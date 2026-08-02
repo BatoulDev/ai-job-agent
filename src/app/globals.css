@@ -1,26 +1,40 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-primary: #1e3a8a;
+  --color-primary-dark: #142a63;
+  --color-accent: #06b6d4;
+  --color-success: #10b981;
+  --color-bg: #f8fafc;
+  --color-card: #ffffff;
+  --color-text: #0f172a;
+  --color-muted: #64748b;
+
+  --font-display: var(--font-display);
+  --font-body: var(--font-body);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+html {
+  /* Offsets hash-link scrolling so headings aren't hidden behind the sticky navbar. */
+  scroll-padding-top: 96px;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  .reveal {
+    animation: reveal-ring 1.4s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+}
+
+@keyframes reveal-ring {
+  from {
+    stroke-dashoffset: var(--ring-circumference);
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--color-bg);
 }
