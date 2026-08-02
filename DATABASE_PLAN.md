@@ -313,3 +313,183 @@ A local-dev-only, idempotent seed script creates three fictional test users (`ma
 ## Deferred to Phase 4+ (intentionally not built now)
 
 CV text extraction, AI CV parsing, any AI provider call, job scraping/collection, job matching, cover-letter generation, notification emails, application sending, n8n workflows, the `analysis_tasks` worker/claim loop, real Whish HTTP calls, and production Supabase/deployment configuration. `analysis_tasks` rows can now be created safely and will sit in `pending` status until a Phase 4 worker exists to claim them.
+
+---
+
+# Phase 4A Addendum — CV Analysis Profile database foundation
+
+Implemented on `feature/cv-analysis-profile`. Schema, constraints, and RLS only — see "Deferred" at the end for what this phase deliberately does not build.
+
+## Experience-level vocabulary
+
+Extended (not renamed) via `20260804090000_extend_job_preferences_experience_level.sql`. The existing convention on `job_preferences.experience_level` is lowercase, hyphen-separated text (`entry-level`, not `entry_level`) — the new values follow the same style rather than introducing a second naming convention:
+
+`internship`, `entry-level`, `junior`, `mid-level`, `senior`, `open-to-all`
+
+All three previously-stored values remain valid under the widened check constraint; no data migration was needed. The vocabulary is now defined once, in `src/lib/experienceLevel.ts`, and consumed by both the onboarding preferences form (`src/app/onboarding/preferences/page.tsx`) and the `cv_analyses.profile_level` TypeScript type — see below for why `profile_level` deliberately reuses this exact list.
+
+## cv_analyses — three regions, one table, kept logically separate
+
+`20260804090010_create_cv_analyses.sql`. Every column belongs to exactly one of three regions, and every future caller (worker, review API, matching engine) must preserve that boundary:
+
+1. **cv_facts** (`professional_summary` … `extracted_text`) — supported only by the CV. Preferences must never alter these.
+2. **preference_snapshot** (one `jsonb` column) — a historical copy of `job_preferences` at analysis time. **Not** the source of truth for current preferences — `job_preferences` still is. A later preferences edit can never retroactively change what an existing analysis says it used.
+3. **ai_career_profile** (`profile_level` … `development_areas`) — conclusions drawn from (1) informed by (2). `profile_level` reuses the experience-level vocabulary above so the user's self-reported target level and the AI-assessed level are always directly comparable.
+
+Array-shaped `jsonb` columns (`skills`, `education`, `work_experience`, `projects`, `certifications`, `languages`, `recommended_roles`, `strongest_areas`, `career_recommendations`, `search_focus`, `development_areas`) are constrained with `jsonb_typeof(...) = 'array'`; object-shaped ones (`preference_snapshot`, `contact_info`, `user_edits`) with `jsonb_typeof(...) = 'object'` — the database rejects a malformed shape, not just the UI.
+
+**Re-analysis is supported by design**: `cv_id` is not unique, so a CV can accumulate multiple `cv_analyses` rows over time (new AI provider, new prompt version, user-requested re-run). Two invariants are enforced at the database layer instead of trusted to application code:
+- `unique (analysis_task_id)` — one task produces at most one result (idempotency, matching `analysis_tasks`' own pattern).
+- A partial unique index, `cv_analyses_one_approved_per_user on (user_id) where review_status = 'approved'` — at most one **approved** analysis per user at any time, since that's the one row future job matching must read. A future approve action must supersede (e.g. demote) any prior approved row for the same user to satisfy this constraint; it will not do so automatically.
+
+## RLS
+
+Enabled, `select`-own only (`auth.uid() = user_id`) for `authenticated`. **No insert/update/delete policy exists for `authenticated` at all** — not even a narrow one for `review_status`/`user_edits`. This was deliberate, not an oversight: this phase does not build a review endpoint, and per the request, an insecure direct-update policy must not be added just to make that future UI easier. `service_role` (via `src/lib/supabase/admin.ts`, already granted full table access by `20260803090010_grant_service_role_table_access.sql`) is the only role that can write to this table today.
+
+**What the future review endpoint must do** (not built in this phase): run server-side, re-derive `auth.uid()` from the verified session itself (never trust a client-supplied user id), verify the target `cv_analyses` row's `user_id` matches, restrict which fields a review action may touch (`review_status` transitions + `user_edits` only — never `status`, `ai_provider`, `ai_model`, `analysis_version`, or any `cv_facts`/`preference_snapshot` column), and use the service-role client to perform the actual write (since no client-facing RLS policy will ever permit it directly). This mirrors the existing `create_payment_attempt` pattern: a validated, narrowly-scoped, server-only mutation path, not a broadened RLS policy.
+
+## Automation contract (Part 5)
+
+**Trusted input** to the future worker is exactly three identifiers, matching the existing `analysis_tasks` queue-payload contract in Phase 3 — never a storage path, plan name, ownership claim, or preferences payload from an untrusted request:
+
+```json
+{ "analysis_task_id": "...", "user_id": "...", "cv_id": "..." }
+```
+
+**The worker must use those identifiers to securely load, server-side, via the service-role client:**
+- the trusted `cvs` row and its Storage path (never accept a path from the caller)
+- the current `job_preferences` row (to build `preference_snapshot` — copied at read time, then frozen into the result)
+- the active `subscriptions` row and its `plans` limits (for future usage-limit enforcement — Phase 6/7, not this phase)
+
+**The stored result must keep the three regions above separate** — `cv_facts` columns, `preference_snapshot`, and `ai_career_profile` columns are never merged or allowed to overwrite one another.
+
+**Plans do not change CV facts or AI conclusions.** A Free/Student/Pro plan_code must never influence what `cv_facts` or `ai_career_profile` say about a CV — plan limits only ever govern *usage* later: number of job matches, number of cover letters, number of revisions, and (if introduced) processing priority. If a plan-based feature ever needs to change analysis behavior itself (not just usage limits), that is a product decision requiring explicit approval, not something to infer from this schema.
+
+## CV Profile page (Part 6) — not wired this phase
+
+`src/components/dashboard/CvProfileSection.tsx` currently renders only `full_name`/`university`/`major`/CV-file-metadata from `profiles`/`cvs`, with an explicit `TrustNote` stating skills/languages/roles will appear "once AI CV parsing is available." That note is accurate and was left unchanged — no fake analysis data was added to this component or any other. New TypeScript types (`src/lib/cvAnalysis/types.ts`) describe the shape a future fetch would use, but nothing queries `cv_analyses` from the dashboard yet.
+
+**Exact next implementation step**, when ready: add a server-side loader (`src/lib/cvAnalysis/` or inline in `src/app/dashboard/page.tsx`) that selects the calling user's own `cv_analyses` row(s) via the existing `select`-own RLS policy — the browser's `authenticated` session is sufficient for reads, no new endpoint is required for *display*. A new server-only Route Handler *is* required before any *review* action (approve/edit) can be wired — see the RLS section above for exactly what it must enforce.
+
+## Generated types (Part 7)
+
+No generated Supabase types file exists anywhere in this project (`grep -r "gen types" src` and a repo-wide file search both come back empty) — all TypeScript types here are manually maintained, matching the existing convention (`src/lib/plans/types.ts`). If a generated-types workflow is introduced later, the command is:
+
+```
+npx supabase gen types typescript --local > src/lib/supabase/database.types.ts
+```
+
+That was **not** run in this phase (no existing generated file to keep in sync, and generating one is a separate, deliberate architectural decision, not a side effect of adding one table).
+
+## Deferred in Phase 4A (intentionally not built)
+
+The extraction/parsing worker, any AI provider call, the review Route Handler, any UI data-fetching for `cv_analyses`, and trusted `SECURITY DEFINER` helper functions for creating/updating analysis rows (e.g. a `create_cv_analysis`-style RPC). That last one is a deliberate scope boundary, not an oversight: the exact fields a real worker needs to set atomically depend on the extraction/AI pipeline design, which doesn't exist yet — inventing a specific function signature now risks guessing wrong and having to migrate around it later. `service_role` already has full direct table access (via the existing grants migration), which is sufficient for a future worker to use immediately once it exists.
+
+---
+
+# Phase 4B Addendum — CV/preference versioning, stale-result protection, analysis lifecycle
+
+Implemented on `feature/cv-analysis-profile`, after Phase 4A. Extends the Phase 4A foundation so concurrent workers, CV replacement, and preference changes can never silently corrupt or overwrite the current career profile. No AI worker, n8n automation, dashboard UI, notifications, job matching, or cover letters were built — schema and documented contracts only, exactly as scoped.
+
+## Exact product rules (verbatim, as specified)
+
+**CV changed** → Full extraction and new AI Career Profile → New user approval required.
+
+**Preferences changed** → Keep valid CV facts → Refresh AI recommendations and future matching → Do not reparse the CV unnecessarily.
+
+**Plan changed** → Usage limits only → Never alter CV facts or AI conclusions.
+
+## job_preferences versioning
+
+`20260805090000_add_job_preferences_versioning.sql`. `version integer not null default 1`, backfilled to `1` for all existing rows automatically by the `ALTER TABLE ... DEFAULT`. A `before insert or update` trigger (`bump_job_preferences_version`) computes the authoritative value itself:
+- On insert: always `1`, regardless of anything in the payload.
+- On update: increments only when `target_roles`, `location`, `remote_preference`, `job_type`, `experience_level`, or `additional_notes` actually changed (`is distinct from`, correctly handling `NULL`); an update that changes nothing else (there is currently no way to update *only* `updated_at` from application code — it's trigger-maintained) leaves `version` untouched.
+
+**Verified live, through the real `authenticated` REST path** (not just as `postgres`): a client that includes `"version": 999` in its `PATCH` payload — whether or not it also changes real data — never affects the stored value; the trigger always recomputes it from `OLD`/`NEW` server-side. `job_preferences` remains the one table in this schema a user can write directly (RLS unchanged), which is exactly why this had to be enforced in the database, not trusted to the client or application code.
+
+## CV versioning and one-active-CV enforcement
+
+`20260805090010_add_cvs_versioning.sql`. Added `version integer not null default 1`, `is_active boolean not null default true`, `superseded_at timestamptz` (nullable) — all existing rows backfilled to `version=1, is_active=true, superseded_at=null`, trivially valid. Added `cvs_one_active_per_user`, a partial unique index on `(user_id) where is_active = true`.
+
+**Schema conflict found and reported, not silently resolved**: `cvs_user_id_key`, a *plain* (non-partial) `unique(user_id)` constraint from Phase 1, still exists and was deliberately **not** dropped. It structurally forbids more than one `cvs` row per user ever — the exact opposite of history preservation — but dropping it would immediately break `src/app/onboarding/upload-cv/page.tsx`'s `.upsert({...}, { onConflict: "user_id" })`: Postgres' `ON CONFLICT` target must name a real unique constraint on exactly those columns, and Supabase-js's `.upsert()` cannot target a `WHERE`-qualified partial index. **Verified live**: attempting a second active-CV row for an existing user fails today on `cvs_user_id_key` specifically (confirmed via direct test) — `cvs_one_active_per_user` is currently a dormant, forward-compatible duplicate of that guarantee, not yet the operative one. The exact resolution (in a future migration, alongside the real Replace CV action) is documented in the migration file itself: create the new version row, deactivate + supersede the old one, *then* drop `cvs_user_id_key` — all in one transaction, using the service-role client, never a client-side upsert.
+
+**Verified live**: the existing upload flow (`upsert` with `onConflict: user_id`) still works completely unchanged — same row `id`, `version`/`is_active`/`superseded_at` untouched (not in its payload).
+
+**Observed, not fixed**: `cvs`' existing `UPDATE` RLS policy (unchanged in this phase — not part of what Part 3 asked for) is not column-scoped, so a user can today directly set their own `is_active`/`version`/`superseded_at` via a direct client request. This is flagged rather than silently tightened, since restricting it wasn't requested and the eventual Replace CV action's authorization model (client session vs. service-role-only) is an open design decision for that future phase, not this one.
+
+## analysis_tasks lifecycle
+
+`20260805090020_extend_analysis_tasks_lifecycle.sql`. Reused rather than duplicated: `cv_id`, `started_at`, `completed_at`, `attempt_count` (all pre-existing); `last_error` reused in place of a new `error_message` column. Added:
+- `task_type text not null default 'full_analysis' check (task_type in ('full_analysis','career_profile_refresh'))` — distinct from the existing `trigger` column (why a task exists, today only `'onboarding_completed'`) vs. what kind of work it is. No caller sets this explicitly yet; `create_analysis_task`'s existing 3-argument signature is completely unchanged and every row it inserts correctly defaults to `full_analysis` (verified live: a task created through the unmodified function has `task_type = 'full_analysis'`).
+- `preferences_version integer` (nullable) — auto-populated from the caller's current `job_preferences.version` by a new `before insert` trigger (`set_analysis_task_preferences_version`) when not explicitly supplied, so `create_analysis_task` needed no signature change at all. **Verified live**: after bumping a fixture user's preferences to version 4, a task created through the existing function correctly captured `preferences_version = 4`.
+- `superseded_at timestamptz` (nullable) — a marker column only; nothing sets it in this phase (see the atomic claim contract below for what must respect it).
+
+**No new duplicate-task partial unique index was added.** The existing `analysis_tasks_one_active_per_cv` (`unique(cv_id) where status in ('pending','processing')` — the real, confirmed status vocabulary) already forbids *any* two active tasks for the same CV, which is strictly stronger than "same user+cv+task_type+preferences_version." Adding the narrower index on top would be unreachable, redundant weight (Phase 1's own instruction against duplicate indexes) unless the coarser one is deliberately loosened first — documented as a future, explicit decision if the product ever wants `full_analysis` and `career_profile_refresh` to run concurrently for one CV.
+
+## cv_analyses stale/current/superseded behavior
+
+`20260805090030_extend_cv_analyses_lifecycle.sql`. Added `preferences_version integer` (nullable), `is_current boolean not null default false`, `superseded_at timestamptz` (nullable), and `recommendations_state text not null default 'current' check (in ('current','stale','superseded'))` — a **separate, clearly-named field** rather than overloading `status` or `review_status`, per the explicit instruction to keep processing status, review status, and system-determined validity independent:
+
+| Field | Answers |
+|---|---|
+| `status` | Did extraction/AI generation succeed? (`processing`/`completed`/`failed`) |
+| `review_status` | Did the user approve this result? (permanent historical fact) |
+| `recommendations_state` + `is_current` | Is this still the record to trust *right now*? |
+
+- **`current`**: `cv_facts` and `ai_career_profile` both match the live CV and live preferences.
+- **`stale`**: CV unchanged, but `preferences_version` is behind the user's live `job_preferences.version` — `cv_facts` remain fully reusable (must not be reparsed); only `ai_career_profile` needs a `career_profile_refresh`.
+- **`superseded`**: the CV itself was replaced — the entire result, `cv_facts` included, is no longer relevant.
+
+Two `security definer` triggers enforce this automatically (definer because they fire during a user's own legitimate write to *their own* `cvs`/`job_preferences` row, but must then write to `cv_analyses`, which has no client-facing write policy at all — the same reasoning `handle_new_user` has always used):
+- `mark_cv_analyses_superseded_on_cv_change` (`after update on cvs`): when `is_active` flips `true → false`, the CV's current analysis (if any) is set `is_current = false, recommendations_state = 'superseded', superseded_at = now()`. `review_status` is left untouched — approval is a historical fact independent of whether the record is still current.
+- `mark_cv_analyses_stale_on_preferences_change` (`after update on job_preferences`): when `version` increments, the user's current analysis (if its `recommendations_state` was `'current'`) is set to `'stale'` — `is_current` stays `true`, since it's still "the" record, just due for a refresh.
+
+**Invariants enforced by the database, not application code**:
+- `cv_analyses_current_not_superseded` check constraint: `is_current` and `recommendations_state = 'superseded'` can never coexist on one row.
+- `cv_analyses_one_current_per_user` partial unique index: at most one `is_current = true` row per user — independent of, and additional to, Phase 4A's `cv_analyses_one_approved_per_user` (review status and currency are decoupled, as above).
+
+**Verified live** (four scenarios, using a real fixture user, cleaned up afterward): (1) a `current` + `superseded` combo is rejected outright by the check constraint; (2) a second `is_current = true` row for the same user is rejected by the partial unique index; (3) bumping `job_preferences.version` correctly flips an existing current analysis to `stale` while `is_current` stays `true`; (4) deactivating the referenced `cvs` row correctly flips it to `superseded`, `is_current = false`, with `superseded_at` set.
+
+## Atomic worker claim (documented, not implemented)
+
+Per the explicit instruction to defer this without guessing at a public function, no claim RPC was written. The required behavior, precisely:
+
+```sql
+-- One transaction, using the service-role client:
+select * from public.analysis_tasks
+where status = 'pending'
+  and available_at <= now()
+  and superseded_at is null
+order by available_at
+limit :batch_size
+for update skip locked;
+-- then, in the same transaction, for each claimed row:
+update public.analysis_tasks
+set status = 'processing', started_at = now(), attempt_count = attempt_count + 1
+where id = :claimed_id;
+```
+
+`for update skip locked` is what makes claiming atomic across concurrent workers: two workers racing for the same row never process it twice — one gets it, the other's `select` silently skips the locked row and moves to the next candidate. `superseded_at is null` (added this phase) must be part of the filter once anything starts setting that column. Retry/idempotency is already fully provided by existing infrastructure: `idempotency_key` (unique), `attempt_count`/`max_attempts`, and `analysis_tasks_one_active_per_cv` together guarantee a retried or duplicate-triggered task creation can never result in two workers concurrently producing conflicting results for the same CV.
+
+## Approval transaction (documented, not implemented)
+
+Per the explicit instruction not to guess a public `security definer` approval function without an established pattern to safely base its authorization on, no such function was written. The required behavior for the future review endpoint, precisely, in one transaction:
+
+1. `select ... for update` the target `cv_analyses` row (lock it against concurrent approval/supersession).
+2. Confirm `user_id = auth.uid()` from the caller's own verified session — never a client-supplied user id (matches every other trusted mutation in this schema).
+3. Confirm its `cv_id` still has `cvs.is_active = true` for that user — reject if not (the CV has since been replaced; this result is stale by construction).
+4. Confirm `preferences_version = ` the user's live `job_preferences.version` — reject (or route to review-with-warning) if behind.
+5. Reject if `status <> 'completed'`, or `recommendations_state = 'superseded'` — an incomplete, failed, or superseded result must never be approved.
+6. If a different row is currently `review_status = 'approved'` and/or `is_current = true` for this user, demote it (`review_status` stays as historical fact per the header table above; only `is_current`/`recommendations_state` on the *old* row need to change, and only if it hasn't already been superseded by the triggers above).
+7. Set the target row `review_status = 'approved'`, `is_current = true`, `recommendations_state = 'current'`.
+8. Set `approved_at = now()`, `reviewed_at = now()`.
+
+This must run server-side (service-role client), exactly mirroring the existing `create_payment_attempt`/`mark_payment_verified` pattern — never a broadened RLS policy on `cv_analyses`.
+
+## Historical data preservation
+
+Nothing in this phase deletes a row or a Storage object. Superseded `cvs` rows, every past `cv_analyses` row (`is_current` or not, any `recommendations_state`), and every `analysis_tasks` row remain queryable indefinitely — future matches/cover letters/applications may still reference a superseded `cv_id` or a non-current `cv_analyses.id` by design.
+
+## Deferred in Phase 4B (intentionally not built)
+
+The Replace CV server action (and the `cvs_user_id_key` drop it requires), the atomic claim function, the approval `security definer` function, any code path that creates a `career_profile_refresh` task, and everything already deferred in Phase 4A (worker, AI calls, review endpoint UI, matching, cover letters, notifications, n8n, deployment).
