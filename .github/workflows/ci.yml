@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+# Cancel older in-progress runs for the same PR/branch when a new commit
+# lands, so CI minutes aren't wasted validating a commit that's already
+# been superseded.
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+# Least privilege: this workflow only reads the repository and never
+# writes back to it, comments, or touches other GitHub resources.
+permissions:
+  contents: read
+
+jobs:
+  quality-checks:
+    name: quality-checks
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v7
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: "22"
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Build
+        run: npm run build
+        env:
+          # Public, browser-safe placeholders only (see src/lib/supabase/env.ts —
+          # both are documented as safe to expose to the browser and grant no
+          # access beyond what Row Level Security allows). next build reads these
+          # eagerly while collecting page data, so a value must be present, but
+          # it never needs to point at a real project: no network call to
+          # Supabase happens during a production build. No service-role key,
+          # password, or other secret is used or required at build time —
+          # verified locally by running `npm run build` with .env.local removed.
+          NEXT_PUBLIC_SUPABASE_URL: "https://ci-placeholder.supabase.co"
+          NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: "sb_publishable_ci_placeholder"
