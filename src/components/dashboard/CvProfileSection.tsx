@@ -1,82 +1,107 @@
-import Link from "next/link";
-import TrustNote from "./TrustNote";
+"use client";
 
-export interface CvProfileData {
-  fullName: string | null;
-  university: string | null;
-  major: string | null;
+import { createClient } from "@/lib/supabase/client";
+import type { PreferencesData } from "./PreferencesSection";
+import CurrentCvCard, { type CvRecord } from "./cvProfile/CurrentCvCard";
+import AiCareerProfileSection from "./cvProfile/AiCareerProfileSection";
+import {
+  deriveCvProfileState,
+  isPreferencesComplete,
+  type RequestChangesPayload,
+} from "@/lib/cvAnalysis/profileState";
+import type { CvAnalysis } from "@/lib/cvAnalysis/types";
+import type { AnalysisTaskStatus } from "@/lib/analysisTasks/types";
+
+export type { CvRecord };
+
+// No approval or revision backend endpoint exists yet — see
+// DATABASE_PLAN.md's Phase 4B addendum ("Approval transaction
+// (documented, not implemented)"). These two handlers are real,
+// connected, and safe: they never write to the database or pretend an
+// action succeeded. Once a real endpoint exists, only these two
+// functions need to change — every dialog/component above already
+// expects exactly this async { ok, message } contract.
+async function approveProfile(): Promise<{ ok: boolean; message?: string }> {
+  return {
+    ok: false,
+    message:
+      "Approving isn't available yet — this will be enabled once profile approval is implemented on the backend.",
+  };
 }
 
-export interface CvFileData {
-  fileName: string;
-  status: string;
-  createdAt: string;
-}
-
-function getInitials(name: string): string {
-  const parts = name.trim().split(/\s+/).filter(Boolean);
-  if (parts.length === 0) return "?";
-  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-  return `${parts[0][0]}${parts[parts.length - 1][0]}`.toUpperCase();
+async function requestProfileChanges(
+  payload: RequestChangesPayload
+): Promise<{ ok: boolean; message?: string }> {
+  // Prepared for a future backend action — logged for local visibility
+  // only, never persisted or claimed as submitted.
+  console.info("[CV Profile] Request Changes payload (not yet submitted anywhere real):", payload);
+  return {
+    ok: false,
+    message:
+      "Submitting change requests isn't available yet — this will be enabled once the review endpoint is implemented on the backend.",
+  };
 }
 
 export default function CvProfileSection({
-  profile,
   cv,
-  fallbackName,
+  preferences,
+  taskStatus,
+  analysis,
+  onNavigateToPreferences,
 }: {
-  profile: CvProfileData | null;
-  cv: CvFileData | null;
-  fallbackName: string;
+  cv: CvRecord | null;
+  preferences: PreferencesData | null;
+  taskStatus: AnalysisTaskStatus | null;
+  analysis: CvAnalysis | null;
+  onNavigateToPreferences: () => void;
 }) {
-  const displayName = profile?.fullName || fallbackName;
-  const subtitle = [profile?.major, profile?.university].filter(Boolean).join(" · ");
+  const state = deriveCvProfileState({
+    hasActiveCv: !!cv,
+    preferencesComplete: isPreferencesComplete(preferences),
+    task: taskStatus ? { status: taskStatus } : null,
+    analysis: analysis
+      ? {
+          status: analysis.status,
+          review_status: analysis.review_status,
+          recommendations_state: analysis.recommendations_state,
+        }
+      : null,
+  });
+
+  const handleViewCv = async () => {
+    if (!cv) return;
+    const supabase = createClient();
+    const { data, error } = await supabase.storage
+      .from("cvs")
+      .createSignedUrl(cv.storagePath, 60);
+    if (error || !data?.signedUrl) {
+      throw error ?? new Error("No signed URL returned");
+    }
+    window.open(data.signedUrl, "_blank", "noopener,noreferrer");
+  };
 
   return (
-    <div className="space-y-6">
-      <div className="rounded-3xl border border-slate-200 bg-card p-6 shadow-sm sm:p-8">
-        <div className="flex items-center gap-4">
-          <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-semibold text-primary">
-            {getInitials(displayName)}
-          </span>
-          <div>
-            <h3 className="font-display text-lg font-semibold text-text">
-              {displayName}
-            </h3>
-            <p className="text-sm text-muted">
-              {subtitle || "Add your university and major from Preferences."}
-            </p>
-          </div>
-        </div>
-
-        <div className="mt-6">
-          <p className="text-xs font-semibold uppercase tracking-wide text-muted">
-            CV on file
-          </p>
-          {cv ? (
-            <p className="mt-2 text-sm text-text">
-              {cv.fileName} · {cv.status} ·{" "}
-              {new Date(cv.createdAt).toLocaleDateString()}
-            </p>
-          ) : (
-            <p className="mt-2 text-sm text-muted">
-              No CV uploaded yet.{" "}
-              <Link
-                href="/onboarding/upload-cv"
-                className="font-medium text-primary hover:text-primary-dark"
-              >
-                Upload one
-              </Link>
-              .
-            </p>
-          )}
-        </div>
+    <div className="space-y-8">
+      <div>
+        <h1 className="font-display text-2xl font-semibold tracking-tight text-text sm:text-3xl">
+          CV Profile
+        </h1>
+        <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
+          Review your CV information, career preferences, and AI career
+          recommendations before job matching begins.
+        </p>
       </div>
 
-      <TrustNote>
-        Skills, languages, and target roles will appear here once AI CV
-        parsing is available.
-      </TrustNote>
+      <CurrentCvCard cv={cv} state={state} onViewCv={handleViewCv} />
+
+      <AiCareerProfileSection
+        state={state}
+        analysis={analysis}
+        preferences={preferences}
+        onApprove={approveProfile}
+        onRequestChanges={requestProfileChanges}
+        onNavigateToPreferences={onNavigateToPreferences}
+      />
     </div>
   );
 }

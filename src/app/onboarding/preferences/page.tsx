@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import OnboardingShell from "@/components/onboarding/OnboardingShell";
 import FormField from "@/components/auth/FormField";
 import { createClient } from "@/lib/supabase/client";
+import { EXPERIENCE_LEVEL_OPTIONS } from "@/lib/experienceLevel";
 
 const REMOTE_PREFERENCE_OPTIONS = [
   { label: "On-site", value: "onsite" },
@@ -20,12 +21,6 @@ const JOB_TYPE_OPTIONS = [
   { label: "Full-time", value: "full-time" },
   { label: "Freelance", value: "freelance" },
   { label: "Open to all", value: "open" },
-];
-
-const EXPERIENCE_LEVEL_OPTIONS = [
-  { label: "Internship", value: "internship" },
-  { label: "Entry-level", value: "entry-level" },
-  { label: "Junior", value: "junior" },
 ];
 
 interface InitialValues {

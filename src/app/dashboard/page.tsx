@@ -13,14 +13,15 @@ import ApprovedSection from "@/components/dashboard/ApprovedSection";
 import SentSection from "@/components/dashboard/SentSection";
 import RejectedSection from "@/components/dashboard/RejectedSection";
 import CvProfileSection, {
-  type CvFileData,
-  type CvProfileData,
+  type CvRecord,
 } from "@/components/dashboard/CvProfileSection";
 import PreferencesSection, {
   type PreferencesData,
 } from "@/components/dashboard/PreferencesSection";
 import { DASHBOARD_STATS } from "@/lib/dashboardData";
 import { createClient } from "@/lib/supabase/client";
+import type { CvAnalysis } from "@/lib/cvAnalysis/types";
+import type { AnalysisTaskStatus } from "@/lib/analysisTasks/types";
 
 const TABS: DashboardTab[] = [
   { id: "new-matches", label: "New Matches" },
@@ -37,9 +38,11 @@ export default function DashboardPage() {
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
-  const [profile, setProfile] = useState<CvProfileData | null>(null);
+  const [fullName, setFullName] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<PreferencesData | null>(null);
-  const [cv, setCv] = useState<CvFileData | null>(null);
+  const [cv, setCv] = useState<CvRecord | null>(null);
+  const [taskStatus, setTaskStatus] = useState<AnalysisTaskStatus | null>(null);
+  const [analysis, setAnalysis] = useState<CvAnalysis | null>(null);
 
   useEffect(() => {
     let isMounted = true;
@@ -59,7 +62,7 @@ export default function DashboardPage() {
       const [profileResult, prefResult, cvResult] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name, university, major")
+          .select("full_name")
           .eq("id", user.id)
           .maybeSingle(),
         supabase
@@ -71,8 +74,9 @@ export default function DashboardPage() {
           .maybeSingle(),
         supabase
           .from("cvs")
-          .select("file_name, status, created_at")
+          .select("id, file_name, file_size_bytes, status, storage_path, is_active, created_at")
           .eq("user_id", user.id)
+          .eq("is_active", true)
           .maybeSingle(),
       ]);
 
@@ -87,11 +91,7 @@ export default function DashboardPage() {
       }
 
       setEmail(user.email ?? "");
-      setProfile({
-        fullName: profileResult.data.full_name,
-        university: profileResult.data.university,
-        major: profileResult.data.major,
-      });
+      setFullName(profileResult.data.full_name);
       setPreferences(
         prefResult.data
           ? {
@@ -104,15 +104,50 @@ export default function DashboardPage() {
             }
           : null
       );
+
+      const activeCv = cvResult.data;
       setCv(
-        cvResult.data
+        activeCv
           ? {
-              fileName: cvResult.data.file_name,
-              status: cvResult.data.status,
-              createdAt: cvResult.data.created_at,
+              id: activeCv.id,
+              fileName: activeCv.file_name,
+              fileSizeBytes: activeCv.file_size_bytes,
+              status: activeCv.status,
+              storagePath: activeCv.storage_path,
+              createdAt: activeCv.created_at,
             }
           : null
       );
+
+      // Both queries below depend on the active CV's id, so they can only
+      // run once the cvs query above has resolved. Most-recent-first: the
+      // latest task/analysis for this CV is the one relevant to display
+      // (see src/lib/cvAnalysis/profileState.ts for how these combine
+      // into a single UI state).
+      if (activeCv) {
+        const [taskResult, analysisResult] = await Promise.all([
+          supabase
+            .from("analysis_tasks")
+            .select("status")
+            .eq("cv_id", activeCv.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+          supabase
+            .from("cv_analyses")
+            .select("*")
+            .eq("cv_id", activeCv.id)
+            .order("created_at", { ascending: false })
+            .limit(1)
+            .maybeSingle(),
+        ]);
+
+        if (!isMounted) return;
+
+        setTaskStatus(taskResult.data?.status ?? null);
+        setAnalysis((analysisResult.data as CvAnalysis | null) ?? null);
+      }
+
       setIsLoading(false);
     }
 
@@ -140,7 +175,7 @@ export default function DashboardPage() {
     );
   }
 
-  const displayName = profile?.fullName || email;
+  const displayName = fullName || email;
 
   return (
     <div className="min-h-screen bg-bg">
@@ -168,7 +203,13 @@ export default function DashboardPage() {
             {activeTab === "sent" && <SentSection />}
             {activeTab === "rejected" && <RejectedSection />}
             {activeTab === "cv-profile" && (
-              <CvProfileSection profile={profile} cv={cv} fallbackName={email} />
+              <CvProfileSection
+                cv={cv}
+                preferences={preferences}
+                taskStatus={taskStatus}
+                analysis={analysis}
+                onNavigateToPreferences={() => setActiveTab("preferences")}
+              />
             )}
             {activeTab === "preferences" && (
               <PreferencesSection preferences={preferences} />

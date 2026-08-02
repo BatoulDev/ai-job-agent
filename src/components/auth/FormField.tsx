@@ -19,7 +19,7 @@ export default function FormField({
   placeholder?: string;
   autoComplete?: string;
   required?: boolean;
-  options?: { label: string; value: string }[];
+  options?: readonly { label: string; value: string }[];
   helperText?: string;
   rows?: number;
   defaultValue?: string;
