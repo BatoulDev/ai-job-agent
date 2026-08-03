@@ -179,9 +179,12 @@ export default function PreferencesPage() {
     // Tells the trusted server-side readiness check to re-evaluate and, if
     // the user is now fully ready, safely enqueue an analysis task (never
     // duplicated on refresh/resubmit — see src/app/api/onboarding/complete).
-    // Falls back to /dashboard if this call fails; it never blocks
-    // onboarding completion since preferences were already saved above.
-    let nextStep = "/dashboard";
+    // Default destination is the CV Profile tab, never New Matches/Get
+    // Matches directly — the user must review (and, once approval exists,
+    // approve) their AI Career Profile first. If a CV analysis is already
+    // queued or processing, CV Profile shows the existing honest
+    // "Analyzing" state there — nothing is simulated here.
+    let nextStep = "/dashboard?tab=cv-profile";
     try {
       const response = await fetch("/api/onboarding/complete", { method: "POST" });
       if (response.ok) {
@@ -190,7 +193,7 @@ export default function PreferencesPage() {
         else if (data.nextStep === "upload_cv") nextStep = "/onboarding/upload-cv";
       }
     } catch {
-      // Ignore — fall back to /dashboard below.
+      // Ignore — fall back to the CV Profile tab below.
     }
 
     setIsSaving(false);
@@ -325,7 +328,7 @@ export default function PreferencesPage() {
               disabled={isSaving}
               className="w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
             >
-              {isSaving ? "Saving..." : "Continue to dashboard"}
+              {isSaving ? "Saving your preferences…" : "Save & Review AI Profile"}
             </button>
             <Link
               href="/onboarding/upload-cv"
