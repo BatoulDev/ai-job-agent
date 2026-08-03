@@ -1,4 +1,10 @@
-const STEPS = ["Create account", "Upload CV", "Set preferences", "Get matches"];
+const STEPS = [
+  "Create account",
+  "Upload CV",
+  "Set preferences",
+  "Review AI Profile",
+  "Get matches",
+];
 
 export default function OnboardingProgress({
   currentStep,

@@ -21,6 +21,16 @@ export type { CvRecord };
 // action succeeded. Once a real endpoint exists, only these two
 // functions need to change — every dialog/component above already
 // expects exactly this async { ok, message } contract.
+//
+// Future UX contract for a successful approval (not implemented — no
+// approval or matching backend exists yet, see LockedMatchesNotice and
+// NewMatchesSection for the matching side):
+//   Approve Profile confirmed
+//     → brief transient state: "Finding your best job matches…"
+//     → user lands on / stays on the dashboard (New Matches tab)
+//     → matching runs in the background, NOT a full-screen blocking loader
+//     → New Matches shows a "finding matches" processing message until
+//       real results exist (see NewMatchesSection.tsx)
 async function approveProfile(): Promise<{ ok: boolean; message?: string }> {
   return {
     ok: false,

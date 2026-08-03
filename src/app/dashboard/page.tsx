@@ -1,7 +1,7 @@
 "use client";
 
-import { useEffect, useState } from "react";
-import { useRouter } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
+import { useRouter, useSearchParams } from "next/navigation";
 import DashboardHeader from "@/components/dashboard/DashboardHeader";
 import DashboardTabs, {
   type DashboardTab,
@@ -9,6 +9,7 @@ import DashboardTabs, {
 import StatsGrid from "@/components/dashboard/StatsGrid";
 import TrustNote from "@/components/dashboard/TrustNote";
 import NewMatchesSection from "@/components/dashboard/NewMatchesSection";
+import LockedMatchesNotice from "@/components/dashboard/LockedMatchesNotice";
 import ApprovedSection from "@/components/dashboard/ApprovedSection";
 import SentSection from "@/components/dashboard/SentSection";
 import RejectedSection from "@/components/dashboard/RejectedSection";
@@ -31,10 +32,16 @@ const TABS: DashboardTab[] = [
   { id: "cv-profile", label: "CV Profile" },
   { id: "preferences", label: "Preferences" },
 ];
+const TAB_IDS = new Set(TABS.map((tab) => tab.id));
+const DEFAULT_TAB = "new-matches";
 
-export default function DashboardPage() {
+function DashboardPageContent() {
   const router = useRouter();
-  const [activeTab, setActiveTab] = useState<string>("new-matches");
+  const searchParams = useSearchParams();
+  const requestedTab = searchParams.get("tab");
+  const [activeTab, setActiveTab] = useState<string>(
+    requestedTab && TAB_IDS.has(requestedTab) ? requestedTab : DEFAULT_TAB
+  );
   const [isLoading, setIsLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
@@ -176,6 +183,10 @@ export default function DashboardPage() {
   }
 
   const displayName = fullName || email;
+  // "Get matches" stays locked until the user's latest CURRENT analysis
+  // has been approved — no job matching exists yet, so this is never
+  // true for a real user today (see LockedMatchesNotice).
+  const isProfileApproved = analysis?.review_status === "approved" && analysis?.is_current === true;
 
   return (
     <div className="min-h-screen bg-bg">
@@ -198,7 +209,12 @@ export default function DashboardPage() {
           <DashboardTabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
 
           <main className="min-w-0 flex-1 space-y-8">
-            {activeTab === "new-matches" && <NewMatchesSection />}
+            {activeTab === "new-matches" &&
+              (isProfileApproved ? (
+                <NewMatchesSection />
+              ) : (
+                <LockedMatchesNotice onReviewProfile={() => setActiveTab("cv-profile")} />
+              ))}
             {activeTab === "approved" && <ApprovedSection />}
             {activeTab === "sent" && <SentSection />}
             {activeTab === "rejected" && <RejectedSection />}
@@ -224,5 +240,13 @@ export default function DashboardPage() {
         </div>
       </div>
     </div>
+  );
+}
+
+export default function DashboardPage() {
+  return (
+    <Suspense fallback={null}>
+      <DashboardPageContent />
+    </Suspense>
   );
 }
