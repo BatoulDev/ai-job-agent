@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabasePublishableKey, supabaseUrl } from "./env";
+import { isSafeRedirectPath } from "@/lib/safeRedirect";
 
 // Route groups gated by src/proxy.ts. Prefix match: "/onboarding" also
 // covers "/onboarding/preferences" and "/onboarding/upload-cv".
@@ -62,10 +63,7 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthOnly) {
     const next = request.nextUrl.searchParams.get("next");
-    const redirectUrl = new URL(
-      next && next.startsWith("/") ? next : "/dashboard",
-      request.url
-    );
+    const redirectUrl = new URL(isSafeRedirectPath(next) ? next : "/dashboard", request.url);
     return withCookiesFrom(response, NextResponse.redirect(redirectUrl));
   }
 

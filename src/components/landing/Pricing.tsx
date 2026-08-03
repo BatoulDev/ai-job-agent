@@ -1,5 +1,7 @@
 import PricingCta from "./PricingCta";
 import type { PlanCode } from "@/lib/plans/types";
+import { createClient } from "@/lib/supabase/server";
+import { LEBANON_COUNTRY_CODE } from "@/lib/countries/types";
 
 // Marketing copy below (price, limits) must match the canonical values in
 // public.plans exactly (supabase/migrations/20260802090000_create_plans.sql).
@@ -80,7 +82,28 @@ const PLANS: {
   },
 ];
 
-export default function Pricing() {
+// Server Component: reads the signed-in user's known country of residence
+// (if any) to decide whether to mark Student unavailable, per AGENTS.md
+// §8 ("If country of residence is known and is outside Lebanon, mark
+// Student as unavailable"). Anonymous visitors and users who haven't set
+// a residence yet always see Student as available — we never guess.
+export default async function Pricing() {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+
+  let studentUnavailable = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("country_of_residence")
+      .eq("id", user.id)
+      .maybeSingle();
+    studentUnavailable =
+      !!profile?.country_of_residence && profile.country_of_residence !== LEBANON_COUNTRY_CODE;
+  }
+
   return (
     <section id="pricing" className="bg-white">
       <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-24">
@@ -96,17 +119,26 @@ export default function Pricing() {
           </p>
         </div>
 
+        <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-accent/20 bg-accent/5 px-5 py-4 text-center text-sm leading-relaxed text-text">
+          Living outside Lebanon? You can use the Pro plan to receive remote
+          opportunities available to applicants in your country. The Student
+          plan is currently limited to users based in Lebanon.
+        </div>
+
         <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {PLANS.map((plan) => (
+          {PLANS.map((plan) => {
+            const isUnavailableStudent = plan.planCode === "student" && studentUnavailable;
+
+            return (
             <div
               key={plan.name}
               className={`relative flex flex-col rounded-3xl border p-8 ${
-                plan.highlighted
+                plan.highlighted && !isUnavailableStudent
                   ? "border-primary bg-primary text-white shadow-xl shadow-primary/20 lg:-translate-y-3"
                   : "border-slate-200 bg-bg text-text"
-              }`}
+              } ${isUnavailableStudent ? "opacity-75" : ""}`}
             >
-              {plan.badge && (
+              {plan.badge && !isUnavailableStudent && (
                 <span className="absolute -top-3 left-8 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white">
                   {plan.badge}
                 </span>
@@ -189,18 +221,30 @@ export default function Pricing() {
                 ))}
               </ul>
 
-              <PricingCta
-                planCode={plan.planCode}
-                className={`mt-8 block rounded-full py-2.5 text-center text-sm font-semibold transition-colors ${
-                  plan.highlighted
-                    ? "bg-white text-primary hover:bg-white/90"
-                    : "bg-primary text-white hover:bg-primary-dark"
-                }`}
-              >
-                {plan.cta}
-              </PricingCta>
+              {isUnavailableStudent ? (
+                <div className="mt-8 rounded-full border border-slate-300 py-2.5 text-center text-sm font-semibold text-muted">
+                  Not available outside Lebanon
+                </div>
+              ) : (
+                <PricingCta
+                  planCode={plan.planCode}
+                  className={`mt-8 block rounded-full py-2.5 text-center text-sm font-semibold transition-colors ${
+                    plan.highlighted
+                      ? "bg-white text-primary hover:bg-white/90"
+                      : "bg-primary text-white hover:bg-primary-dark"
+                  }`}
+                >
+                  {plan.cta}
+                </PricingCta>
+              )}
+              {isUnavailableStudent && (
+                <p className="mt-2 text-center text-xs leading-relaxed text-muted">
+                  Student is only available to users residing in Lebanon.
+                </p>
+              )}
             </div>
-          ))}
+            );
+          })}
         </div>
 
         <p className="mx-auto mt-8 max-w-3xl text-center text-sm leading-relaxed text-muted">

@@ -167,7 +167,7 @@ function CompactPreferenceContext({
 }) {
   const tokens = [
     firstToken(preferences.targetRoles),
-    titleCase(preferences.remotePreference),
+    titleCase(preferences.workArrangement),
     titleCase(preferences.experienceLevel),
   ].filter((token): token is string => !!token);
 

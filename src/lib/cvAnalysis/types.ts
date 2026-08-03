@@ -88,9 +88,10 @@ export interface CvFacts {
 // time. NOT the current source of truth; job_preferences is. Structure
 // matches job_preferences' own columns (see src/app/onboarding/preferences/page.tsx).
 export interface PreferenceSnapshot {
-  target_roles: string | null;
-  location: string | null;
-  remote_preference: string | null;
+  target_roles: string[];
+  location: string[];
+  work_arrangement: string | null;
+  job_market_coverage: string | null;
   job_type: string | null;
   experience_level: string | null;
   additional_notes: string | null;

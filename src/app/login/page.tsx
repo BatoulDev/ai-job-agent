@@ -7,6 +7,7 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import AuthCard from "@/components/auth/AuthCard";
 import FormField from "@/components/auth/FormField";
 import { createClient } from "@/lib/supabase/client";
+import { isSafeRedirectPath } from "@/lib/safeRedirect";
 
 function LoginPageContent() {
   const router = useRouter();
@@ -45,7 +46,7 @@ function LoginPageContent() {
     }
 
     const next = searchParams.get("next");
-    router.push(next && next.startsWith("/") ? next : "/dashboard");
+    router.push(isSafeRedirectPath(next) ? next : "/dashboard");
   };
 
   return (

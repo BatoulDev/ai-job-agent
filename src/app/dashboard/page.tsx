@@ -23,6 +23,7 @@ import { DASHBOARD_STATS } from "@/lib/dashboardData";
 import { createClient } from "@/lib/supabase/client";
 import type { CvAnalysis } from "@/lib/cvAnalysis/types";
 import type { AnalysisTaskStatus } from "@/lib/analysisTasks/types";
+import { isPreferencesComplete } from "@/lib/cvAnalysis/profileState";
 
 const TABS: DashboardTab[] = [
   { id: "new-matches", label: "New Matches" },
@@ -47,6 +48,7 @@ function DashboardPageContent() {
   const [email, setEmail] = useState("");
   const [fullName, setFullName] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<PreferencesData | null>(null);
+  const [preferencesComplete, setPreferencesComplete] = useState(false);
   const [cv, setCv] = useState<CvRecord | null>(null);
   const [taskStatus, setTaskStatus] = useState<AnalysisTaskStatus | null>(null);
   const [analysis, setAnalysis] = useState<CvAnalysis | null>(null);
@@ -69,13 +71,15 @@ function DashboardPageContent() {
       const [profileResult, prefResult, cvResult] = await Promise.all([
         supabase
           .from("profiles")
-          .select("full_name")
+          .select(
+            "full_name, country_of_residence, university_id, custom_university, major_id, custom_major"
+          )
           .eq("id", user.id)
           .maybeSingle(),
         supabase
           .from("job_preferences")
           .select(
-            "target_roles, location, remote_preference, job_type, experience_level, additional_notes"
+            "id, work_arrangement, job_type, experience_level, additional_notes, job_market_coverage, custom_target_roles, custom_locations"
           )
           .eq("user_id", user.id)
           .maybeSingle(),
@@ -97,19 +101,64 @@ function DashboardPageContent() {
         return;
       }
 
+      const profile = profileResult.data;
+      const prefs = prefResult.data;
+
+      // Role/location names now live in join tables — fetch the selected
+      // reference rows' display names alongside the custom_* free-text
+      // arrays already loaded above.
+      let selectedRoleNames: string[] = [];
+      let selectedLocationNames: string[] = [];
+      if (prefs?.id) {
+        const [roleRowsResult, locationRowsResult] = await Promise.all([
+          supabase
+            .from("job_preference_target_roles")
+            .select("target_roles(name)")
+            .eq("job_preference_id", prefs.id),
+          supabase
+            .from("job_preference_locations")
+            .select("locations(name)")
+            .eq("job_preference_id", prefs.id),
+        ]);
+
+        if (!isMounted) return;
+
+        selectedRoleNames = (roleRowsResult.data ?? [])
+          .map((row) => (row.target_roles as unknown as { name: string } | null)?.name)
+          .filter((name): name is string => !!name);
+        selectedLocationNames = (locationRowsResult.data ?? [])
+          .map((row) => (row.locations as unknown as { name: string } | null)?.name)
+          .filter((name): name is string => !!name);
+      }
+
+      const allRoleNames = [...selectedRoleNames, ...(prefs?.custom_target_roles ?? [])];
+      const allLocationNames = [...selectedLocationNames, ...(prefs?.custom_locations ?? [])];
+
       setEmail(user.email ?? "");
-      setFullName(profileResult.data.full_name);
+      setFullName(profile.full_name);
       setPreferences(
-        prefResult.data
+        prefs
           ? {
-              targetRoles: prefResult.data.target_roles,
-              location: prefResult.data.location,
-              remotePreference: prefResult.data.remote_preference,
-              jobType: prefResult.data.job_type,
-              experienceLevel: prefResult.data.experience_level,
-              additionalNotes: prefResult.data.additional_notes,
+              targetRoles: allRoleNames.length > 0 ? allRoleNames.join(", ") : null,
+              location: allLocationNames.length > 0 ? allLocationNames.join(", ") : null,
+              workArrangement: prefs.work_arrangement,
+              jobType: prefs.job_type,
+              experienceLevel: prefs.experience_level,
+              additionalNotes: prefs.additional_notes,
             }
           : null
+      );
+      setPreferencesComplete(
+        isPreferencesComplete({
+          countryOfResidence: profile.country_of_residence,
+          hasUniversity: !!(profile.university_id || profile.custom_university),
+          hasMajor: !!(profile.major_id || profile.custom_major),
+          hasTargetRole: allRoleNames.length > 0,
+          workArrangement: prefs?.work_arrangement ?? null,
+          jobType: prefs?.job_type ?? null,
+          experienceLevel: prefs?.experience_level ?? null,
+          hasLocation: allLocationNames.length > 0,
+        })
       );
 
       const activeCv = cvResult.data;
@@ -222,6 +271,7 @@ function DashboardPageContent() {
               <CvProfileSection
                 cv={cv}
                 preferences={preferences}
+                preferencesComplete={preferencesComplete}
                 taskStatus={taskStatus}
                 analysis={analysis}
                 onNavigateToPreferences={() => setActiveTab("preferences")}
