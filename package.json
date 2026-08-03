@@ -6,7 +6,10 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "seed:local": "node scripts/seed-local-automation-users.mjs",
+    "seed:local:dry-run": "node scripts/seed-local-automation-users.mjs --dry-run",
+    "seed:local:cleanup": "node scripts/seed-local-automation-users.mjs --cleanup"
   },
   "dependencies": {
     "@supabase/ssr": "^0.12.2",

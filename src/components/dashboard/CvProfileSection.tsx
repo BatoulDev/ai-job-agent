@@ -6,7 +6,6 @@ import CurrentCvCard, { type CvRecord } from "./cvProfile/CurrentCvCard";
 import AiCareerProfileSection from "./cvProfile/AiCareerProfileSection";
 import {
   deriveCvProfileState,
-  isPreferencesComplete,
   type RequestChangesPayload,
 } from "@/lib/cvAnalysis/profileState";
 import type { CvAnalysis } from "@/lib/cvAnalysis/types";
@@ -55,19 +54,21 @@ async function requestProfileChanges(
 export default function CvProfileSection({
   cv,
   preferences,
+  preferencesComplete,
   taskStatus,
   analysis,
   onNavigateToPreferences,
 }: {
   cv: CvRecord | null;
   preferences: PreferencesData | null;
+  preferencesComplete: boolean;
   taskStatus: AnalysisTaskStatus | null;
   analysis: CvAnalysis | null;
   onNavigateToPreferences: () => void;
 }) {
   const state = deriveCvProfileState({
     hasActiveCv: !!cv,
-    preferencesComplete: isPreferencesComplete(preferences),
+    preferencesComplete,
     task: taskStatus ? { status: taskStatus } : null,
     analysis: analysis
       ? {

@@ -32,6 +32,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
     }
 
+    // A known, expected validation outcome (Student is only available to
+    // Lebanon-based users — see create_payment_attempt in
+    // supabase/migrations/20260806090120_add_student_plan_residence_guard.sql),
+    // not an internal error — surface it distinctly (AGENTS.md §19:
+    // distinguish validation errors from unexpected errors).
+    if (error instanceof Error && error.message === "student_unavailable_outside_lebanon") {
+      return NextResponse.json({ error: "student_unavailable_outside_lebanon" }, { status: 422 });
+    }
+
     // Do not expose internal error details to the client (AGENTS.md §6/§19).
     console.error("Checkout attempt failed:", error);
     return NextResponse.json(

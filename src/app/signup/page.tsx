@@ -7,13 +7,17 @@ import AuthLayout from "@/components/auth/AuthLayout";
 import AuthCard from "@/components/auth/AuthCard";
 import FormField from "@/components/auth/FormField";
 import { createClient } from "@/lib/supabase/client";
+import { isSafeRedirectPath } from "@/lib/safeRedirect";
 
 const UPLOAD_CV_PATH = "/onboarding/upload-cv";
 const NEWS_PATH = "/news";
 const MIN_PASSWORD_LENGTH = 8;
 
 function getSignupDestination(next: string | null): string {
-  if (!next) return `${UPLOAD_CV_PATH}?gift=1`;
+  // Reject anything that isn't a safe same-origin relative path up front
+  // (including a bare "//evil.com", which the old `!next` check alone let
+  // through unchecked below) before ever considering returning it verbatim.
+  if (!isSafeRedirectPath(next)) return `${UPLOAD_CV_PATH}?gift=1`;
 
   const [path, query = ""] = next.split("?");
 

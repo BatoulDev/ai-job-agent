@@ -1,20 +1,30 @@
 #!/usr/bin/env node
 // scripts/seed-local-automation-users.mjs
 //
-// Creates three fictional local-dev test users (Maya/free, Karim/student,
-// Lina/pro) with a complete profile, CV upload, job preferences, an
-// active subscription, and one pending analysis task each — everything
-// the Phase 4 CV-analysis worker will eventually need, and nothing it
-// hasn't earned yet (no fake AI results, no fake payments).
+// Creates four fictional local-dev test users — Maya/free (Lebanon),
+// Karim/student (Lebanon), Lina/pro (Lebanon), and Zain/pro (international,
+// Jordan, remote-only) — covering the country-of-residence/plan
+// eligibility rules added in supabase/migrations/20260806090090_enforce_
+// job_preferences_eligibility_trigger.sql. Each fixture gets a complete
+// profile (country, university/major reference or custom values), an
+// active subscription, job preferences (work arrangement, job-market
+// coverage where eligible, target roles, locations), and — where a real
+// local CV file exists — a CV upload and one pending analysis task.
+// Nothing is fabricated: Zain has no local CV fixture file, so no CV or
+// analysis task is created for him (see FIXTURES below).
 //
 // LOCAL DEVELOPMENT ONLY. Refuses to run unless NEXT_PUBLIC_SUPABASE_URL
 // resolves to 127.0.0.1/localhost AND the connected database's
 // public.plans table matches this project's canonical catalog exactly.
 //
-// Usage (run from the repo root):
+// Usage (run from the repo root, or via the package.json scripts below):
 //   node scripts/seed-local-automation-users.mjs             # seed (safe to rerun)
 //   node scripts/seed-local-automation-users.mjs --dry-run   # print the plan, write nothing
-//   node scripts/seed-local-automation-users.mjs --cleanup   # remove ONLY these 3 fixture users
+//   node scripts/seed-local-automation-users.mjs --cleanup   # remove ONLY these 4 fixture users
+//
+//   npm run seed:local             # same as plain seed
+//   npm run seed:local:dry-run
+//   npm run seed:local:cleanup
 //
 // Requires (in .env.local, never committed — see .env.example):
 //   NEXT_PUBLIC_SUPABASE_URL, SUPABASE_SECRET_KEY, LOCAL_SEED_USER_PASSWORD
@@ -157,23 +167,38 @@ const DOCX_MIME =
   "application/vnd.openxmlformats-officedocument.wordprocessingml.document";
 
 // ---------------------------------------------------------------------
-// Fixture data. CV facts (university, major, program dates) were read
-// directly from each attached .docx's real text content, not guessed —
-// see the final report for how they were extracted.
-// ---------------------------------------------------------------------
+// Fixture data. Maya/Karim/Lina's CV facts (university, major, program
+// dates) were read directly from each attached .docx's real text content,
+// not guessed — see the final report for how they were extracted. Their
+// identities, CVs, and notes are unchanged from the original three
+// fixtures. Zain is a new, clearly-fictional fourth fixture added to
+// cover the international/Pro/Remote-only eligibility path introduced by
+// the country-of-residence work — there is no local CV fixture file for
+// him, so cvFile is null and no CV/analysis-task rows are created (see
+// ensureCv/seedFixture below, which honor that instead of fabricating a
+// CV upload).
+//
+// university/major are now expressed as reference-table ids
+// (universityId/majorId, matching public.universities/public.majors)
+// where a real match exists, or a custom free-text value
+// (customUniversity/customMajor) otherwise — mirroring exactly what the
+// onboarding preferences UI itself would save. Likewise, targetRoleIds/
+// locationIds reference public.target_roles/public.locations, with
+// customTargetRoles/customLocations for anything without a clean
+// reference match (never inventing a role/location name that isn't
+// either a real reference row or the person's own original free text).
 const FIXTURES = [
   {
     email: "maya.haddad@test.local",
     fullName: "Maya Haddad",
-    university: "Lebanese International University",
-    major: "Marketing",
+    countryOfResidence: "LB",
+    universityId: "lebanese-international-university",
+    majorId: "marketing",
     planCode: "free",
     cvFile: "01_Maya_Haddad_Marketing_CV.docx",
     preferences: {
-      target_roles:
-        "Junior Digital Marketing Specialist, Social Media Coordinator, Content Marketing Assistant",
-      location: "Beirut, Lebanon (also open to Remote)",
-      remote_preference: "hybrid",
+      work_arrangement: "hybrid",
+      job_market_coverage: null, // Free plan never gets Pro-only coverage.
       job_type: "internship",
       experience_level: "entry-level",
       additional_notes:
@@ -184,18 +209,26 @@ const FIXTURES = [
         "Not open to relocation outside Lebanon. Minimum match threshold: 80. " +
         "Job alerts: enabled, at the cadence permitted by the Free plan.",
     },
+    targetRoleIds: ["digital-marketing-specialist", "social-media-specialist"],
+    customTargetRoles: ["Content Marketing Assistant"],
+    locationIds: ["beirut"],
+    customLocations: [],
   },
   {
     email: "karim.nassar@test.local",
     fullName: "Karim Nassar",
-    university: "Lebanese University",
-    major: "Computer Science",
+    countryOfResidence: "LB",
+    universityId: "lebanese-university",
+    majorId: "computer-science",
     planCode: "student",
     cvFile: "02_Karim_Nassar_Computer_Science_CV.docx",
     preferences: {
-      target_roles: "Junior Full-Stack Developer, Frontend Developer, Junior Software Engineer",
-      location: "Beirut, Lebanon (also open to Remote MENA)",
-      remote_preference: "remote",
+      work_arrangement: "remote",
+      // Student is never eligible for job_market_coverage regardless of
+      // work arrangement (enforce_job_preferences_eligibility_trigger
+      // rejects it) — deliberately null here, not "remote_mena", even
+      // though his own notes below mention MENA interest.
+      job_market_coverage: null,
       job_type: "full-time",
       experience_level: "entry-level",
       additional_notes:
@@ -204,21 +237,30 @@ const FIXTURES = [
         "Skills/keywords: TypeScript, JavaScript, React, Next.js, Node.js, Python, SQL, PostgreSQL, Supabase, Git. " +
         "Languages: Arabic (native), English (professional), French (basic). " +
         "Open to relocation within Lebanon; not international relocation by default. Minimum match threshold: 80. " +
+        "Interested in MENA-wide remote roles, though Student plan currently covers the Lebanon market only. " +
         "Job alerts: enabled, at the cadence permitted by the Student plan.",
     },
+    targetRoleIds: ["full-stack-developer", "frontend-developer", "software-engineer"],
+    customTargetRoles: [],
+    // Remote — no physical location required or shown.
+    locationIds: [],
+    customLocations: [],
   },
   {
     email: "lina.mansour@test.local",
     fullName: "Lina Mansour",
-    university: "Holy Spirit University of Kaslik",
-    major: "Business Administration",
+    countryOfResidence: "LB",
+    universityId: "holy-spirit-university-of-kaslik",
+    majorId: "business-administration",
     planCode: "pro",
     cvFile: "03_Lina_Mansour_Business_Administration_CV.docx",
     preferences: {
-      target_roles:
-        "Operations Coordinator, Customer Success Associate, Junior Project Coordinator, Administrative Coordinator",
-      location: "Beirut / Jounieh / Mount Lebanon (also open to Remote MENA)",
-      remote_preference: "hybrid",
+      // Flexible (not just hybrid) matches her own notes ("also open to
+      // remote and on-site work modes") and demonstrates the Lebanon +
+      // Pro + Flexible combination: both job-market coverage AND
+      // preferred physical locations apply at once.
+      work_arrangement: "flexible",
+      job_market_coverage: "remote_mena", // matches her original "also open to Remote MENA" note.
       job_type: "full-time",
       experience_level: "entry-level",
       additional_notes:
@@ -229,6 +271,40 @@ const FIXTURES = [
         "Open to relocation within Lebanon. Minimum match threshold: 80. " +
         "Job alerts: enabled, at the cadence permitted by the Pro plan.",
     },
+    targetRoleIds: ["operations-coordinator", "project-coordinator"],
+    customTargetRoles: ["Customer Success Associate", "Administrative Coordinator"],
+    locationIds: ["beirut", "jounieh", "mount-lebanon"],
+    customLocations: [],
+  },
+  {
+    email: "zain.khalil@test.local",
+    fullName: "Zain Khalil",
+    countryOfResidence: "JO", // Jordan — international, non-Lebanon.
+    universityId: null,
+    customUniversity: "University of Jordan", // no matching reference row — legitimate "Other university" case.
+    majorId: "finance",
+    planCode: "pro",
+    cvFile: null, // No real local CV fixture file exists for this persona — no CV/analysis task is created.
+    preferences: {
+      // International residents are restricted to Remote by
+      // enforce_job_preferences_eligibility_trigger — this is the only
+      // legal value for him, enforced server-side, not just by this seed.
+      work_arrangement: "remote",
+      // job_market_coverage is a Lebanon-Pro-only concept — always null
+      // for a non-Lebanon resident, even on Pro.
+      job_market_coverage: null,
+      job_type: "full-time",
+      experience_level: "entry-level",
+      additional_notes:
+        "International fixture (Jordan) — no local CV file on hand, so this account has no CV or analysis task. " +
+        "Exists to exercise the Pro + non-Lebanon + Remote-only eligibility path: on-site/hybrid roles outside " +
+        "Lebanon are not supported yet, and only remote opportunities that accept applicants based in Jordan apply.",
+    },
+    targetRoleIds: ["business-analyst", "financial-analyst"],
+    customTargetRoles: [],
+    // International — physical locations are not offered/required.
+    locationIds: [],
+    customLocations: [],
   },
 ];
 
@@ -278,27 +354,39 @@ async function ensureAuthUser(fixture) {
 
 async function ensureProfile(userId, fixture) {
   if (userId === DRY_RUN_ID) {
-    console.log(`  [profiles] would upsert university/major/onboarding_completed_at (new user — nothing to check yet)`);
+    console.log(`  [profiles] would upsert country_of_residence/university/major/onboarding_completed_at (new user — nothing to check yet)`);
     return;
   }
   if (isDryRun) {
-    console.log(`  [profiles] would upsert university/major/onboarding_completed_at`);
+    console.log(`  [profiles] would upsert country_of_residence/university/major/onboarding_completed_at`);
     return;
   }
+  // university/major here are the new reference-table-backed columns —
+  // the legacy free-text profiles.university/major columns are frozen
+  // (see supabase/migrations/20260806090050_extend_profiles_residence_and_references.sql)
+  // and intentionally left untouched by new code, including this script.
   const { error } = await supabase
     .from("profiles")
     .update({
       full_name: fixture.fullName,
-      university: fixture.university,
-      major: fixture.major,
+      country_of_residence: fixture.countryOfResidence,
+      university_id: fixture.universityId ?? null,
+      custom_university: fixture.universityId ? null : (fixture.customUniversity ?? null),
+      major_id: fixture.majorId ?? null,
+      custom_major: fixture.majorId ? null : (fixture.customMajor ?? null),
       onboarding_completed_at: new Date().toISOString(),
     })
     .eq("id", userId);
   if (error) fail(`Failed to update profile for ${fixture.email}: ${error.message}`);
-  console.log(`  [profiles] updated`);
+  console.log(`  [profiles] updated (country=${fixture.countryOfResidence})`);
 }
 
 async function ensureCv(userId, fixture) {
+  if (!fixture.cvFile) {
+    console.log(`  [cvs] skipped — no local CV fixture file for this persona (by design, not a fake upload)`);
+    return { id: null, storagePath: null };
+  }
+
   const docxPath = path.join(CV_DIR, fixture.cvFile);
   if (!existsSync(docxPath)) {
     fail(`Fixture CV not found: ${docxPath}`);
@@ -367,20 +455,73 @@ async function ensureCv(userId, fixture) {
   return { id: cvRow.id, storagePath };
 }
 
+// Mirrors what public.save_job_preferences(...) does — upsert the scalar
+// row, then replace both join tables' rows — but via direct service-role
+// table writes instead of the RPC itself. The RPC is `security invoker`
+// (auth.uid()-based, by design — see supabase/migrations/20260806090100_create_save_job_preferences_rpc.sql),
+// so calling it from this service-role script would see a null auth.uid()
+// and fail "Not authenticated". Direct writes still go through
+// enforce_job_preferences_eligibility_trigger (triggers fire regardless
+// of role), so the same country/plan eligibility rules are enforced here
+// too — not bypassed, just reached via a different, equally valid path.
 async function ensurePreferences(userId, fixture) {
   if (userId === DRY_RUN_ID) {
-    console.log(`  [job_preferences] would upsert (new user — nothing to check yet)`);
+    console.log(`  [job_preferences] would upsert preferences + target roles + locations (new user — nothing to check yet)`);
     return;
   }
   if (isDryRun) {
-    console.log(`  [job_preferences] would upsert`);
+    console.log(`  [job_preferences] would upsert preferences + target roles + locations`);
     return;
   }
-  const { error } = await supabase
+
+  const { data: prefRow, error: prefError } = await supabase
     .from("job_preferences")
-    .upsert({ user_id: userId, ...fixture.preferences }, { onConflict: "user_id" });
-  if (error) fail(`Failed to upsert job_preferences for ${fixture.email}: ${error.message}`);
-  console.log(`  [job_preferences] upserted`);
+    .upsert(
+      {
+        user_id: userId,
+        work_arrangement: fixture.preferences.work_arrangement,
+        job_market_coverage: fixture.preferences.job_market_coverage ?? null,
+        job_type: fixture.preferences.job_type,
+        experience_level: fixture.preferences.experience_level,
+        additional_notes: fixture.preferences.additional_notes ?? null,
+        custom_target_roles: fixture.customTargetRoles ?? [],
+        custom_locations: fixture.customLocations ?? [],
+      },
+      { onConflict: "user_id" }
+    )
+    .select("id")
+    .single();
+  if (prefError) fail(`Failed to upsert job_preferences for ${fixture.email}: ${prefError.message}`);
+
+  const { error: deleteRolesError } = await supabase
+    .from("job_preference_target_roles")
+    .delete()
+    .eq("job_preference_id", prefRow.id);
+  if (deleteRolesError) fail(`Failed to clear target roles for ${fixture.email}: ${deleteRolesError.message}`);
+
+  if (fixture.targetRoleIds?.length) {
+    const { error: insertRolesError } = await supabase
+      .from("job_preference_target_roles")
+      .insert(fixture.targetRoleIds.map((target_role_id) => ({ job_preference_id: prefRow.id, target_role_id })));
+    if (insertRolesError) fail(`Failed to insert target roles for ${fixture.email}: ${insertRolesError.message}`);
+  }
+
+  const { error: deleteLocationsError } = await supabase
+    .from("job_preference_locations")
+    .delete()
+    .eq("job_preference_id", prefRow.id);
+  if (deleteLocationsError) fail(`Failed to clear locations for ${fixture.email}: ${deleteLocationsError.message}`);
+
+  if (fixture.locationIds?.length) {
+    const { error: insertLocationsError } = await supabase
+      .from("job_preference_locations")
+      .insert(fixture.locationIds.map((location_id) => ({ job_preference_id: prefRow.id, location_id })));
+    if (insertLocationsError) fail(`Failed to insert locations for ${fixture.email}: ${insertLocationsError.message}`);
+  }
+
+  console.log(
+    `  [job_preferences] upserted (${fixture.targetRoleIds?.length ?? 0} reference role(s) + ${fixture.customTargetRoles?.length ?? 0} custom, ${fixture.locationIds?.length ?? 0} reference location(s) + ${fixture.customLocations?.length ?? 0} custom)`
+  );
 }
 
 async function ensureSubscription(userId, fixture) {
@@ -467,11 +608,19 @@ async function ensureAnalysisTask(userId, cvId, fixture) {
 async function seedFixture(fixture) {
   console.log(`\n=== ${fixture.fullName} (${fixture.email}) — ${fixture.planCode} ===`);
   const user = await ensureAuthUser(fixture);
+  // Profile and subscription must both be in place BEFORE preferences are
+  // written: enforce_job_preferences_eligibility_trigger reads the
+  // caller's current country_of_residence and plan_code at write time
+  // (e.g. Lina's job_market_coverage requires her subscription to already
+  // be "pro", not still the default "free").
   await ensureProfile(user.id, fixture);
-  const cv = await ensureCv(user.id, fixture);
-  await ensurePreferences(user.id, fixture);
   await ensureSubscription(user.id, fixture);
-  const task = await ensureAnalysisTask(user.id, cv.id, fixture);
+  await ensurePreferences(user.id, fixture);
+  const cv = await ensureCv(user.id, fixture);
+  const task = cv.id ? await ensureAnalysisTask(user.id, cv.id, fixture) : null;
+  if (!cv.id && !isDryRun) {
+    console.log(`  [analysis_tasks] skipped — no CV for this fixture`);
+  }
   return { userId: user.id, cvId: cv.id, taskId: task?.id ?? null };
 }
 
@@ -497,8 +646,10 @@ async function cleanupFixture(fixture) {
   }
 
   // profiles/cvs/job_preferences/subscriptions/analysis_tasks all cascade
-  // via "on delete cascade" FKs to auth.users(id) — deleting the auth
-  // user is sufficient for everything else.
+  // via "on delete cascade" FKs to auth.users(id), and
+  // job_preference_target_roles/job_preference_locations cascade in turn
+  // from job_preferences(id) — deleting the auth user is sufficient for
+  // everything else.
   const { error: deleteError } = await supabase.auth.admin.deleteUser(user.id);
   if (deleteError) fail(`Failed to delete auth user ${fixture.email}: ${deleteError.message}`);
   console.log(`  [cleanup] deleted auth user ${fixture.email} (${user.id}) and all owned rows`);
@@ -515,7 +666,7 @@ async function main() {
       console.log(`\n=== cleanup: ${fixture.fullName} (${fixture.email}) ===`);
       await cleanupFixture(fixture);
     }
-    console.log("\nCleanup complete. Only the 3 fixture users above were touched.");
+    console.log(`\nCleanup complete. Only the ${FIXTURES.length} fixture users above were touched.`);
     return;
   }
 
@@ -526,9 +677,11 @@ async function main() {
 
   console.log("\n=== Summary ===");
   for (const r of results) {
-    const fmt = (v) => v ?? "(dry-run, not yet created)";
+    const fmtUser = (v) => v ?? "(dry-run, not yet created)";
+    const fmtCv = (v, fixture) =>
+      v ?? (fixture.cvFile ? "(dry-run, not yet created)" : "(none — no local CV fixture file)");
     console.log(
-      `${r.fixture.fullName.padEnd(14)} ${r.fixture.email.padEnd(26)} plan=${r.fixture.planCode.padEnd(8)} user_id=${fmt(r.userId)} cv_id=${fmt(r.cvId)} task_id=${fmt(r.taskId)}`
+      `${r.fixture.fullName.padEnd(14)} ${r.fixture.email.padEnd(26)} plan=${r.fixture.planCode.padEnd(8)} user_id=${fmtUser(r.userId)} cv_id=${fmtCv(r.cvId, r.fixture)} task_id=${fmtCv(r.taskId, r.fixture)}`
     );
   }
   console.log(

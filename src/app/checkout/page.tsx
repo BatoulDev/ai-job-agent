@@ -12,7 +12,7 @@ const PLAN_DISPLAY_NAMES: Record<PayablePlanCode, string> = {
 };
 
 interface CheckoutState {
-  status: "loading" | "error" | "not_available" | "ready";
+  status: "loading" | "error" | "not_available" | "ready" | "ineligible";
   message?: string;
 }
 
@@ -39,6 +39,17 @@ function CheckoutPageContent() {
           window.location.href = `/login?next=${encodeURIComponent(
             `/checkout?plan=${plan}`
           )}`;
+          return;
+        }
+
+        if (response.status === 422) {
+          const data = (await response.json().catch(() => null)) as { error?: string } | null;
+          if (!isMounted) return;
+          if (data?.error === "student_unavailable_outside_lebanon") {
+            setState({ status: "ineligible" });
+            return;
+          }
+          setState({ status: "error" });
           return;
         }
 
@@ -89,6 +100,26 @@ function CheckoutPageContent() {
               <p className="mt-3 text-sm leading-relaxed text-muted">
                 The plan in this link isn&apos;t recognized. Please choose a
                 plan again from pricing.
+              </p>
+              <Link
+                href="/#pricing"
+                className="mt-6 inline-block rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-colors hover:bg-primary-dark"
+              >
+                Back to pricing
+              </Link>
+            </>
+          )}
+
+          {state.status === "ineligible" && (
+            <>
+              <h1 className="font-display text-xl font-semibold text-text">
+                Student plan isn&apos;t available for your account
+              </h1>
+              <p className="mt-3 text-sm leading-relaxed text-muted">
+                The Student plan is currently limited to users residing in
+                Lebanon. You can use the Pro plan instead for remote
+                opportunities available to applicants in your country — no
+                payment has been requested or taken.
               </p>
               <Link
                 href="/#pricing"

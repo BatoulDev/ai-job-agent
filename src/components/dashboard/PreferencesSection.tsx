@@ -3,7 +3,7 @@ import Link from "next/link";
 export interface PreferencesData {
   targetRoles: string | null;
   location: string | null;
-  remotePreference: string | null;
+  workArrangement: string | null;
   jobType: string | null;
   experienceLevel: string | null;
   additionalNotes: string | null;
@@ -19,7 +19,7 @@ export default function PreferencesSection({
   const items = [
     { label: "Target roles", value: preferences?.targetRoles },
     { label: "Preferred location", value: preferences?.location },
-    { label: "Remote preference", value: preferences?.remotePreference },
+    { label: "Work arrangement", value: preferences?.workArrangement },
     { label: "Job type", value: preferences?.jobType },
     { label: "Experience level", value: preferences?.experienceLevel },
   ];

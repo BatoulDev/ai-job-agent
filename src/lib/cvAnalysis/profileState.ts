@@ -58,20 +58,31 @@ export function deriveCvProfileState({
   return "analyzing";
 }
 
-// Matches job_preferences_experience_level_check's dependency on the same
-// three NOT NULL fields get_onboarding_readiness() checks server-side
-// (supabase/migrations/20260802090040_onboarding_readiness.sql) — kept in
-// sync deliberately, not reinvented.
-export function isPreferencesComplete(preferences: {
-  remotePreference: string | null;
+// Mirrors get_onboarding_readiness()'s v_preferences_complete computation
+// exactly (supabase/migrations/20260806090110_update_onboarding_readiness_reference_preferences.sql)
+// — kept in sync deliberately, not reinvented. A preferred location is
+// only required when workArrangement is onsite/hybrid.
+export function isPreferencesComplete(input: {
+  countryOfResidence: string | null;
+  hasUniversity: boolean;
+  hasMajor: boolean;
+  hasTargetRole: boolean;
+  workArrangement: string | null;
   jobType: string | null;
   experienceLevel: string | null;
+  hasLocation: boolean;
 } | null): boolean {
+  if (!input) return false;
+
   return !!(
-    preferences &&
-    preferences.remotePreference &&
-    preferences.jobType &&
-    preferences.experienceLevel
+    input.countryOfResidence &&
+    input.hasUniversity &&
+    input.hasMajor &&
+    input.hasTargetRole &&
+    input.workArrangement &&
+    input.jobType &&
+    input.experienceLevel &&
+    (!(input.workArrangement === "onsite" || input.workArrangement === "hybrid") || input.hasLocation)
   );
 }
 
