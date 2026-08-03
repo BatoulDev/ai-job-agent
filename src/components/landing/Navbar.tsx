@@ -56,14 +56,12 @@ export default function Navbar() {
               {link.label}
             </Link>
           ))}
-          {showLoggedInUI && (
-            <Link
-              href="/news"
-              className="text-sm font-medium text-muted transition-colors hover:text-text"
-            >
-              AI/Tech News
-            </Link>
-          )}
+          <Link
+            href="/news"
+            className="text-sm font-medium text-muted transition-colors hover:text-text"
+          >
+            AI/Tech News
+          </Link>
         </div>
 
         <div className="hidden items-center gap-4 md:flex">
@@ -119,15 +117,13 @@ export default function Navbar() {
                 {link.label}
               </Link>
             ))}
-            {showLoggedInUI && (
-              <Link
-                href="/news"
-                onClick={() => setIsOpen(false)}
-                className="text-sm font-medium text-muted hover:text-text"
-              >
-                AI/Tech News
-              </Link>
-            )}
+            <Link
+              href="/news"
+              onClick={() => setIsOpen(false)}
+              className="text-sm font-medium text-muted hover:text-text"
+            >
+              AI/Tech News
+            </Link>
 
             {showLoggedInUI && (
               <div className="mt-2 flex flex-col gap-3 border-t border-slate-200/70 pt-4">
