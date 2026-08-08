@@ -1,4 +1,4 @@
-import { createPublicClient } from "@/lib/supabase/publicClient";
+import { createNewsClient } from "@/lib/supabase/newsClient";
 import type { DailyNewsBrief } from "./types";
 
 const LATEST_BRIEFS_LIMIT = 5;
@@ -45,16 +45,17 @@ export type DailyNewsBriefsResult =
 // Component whose route sets `export const revalidate`, so this only runs
 // during background ISR regeneration — never once per visitor.
 //
-// Never throws: a query/network failure (e.g. an unreachable Supabase URL
-// during a build, or a transient outage during ISR regeneration) must not
-// crash the whole page render — that would fail the build outright, or
-// (with no prior cache) leave nothing for ISR to serve. Callers must
-// render `status: "unavailable"` distinctly from a genuine zero-briefs
-// result, never conflate the two.
+// Never throws: a missing NEWS_SUPABASE_URL/NEWS_SUPABASE_ANON_KEY (e.g. in
+// CI, which never configures the external news project), an unreachable
+// Supabase URL during a build, or a transient outage during ISR
+// regeneration must not crash the whole page render — that would fail the
+// build outright, or (with no prior cache) leave nothing for ISR to serve.
+// Callers must render `status: "unavailable"` distinctly from a genuine
+// zero-briefs result, never conflate the two.
 export async function getLatestDailyNewsBriefs(): Promise<DailyNewsBriefsResult> {
-  const supabase = createPublicClient();
-
   try {
+    const supabase = createNewsClient();
+
     const { data, error } = await supabase
       .from("daily_news_briefs")
       .select("id, brief_date, daily_news_items(id, headline, summary, position)")
