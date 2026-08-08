@@ -1,0 +1,17 @@
+-- audit_events was deliberately created with no delete grant for anyone,
+-- including service_role, reinforcing "append-only" at the grant layer.
+-- In practice this means even a legitimate future retention/archival job
+-- (audit logs should not be kept forever with no defined reason — AGENTS.md
+-- §33) would have no way to purge old rows, and local test runs have no
+-- way to clean up their own fixture audit events (visible today as ~90
+-- harmless, non-sensitive rows accumulated in the local dev database from
+-- this mission's test suite — event_type/entity_id/actor_type only, no
+-- CV content, no PII, and user_id already nulled via "on delete set null"
+-- once each fixture user was removed).
+--
+-- Grants delete to service_role only — ordinary users still have no
+-- insert/update/delete grant on this table at all, so "ordinary users
+-- cannot forge or destroy trusted audit history" is unaffected. This does
+-- not implement a retention job (out of scope for this mission); it only
+-- makes one possible in the future without another migration.
+grant delete on public.audit_events to service_role;

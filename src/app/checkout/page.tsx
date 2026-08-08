@@ -2,7 +2,7 @@
 
 import { Suspense, useEffect, useState } from "react";
 import Link from "next/link";
-import { useSearchParams } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
 import { isPayablePlanCode, type PayablePlanCode } from "@/lib/plans/types";
 
@@ -17,6 +17,7 @@ interface CheckoutState {
 }
 
 function CheckoutPageContent() {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const planParam = searchParams.get("plan");
   const isValidPlan = isPayablePlanCode(planParam);
@@ -36,9 +37,9 @@ function CheckoutPageContent() {
         });
 
         if (response.status === 401) {
-          window.location.href = `/login?next=${encodeURIComponent(
-            `/checkout?plan=${plan}`
-          )}`;
+          router.push(
+            `/login?next=${encodeURIComponent(`/checkout?plan=${plan}`)}`
+          );
           return;
         }
 
@@ -76,7 +77,7 @@ function CheckoutPageContent() {
     return () => {
       isMounted = false;
     };
-  }, [planParam]);
+  }, [planParam, router]);
 
   const planName = isPayablePlanCode(planParam) ? PLAN_DISPLAY_NAMES[planParam] : null;
 

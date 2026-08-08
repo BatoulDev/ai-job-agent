@@ -402,8 +402,9 @@ async function ensureCv(userId, fixture) {
 
   const { data: existingCv, error: existingCvError } = await supabase
     .from("cvs")
-    .select("id, file_name, storage_path")
+    .select("id, file_name, storage_path, version")
     .eq("user_id", userId)
+    .eq("is_active", true)
     .maybeSingle();
   if (existingCvError) fail(`Failed to read existing cvs row for ${fixture.email}: ${existingCvError.message}`);
 
@@ -426,25 +427,45 @@ async function ensureCv(userId, fixture) {
 
   const previousStoragePath = existingCv?.storage_path ?? null;
 
+  // cvs_user_id_key (the plain unique(user_id) constraint .upsert() used to
+  // target) no longer exists — see
+  // supabase/migrations/20260809090010_resolve_cvs_versioning_conflict.sql.
+  // The sanctioned write path is now replace_cv(), but that RPC derives
+  // auth.uid() from a real user session, which this service-role script
+  // has none of. Mirror exactly what replace_cv() does instead, using
+  // direct service-role table writes (service_role already has full CRUD
+  // on cvs, unaffected by the authenticated-role grant restriction that
+  // migration also added): deactivate any existing active row, then insert
+  // the new one as the next version.
+  if (existingCv) {
+    const { error: deactivateError } = await supabase
+      .from("cvs")
+      .update({ is_active: false, superseded_at: new Date().toISOString() })
+      .eq("id", existingCv.id);
+    if (deactivateError) {
+      await supabase.storage.from(CV_BUCKET).remove([storagePath]);
+      fail(`Failed to deactivate previous cvs row for ${fixture.email}: ${deactivateError.message}`);
+    }
+  }
+
   const { data: cvRow, error: cvError } = await supabase
     .from("cvs")
-    .upsert(
-      {
-        user_id: userId,
-        storage_path: storagePath,
-        file_name: fixture.cvFile,
-        file_size_bytes: fileSizeBytes,
-        mime_type: DOCX_MIME,
-        status: "uploaded",
-      },
-      { onConflict: "user_id" }
-    )
+    .insert({
+      user_id: userId,
+      storage_path: storagePath,
+      file_name: fixture.cvFile,
+      file_size_bytes: fileSizeBytes,
+      mime_type: DOCX_MIME,
+      status: "uploaded",
+      version: (existingCv?.version ?? 0) + 1,
+      is_active: true,
+    })
     .select("id")
     .single();
 
   if (cvError) {
     await supabase.storage.from(CV_BUCKET).remove([storagePath]);
-    fail(`Failed to upsert cvs row for ${fixture.email}: ${cvError.message}`);
+    fail(`Failed to insert cvs row for ${fixture.email}: ${cvError.message}`);
   }
 
   if (previousStoragePath && previousStoragePath !== storagePath) {
