@@ -1,15 +1,15 @@
 import type { ExperienceLevel } from "@/lib/experienceLevel";
 
-// Mirrors supabase/migrations/20260804090010_create_cv_analyses.sql and
-// supabase/migrations/20260805090030_extend_cv_analyses_lifecycle.sql
-// exactly. Foundation types only — nothing here is wired to a
-// data-fetching route or rendered UI yet (no backend endpoint exposes
-// cv_analyses to the dashboard in this phase). Kept here, manually
-// maintained, following this project's existing convention (see
-// src/lib/plans/types.ts) — there is no generated Supabase types file in
-// this project. If one is introduced later via
-// `npx supabase gen types typescript --local`, these interfaces should be
-// replaced by (or checked against) the generated `public.cv_analyses` Row type.
+// Mirrors supabase/migrations/20260804090010_create_cv_analyses.sql,
+// supabase/migrations/20260805090030_extend_cv_analyses_lifecycle.sql, and
+// supabase/migrations/20260809090100_add_cv_analyses_review_confirm.sql
+// exactly. Wired to a real backend now via src/lib/cvAnalysis/review.ts
+// (GET/review/confirm — see src/app/api/cv-analysis/*). Kept here,
+// manually maintained, following this project's existing convention (see
+// src/lib/plans/types.ts). A generated types file now also exists
+// (src/lib/supabase/database.types.ts, `npm run db:types`) — check this
+// interface against its `public.cv_analyses` Row type after any future
+// schema change to cv_analyses.
 //
 // Three independent lifecycle dimensions — never conflate them:
 //   status              — processing lifecycle (did the extraction/AI run succeed?)
@@ -22,7 +22,14 @@ import type { ExperienceLevel } from "@/lib/experienceLevel";
 // not imply each other.
 
 export type CvAnalysisStatus = "processing" | "completed" | "failed";
-export type CvAnalysisReviewStatus = "pending_review" | "approved" | "changes_requested";
+// 'superseded' added by supabase/migrations/20260809090100_add_cv_analyses_review_confirm.sql:
+// cv_analyses_one_approved_per_user allows at most one row with
+// review_status = 'approved' per user, ever — when a newer analysis is
+// approved (or the CV it was based on is replaced), the previous row's
+// review_status moves to 'superseded' rather than staying 'approved'.
+// approved_at is the permanent historical record of when it was approved,
+// independent of the current review_status value.
+export type CvAnalysisReviewStatus = "pending_review" | "approved" | "changes_requested" | "superseded";
 export type CvAnalysisRecommendationsState = "current" | "stale" | "superseded";
 
 // cv_facts — extracted only from the CV. Never invented or altered by

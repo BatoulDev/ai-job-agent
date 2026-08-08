@@ -108,13 +108,16 @@ function UploadCvPageContent() {
       return;
     }
 
-    // Read any existing CV row so its storage object can be cleaned up
-    // after a successful replace — never before, so a failed upload never
-    // leaves the user without a working CV.
+    // Read the current active CV row (if any) so its storage object can be
+    // cleaned up after a successful replace — never before, so a failed
+    // upload never leaves the user without a working CV. Scoped to
+    // is_active: a user may now have historical (inactive) cvs rows too
+    // (see replace_cv()), so this must not match more than one row.
     const { data: existingCv } = await supabase
       .from("cvs")
       .select("storage_path")
       .eq("user_id", user.id)
+      .eq("is_active", true)
       .maybeSingle();
 
     const storagePath = `${user.id}/${crypto.randomUUID()}-${sanitizeFileName(
@@ -134,17 +137,18 @@ function UploadCvPageContent() {
       return;
     }
 
-    const { error: dbError } = await supabase.from("cvs").upsert(
-      {
-        user_id: user.id,
-        storage_path: storagePath,
-        file_name: selectedFile.name,
-        file_size_bytes: selectedFile.size,
-        mime_type: selectedFile.type,
-        status: "uploaded",
-      },
-      { onConflict: "user_id" }
-    );
+    // replace_cv() is the sanctioned write path (see
+    // supabase/migrations/20260809090010_resolve_cvs_versioning_conflict.sql):
+    // it atomically deactivates any existing active CV and inserts this one
+    // as the new active version, deriving the owning user from the session
+    // server-side rather than trusting a client-supplied user_id. Direct
+    // client inserts/updates on cvs are no longer permitted.
+    const { error: dbError } = await supabase.rpc("replace_cv", {
+      p_storage_path: storagePath,
+      p_file_name: selectedFile.name,
+      p_file_size_bytes: selectedFile.size,
+      p_mime_type: selectedFile.type,
+    });
 
     if (dbError) {
       const { error: cleanupError } = await supabase.storage
