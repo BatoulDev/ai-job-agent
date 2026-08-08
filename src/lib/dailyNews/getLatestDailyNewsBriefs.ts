@@ -1,4 +1,4 @@
-import { createPublicClient } from "@/lib/supabase/publicClient";
+import { createNewsClient } from "@/lib/supabase/newsClient";
 import type { DailyNewsBrief } from "./types";
 
 const LATEST_BRIEFS_LIMIT = 5;
@@ -52,7 +52,7 @@ export type DailyNewsBriefsResult =
 // render `status: "unavailable"` distinctly from a genuine zero-briefs
 // result, never conflate the two.
 export async function getLatestDailyNewsBriefs(): Promise<DailyNewsBriefsResult> {
-  const supabase = createPublicClient();
+  const supabase = createNewsClient();
 
   try {
     const { data, error } = await supabase
