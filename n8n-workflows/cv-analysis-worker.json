@@ -182,7 +182,7 @@
       "continueOnFail": true,
       "parameters": {
         "method": "GET",
-        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/job_preferences?user_id=eq.{{ $('Validate CV Context').item.json.userId }}&limit=1",
+        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/job_preferences?user_id=eq.{{ $('Validate CV Context').item.json.userId }}&select=id,user_id,work_arrangement,job_market_coverage,job_type,experience_level,additional_notes,custom_target_roles,custom_locations,version&limit=1",
         "authentication": "predefinedCredentialType",
         "nodeCredentialType": "supabaseApi",
         "sendHeaders": true,
@@ -197,14 +197,71 @@
       }
     },
     {
+      "id": "load-preference-roles",
+      "name": "Load Preference Roles",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2420, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/job_preference_target_roles?job_preference_id=eq.{{ ($('Load Preferences').item.json[0] || {}).id || 'none' }}&select=target_roles(name)&limit=20",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "load-preference-locations",
+      "name": "Load Preference Locations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2640, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $vars.SUPABASE_URL }}/rest/v1/job_preference_locations?job_preference_id=eq.{{ ($('Load Preferences').item.json[0] || {}).id || 'none' }}&select=locations(name)&limit=20",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "merge-preference-data",
+      "name": "Merge Preference Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [2860, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "jsCode": "const taskCtx  = $('Validate CV Context').item.json;\nconst prefsArr = $('Load Preferences').item.json;\nconst rolesArr = $('Load Preference Roles').item.json;\nconst locsArr  = $input.item.json;\n\nconst prefsRow = Array.isArray(prefsArr) ? (prefsArr[0] || null) : null;\n\nif (prefsRow && prefsRow.user_id && prefsRow.user_id !== taskCtx.userId) {\n  throw new Error('PERMANENT: job_preferences user_id does not match task user_id');\n}\n\nconst joinRoleNames = Array.isArray(rolesArr)\n  ? rolesArr.map(r => r.target_roles?.name).filter(n => typeof n === 'string' && n.length > 0)\n  : [];\nconst customRoles = Array.isArray(prefsRow?.custom_target_roles)\n  ? prefsRow.custom_target_roles.filter(r => typeof r === 'string' && r.length > 0)\n  : [];\n\nconst joinLocNames = Array.isArray(locsArr)\n  ? locsArr.map(l => l.locations?.name).filter(n => typeof n === 'string' && n.length > 0)\n  : [];\nconst customLocs = Array.isArray(prefsRow?.custom_locations)\n  ? prefsRow.custom_locations.filter(l => typeof l === 'string' && l.length > 0)\n  : [];\n\nreturn [{\n  json: {\n    preferenceSnapshot: {\n      target_roles:        [...joinRoleNames, ...customRoles],\n      preferred_locations: [...joinLocNames,  ...customLocs],\n      work_arrangement:    prefsRow?.work_arrangement    || null,\n      job_market_coverage: prefsRow?.job_market_coverage || null,\n      job_type:            prefsRow?.job_type            || null,\n      experience_level:    prefsRow?.experience_level    || null,\n      additional_notes:    prefsRow?.additional_notes    || null,\n      preferences_version: typeof prefsRow?.version === 'number' ? prefsRow.version : null\n    }\n  }\n}];"
+      }
+    },
+    {
       "id": "build-openai-request",
       "name": "Build OpenAI Request",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2420, 0],
+      "position": [3080, 0],
       "continueOnFail": true,
       "parameters": {
-        "jsCode": "const taskCtx     = $('Validate CV Context').item.json;\nconst extractOut  = $('Extract PDF Text').item.json;\nconst prefsResult = $input.item.json;\n\nif (extractOut?.error) {\n  throw new Error('RETRYABLE: PDF extraction failed: ' + extractOut.error);\n}\nif (prefsResult?.error) {\n  throw new Error('RETRYABLE: Preferences load failed: ' + prefsResult.error);\n}\n\nconst cvText = extractOut?.text || '';\nif (!cvText.trim()) {\n  throw new Error('PERMANENT: PDF produced no extractable text (may be scanned/image-only)');\n}\n\nconst prefs = Array.isArray(prefsResult) ? (prefsResult[0] || {}) : (prefsResult || {});\n\nconst systemPrompt =\n  'You are an expert CV analyst. Extract structured professional information from ' +\n  'the CV text and generate a career profile informed by the job preferences.\\n\\n' +\n  'Return ONLY a valid JSON object with EXACTLY these fields. No markdown, no explanation.\\n\\n' +\n  '{\\n' +\n  '  \"professional_summary\": \"2-4 sentence plain-text summary, or null\",\\n' +\n  '  \"skills\": [\"skill1\", \"skill2\"],\\n' +\n  '  \"education\": [{\"institution\":\"\",\"degree\":\"\",\"field\":\"\",\"start_year\":null,\"end_year\":null}],\\n' +\n  '  \"work_experience\": [{\"company\":\"\",\"title\":\"\",\"start_date\":\"\",\"end_date\":\"\",\"description\":\"\"}],\\n' +\n  '  \"projects\": [{\"name\":\"\",\"description\":\"\",\"technologies\":[]}],\\n' +\n  '  \"certifications\": [{\"name\":\"\",\"issuer\":\"\",\"year\":null}],\\n' +\n  '  \"languages\": [{\"language\":\"\",\"level\":\"\"}],\\n' +\n  '  \"contact_info\": {\"linkedin\":null,\"github\":null,\"location\":null},\\n' +\n  '  \"profile_level\": \"junior\",\\n' +\n  '  \"recommended_roles\": [\"role1\"],\\n' +\n  '  \"strongest_areas\": [\"area1\"],\\n' +\n  '  \"career_recommendations\": [\"recommendation1\"],\\n' +\n  '  \"search_focus\": [\"focus1\"],\\n' +\n  '  \"development_areas\": [\"area1\"]\\n' +\n  '}\\n\\n' +\n  'Rules:\\n' +\n  '- Extract ONLY information present in the CV. Never invent details.\\n' +\n  '- profile_level MUST be exactly one of: internship, entry-level, junior, mid-level, senior, open-to-all\\n' +\n  '- contact_info: include only linkedin URL, github URL, and location (city/country). Never email or phone.\\n' +\n  '- Use [] for missing arrays, null for missing scalars.\\n' +\n  '- career_recommendations, search_focus, development_areas should reflect strengths vs preferences.';\n\nconst userMessage = 'JOB PREFERENCES:\\n' + JSON.stringify(prefs, null, 2) + '\\n\\nCV TEXT:\\n' + cvText;\n\nreturn [{\n  json: {\n    taskId:             taskCtx.taskId,\n    userId:             taskCtx.userId,\n    cvId:               taskCtx.cvId,\n    taskAttempt:        taskCtx.taskAttempt,\n    taskMaxAttempts:    taskCtx.taskMaxAttempts,\n    cvText:             cvText,\n    preferenceSnapshot: prefs,\n    openAIBody: {\n      model: 'gpt-4o',\n      response_format: { type: 'json_object' },\n      temperature: 0,\n      max_tokens: 4096,\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMessage }\n      ]\n    }\n  }\n}];"
+        "jsCode": "const taskCtx     = $('Validate CV Context').item.json;\nconst extractOut  = $('Extract PDF Text').item.json;\nconst mergedPrefs = $input.item.json;\n\nif (extractOut?.error) {\n  throw new Error('RETRYABLE: PDF extraction failed: ' + extractOut.error);\n}\n\nif (mergedPrefs?.error && String(mergedPrefs.error).includes('PERMANENT:')) {\n  throw new Error(mergedPrefs.error);\n}\n\nconst cvText = extractOut?.text || '';\nif (!cvText.trim()) {\n  throw new Error('PERMANENT: PDF produced no extractable text (may be scanned/image-only)');\n}\n\nconst preferenceSnapshot = mergedPrefs?.preferenceSnapshot || {\n  target_roles: [], preferred_locations: [], work_arrangement: null,\n  job_market_coverage: null, job_type: null, experience_level: null,\n  additional_notes: null, preferences_version: null\n};\n\nconst systemPrompt =\n  'You are an expert CV analyst. Extract structured professional information from ' +\n  'the CV text and generate a career profile informed by the job preferences.\\n\\n' +\n  'Return ONLY a valid JSON object with EXACTLY these fields. No markdown, no explanation.\\n\\n' +\n  '{\\n' +\n  '  \"professional_summary\": \"2-4 sentence plain-text summary, or null\",\\n' +\n  '  \"skills\": [\"skill1\", \"skill2\"],\\n' +\n  '  \"education\": [{\"institution\":\"\",\"degree\":\"\",\"field_of_study\":\"\",\"start_date\":\"\",\"end_date\":\"\"}],\\n' +\n  '  \"work_experience\": [{\"organization\":\"\",\"title\":\"\",\"start_date\":\"\",\"end_date\":\"\",\"highlights\":[\"point1\",\"point2\"]}],\\n' +\n  '  \"projects\": [{\"name\":\"\",\"description\":\"\",\"technologies\":[]}],\\n' +\n  '  \"certifications\": [{\"name\":\"\",\"issuer\":\"\",\"year\":null}],\\n' +\n  '  \"languages\": [{\"language\":\"\",\"proficiency\":\"\"}],\\n' +\n  '  \"contact_info\": {\"links\":[],\"location\":null},\\n' +\n  '  \"profile_level\": \"junior\",\\n' +\n  '  \"recommended_roles\": [\"role1\"],\\n' +\n  '  \"strongest_areas\": [\"area1\"],\\n' +\n  '  \"career_recommendations\": [\"recommendation1\"],\\n' +\n  '  \"search_focus\": [\"focus1\"],\\n' +\n  '  \"development_areas\": [\"area1\"]\\n' +\n  '}\\n\\n' +\n  'Field rules:\\n' +\n  '- Extract ONLY information present in the CV. Never invent details.\\n' +\n  '- profile_level MUST be exactly one of: internship, entry-level, junior, mid-level, senior, open-to-all\\n' +\n  '- education[].field_of_study: the subject/major studied, or empty string if unknown.\\n' +\n  '- education[].start_date / end_date: \"YYYY\" or \"YYYY-MM\" or empty string.\\n' +\n  '- work_experience[].organization: company or institution name.\\n' +\n  '- work_experience[].highlights: array of short bullet strings (not a single description string).\\n' +\n  '- languages[].proficiency: one of Native, Fluent, Advanced, Intermediate, Basic \\u2014 or empty string.\\n' +\n  '- contact_info.links: array of public profile URLs (LinkedIn, GitHub, portfolio). Never include email or phone.\\n' +\n  '- contact_info.location: city/country string or null.\\n' +\n  '- Use [] for missing arrays, null or empty string for missing scalars.\\n' +\n  '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and preferences.';\n\nconst userMessage = 'JOB PREFERENCES:\\n' + JSON.stringify(preferenceSnapshot, null, 2) + '\\n\\nCV TEXT:\\n' + cvText;\n\nreturn [{\n  json: {\n    taskId:             taskCtx.taskId,\n    userId:             taskCtx.userId,\n    cvId:               taskCtx.cvId,\n    taskAttempt:        taskCtx.taskAttempt,\n    taskMaxAttempts:    taskCtx.taskMaxAttempts,\n    cvText:             cvText,\n    preferenceSnapshot: preferenceSnapshot,\n    openAIBody: {\n      model: 'gpt-4o',\n      response_format: { type: 'json_object' },\n      temperature: 0,\n      max_tokens: 4096,\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMessage }\n      ]\n    }\n  }\n}];"
       }
     },
     {
@@ -212,7 +269,7 @@
       "name": "Call OpenAI",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [2640, 0],
+      "position": [3300, 0],
       "continueOnFail": true,
       "parameters": {
         "method": "POST",
@@ -241,10 +298,10 @@
       "name": "Parse AI Response",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [2860, 0],
+      "position": [3520, 0],
       "continueOnFail": true,
       "parameters": {
-        "jsCode": "const reqCtx     = $('Build OpenAI Request').item.json;\nconst aiResponse = $input.item.json;\n\nif (reqCtx?.error) {\n  throw new Error(reqCtx.error);\n}\nif (aiResponse?.error) {\n  throw new Error('RETRYABLE: OpenAI call failed: ' + aiResponse.error);\n}\n\nconst statusCode = aiResponse?.statusCode || 0;\nif (statusCode === 429) {\n  throw new Error('RATE_LIMIT: OpenAI rate limit reached');\n}\nif (statusCode >= 500) {\n  throw new Error('RETRYABLE: OpenAI server error ' + statusCode);\n}\n\nconst rawContent = aiResponse?.choices?.[0]?.message?.content;\nif (!rawContent) {\n  throw new Error('RETRYABLE: Empty or missing content in OpenAI response');\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(rawContent);\n} catch (e) {\n  throw new Error('RETRYABLE: Invalid JSON from OpenAI: ' + String(rawContent).substring(0, 120));\n}\n\nconst allowedLevels = ['internship','entry-level','junior','mid-level','senior','open-to-all'];\nif (!allowedLevels.includes(parsed.profile_level)) {\n  parsed.profile_level = null;\n}\n\nconst safeArr = v => Array.isArray(v) ? v : [];\nconst safeObj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;\nconst safeStr = v => (typeof v === 'string' && v.trim()) ? v.trim() : null;\n\nreturn [{\n  json: {\n    taskId:          reqCtx.taskId,\n    taskAttempt:     reqCtx.taskAttempt,\n    taskMaxAttempts: reqCtx.taskMaxAttempts,\n    outcome: 'success',\n    insertBody: {\n      user_id:                reqCtx.userId,\n      cv_id:                  reqCtx.cvId,\n      analysis_task_id:       reqCtx.taskId,\n      ai_provider:            'openai',\n      ai_model:               'gpt-4o',\n      analyzed_at:            new Date().toISOString(),\n      extracted_text:         reqCtx.cvText || null,\n      preference_snapshot:    reqCtx.preferenceSnapshot || {},\n      professional_summary:   safeStr(parsed.professional_summary),\n      skills:                 safeArr(parsed.skills),\n      education:              safeArr(parsed.education),\n      work_experience:        safeArr(parsed.work_experience),\n      projects:               safeArr(parsed.projects),\n      certifications:         safeArr(parsed.certifications),\n      languages:              safeArr(parsed.languages),\n      contact_info:           safeObj(parsed.contact_info),\n      profile_level:          parsed.profile_level || null,\n      recommended_roles:      safeArr(parsed.recommended_roles),\n      strongest_areas:        safeArr(parsed.strongest_areas),\n      career_recommendations: safeArr(parsed.career_recommendations),\n      search_focus:           safeArr(parsed.search_focus),\n      development_areas:      safeArr(parsed.development_areas)\n    }\n  }\n}];"
+        "jsCode": "const reqCtx     = $('Build OpenAI Request').item.json;\nconst aiResponse = $input.item.json;\n\nif (reqCtx?.error) {\n  throw new Error(reqCtx.error);\n}\nif (aiResponse?.error) {\n  throw new Error('RETRYABLE: OpenAI call failed: ' + aiResponse.error);\n}\n\nconst statusCode = aiResponse?.statusCode || 0;\nif (statusCode === 429) {\n  throw new Error('RATE_LIMIT: OpenAI rate limit reached');\n}\nif (statusCode >= 500) {\n  throw new Error('RETRYABLE: OpenAI server error ' + statusCode);\n}\n\nconst rawContent = aiResponse?.choices?.[0]?.message?.content;\nif (!rawContent) {\n  throw new Error('RETRYABLE: Empty or missing content in OpenAI response');\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(rawContent);\n} catch (e) {\n  throw new Error('RETRYABLE: Invalid JSON from OpenAI: ' + String(rawContent).substring(0, 120));\n}\n\nconst allowedLevels = ['internship','entry-level','junior','mid-level','senior','open-to-all'];\nif (!allowedLevels.includes(parsed.profile_level)) {\n  parsed.profile_level = null;\n}\n\nconst safeArr = v => Array.isArray(v) ? v : [];\nconst safeObj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;\nconst safeStr = v => (typeof v === 'string' && v.trim()) ? v.trim() : null;\n\nconst prefs = reqCtx.preferenceSnapshot || {};\n\nreturn [{\n  json: {\n    taskId:          reqCtx.taskId,\n    taskAttempt:     reqCtx.taskAttempt,\n    taskMaxAttempts: reqCtx.taskMaxAttempts,\n    outcome: 'success',\n    insertBody: {\n      user_id:                reqCtx.userId,\n      cv_id:                  reqCtx.cvId,\n      analysis_task_id:       reqCtx.taskId,\n      status:                 'completed',\n      ai_provider:            'openai',\n      ai_model:               'gpt-4o',\n      analyzed_at:            new Date().toISOString(),\n      extracted_text:         reqCtx.cvText || null,\n      preference_snapshot:    prefs,\n      preferences_version:    typeof prefs.preferences_version === 'number' ? prefs.preferences_version : null,\n      professional_summary:   safeStr(parsed.professional_summary),\n      skills:                 safeArr(parsed.skills),\n      education:              safeArr(parsed.education),\n      work_experience:        safeArr(parsed.work_experience),\n      projects:               safeArr(parsed.projects),\n      certifications:         safeArr(parsed.certifications),\n      languages:              safeArr(parsed.languages),\n      contact_info:           safeObj(parsed.contact_info),\n      profile_level:          parsed.profile_level || null,\n      recommended_roles:      safeArr(parsed.recommended_roles),\n      strongest_areas:        safeArr(parsed.strongest_areas),\n      career_recommendations: safeArr(parsed.career_recommendations),\n      search_focus:           safeArr(parsed.search_focus),\n      development_areas:      safeArr(parsed.development_areas)\n    }\n  }\n}];"
       }
     },
     {
@@ -252,7 +309,7 @@
       "name": "Insert CV Analysis",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [3080, 0],
+      "position": [3740, 0],
       "continueOnFail": true,
       "parameters": {
         "method": "POST",
@@ -279,9 +336,9 @@
       "name": "Build Task Update",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
-      "position": [3300, 0],
+      "position": [3960, 0],
       "parameters": {
-        "jsCode": "const parseResult  = $('Parse AI Response').item.json;\nconst insertResult = $input.item.json;\nconst validateCtx  = $('Validate CV Context').item.json;\nconst splitCtx     = $('Split Tasks').item.json;\n\nconst taskId      = parseResult?.taskId      || validateCtx?.taskId      || splitCtx?.id;\nconst attempt     = parseResult?.taskAttempt || validateCtx?.taskAttempt || splitCtx?.attempt_count || 0;\nconst maxAttempts = parseResult?.taskMaxAttempts || validateCtx?.taskMaxAttempts || splitCtx?.max_attempts || 3;\n\nif (!taskId) {\n  return [{ json: { skipped: true, reason: 'No task ID resolved.' } }];\n}\n\nconst parseSucceeded = parseResult?.outcome === 'success';\nconst insertError    = insertResult?.error;\n\nlet patchBody;\n\nif (parseSucceeded && !insertError) {\n  patchBody = { status: 'completed', completed_at: new Date().toISOString() };\n} else {\n  const rawError = (\n    insertError ||\n    parseResult?.error ||\n    $('Call OpenAI').item.json?.error ||\n    $('Build OpenAI Request').item.json?.error ||\n    $('Load Preferences').item.json?.error ||\n    $('Extract PDF Text').item.json?.error ||\n    $('Download CV Binary').item.json?.error ||\n    $('Sign Storage URL').item.json?.error ||\n    validateCtx?.error ||\n    $('Load CV Row').item.json?.error ||\n    'Unknown processing error'\n  )?.toString() || 'Unknown processing error';\n\n  const isPermanent = rawError.includes('PERMANENT:');\n  const isRateLimit = rawError.includes('RATE_LIMIT:');\n  const safeMsg = rawError.replace(/^(PERMANENT:|RATE_LIMIT:|RETRYABLE:)\\s*/, '').substring(0, 500);\n\n  if (isPermanent || attempt >= maxAttempts) {\n    patchBody = { status: 'failed', failed_at: new Date().toISOString(), last_error: safeMsg };\n  } else {\n    const baseSec   = isRateLimit ? 60 : 30;\n    const backoffMs = baseSec * 1000 * Math.pow(2, Math.max(0, attempt - 1));\n    patchBody = {\n      status:       'pending',\n      available_at: new Date(Date.now() + backoffMs).toISOString(),\n      last_error:   safeMsg\n    };\n  }\n}\n\nreturn [{ json: { taskId, patchBody } }];"
+        "jsCode": "const parseResult  = $('Parse AI Response').item.json;\nconst insertResult = $input.item.json;\nconst validateCtx  = $('Validate CV Context').item.json;\nconst splitCtx     = $('Split Tasks').item.json;\n\nconst taskId      = parseResult?.taskId      || validateCtx?.taskId      || splitCtx?.id;\nconst attempt     = parseResult?.taskAttempt || validateCtx?.taskAttempt || splitCtx?.attempt_count || 0;\nconst maxAttempts = parseResult?.taskMaxAttempts || validateCtx?.taskMaxAttempts || splitCtx?.max_attempts || 3;\n\nif (!taskId) {\n  return [{ json: { skipped: true, reason: 'No task ID resolved.' } }];\n}\n\nconst parseSucceeded = parseResult?.outcome === 'success';\nconst insertError    = insertResult?.error;\n\nlet patchBody;\n\nif (parseSucceeded && !insertError) {\n  // Success path. Also covers the idempotent-retry case where the INSERT was\n  // silently ignored on cv_analyses_analysis_task_id_key (same task processed\n  // twice). The existing row is already status=completed. No approved/current\n  // row is affected — it has a different analysis_task_id.\n  patchBody = { status: 'completed', completed_at: new Date().toISOString() };\n} else {\n  const rawError = (\n    insertError ||\n    parseResult?.error ||\n    $('Call OpenAI').item.json?.error ||\n    $('Build OpenAI Request').item.json?.error ||\n    $('Merge Preference Data').item.json?.error ||\n    $('Load Preference Locations').item.json?.error ||\n    $('Load Preference Roles').item.json?.error ||\n    $('Load Preferences').item.json?.error ||\n    $('Extract PDF Text').item.json?.error ||\n    $('Download CV Binary').item.json?.error ||\n    $('Sign Storage URL').item.json?.error ||\n    validateCtx?.error ||\n    $('Load CV Row').item.json?.error ||\n    'Unknown processing error'\n  )?.toString() || 'Unknown processing error';\n\n  const isPermanent = rawError.includes('PERMANENT:');\n  const isRateLimit = rawError.includes('RATE_LIMIT:');\n  const safeMsg = rawError.replace(/^(PERMANENT:|RATE_LIMIT:|RETRYABLE:)\\s*/, '').substring(0, 500);\n\n  if (isPermanent || attempt >= maxAttempts) {\n    patchBody = { status: 'failed', failed_at: new Date().toISOString(), last_error: safeMsg };\n  } else {\n    const baseSec   = isRateLimit ? 60 : 30;\n    const backoffMs = baseSec * 1000 * Math.pow(2, Math.max(0, attempt - 1));\n    patchBody = {\n      status:       'pending',\n      available_at: new Date(Date.now() + backoffMs).toISOString(),\n      last_error:   safeMsg\n    };\n  }\n}\n\nreturn [{ json: { taskId, patchBody } }];"
       }
     },
     {
@@ -289,7 +346,7 @@
       "name": "Update Task Status",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [3520, 0],
+      "position": [4180, 0],
       "parameters": {
         "method": "PATCH",
         "url": "={{ $vars.SUPABASE_URL }}/rest/v1/analysis_tasks?id=eq.{{ $json.taskId }}",
@@ -346,6 +403,15 @@
       "main": [[{ "node": "Load Preferences", "type": "main", "index": 0 }]]
     },
     "Load Preferences": {
+      "main": [[{ "node": "Load Preference Roles", "type": "main", "index": 0 }]]
+    },
+    "Load Preference Roles": {
+      "main": [[{ "node": "Load Preference Locations", "type": "main", "index": 0 }]]
+    },
+    "Load Preference Locations": {
+      "main": [[{ "node": "Merge Preference Data", "type": "main", "index": 0 }]]
+    },
+    "Merge Preference Data": {
       "main": [[{ "node": "Build OpenAI Request", "type": "main", "index": 0 }]]
     },
     "Build OpenAI Request": {

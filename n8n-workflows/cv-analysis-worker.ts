@@ -45,6 +45,18 @@
  * To increase throughput beyond what overlapping executions provide, switch
  * to n8n Queue Mode (requires Redis and multiple worker processes) — no
  * workflow code changes are needed for that migration.
+ *
+ * DUPLICATE-INSERT SAFETY
+ * ───────────────────────
+ * cv_analyses is inserted with Prefer: resolution=ignore-duplicates. The only
+ * unique constraint that triggers a silent skip is cv_analyses_analysis_task_id_key
+ * (unique on analysis_task_id). That constraint can only conflict when the SAME
+ * task is processed twice (idempotent retry after a task-status-update failure).
+ * An approved or current analysis row belongs to a different task and a different
+ * analysis_task_id — it is never affected. The workflow never sets is_current=true
+ * or review_status='approved', so a silently ignored insert never overwrites or
+ * demotes an approved profile. Build Task Update correctly treats a silent ignore
+ * (no error, parseSucceeded=true) as a completed task.
  */
 
 import {
@@ -310,7 +322,7 @@ const extractPdfText = node({
   }
 });
 
-// ── 4f. Load the user job preferences for the preference_snapshot ─────────────
+// ── 4f. Load the main job_preferences row (scoped to the claimed task's userId)
 const loadPreferences = node({
   type: 'n8n-nodes-base.httpRequest',
   version: 4.4,
@@ -319,7 +331,7 @@ const loadPreferences = node({
     continueOnFail: true,
     parameters: {
       method: 'GET',
-      url: expr('={{ $vars.SUPABASE_URL }}/rest/v1/job_preferences?user_id=eq.{{ $("Validate CV Context").item.json.userId }}&limit=1'),
+      url: expr('={{ $vars.SUPABASE_URL }}/rest/v1/job_preferences?user_id=eq.{{ $("Validate CV Context").item.json.userId }}&select=id,user_id,work_arrangement,job_market_coverage,job_type,experience_level,additional_notes,custom_target_roles,custom_locations,version&limit=1'),
       authentication: 'predefinedCredentialType',
       nodeCredentialType: 'supabaseApi',
       sendHeaders: true,
@@ -330,11 +342,125 @@ const loadPreferences = node({
       }
     },
     credentials: { supabaseApi: supabaseCred },
-    output: [{ json: [{ user_id: 'user-uuid', desired_roles: [], preferred_locations: [] }] }]
+    output: [{ json: [{ id: 'pref-uuid', user_id: 'user-uuid', work_arrangement: 'remote', version: 1 }] }]
   }
 });
 
-// ── 4g. Build the GPT-4o request body ─────────────────────────────────────────
+// ── 4g. Load selected target roles from the join table (scoped via job_preference_id
+//        derived from the Load Preferences result — itself already scoped to userId)
+const loadPreferenceRoles = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Load Preference Roles',
+    continueOnFail: true,
+    parameters: {
+      method: 'GET',
+      url: expr('={{ $vars.SUPABASE_URL }}/rest/v1/job_preference_target_roles?job_preference_id=eq.{{ ($("Load Preferences").item.json[0] || {}).id || "none" }}&select=target_roles(name)&limit=20'),
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'supabaseApi',
+      sendHeaders: true,
+      headerParameters: {
+        parameters: [
+          { name: 'Accept', value: 'application/json' }
+        ]
+      }
+    },
+    credentials: { supabaseApi: supabaseCred },
+    output: [{ json: [{ target_roles: { name: 'Software Engineer' } }] }]
+  }
+});
+
+// ── 4h. Load selected locations from the join table (same scope chain as roles) ─
+const loadPreferenceLocations = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Load Preference Locations',
+    continueOnFail: true,
+    parameters: {
+      method: 'GET',
+      url: expr('={{ $vars.SUPABASE_URL }}/rest/v1/job_preference_locations?job_preference_id=eq.{{ ($("Load Preferences").item.json[0] || {}).id || "none" }}&select=locations(name)&limit=20'),
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'supabaseApi',
+      sendHeaders: true,
+      headerParameters: {
+        parameters: [
+          { name: 'Accept', value: 'application/json' }
+        ]
+      }
+    },
+    credentials: { supabaseApi: supabaseCred },
+    output: [{ json: [{ locations: { name: 'Remote' } }] }]
+  }
+});
+
+// ── 4i. Merge all preference data into a single structured snapshot ────────────
+// Combines the main job_preferences row with role names from job_preference_target_roles
+// and location names from job_preference_locations. Each fetch is already scoped to
+// the claimed task's userId — roles/locations are joined via job_preference_id,
+// which was derived from a userId-filtered query. An additional user_id guard
+// catches any accidental cross-user reference at the Code layer.
+const mergePreferenceData = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'Merge Preference Data',
+    continueOnFail: true,
+    parameters: {
+      jsCode: `
+const taskCtx  = $('Validate CV Context').item.json;
+const prefsArr = $('Load Preferences').item.json;
+const rolesArr = $('Load Preference Roles').item.json;
+const locsArr  = $input.item.json;  // output of Load Preference Locations
+
+const prefsRow = Array.isArray(prefsArr) ? (prefsArr[0] || null) : null;
+
+// Defense-in-depth: the userId that owns this task must match the preferences row.
+if (prefsRow && prefsRow.user_id && prefsRow.user_id !== taskCtx.userId) {
+  throw new Error('PERMANENT: job_preferences user_id does not match task user_id');
+}
+
+// Join-table role names + custom free-text roles (both already user-scoped).
+const joinRoleNames = Array.isArray(rolesArr)
+  ? rolesArr.map(r => r.target_roles?.name).filter(n => typeof n === 'string' && n.length > 0)
+  : [];
+const customRoles = Array.isArray(prefsRow?.custom_target_roles)
+  ? prefsRow.custom_target_roles.filter(r => typeof r === 'string' && r.length > 0)
+  : [];
+
+// Join-table location names + custom free-text locations.
+const joinLocNames = Array.isArray(locsArr)
+  ? locsArr.map(l => l.locations?.name).filter(n => typeof n === 'string' && n.length > 0)
+  : [];
+const customLocs = Array.isArray(prefsRow?.custom_locations)
+  ? prefsRow.custom_locations.filter(l => typeof l === 'string' && l.length > 0)
+  : [];
+
+return [{
+  json: {
+    preferenceSnapshot: {
+      target_roles:        [...joinRoleNames, ...customRoles],
+      preferred_locations: [...joinLocNames,  ...customLocs],
+      work_arrangement:    prefsRow?.work_arrangement   || null,
+      job_market_coverage: prefsRow?.job_market_coverage || null,
+      job_type:            prefsRow?.job_type            || null,
+      experience_level:    prefsRow?.experience_level    || null,
+      additional_notes:    prefsRow?.additional_notes    || null,
+      preferences_version: typeof prefsRow?.version === 'number' ? prefsRow.version : null
+    }
+  }
+}];
+`
+    },
+    output: [{ json: { preferenceSnapshot: { target_roles: ['Software Engineer'], preferred_locations: ['Remote'], work_arrangement: 'remote', job_type: 'full-time', experience_level: 'junior', additional_notes: null, job_market_coverage: null, preferences_version: 1 } } }]
+  }
+});
+
+// ── 4j. Build the GPT-4o request body ─────────────────────────────────────────
+// Reads extract output and merged preferences; field names in the JSON schema
+// match src/lib/cvAnalysis/types.ts exactly so the Career Profile frontend
+// renders all sections without remapping.
 const buildOpenAIRequest = node({
   type: 'n8n-nodes-base.code',
   version: 2,
@@ -343,15 +469,18 @@ const buildOpenAIRequest = node({
     continueOnFail: true,
     parameters: {
       jsCode: `
-const taskCtx     = $('Validate CV Context').item.json;
-const extractOut  = $('Extract PDF Text').item.json;
-const prefsResult = $input.item.json;
+const taskCtx   = $('Validate CV Context').item.json;
+const extractOut = $('Extract PDF Text').item.json;
+const mergedPrefs = $input.item.json;  // output of Merge Preference Data
 
 if (extractOut?.error) {
   throw new Error('RETRYABLE: PDF extraction failed: ' + extractOut.error);
 }
-if (prefsResult?.error) {
-  throw new Error('RETRYABLE: Preferences load failed: ' + prefsResult.error);
+
+// A PERMANENT error from Merge Preference Data (e.g. user_id mismatch) must
+// propagate — do not continue with potentially wrong preferences.
+if (mergedPrefs?.error && String(mergedPrefs.error).includes('PERMANENT:')) {
+  throw new Error(mergedPrefs.error);
 }
 
 const cvText = extractOut?.text || '';
@@ -359,7 +488,13 @@ if (!cvText.trim()) {
   throw new Error('PERMANENT: PDF produced no extractable text (may be scanned/image-only)');
 }
 
-const prefs = Array.isArray(prefsResult) ? (prefsResult[0] || {}) : (prefsResult || {});
+// If preference merge failed for a non-permanent reason, continue with empty
+// preferences — CV facts are still extracted correctly and stored.
+const preferenceSnapshot = mergedPrefs?.preferenceSnapshot || {
+  target_roles: [], preferred_locations: [], work_arrangement: null,
+  job_market_coverage: null, job_type: null, experience_level: null,
+  additional_notes: null, preferences_version: null
+};
 
 const systemPrompt =
   'You are an expert CV analyst. Extract structured professional information from ' +
@@ -368,12 +503,12 @@ const systemPrompt =
   '{\\n' +
   '  "professional_summary": "2-4 sentence plain-text summary, or null",\\n' +
   '  "skills": ["skill1", "skill2"],\\n' +
-  '  "education": [{"institution":"","degree":"","field":"","start_year":null,"end_year":null}],\\n' +
-  '  "work_experience": [{"company":"","title":"","start_date":"","end_date":"","description":""}],\\n' +
+  '  "education": [{"institution":"","degree":"","field_of_study":"","start_date":"","end_date":""}],\\n' +
+  '  "work_experience": [{"organization":"","title":"","start_date":"","end_date":"","highlights":["point1","point2"]}],\\n' +
   '  "projects": [{"name":"","description":"","technologies":[]}],\\n' +
   '  "certifications": [{"name":"","issuer":"","year":null}],\\n' +
-  '  "languages": [{"language":"","level":""}],\\n' +
-  '  "contact_info": {"linkedin":null,"github":null,"location":null},\\n' +
+  '  "languages": [{"language":"","proficiency":""}],\\n' +
+  '  "contact_info": {"links":[],"location":null},\\n' +
   '  "profile_level": "junior",\\n' +
   '  "recommended_roles": ["role1"],\\n' +
   '  "strongest_areas": ["area1"],\\n' +
@@ -381,14 +516,20 @@ const systemPrompt =
   '  "search_focus": ["focus1"],\\n' +
   '  "development_areas": ["area1"]\\n' +
   '}\\n\\n' +
-  'Rules:\\n' +
+  'Field rules:\\n' +
   '- Extract ONLY information present in the CV. Never invent details.\\n' +
   '- profile_level MUST be exactly one of: internship, entry-level, junior, mid-level, senior, open-to-all\\n' +
-  '- contact_info: include only linkedin URL, github URL, and location (city/country). Never email or phone.\\n' +
-  '- Use [] for missing arrays, null for missing scalars.\\n' +
-  '- career_recommendations, search_focus, development_areas should reflect strengths vs preferences.';
+  '- education[].field_of_study: the subject/major studied, or empty string if unknown.\\n' +
+  '- education[].start_date / end_date: "YYYY" or "YYYY-MM" or empty string.\\n' +
+  '- work_experience[].organization: company or institution name.\\n' +
+  '- work_experience[].highlights: array of short bullet strings (not a single description string).\\n' +
+  '- languages[].proficiency: one of Native, Fluent, Advanced, Intermediate, Basic — or empty string.\\n' +
+  '- contact_info.links: array of public profile URLs (LinkedIn, GitHub, portfolio). Never include email or phone.\\n' +
+  '- contact_info.location: city/country string or null.\\n' +
+  '- Use [] for missing arrays, null or empty string for missing scalars.\\n' +
+  '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and preferences.';
 
-const userMessage = 'JOB PREFERENCES:\\n' + JSON.stringify(prefs, null, 2) + '\\n\\nCV TEXT:\\n' + cvText;
+const userMessage = 'JOB PREFERENCES:\\n' + JSON.stringify(preferenceSnapshot, null, 2) + '\\n\\nCV TEXT:\\n' + cvText;
 
 return [{
   json: {
@@ -398,7 +539,7 @@ return [{
     taskAttempt:        taskCtx.taskAttempt,
     taskMaxAttempts:    taskCtx.taskMaxAttempts,
     cvText:             cvText,
-    preferenceSnapshot: prefs,
+    preferenceSnapshot: preferenceSnapshot,
     openAIBody: {
       model: 'gpt-4o',
       response_format: { type: 'json_object' },
@@ -413,11 +554,11 @@ return [{
 }];
 `
     },
-    output: [{ json: { taskId: 'task-uuid', userId: 'user-uuid', cvId: 'cv-uuid', taskAttempt: 1, taskMaxAttempts: 3, cvText: 'CV text', preferenceSnapshot: {}, openAIBody: { model: 'gpt-4o' } } }]
+    output: [{ json: { taskId: 'task-uuid', userId: 'user-uuid', cvId: 'cv-uuid', taskAttempt: 1, taskMaxAttempts: 3, cvText: 'CV text', preferenceSnapshot: { target_roles: [], preferred_locations: [] }, openAIBody: { model: 'gpt-4o' } } }]
   }
 });
 
-// ── 4h. Call GPT-4o (2-minute timeout, JSON mode) ────────────────────────────
+// ── 4k. Call GPT-4o (2-minute timeout, JSON mode) ────────────────────────────
 const callOpenAI = node({
   type: 'n8n-nodes-base.httpRequest',
   version: 4.4,
@@ -447,7 +588,11 @@ const callOpenAI = node({
   }
 });
 
-// ── 4i. Parse and validate AI response; build cv_analyses insert body ─────────
+// ── 4l. Parse and validate AI response; build cv_analyses insert body ─────────
+// Field names match src/lib/cvAnalysis/types.ts (CvFacts + AiCareerProfile)
+// so the Career Profile frontend renders all sections without remapping.
+// status:'completed' is explicitly set so the review/approval RPCs accept the row
+// (both guard on v_row.status = 'completed' — the column default is 'processing').
 const parseAIResponse = node({
   type: 'n8n-nodes-base.code',
   version: 2,
@@ -495,6 +640,8 @@ const safeArr = v => Array.isArray(v) ? v : [];
 const safeObj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
 const safeStr = v => (typeof v === 'string' && v.trim()) ? v.trim() : null;
 
+const prefs = reqCtx.preferenceSnapshot || {};
+
 return [{
   json: {
     taskId:          reqCtx.taskId,
@@ -505,11 +652,16 @@ return [{
       user_id:                reqCtx.userId,
       cv_id:                  reqCtx.cvId,
       analysis_task_id:       reqCtx.taskId,
+      // status: 'completed' is required — the column default is 'processing'.
+      // Without this, deriveCvProfileState returns "analyzing" indefinitely and
+      // update_cv_analysis_review / confirm_cv_analysis both reject the row.
+      status:                 'completed',
       ai_provider:            'openai',
       ai_model:               'gpt-4o',
       analyzed_at:            new Date().toISOString(),
       extracted_text:         reqCtx.cvText || null,
-      preference_snapshot:    reqCtx.preferenceSnapshot || {},
+      preference_snapshot:    prefs,
+      preferences_version:    typeof prefs.preferences_version === 'number' ? prefs.preferences_version : null,
       professional_summary:   safeStr(parsed.professional_summary),
       skills:                 safeArr(parsed.skills),
       education:              safeArr(parsed.education),
@@ -529,11 +681,16 @@ return [{
 }];
 `
     },
-    output: [{ json: { taskId: 'task-uuid', taskAttempt: 1, taskMaxAttempts: 3, outcome: 'success', insertBody: {} } }]
+    output: [{ json: { taskId: 'task-uuid', taskAttempt: 1, taskMaxAttempts: 3, outcome: 'success', insertBody: { status: 'completed' } } }]
   }
 });
 
-// ── 4j. Insert the cv_analyses row (idempotent: conflict = skip, not error) ───
+// ── 4m. Insert the cv_analyses row (idempotent: conflict = skip, not error) ───
+// Prefer: resolution=ignore-duplicates means a duplicate on analysis_task_id_key
+// is silently skipped (no error). Build Task Update treats this as success:
+// the row was already inserted by an earlier attempt for the same task, and
+// the task should now complete. No approved/current row is at risk — see the
+// DUPLICATE-INSERT SAFETY header comment.
 const insertCvAnalysis = node({
   type: 'n8n-nodes-base.httpRequest',
   version: 4.4,
@@ -561,7 +718,7 @@ const insertCvAnalysis = node({
   }
 });
 
-// ── 4k. Resolve success / retry / permanent-fail outcome ──────────────────────
+// ── 4n. Resolve success / retry / permanent-fail outcome ──────────────────────
 const buildTaskUpdate = node({
   type: 'n8n-nodes-base.code',
   version: 2,
@@ -580,7 +737,7 @@ const attempt     = parseResult?.taskAttempt || validateCtx?.taskAttempt || spli
 const maxAttempts = parseResult?.taskMaxAttempts || validateCtx?.taskMaxAttempts || splitCtx?.max_attempts || 3;
 
 if (!taskId) {
-  // No task ID found anywhere in the chain. The stale-task sweep will catch
+  // No task ID resolved anywhere in the chain. The stale-task sweep will catch
   // this task once its 10-minute lease expires on the next execution.
   return [{ json: { skipped: true, reason: 'No task ID resolved.' } }];
 }
@@ -591,6 +748,10 @@ const insertError    = insertResult?.error;
 let patchBody;
 
 if (parseSucceeded && !insertError) {
+  // Success path. Also covers the idempotent-retry case where the INSERT was
+  // silently ignored because analysis_task_id already existed: the existing row
+  // is already status='completed', the task should complete, no approved/current
+  // row is touched (see DUPLICATE-INSERT SAFETY in the file header).
   patchBody = { status: 'completed', completed_at: new Date().toISOString() };
 } else {
   // Walk the error chain to find the first informative message.
@@ -599,6 +760,9 @@ if (parseSucceeded && !insertError) {
     parseResult?.error ||
     $('Call OpenAI').item.json?.error ||
     $('Build OpenAI Request').item.json?.error ||
+    $('Merge Preference Data').item.json?.error ||
+    $('Load Preference Locations').item.json?.error ||
+    $('Load Preference Roles').item.json?.error ||
     $('Load Preferences').item.json?.error ||
     $('Extract PDF Text').item.json?.error ||
     $('Download CV Binary').item.json?.error ||
@@ -610,7 +774,7 @@ if (parseSucceeded && !insertError) {
 
   const isPermanent = rawError.includes('PERMANENT:');
   const isRateLimit = rawError.includes('RATE_LIMIT:');
-  // Strip prefix before writing to last_error — never log raw internal errors
+  // Strip prefix before writing to last_error — never log raw internal error detail
   const safeMsg = rawError.replace(/^(PERMANENT:|RATE_LIMIT:|RETRYABLE:)\\s*/, '').substring(0, 500);
 
   if (isPermanent || attempt >= maxAttempts) {
@@ -634,7 +798,7 @@ return [{ json: { taskId, patchBody } }];
   }
 });
 
-// ── 4l. Write the final task status ───────────────────────────────────────────
+// ── 4o. Write the final task status ───────────────────────────────────────────
 const updateTaskStatus = node({
   type: 'n8n-nodes-base.httpRequest',
   version: 4.4,
@@ -661,7 +825,7 @@ const updateTaskStatus = node({
   }
 });
 
-export default workflow('cv-analysis-worker', 'AI Job Agent — CV Analysis Worker')
+export default workflow('cv-analysis-worker', 'CV Analysis Worker')
   .add(pollTrigger)
   .to(failStuckTasks)
   .to(claimBatch)
@@ -674,6 +838,9 @@ export default workflow('cv-analysis-worker', 'AI Job Agent — CV Analysis Work
         .to(downloadCvBinary)
         .to(extractPdfText)
         .to(loadPreferences)
+        .to(loadPreferenceRoles)
+        .to(loadPreferenceLocations)
+        .to(mergePreferenceData)
         .to(buildOpenAIRequest)
         .to(callOpenAI)
         .to(parseAIResponse)
