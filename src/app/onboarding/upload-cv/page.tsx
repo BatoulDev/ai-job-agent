@@ -7,13 +7,9 @@ import OnboardingShell from "@/components/onboarding/OnboardingShell";
 import GiftModal from "@/components/onboarding/GiftModal";
 import { createClient } from "@/lib/supabase/client";
 
-const ACCEPTED_FORMATS = ".pdf,.doc,.docx";
+const ACCEPTED_FORMATS = ".pdf";
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
-const ALLOWED_MIME_TYPES = [
-  "application/pdf",
-  "application/msword",
-  "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
-];
+const ALLOWED_MIME_TYPES = ["application/pdf"];
 
 function formatFileSize(bytes: number) {
   if (bytes < 1024) return `${bytes} B`;
@@ -23,7 +19,7 @@ function formatFileSize(bytes: number) {
 
 function validateFile(file: File): string | null {
   if (!ALLOWED_MIME_TYPES.includes(file.type)) {
-    return "Please upload a PDF, DOC, or DOCX file.";
+    return "Please upload a PDF file.";
   }
   if (file.size > MAX_FILE_SIZE_BYTES) {
     return "File is too large. Maximum size is 5MB.";
@@ -231,7 +227,7 @@ function UploadCvPageContent() {
             <span className="text-primary">click to browse</span>
           </p>
           <p className="text-xs text-muted">
-            Accepted formats: PDF, DOC, DOCX
+            Accepted format: PDF
           </p>
           <p className="text-xs text-muted">Max file size: 5MB</p>
 
