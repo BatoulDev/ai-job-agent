@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef } from "react";
+import { useEffect, useLayoutEffect, useRef } from "react";
 
 // Shared accessible dialog shell for the CV Profile page's two dialogs
 // (ApproveProfileDialog, RequestChangesDialog). Same visual pattern as
@@ -23,6 +23,17 @@ export default function Dialog({
 }) {
   const panelRef = useRef<HTMLDivElement>(null);
   const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  // Hold a stable ref to onClose so the effect below does not re-run when
+  // the parent passes a new inline function on every render. Without this,
+  // every keystroke in a controlled input triggers a parent re-render that
+  // creates a fresh onClose reference, which fires the effect, which calls
+  // panelRef.focus() and steals focus from the input the user was typing in.
+  const onCloseRef = useRef(onClose);
+  // useLayoutEffect (no deps) runs after every render, before paint, keeping
+  // the ref in sync without triggering the Escape-handler effect.
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  });
 
   useEffect(() => {
     if (!open) return;
@@ -33,7 +44,7 @@ export default function Dialog({
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === "Escape") {
         event.preventDefault();
-        onClose();
+        onCloseRef.current();
       }
     }
 
@@ -42,7 +53,7 @@ export default function Dialog({
       document.removeEventListener("keydown", handleKeyDown);
       previouslyFocusedRef.current?.focus?.();
     };
-  }, [open, onClose]);
+  }, [open]); // onClose intentionally excluded — handled via onCloseRef above
 
   if (!open) return null;
 

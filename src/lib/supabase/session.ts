@@ -5,7 +5,7 @@ import { isSafeRedirectPath } from "@/lib/safeRedirect";
 
 // Route groups gated by src/proxy.ts. Prefix match: "/onboarding" also
 // covers "/onboarding/preferences" and "/onboarding/upload-cv".
-const PROTECTED_PATHS = ["/welcome", "/onboarding", "/dashboard", "/checkout"];
+const PROTECTED_PATHS = ["/welcome", "/onboarding", "/dashboard", "/checkout", "/settings"];
 const AUTH_ONLY_PATHS = ["/login", "/signup"];
 
 function isUnderPath(pathname: string, base: string): boolean {

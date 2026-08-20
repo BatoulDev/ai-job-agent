@@ -1,9 +1,9 @@
 import type { CvAnalysis } from "./types";
 import type { AnalysisTask } from "@/lib/analysisTasks/types";
 
-// The 8 CV Profile page states (Phase 4 UI spec). Derived purely from
-// real data — never set directly by a component. No state here implies
-// or fabricates a database write; it only describes what's currently true.
+// The 9 CV Profile page states (Phase 4 UI spec + ownership mismatch). Derived
+// purely from real data — never set directly by a component. No state here
+// implies or fabricates a database write; it only describes what's currently true.
 export type CvProfileState =
   | "no_cv"
   | "no_preferences"
@@ -12,12 +12,13 @@ export type CvProfileState =
   | "changes_requested"
   | "approved"
   | "preferences_outdated"
-  | "failed";
+  | "failed"
+  | "ownership_mismatch";
 
 export interface DeriveCvProfileStateInput {
   hasActiveCv: boolean;
   preferencesComplete: boolean;
-  task: Pick<AnalysisTask, "status"> | null;
+  task: Pick<AnalysisTask, "status" | "last_error"> | null;
   analysis: Pick<CvAnalysis, "status" | "review_status" | "recommendations_state"> | null;
 }
 
@@ -35,9 +36,28 @@ export function deriveCvProfileState({
   if (!hasActiveCv) return "no_cv";
   if (!preferencesComplete) return "no_preferences";
 
+  // An active task (pending/processing) means a new analysis is being computed.
+  // This takes priority over the existing analysis state so the user sees the
+  // progress spinner immediately — not the stale "preferences_outdated" banner
+  // that was the last completed state before the new task was queued.
+  if (task && (task.status === "pending" || task.status === "processing")) {
+    return "analyzing";
+  }
+
+  // ownership_mismatch is a specific kind of task failure: the CV name doesn't
+  // match the account name. Checked before the generic "failed" state so the
+  // UI can show a targeted recovery action instead of a generic error.
+  if (
+    task &&
+    task.status === "failed" &&
+    typeof task.last_error === "string" &&
+    task.last_error.startsWith("OWNERSHIP_MISMATCH:")
+  ) {
+    return "ownership_mismatch";
+  }
+
   if (analysis) {
     if (analysis.status === "failed") return "failed";
-    if (analysis.status === "processing") return "analyzing";
     if (analysis.review_status === "changes_requested") return "changes_requested";
     if (analysis.recommendations_state === "stale") return "preferences_outdated";
     if (analysis.review_status === "approved") return "approved";
@@ -46,10 +66,7 @@ export function deriveCvProfileState({
     return "ready_for_review";
   }
 
-  if (task) {
-    if (task.status === "failed") return "failed";
-    if (task.status === "pending" || task.status === "processing") return "analyzing";
-  }
+  if (task && task.status === "failed") return "failed";
 
   // CV and preferences are both ready but nothing has been queued or
   // analyzed yet (e.g. the automatic task-creation call after saving
@@ -59,9 +76,9 @@ export function deriveCvProfileState({
 }
 
 // Mirrors get_onboarding_readiness()'s v_preferences_complete computation
-// exactly (supabase/migrations/20260806090110_update_onboarding_readiness_reference_preferences.sql)
-// — kept in sync deliberately, not reinvented. A preferred location is
-// only required when workArrangement is onsite/hybrid.
+// exactly (supabase/migrations/20260819100000_flexible_requires_location.sql
+// supersedes 20260806090110) — kept in sync deliberately, not reinvented.
+// A preferred location is required when workArrangement is onsite/hybrid/flexible.
 export function isPreferencesComplete(input: {
   countryOfResidence: string | null;
   hasUniversity: boolean;
@@ -82,7 +99,7 @@ export function isPreferencesComplete(input: {
     input.workArrangement &&
     input.jobType &&
     input.experienceLevel &&
-    (!(input.workArrangement === "onsite" || input.workArrangement === "hybrid") || input.hasLocation)
+    (!(input.workArrangement === "onsite" || input.workArrangement === "hybrid" || input.workArrangement === "flexible") || input.hasLocation)
   );
 }
 

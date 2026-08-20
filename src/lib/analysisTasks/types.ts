@@ -3,12 +3,21 @@
 // supabase/migrations/20260805090020_extend_analysis_tasks_lifecycle.sql).
 //
 // `trigger` and `task_type` are deliberately separate fields: trigger
-// records WHY a task was created (today only "onboarding_completed" is
-// allowed by the database); task_type records WHAT KIND of analysis work
-// it is. No code path creates a "career_profile_refresh" task yet — every
-// existing caller (create_analysis_task, called with 3 args) gets
+// records WHY a task was created; task_type records WHAT KIND of analysis
+// work it is. No code path creates a "career_profile_refresh" task yet —
+// every existing caller (create_analysis_task, called with 3 args) gets
 // task_type="full_analysis" from the column default.
-export type AnalysisTaskTrigger = "onboarding_completed";
+//
+// Allowed trigger values are enforced by the database constraint
+// analysis_tasks_trigger_check; keep this union in sync with that constraint
+// (see supabase/migrations/).
+export type AnalysisTaskTrigger =
+  | "onboarding_completed"
+  | "cv_replaced"
+  | "preferences_updated"
+  | "cv_correction"
+  | "recommendation_feedback"
+  | "user_request";
 export type AnalysisTaskType = "full_analysis" | "career_profile_refresh";
 export type AnalysisTaskStatus = "pending" | "processing" | "completed" | "failed";
 

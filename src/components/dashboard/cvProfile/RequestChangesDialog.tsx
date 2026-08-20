@@ -119,12 +119,14 @@ export default function RequestChangesDialog({
     setValidationError(null);
     const result = await onSubmit(payload);
     setIsSubmitting(false);
-    setNotice(
-      result.message ??
-        (result.ok
-          ? "Thanks — we've noted your feedback."
-          : "Submitting change requests isn't available yet — this will be enabled in a future update. Your note wasn't saved.")
-    );
+
+    if (result.ok) {
+      // Close the dialog on success — the dashboard will immediately show
+      // the trigger-specific progress state without a notice inside the dialog.
+      resetAndClose();
+    } else {
+      setNotice(result.message ?? "Something went wrong. Please try again.");
+    }
   };
 
   const selectedOption = OPTIONS.find((option) => option.reason === selectedReason);

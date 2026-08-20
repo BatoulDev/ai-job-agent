@@ -1,12 +1,14 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
+import { createPortal } from "react-dom";
 import Link from "next/link";
 import type { CvAnalysis } from "@/lib/cvAnalysis/types";
 import type { CvProfileState, RequestChangesPayload } from "@/lib/cvAnalysis/profileState";
 import type { PreferencesData } from "@/components/dashboard/PreferencesSection";
 import ApproveProfileDialog from "./ApproveProfileDialog";
 import RequestChangesDialog from "./RequestChangesDialog";
+import type { AnalysisTaskTrigger } from "@/lib/analysisTasks/types";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("en-US", {
@@ -139,11 +141,6 @@ function CvInformationGroup({ analysis }: { analysis: CvAnalysis }) {
   );
 }
 
-// Compact preference context (Item 5): a single line, not the full field
-// grid — the dedicated Preferences tab is the one place that shows and
-// edits every field. Reflects the user's LIVE current preferences (not
-// the historical preference_snapshot baked into the analysis) — that's
-// the whole point of being able to notice they've diverged (Item 8).
 function firstToken(value: string | null | undefined): string | null {
   if (!value) return null;
   const first = value.split(",")[0]?.trim();
@@ -222,30 +219,174 @@ function AiRecommendationsGroup({ analysis }: { analysis: CvAnalysis }) {
   );
 }
 
+export function triggerProgressLabel(trigger: AnalysisTaskTrigger | null | undefined): { title: string; message: string } {
+  switch (trigger) {
+    case "preferences_updated":
+      return {
+        title: "Updating your AI Career Profile",
+        message: "Please wait while we prepare your new recommendations.",
+      };
+    case "cv_replaced":
+      return {
+        title: "Analyzing your new CV",
+        message: "Please wait while we rebuild your AI Career Profile.",
+      };
+    case "cv_correction":
+      return {
+        title: "Updating your CV information",
+        message: "Please wait while we apply your correction.",
+      };
+    case "recommendation_feedback":
+      return {
+        title: "Updating your recommendations",
+        message: "Please wait while we prepare new recommendations.",
+      };
+    case "user_request":
+      return {
+        title: "Updating your AI Career Profile",
+        message: "Please wait while we apply your requested changes.",
+      };
+    default:
+      return {
+        title: "Updating your AI Career Profile",
+        message: "Please wait while we apply your requested changes.",
+      };
+  }
+}
+
+function ProcessingPopup({
+  taskTrigger,
+}: {
+  taskTrigger: AnalysisTaskTrigger | null | undefined;
+}) {
+  const dialogRef = useRef<HTMLDivElement>(null);
+  const previousFocusRef = useRef<Element | null>(null);
+
+  useEffect(() => {
+    previousFocusRef.current = document.activeElement;
+    dialogRef.current?.focus();
+
+    const originalOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.body.style.overflow = originalOverflow;
+      if (previousFocusRef.current instanceof HTMLElement) {
+        previousFocusRef.current.focus();
+      }
+    };
+  }, []);
+
+  function handleKeyDown(e: React.KeyboardEvent) {
+    // Keep focus within the dialog — no interactive elements to cycle through,
+    // so Tab stays on the dialog itself. Escape intentionally ignored: processing
+    // cannot be cancelled by the user.
+    if (e.key === "Tab") {
+      e.preventDefault();
+    }
+  }
+
+  const { title, message } = triggerProgressLabel(taskTrigger);
+
+  // Guard against SSR: document.body is not available during server render.
+  if (typeof window === "undefined") return null;
+
+  return createPortal(
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+      {/* Backdrop: dims and blurs content to signal processing in progress */}
+      <div
+        className="absolute inset-0 bg-slate-900/40 backdrop-blur-sm"
+        aria-hidden="true"
+      />
+      {/* Dialog */}
+      <div
+        ref={dialogRef}
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="processing-popup-title"
+        tabIndex={-1}
+        onKeyDown={handleKeyDown}
+        className="relative z-10 w-full max-w-[440px] rounded-2xl bg-white p-8 shadow-xl focus:outline-none"
+      >
+        <div className="flex flex-col items-center gap-5 text-center">
+          <span
+            role="status"
+            aria-label="Processing"
+            className="flex h-12 w-12 items-center justify-center rounded-full bg-accent/10"
+          >
+            <svg
+              className="h-6 w-6 animate-spin motion-reduce:animate-none text-accent"
+              viewBox="0 0 24 24"
+              fill="none"
+              aria-hidden="true"
+            >
+              <circle
+                className="opacity-25"
+                cx="12"
+                cy="12"
+                r="10"
+                stroke="currentColor"
+                strokeWidth="4"
+              />
+              <path
+                className="opacity-75"
+                fill="currentColor"
+                d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z"
+              />
+            </svg>
+          </span>
+          <div className="space-y-2">
+            <p
+              id="processing-popup-title"
+              className="text-sm font-semibold text-text"
+            >
+              {title}
+            </p>
+            <p className="text-sm leading-relaxed text-muted">{message}</p>
+          </div>
+        </div>
+      </div>
+    </div>,
+    document.body
+  );
+}
+
 export default function AiCareerProfileSection({
   state,
+  taskTrigger,
   analysis,
   preferences,
   onApprove,
   onRequestChanges,
   onNavigateToPreferences,
+  updateStalled,
 }: {
   state: CvProfileState;
+  taskTrigger?: AnalysisTaskTrigger | null;
   analysis: CvAnalysis | null;
   preferences: PreferencesData | null;
   onApprove: () => Promise<{ ok: boolean; message?: string }>;
   onRequestChanges: (payload: RequestChangesPayload) => Promise<{ ok: boolean; message?: string }>;
   onNavigateToPreferences: () => void;
+  updateStalled?: boolean;
 }) {
   const [showApprove, setShowApprove] = useState(false);
   const [showRequestChanges, setShowRequestChanges] = useState(false);
 
+  // Show the processing popup during any active update: optimistic (flag set,
+  // no DB task yet), pending task, or processing task. Not shown when the
+  // optimistic timeout fires (updateStalled) — that case shows the stalled
+  // banner instead.
+  const isProcessing =
+    (state === "analyzing" || state === "changes_requested") && !updateStalled;
+
+  // Profile content is only shown in the non-processing terminal states where
+  // the user needs to read, review, or act on the analysis.
   const showFullContent =
     analysis &&
     (state === "ready_for_review" ||
       state === "approved" ||
-      state === "preferences_outdated" ||
-      state === "changes_requested");
+      state === "preferences_outdated");
 
   return (
     <section className="rounded-3xl border border-slate-200 bg-card p-6 shadow-sm sm:p-8">
@@ -267,7 +408,7 @@ export default function AiCareerProfileSection({
         preferences to recommend roles and next steps.
       </p>
 
-      {preferences && state !== "no_cv" && state !== "no_preferences" && (
+      {preferences && state !== "no_cv" && state !== "no_preferences" && !isProcessing && (
         <div className="mt-5">
           <CompactPreferenceContext
             preferences={preferences}
@@ -293,26 +434,43 @@ export default function AiCareerProfileSection({
           />
         )}
 
-        {state === "analyzing" && (
-          <ProgressBlock message="We're analyzing your CV and career preferences." />
-        )}
-
-        {state === "changes_requested" && (
-          <>
-            <ProgressBlock message="We're updating your profile based on your feedback." />
-            {showFullContent && analysis && (
-              <div className="mt-8 border-t border-slate-100 pt-8">
-                <ProfileContent analysis={analysis} />
-              </div>
-            )}
-          </>
+        {updateStalled && (
+          <div
+            role="alert"
+            className="mb-6 flex items-start gap-3 rounded-2xl border border-amber-300 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-800"
+          >
+            <svg
+              width="20"
+              height="20"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              strokeWidth="2"
+              className="mt-0.5 shrink-0"
+              aria-hidden="true"
+            >
+              <path
+                d="M12 9v4m0 4h.01M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0Z"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </svg>
+            <p>
+              We saved your preferences, but the profile update has not started
+              yet. Please try again.
+            </p>
+          </div>
         )}
 
         {state === "failed" && (
-          <FailedBlock hasRetryEndpoint={false} />
+          <FailedBlock />
         )}
 
-        {showFullContent && analysis && state !== "changes_requested" && (
+        {state === "ownership_mismatch" && (
+          <OwnershipMismatchBlock />
+        )}
+
+        {showFullContent && analysis && (
           <>
             {state === "preferences_outdated" && (
               <div className="mb-8 flex items-start gap-3 rounded-2xl border-2 border-amber-300 bg-amber-50 px-5 py-4 text-sm leading-relaxed text-amber-800">
@@ -398,6 +556,8 @@ export default function AiCareerProfileSection({
           />
         </>
       )}
+
+      {isProcessing && <ProcessingPopup taskTrigger={taskTrigger} />}
     </section>
   );
 }
@@ -433,52 +593,47 @@ function EmptyStateBlock({
   );
 }
 
-function ProgressBlock({ message }: { message: string }) {
+function FailedBlock() {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-2xl border border-slate-200 bg-bg px-6 py-10 text-center">
-      <span className="flex h-10 w-10 items-center justify-center rounded-full bg-accent/10">
-        <svg
-          className="h-5 w-5 animate-spin text-accent"
-          viewBox="0 0 24 24"
-          fill="none"
-          aria-hidden="true"
-        >
-          <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" />
-          <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 0 1 8-8V0C5.373 0 0 5.373 0 12h4Z" />
-        </svg>
-      </span>
-      <p className="max-w-sm text-sm leading-relaxed text-text">{message}</p>
-      <p className="max-w-sm text-xs leading-relaxed text-muted">
-        Your result will appear on this page automatically when it&apos;s
-        ready — no need to refresh.
+    <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-10 text-center">
+      <p className="text-sm font-medium text-red-700">
+        We couldn&apos;t complete your update
+      </p>
+      <p className="mt-2 text-sm leading-relaxed text-red-700/80">
+        Your previous profile is still available. Please try again.
+      </p>
+      <p className="mt-4 text-xs text-red-700/70">
+        A retry option isn&apos;t available yet — please replace your CV
+        or update your preferences to start a new analysis.
       </p>
     </div>
   );
 }
 
-function FailedBlock({ hasRetryEndpoint }: { hasRetryEndpoint: boolean }) {
+function OwnershipMismatchBlock() {
   return (
-    <div className="rounded-2xl border border-red-200 bg-red-50 px-6 py-10 text-center">
-      <p className="text-sm font-medium text-red-700">
-        We couldn&apos;t complete your profile analysis.
+    <div className="rounded-2xl border border-amber-300 bg-amber-50 px-6 py-8 text-center">
+      <p className="text-sm font-semibold text-amber-900">
+        This CV may belong to someone else
       </p>
-      <p className="mt-2 text-sm leading-relaxed text-red-700/80">
-        This sometimes happens with unusual file formats or a temporary
-        issue on our side.
+      <p className="mt-2 text-sm leading-relaxed text-amber-800">
+        The name on this CV does not match your account name. Please upload
+        your own CV or update your account name before continuing.
       </p>
-      {hasRetryEndpoint ? (
-        <button
-          type="button"
-          className="mt-4 rounded-full bg-primary px-6 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
+      <div className="mt-6 flex flex-col items-center gap-3 sm:flex-row sm:justify-center">
+        <Link
+          href="/onboarding/upload-cv"
+          className="inline-block rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-primary-dark"
         >
-          Try Again
-        </button>
-      ) : (
-        <p className="mt-4 text-xs text-red-700/70">
-          A retry option isn&apos;t available yet — please check back
-          soon, or replace your CV to start a new analysis.
-        </p>
-      )}
+          Upload another CV
+        </Link>
+        <Link
+          href="/settings/profile"
+          className="inline-block rounded-full border border-amber-400 px-5 py-2.5 text-sm font-semibold text-amber-900 transition-colors hover:bg-amber-100"
+        >
+          Update account name
+        </Link>
+      </div>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import OnboardingShell from "@/components/onboarding/OnboardingShell";
@@ -15,6 +15,7 @@ import { OTHER_MAJOR_VALUE, type Major } from "@/lib/majors/types";
 import { MAX_TARGET_ROLES, type TargetRole } from "@/lib/targetRoles/types";
 import type { JobLocation } from "@/lib/locations/types";
 import type { WorkArrangement, JobMarketCoverage } from "@/lib/jobPreferences/types";
+import { setProfileUpdatePending } from "@/lib/optimisticProfileUpdate";
 
 const JOB_TYPE_OPTIONS = [
   { label: "Internship", value: "internship" },
@@ -77,6 +78,8 @@ export default function PreferencesPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const locationInputRef = useRef<HTMLInputElement | null>(null);
   const [userId, setUserId] = useState<string | null>(null);
   const [profileMissing, setProfileMissing] = useState(false);
   const [planCode, setPlanCode] = useState<string | null>(null);
@@ -288,8 +291,8 @@ export default function PreferencesPage() {
     WORK_ARRANGEMENT_OPTIONS.find((o) => o.value === workArrangement)?.description ?? null;
 
   const totalRoleCount = selectedRoleIds.length + customRoles.length;
-  const requiresPhysicalLocation = workArrangement === "onsite" || workArrangement === "hybrid";
-  const showLocationControls = isLebanon && (requiresPhysicalLocation || workArrangement === "flexible");
+  const requiresLocation = workArrangement === "onsite" || workArrangement === "hybrid" || workArrangement === "flexible";
+  const showLocationControls = isLebanon && requiresLocation;
   const showCoveragePicker =
     isLebanon && planCode === "pro" && (workArrangement === "remote" || workArrangement === "flexible");
   // Shown across every work arrangement (not just remote/flexible) — a
@@ -303,6 +306,7 @@ export default function PreferencesPage() {
 
     setErrorMessage(null);
     setSuccessMessage(null);
+    setLocationError(null);
 
     const formData = new FormData(event.currentTarget);
     const jobType = String(formData.get("jobType") ?? "");
@@ -335,11 +339,13 @@ export default function PreferencesPage() {
     }
     if (
       isLebanon &&
-      requiresPhysicalLocation &&
+      requiresLocation &&
       selectedLocationIds.length === 0 &&
       customLocations.length === 0
     ) {
-      setErrorMessage("Please select at least one preferred location for On-site or Hybrid.");
+      setLocationError("Select at least one preferred job location for this work arrangement.");
+      locationInputRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
+      locationInputRef.current?.focus();
       return;
     }
 
@@ -393,6 +399,18 @@ export default function PreferencesPage() {
       }
     } catch {
       // Ignore — fall back to the CV Profile tab below.
+    }
+
+    // Signal the dashboard to show an optimistic progress panel before
+    // the analysis_tasks row is visible to polling. Only set for the
+    // dashboard destination; other nextStep values (plan, upload_cv)
+    // don't show the CV profile immediately.
+    if (nextStep.startsWith("/dashboard")) {
+      try {
+        setProfileUpdatePending("preferences_updated");
+      } catch {
+        // sessionStorage unavailable — degrade gracefully
+      }
     }
 
     setIsSaving(false);
@@ -556,7 +574,7 @@ export default function PreferencesPage() {
                       name="workArrangement"
                       value={option.value}
                       checked={isSelected}
-                      onChange={() => setWorkArrangement(option.value)}
+                      onChange={() => { setWorkArrangement(option.value); setLocationError(null); }}
                       className="sr-only"
                     />
                     {option.label}
@@ -637,14 +655,22 @@ export default function PreferencesPage() {
               )}
               <MultiSelectCombobox
                 id="locations"
-                label={`Preferred job locations${requiresPhysicalLocation ? " (required)" : ""}`}
+                label="Preferred job locations (required)"
                 options={locationOptions}
                 selectedValues={selectedLocationIds}
-                onChange={setSelectedLocationIds}
+                onChange={(vals) => {
+                  setSelectedLocationIds(vals);
+                  if (vals.length > 0) setLocationError(null);
+                }}
                 customValues={customLocations}
-                onCustomValuesChange={setCustomLocations}
+                onCustomValuesChange={(vals) => {
+                  setCustomLocations(vals);
+                  if (vals.length > 0) setLocationError(null);
+                }}
                 placeholder="Search locations..."
                 customPlaceholder="Type a location and press Enter"
+                error={locationError}
+                inputRef={locationInputRef}
               />
             </div>
           )}

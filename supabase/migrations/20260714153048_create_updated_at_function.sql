@@ -1,3 +1,7 @@
+
+
+
+
 -- Shared trigger function that stamps updated_at on every row update.
 -- Used by profiles, job_preferences, and cvs so none of them trust a
 -- client-supplied updated_at value.

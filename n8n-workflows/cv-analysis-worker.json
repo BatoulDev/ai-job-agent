@@ -1,0 +1,637 @@
+{
+  "name": "CV Analysis Worker",
+  "active": false,
+  "nodes": [
+    {
+      "id": "poll-trigger",
+      "name": "Poll Queue Every 5s",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [0, 0],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "seconds", "secondsInterval": 5 }]
+        }
+      }
+    },
+    {
+      "id": "workflow-configuration",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [220, 0],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "supabase-base-url",
+              "name": "supabaseBaseUrl",
+              "value": "http://host.docker.internal:55321",
+              "type": "string"
+            },
+            {
+              "id": "environment-field",
+              "name": "environment",
+              "value": "local",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "fail-stuck-tasks",
+      "name": "Fail Stuck Tasks",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [440, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/rpc/fail_stale_analysis_tasks",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": { "p_lease_minutes": 10 }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "claim-batch",
+      "name": "Claim Task Batch",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [660, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/rpc/claim_analysis_task",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": { "p_batch_size": 3 }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "split-tasks",
+      "name": "Split Tasks",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [880, 0],
+      "parameters": {
+        "jsCode": "const tasks = [];\nfor (const item of $input.all()) {\n  const t = item.json;\n  // n8n HTTP Request v4.4 unwraps JSON array responses into individual items,\n  // so each claimed task arrives as a separate item (confirmed in execution #51).\n  // The array branch below guards against any future n8n version that returns\n  // the whole array as a single item's json.\n  if (Array.isArray(t)) {\n    for (const task of t) {\n      if (task && typeof task === 'object' && task.id && task.user_id && task.cv_id) {\n        tasks.push({ json: task });\n      }\n    }\n  } else if (t && typeof t === 'object' && t.id && t.user_id && t.cv_id) {\n    tasks.push({ json: t });\n  }\n}\nreturn tasks;"
+      }
+    },
+    {
+      "id": "for-each-task",
+      "name": "For Each Task",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1100, 0],
+      "parameters": { "batchSize": 1 }
+    },
+    {
+      "id": "load-cv-row",
+      "name": "Load CV Row",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1320, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/cvs?id=eq.{{ $json.cv_id }}&user_id=eq.{{ $json.user_id }}&select=id,storage_path,mime_type,is_active,file_name&limit=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "validate-cv-context",
+      "name": "Validate CV Context",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1540, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "jsCode": "const taskCtx = $('Split Tasks').item.json;\n\nif ($input.item.json?.error) {\n  throw new Error('RETRYABLE: CV row load failed: ' + JSON.stringify($input.item.json.error));\n}\n\nconst rows = $input.item.json;\n// n8n HTTP Request v4.4 unwraps single-element JSON arrays into individual items.\n// The CV row therefore arrives as a direct object, not an array. Accept both shapes.\nconst cvRow = Array.isArray(rows)\n  ? (rows[0] ?? null)\n  : (rows && typeof rows === 'object' && rows.id ? rows : null);\n\nif (!cvRow) {\n  throw new Error('PERMANENT: CV record not found for cv_id=' + taskCtx.cv_id);\n}\nif (cvRow.id !== taskCtx.cv_id) {\n  throw new Error('PERMANENT: CV id mismatch: expected ' + taskCtx.cv_id + ' got ' + cvRow.id);\n}\nif (!cvRow.is_active) {\n  throw new Error('PERMANENT: CV is no longer active (cv_id=' + taskCtx.cv_id + ')');\n}\nif (!cvRow.storage_path || typeof cvRow.storage_path !== 'string' || !cvRow.storage_path.trim()) {\n  throw new Error('PERMANENT: CV has no valid storage_path (cv_id=' + taskCtx.cv_id + ')');\n}\nif (cvRow.mime_type !== 'application/pdf') {\n  throw new Error('PERMANENT: Unsupported MIME type: ' + cvRow.mime_type);\n}\n\nreturn [{\n  json: {\n    taskId:          taskCtx.id,\n    taskTrigger:     taskCtx.trigger || null,\n    userId:          taskCtx.user_id,\n    cvId:            taskCtx.cv_id,\n    cvStoragePath:   cvRow.storage_path,\n    cvMimeType:      cvRow.mime_type,\n    cvFileName:      cvRow.file_name || null,\n    attemptCount:    taskCtx.attempt_count,\n    maxAttempts:     taskCtx.max_attempts,\n    taskAttempt:     taskCtx.attempt_count,\n    taskMaxAttempts: taskCtx.max_attempts\n  }\n}];"
+      }
+    },
+    {
+      "id": "check-context-valid",
+      "name": "Check Context Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [1760, 0],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "ctx-storage-path-set",
+              "leftValue": "={{ $json.cvStoragePath }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "handle-context-failure",
+      "name": "Handle Context Failure",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [1980, 200],
+      "parameters": {
+        "jsCode": "// Runs on the false branch of Check Context Valid.\n// Validate CV Context returned an error — build the task update without\n// referencing intermediate processing nodes that have not yet run.\nconst splitCtx = $('Split Tasks').item.json;\n\nconst rawError = (\n  $input.item.json?.error ||\n  'CV context validation failed'\n).toString();\n\nconst isPermanent = rawError.includes('PERMANENT:');\nconst isRateLimit = rawError.includes('RATE_LIMIT:');\nconst safeMsg = rawError.replace(/^(PERMANENT:|RATE_LIMIT:|RETRYABLE:)\\s*/, '').substring(0, 500);\n\nconst taskId      = splitCtx?.id;\nconst attempt     = splitCtx?.attempt_count || 0;\nconst maxAttempts = splitCtx?.max_attempts  || 3;\n\nif (!taskId) {\n  return [{ json: { skipped: true, reason: 'No task ID for context failure update.' } }];\n}\n\nlet patchBody;\nif (isPermanent || attempt >= maxAttempts) {\n  patchBody = { status: 'failed', failed_at: new Date().toISOString(), last_error: safeMsg };\n} else {\n  const baseSec   = isRateLimit ? 60 : 30;\n  const backoffMs = baseSec * 1000 * Math.pow(2, Math.max(0, attempt - 1));\n  patchBody = {\n    status:       'pending',\n    available_at: new Date(Date.now() + backoffMs).toISOString(),\n    last_error:   safeMsg\n  };\n}\n\nreturn [{ json: { taskId, patchBody } }];"
+      }
+    },
+    {
+      "id": "sign-storage-url",
+      "name": "Sign Storage URL",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1980, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/storage/v1/object/sign/cvs/{{ $json.cvStoragePath }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": { "expiresIn": 120 }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "download-cv-binary",
+      "name": "Download CV Binary",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2200, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/storage/v1{{ $json.signedURL }}",
+        "sendHeaders": false,
+        "responseFormat": "file",
+        "binaryPropertyName": "data"
+      }
+    },
+    {
+      "id": "extract-pdf-text",
+      "name": "Extract PDF Text",
+      "type": "n8n-nodes-base.extractFromFile",
+      "typeVersion": 1.1,
+      "position": [2420, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "operation": "pdf",
+        "binaryPropertyName": "data"
+      }
+    },
+    {
+      "id": "load-preferences",
+      "name": "Load Preferences",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2640, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/job_preferences?user_id=eq.{{ $('Validate CV Context').item.json.userId }}&select=id,user_id,work_arrangement,job_market_coverage,job_type,experience_level,additional_notes,custom_target_roles,custom_locations,version&limit=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "load-preference-roles",
+      "name": "Load Preference Roles",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2860, 0],
+      "continueOnFail": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/job_preference_target_roles?job_preference_id=eq.{{ (Array.isArray($('Load Preferences').item.json) ? ($('Load Preferences').item.json[0] || {}) : ($('Load Preferences').item.json || {})).id || '00000000-0000-0000-0000-000000000000' }}&select=target_roles(name)&limit=20",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "load-preference-locations",
+      "name": "Load Preference Locations",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3080, 0],
+      "continueOnFail": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/job_preference_locations?job_preference_id=eq.{{ (Array.isArray($('Load Preferences').item.json) ? ($('Load Preferences').item.json[0] || {}) : ($('Load Preferences').item.json || {})).id || '00000000-0000-0000-0000-000000000000' }}&select=locations(name)&limit=20",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "merge-preference-data",
+      "name": "Merge Preference Data",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3300, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "jsCode": "const taskCtx   = $('Validate CV Context').item.json;\nconst prefsJson = $('Load Preferences').item.json;\n\n// n8n HTTP Request v4.4 unwraps single-element arrays into individual items.\n// Accept both a direct object (the common case) and an array.\nconst prefsRow = Array.isArray(prefsJson)\n  ? (prefsJson[0] || null)\n  : (prefsJson && typeof prefsJson === 'object' && prefsJson.id ? prefsJson : null);\n\n// Defense-in-depth: the userId that owns this task must match the preferences row.\nif (prefsRow && prefsRow.user_id && prefsRow.user_id !== taskCtx.userId) {\n  throw new Error('PERMANENT: job_preferences user_id does not match task user_id');\n}\n\n// alwaysOutputData on Load Preference Roles guarantees at-least-1 item even when Supabase\n// returns []. Empty-sentinel items produce no target_roles.name and are filtered out.\nconst joinRoleNames = $('Load Preference Roles').all()\n  .map(item => item.json?.target_roles?.name)\n  .filter(n => typeof n === 'string' && n.length > 0);\n\n// $input.all() collects every location item from the current batch, ensuring\n// we capture all rows when Load Preference Locations produces multiple items.\nconst joinLocNames = $input.all()\n  .map(item => item.json?.locations?.name)\n  .filter(n => typeof n === 'string' && n.length > 0);\n\nconst customRoles = Array.isArray(prefsRow?.custom_target_roles)\n  ? prefsRow.custom_target_roles.filter(r => typeof r === 'string' && r.length > 0)\n  : [];\nconst customLocs = Array.isArray(prefsRow?.custom_locations)\n  ? prefsRow.custom_locations.filter(l => typeof l === 'string' && l.length > 0)\n  : [];\n\n// Combine reference names and custom free-text names. save_job_preferences\n// deduplicates custom roles against reference role names already.\nconst allRoles = [...joinRoleNames, ...customRoles];\nconst allLocs  = [...joinLocNames,  ...customLocs];\n\nreturn [{\n  json: {\n    preferenceSnapshot: {\n      target_roles:        allRoles.length > 0 ? allRoles : [],\n      preferred_locations: allLocs.length  > 0 ? allLocs  : [],\n      work_arrangement:    prefsRow?.work_arrangement    || null,\n      job_market_coverage: prefsRow?.job_market_coverage || null,\n      job_type:            prefsRow?.job_type            || null,\n      experience_level:    prefsRow?.experience_level    || null,\n      additional_notes:    prefsRow?.additional_notes    || null,\n      preferences_version: typeof prefsRow?.version === 'number' ? prefsRow.version : null\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "load-task-feedback",
+      "name": "Load Task Feedback",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3410, 0],
+      "continueOnFail": true,
+      "alwaysOutputData": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/analysis_feedback?analysis_task_id=eq.{{ $('Validate CV Context').item.json.taskId }}&select=feedback_type,affected_section,feedback_text&limit=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "build-openai-request",
+      "name": "Build OpenAI Request",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3520, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "jsCode": "const taskCtx     = $('Validate CV Context').item.json;\nconst extractOut  = $('Extract PDF Text').item.json;\nconst mergedPrefs = $('Merge Preference Data').item.json;\n\nif (extractOut?.error) {\n  throw new Error('RETRYABLE: PDF extraction failed: ' + extractOut.error);\n}\n\nif (mergedPrefs?.error && String(mergedPrefs.error).includes('PERMANENT:')) {\n  throw new Error(mergedPrefs.error);\n}\n\nconst cvText = extractOut?.text || '';\nif (!cvText.trim()) {\n  throw new Error('PERMANENT: PDF produced no extractable text (may be scanned/image-only)');\n}\n\nconst preferenceSnapshot = mergedPrefs?.preferenceSnapshot || {\n  target_roles: [], preferred_locations: [], work_arrangement: null,\n  job_market_coverage: null, job_type: null, experience_level: null,\n  additional_notes: null, preferences_version: null\n};\n\n// Load Task Feedback: alwaysOutputData means this node always has one item.\n// A real feedback row has feedback_type set; the empty sentinel does not.\nconst feedbackItem = $('Load Task Feedback').item.json;\nconst feedbackRow = (feedbackItem && feedbackItem.feedback_type) ? feedbackItem : null;\n\nlet systemPrompt =\n  'You are an expert CV analyst. Extract structured professional information from ' +\n  'the CV text and generate a career profile informed by the job preferences.\\n\\n' +\n  'Return ONLY a valid JSON object with EXACTLY these fields. No markdown, no explanation.\\n\\n' +\n  '{\\n' +\n  '  \"candidate_name\": \"Full name as it appears on the CV header or contact section, or null if not found\",\\n' +\n  '  \"candidate_email\": \"Email address as it appears on the CV, or null if not found\",\\n' +\n  '  \"professional_summary\": \"2-4 sentence plain-text summary, or null\",\\n' +\n  '  \"skills\": [\"skill1\", \"skill2\"],\\n' +\n  '  \"education\": [{\"institution\":\"\",\"degree\":\"\",\"field_of_study\":\"\",\"start_date\":\"\",\"end_date\":\"\"}],\\n' +\n  '  \"work_experience\": [{\"organization\":\"\",\"title\":\"\",\"start_date\":\"\",\"end_date\":\"\",\"highlights\":[\"point1\",\"point2\"]}],\\n' +\n  '  \"projects\": [{\"name\":\"\",\"description\":\"\",\"technologies\":[]}],\\n' +\n  '  \"certifications\": [{\"name\":\"\",\"issuer\":\"\",\"year\":null}],\\n' +\n  '  \"languages\": [{\"language\":\"\",\"proficiency\":\"\"}],\\n' +\n  '  \"contact_info\": {\"links\":[],\"location\":null},\\n' +\n  '  \"profile_level\": \"junior\",\\n' +\n  '  \"recommended_roles\": [\"role1\"],\\n' +\n  '  \"strongest_areas\": [\"area1\"],\\n' +\n  '  \"career_recommendations\": [\"recommendation1\"],\\n' +\n  '  \"search_focus\": [\"focus1\"],\\n' +\n  '  \"development_areas\": [\"area1\"]\\n' +\n  '}\\n\\n' +\n  'Field rules:\\n' +\n  '- Extract ONLY information present in the CV. Never invent details.\\n' +\n  '- profile_level MUST be exactly one of: internship, entry-level, junior, mid-level, senior, open-to-all\\n' +\n  '- education[].field_of_study: the subject/major studied, or empty string if unknown.\\n' +\n  '- education[].start_date / end_date: \"YYYY\" or \"YYYY-MM\" or empty string.\\n' +\n  '- work_experience[].organization: company or institution name.\\n' +\n  '- work_experience[].highlights: array of short bullet strings (not a single description string).\\n' +\n  '- languages[].proficiency: one of Native, Fluent, Advanced, Intermediate, Basic \\u2014 or empty string.\\n' +\n  '- contact_info.links: array of public profile URLs (LinkedIn, GitHub, portfolio). Never include email or phone.\\n' +\n  '- contact_info.location: city/country string or null.\\n' +\n  '- Use [] for missing arrays, null or empty string for missing scalars.\\n' +\n  '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and preferences.\\n' +\n  '- candidate_name: copy the name exactly from the CV header or contact section. null if absent.\\n' +\n  '- candidate_email: copy the email exactly from the CV. null if absent.';\n\nif (feedbackRow) {\n  systemPrompt +=\n    '\\n\\nUSER FEEDBACK NOTE: The user has provided specific feedback about their ' +\n    'previous AI Career Profile (included in the USER FEEDBACK section of the user ' +\n    'message). Incorporate their corrections or guidance into your analysis. ' +\n    'For cv_correction requests: correct only the specific detail the user identified — ' +\n    'do not fabricate other changes. ' +\n    'The JSON output format above is fixed and must not change regardless of feedback content.';\n}\n\nconst userParts = ['JOB PREFERENCES:\\n' + JSON.stringify(preferenceSnapshot, null, 2)];\n\nif (feedbackRow) {\n  const section = feedbackRow.affected_section\n    ? 'Section: ' + feedbackRow.affected_section + '\\n'\n    : '';\n  userParts.push(\n    'USER FEEDBACK (' + feedbackRow.feedback_type + '):\\n' +\n    section +\n    feedbackRow.feedback_text\n  );\n}\n\nuserParts.push('CV TEXT:\\n' + cvText);\n\nconst userMessage = userParts.join('\\n\\n');\n\nreturn [{\n  json: {\n    taskId:             taskCtx.taskId,\n    userId:             taskCtx.userId,\n    cvId:               taskCtx.cvId,\n    taskAttempt:        taskCtx.taskAttempt,\n    taskMaxAttempts:    taskCtx.taskMaxAttempts,\n    cvText:             cvText,\n    preferenceSnapshot: preferenceSnapshot,\n    openAIBody: {\n      model: 'gpt-4o',\n      response_format: { type: 'json_object' },\n      temperature: 0,\n      max_tokens: 4096,\n      messages: [\n        { role: 'system', content: systemPrompt },\n        { role: 'user', content: userMessage }\n      ]\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "call-openai",
+      "name": "Call OpenAI",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [3740, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.openAIBody }}",
+        "options": { "timeout": 120000 }
+      },
+      "credentials": {
+        "openAiApi": { "id": "", "name": "OpenAI" }
+      }
+    },
+    {
+      "id": "parse-ai-response",
+      "name": "Parse AI Response",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [3960, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "jsCode": "const reqCtx     = $('Build OpenAI Request').item.json;\nconst aiResponse = $input.item.json;\n\nif (reqCtx?.error) {\n  throw new Error(reqCtx.error);\n}\nif (aiResponse?.error) {\n  throw new Error('RETRYABLE: OpenAI call failed: ' + aiResponse.error);\n}\n\nconst statusCode = aiResponse?.statusCode || 0;\nif (statusCode === 429) {\n  throw new Error('RATE_LIMIT: OpenAI rate limit reached');\n}\nif (statusCode >= 500) {\n  throw new Error('RETRYABLE: OpenAI server error ' + statusCode);\n}\n\nconst rawContent = aiResponse?.choices?.[0]?.message?.content;\nif (!rawContent) {\n  throw new Error('RETRYABLE: Empty or missing content in OpenAI response');\n}\n\nlet parsed;\ntry {\n  parsed = JSON.parse(rawContent);\n} catch (e) {\n  throw new Error('RETRYABLE: Invalid JSON from OpenAI: ' + String(rawContent).substring(0, 120));\n}\n\nconst allowedLevels = ['internship','entry-level','junior','mid-level','senior','open-to-all'];\nif (!allowedLevels.includes(parsed.profile_level)) {\n  parsed.profile_level = null;\n}\n\nconst safeArr = v => Array.isArray(v) ? v : [];\nconst safeObj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;\nconst safeStr = v => (typeof v === 'string' && v.trim()) ? v.trim() : null;\n\nconst prefs = reqCtx.preferenceSnapshot || {};\n\nreturn [{\n  json: {\n    taskId:          reqCtx.taskId,\n    taskAttempt:     reqCtx.taskAttempt,\n    taskMaxAttempts: reqCtx.taskMaxAttempts,\n    outcome: 'success',\n    candidate_name:  safeStr(parsed.candidate_name),\n    candidate_email: safeStr(parsed.candidate_email),\n    insertBody: {\n      user_id:                reqCtx.userId,\n      cv_id:                  reqCtx.cvId,\n      analysis_task_id:       reqCtx.taskId,\n      status:                 'completed',\n      ai_provider:            'openai',\n      ai_model:               'gpt-4o',\n      analyzed_at:            new Date().toISOString(),\n      extracted_text:         reqCtx.cvText || null,\n      preference_snapshot:    prefs,\n      preferences_version:    typeof prefs.preferences_version === 'number' ? prefs.preferences_version : null,\n      professional_summary:   safeStr(parsed.professional_summary),\n      skills:                 safeArr(parsed.skills),\n      education:              safeArr(parsed.education),\n      work_experience:        safeArr(parsed.work_experience),\n      projects:               safeArr(parsed.projects),\n      certifications:         safeArr(parsed.certifications),\n      languages:              safeArr(parsed.languages),\n      contact_info:           safeObj(parsed.contact_info),\n      profile_level:          parsed.profile_level || null,\n      recommended_roles:      safeArr(parsed.recommended_roles),\n      strongest_areas:        safeArr(parsed.strongest_areas),\n      career_recommendations: safeArr(parsed.career_recommendations),\n      search_focus:           safeArr(parsed.search_focus),\n      development_areas:      safeArr(parsed.development_areas)\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "load-user-profile",
+      "name": "Load User Profile",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [4180, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/profiles?id=eq.{{ $('Validate CV Context').item.json.userId }}&select=id,full_name&limit=1",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Accept", "value": "application/json" }
+          ]
+        }
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "validate-cv-ownership",
+      "name": "Validate CV Ownership",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4400, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "jsCode": "const parseCtx    = $('Parse AI Response').item.json;\nconst profileJson = $input.item.json;\n\nconst taskId          = parseCtx?.taskId;\nconst taskAttempt     = parseCtx?.taskAttempt;\nconst taskMaxAttempts = parseCtx?.taskMaxAttempts;\nconst candidateName   = parseCtx?.candidate_name || null;\n\n// n8n HTTP Request v4.4 unwraps single-element arrays into individual items.\nconst profileRow = Array.isArray(profileJson)\n  ? (profileJson[0] || null)\n  : (profileJson && typeof profileJson === 'object' && profileJson.id ? profileJson : null);\n\nconst accountName = profileRow?.full_name || null;\n\nconst passthrough = {\n  taskId, taskAttempt, taskMaxAttempts,\n  outcome:    parseCtx?.outcome,\n  insertBody: parseCtx?.insertBody\n};\n\n// If either name is absent, ownership cannot be determined — allow through\nif (!candidateName || !accountName) {\n  return [{ json: { ...passthrough, ownershipStatus: 'unable_to_verify', ownershipDetail: null } }];\n}\n\n// Normalize: strip diacritics, lowercase, keep only letters, split to tokens > 1 char\nfunction tokenize(name) {\n  return name\n    .normalize('NFD')\n    .replace(/[\\u0300-\\u036f]/g, '')\n    .toLowerCase()\n    .replace(/[^a-z]/g, ' ')\n    .split(/\\s+/)\n    .filter(t => t.length > 1);\n}\n\nconst tokA = tokenize(accountName);\nconst tokB = tokenize(candidateName);\n\nif (tokA.length === 0 || tokB.length === 0) {\n  return [{ json: { ...passthrough, ownershipStatus: 'unable_to_verify', ownershipDetail: null } }];\n}\n\nconst setA = new Set(tokA);\nconst setB = new Set(tokB);\nlet shared = 0;\nfor (const t of setA) { if (setB.has(t)) shared++; }\nconst union = setA.size + setB.size - shared;\nconst similarity = union === 0 ? 1 : shared / union;\n\nlet ownershipStatus, ownershipDetail;\nif (shared === 0) {\n  // Zero shared tokens — clearly a different person — block\n  ownershipStatus = 'name_mismatch';\n  ownershipDetail = 'CV name does not match account name';\n} else if (similarity >= 0.4) {\n  ownershipStatus = 'verified';\n  ownershipDetail = null;\n} else {\n  // Some overlap but below threshold — uncertain, allow through\n  ownershipStatus = 'unable_to_verify';\n  ownershipDetail = null;\n}\n\nreturn [{ json: { ...passthrough, ownershipStatus, ownershipDetail } }];"
+      }
+    },
+    {
+      "id": "check-ownership-valid",
+      "name": "Check Ownership Valid",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [4620, 0],
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "ownership-not-mismatch",
+              "leftValue": "={{ $json.ownershipStatus }}",
+              "rightValue": "name_mismatch",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "handle-ownership-mismatch",
+      "name": "Handle Ownership Mismatch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [4840, 200],
+      "parameters": {
+        "jsCode": "// Runs on the false branch of Check Ownership Valid.\n// Writes a permanent task failure with last_error prefixed OWNERSHIP_MISMATCH:\n// so the frontend shows a targeted recovery UI (upload another CV / update name).\nconst ownershipCtx = $('Validate CV Ownership').item.json;\nconst splitCtx     = $('Split Tasks').item.json;\n\nconst taskId = ownershipCtx?.taskId || splitCtx?.id;\nconst detail = ownershipCtx?.ownershipDetail || 'CV name does not match account name';\n\nreturn [{\n  json: {\n    taskId,\n    patchBody: {\n      status:     'failed',\n      failed_at:  new Date().toISOString(),\n      last_error: 'OWNERSHIP_MISMATCH: ' + detail.substring(0, 400)\n    }\n  }\n}];"
+      }
+    },
+    {
+      "id": "insert-cv-analysis",
+      "name": "Insert CV Analysis",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [4840, 0],
+      "continueOnFail": true,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/cv_analyses",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "resolution=ignore-duplicates,return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.insertBody }}"
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    },
+    {
+      "id": "build-task-update",
+      "name": "Build Task Update",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [5060, 0],
+      "parameters": {
+        "jsCode": "const parseResult  = $('Parse AI Response').item.json;\nconst insertResult = $input.item.json;\nconst validateCtx  = $('Validate CV Context').item.json;\nconst splitCtx     = $('Split Tasks').item.json;\n\nconst taskId      = parseResult?.taskId      || validateCtx?.taskId      || splitCtx?.id;\nconst attempt     = parseResult?.taskAttempt || validateCtx?.taskAttempt || splitCtx?.attempt_count || 0;\nconst maxAttempts = parseResult?.taskMaxAttempts || validateCtx?.taskMaxAttempts || splitCtx?.max_attempts || 3;\n\nif (!taskId) {\n  return [{ json: { skipped: true, reason: 'No task ID resolved.' } }];\n}\n\nconst parseSucceeded = parseResult?.outcome === 'success';\nconst insertError    = insertResult?.error;\n\nlet patchBody;\n\nif (parseSucceeded && !insertError) {\n  patchBody = { status: 'completed', completed_at: new Date().toISOString() };\n} else {\n  const rawError = (\n    insertError ||\n    parseResult?.error ||\n    $('Call OpenAI').item.json?.error ||\n    $('Build OpenAI Request').item.json?.error ||\n    $('Validate CV Ownership').item.json?.error ||\n    $('Load User Profile').item.json?.error ||\n    $('Merge Preference Data').item.json?.error ||\n    $('Load Preference Locations').item.json?.error ||\n    $('Load Preference Roles').item.json?.error ||\n    $('Load Preferences').item.json?.error ||\n    $('Extract PDF Text').item.json?.error ||\n    $('Download CV Binary').item.json?.error ||\n    $('Sign Storage URL').item.json?.error ||\n    validateCtx?.error ||\n    $('Load CV Row').item.json?.error ||\n    'Unknown processing error'\n  )?.toString() || 'Unknown processing error';\n\n  const isPermanent = rawError.includes('PERMANENT:');\n  const isRateLimit = rawError.includes('RATE_LIMIT:');\n  const safeMsg = rawError.replace(/^(PERMANENT:|RATE_LIMIT:|RETRYABLE:)\\s*/, '').substring(0, 500);\n\n  if (isPermanent || attempt >= maxAttempts) {\n    patchBody = { status: 'failed', failed_at: new Date().toISOString(), last_error: safeMsg };\n  } else {\n    const baseSec   = isRateLimit ? 60 : 30;\n    const backoffMs = baseSec * 1000 * Math.pow(2, Math.max(0, attempt - 1));\n    patchBody = {\n      status:       'pending',\n      available_at: new Date(Date.now() + backoffMs).toISOString(),\n      last_error:   safeMsg\n    };\n  }\n}\n\nreturn [{ json: { taskId, patchBody } }];"
+      }
+    },
+    {
+      "id": "update-task-status",
+      "name": "Update Task Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [5280, 0],
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/analysis_tasks?id=eq.{{ $json.taskId }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Prefer", "value": "return=minimal" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.patchBody }}"
+      },
+      "credentials": {
+        "supabaseApi": { "id": "", "name": "Supabase Service Role" }
+      }
+    }
+  ],
+  "connections": {
+    "Poll Queue Every 5s": {
+      "main": [[{ "node": "Workflow Configuration", "type": "main", "index": 0 }]]
+    },
+    "Workflow Configuration": {
+      "main": [[{ "node": "Fail Stuck Tasks", "type": "main", "index": 0 }]]
+    },
+    "Fail Stuck Tasks": {
+      "main": [[{ "node": "Claim Task Batch", "type": "main", "index": 0 }]]
+    },
+    "Claim Task Batch": {
+      "main": [[{ "node": "Split Tasks", "type": "main", "index": 0 }]]
+    },
+    "Split Tasks": {
+      "main": [[{ "node": "For Each Task", "type": "main", "index": 0 }]]
+    },
+    "For Each Task": {
+      "main": [
+        [],
+        [{ "node": "Load CV Row", "type": "main", "index": 0 }]
+      ]
+    },
+    "Load CV Row": {
+      "main": [[{ "node": "Validate CV Context", "type": "main", "index": 0 }]]
+    },
+    "Validate CV Context": {
+      "main": [[{ "node": "Check Context Valid", "type": "main", "index": 0 }]]
+    },
+    "Check Context Valid": {
+      "main": [
+        [{ "node": "Sign Storage URL", "type": "main", "index": 0 }],
+        [{ "node": "Handle Context Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Handle Context Failure": {
+      "main": [[{ "node": "Update Task Status", "type": "main", "index": 0 }]]
+    },
+    "Sign Storage URL": {
+      "main": [[{ "node": "Download CV Binary", "type": "main", "index": 0 }]]
+    },
+    "Download CV Binary": {
+      "main": [[{ "node": "Extract PDF Text", "type": "main", "index": 0 }]]
+    },
+    "Extract PDF Text": {
+      "main": [[{ "node": "Load Preferences", "type": "main", "index": 0 }]]
+    },
+    "Load Preferences": {
+      "main": [[{ "node": "Load Preference Roles", "type": "main", "index": 0 }]]
+    },
+    "Load Preference Roles": {
+      "main": [[{ "node": "Load Preference Locations", "type": "main", "index": 0 }]]
+    },
+    "Load Preference Locations": {
+      "main": [[{ "node": "Merge Preference Data", "type": "main", "index": 0 }]]
+    },
+    "Merge Preference Data": {
+      "main": [[{ "node": "Load Task Feedback", "type": "main", "index": 0 }]]
+    },
+    "Load Task Feedback": {
+      "main": [[{ "node": "Build OpenAI Request", "type": "main", "index": 0 }]]
+    },
+    "Build OpenAI Request": {
+      "main": [[{ "node": "Call OpenAI", "type": "main", "index": 0 }]]
+    },
+    "Call OpenAI": {
+      "main": [[{ "node": "Parse AI Response", "type": "main", "index": 0 }]]
+    },
+    "Parse AI Response": {
+      "main": [[{ "node": "Load User Profile", "type": "main", "index": 0 }]]
+    },
+    "Load User Profile": {
+      "main": [[{ "node": "Validate CV Ownership", "type": "main", "index": 0 }]]
+    },
+    "Validate CV Ownership": {
+      "main": [[{ "node": "Check Ownership Valid", "type": "main", "index": 0 }]]
+    },
+    "Check Ownership Valid": {
+      "main": [
+        [{ "node": "Insert CV Analysis", "type": "main", "index": 0 }],
+        [{ "node": "Handle Ownership Mismatch", "type": "main", "index": 0 }]
+      ]
+    },
+    "Handle Ownership Mismatch": {
+      "main": [[{ "node": "Update Task Status", "type": "main", "index": 0 }]]
+    },
+    "Insert CV Analysis": {
+      "main": [[{ "node": "Build Task Update", "type": "main", "index": 0 }]]
+    },
+    "Build Task Update": {
+      "main": [[{ "node": "Update Task Status", "type": "main", "index": 0 }]]
+    },
+    "Update Task Status": {
+      "main": [[{ "node": "For Each Task", "type": "main", "index": 0 }]]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
