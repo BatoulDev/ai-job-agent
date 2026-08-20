@@ -21,6 +21,7 @@ const STATUS_LABELS: Record<CvProfileState, string> = {
   approved: "Approved and active",
   preferences_outdated: "Update required",
   changes_requested: "Update required",
+  ownership_mismatch: "Review required",
   failed: "Analysis failed",
 };
 
@@ -32,6 +33,7 @@ const STATUS_STYLES: Record<CvProfileState, string> = {
   approved: "bg-success/10 text-success",
   preferences_outdated: "bg-amber-100 text-amber-700",
   changes_requested: "bg-amber-100 text-amber-700",
+  ownership_mismatch: "bg-amber-100 text-amber-700",
   failed: "bg-red-50 text-red-700",
 };
 

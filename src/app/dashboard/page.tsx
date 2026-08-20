@@ -22,8 +22,13 @@ import PreferencesSection, {
 import { DASHBOARD_STATS } from "@/lib/dashboardData";
 import { createClient } from "@/lib/supabase/client";
 import type { CvAnalysis } from "@/lib/cvAnalysis/types";
-import type { AnalysisTaskStatus } from "@/lib/analysisTasks/types";
+import type { AnalysisTaskStatus, AnalysisTaskTrigger } from "@/lib/analysisTasks/types";
 import { isPreferencesComplete } from "@/lib/cvAnalysis/profileState";
+import {
+  readAndClearProfileUpdatePending,
+  computeEffectiveTaskState,
+  OPTIMISTIC_TIMEOUT_MS,
+} from "@/lib/optimisticProfileUpdate";
 
 const TABS: DashboardTab[] = [
   { id: "new-matches", label: "New Matches" },
@@ -51,7 +56,23 @@ function DashboardPageContent() {
   const [preferencesComplete, setPreferencesComplete] = useState(false);
   const [cv, setCv] = useState<CvRecord | null>(null);
   const [taskStatus, setTaskStatus] = useState<AnalysisTaskStatus | null>(null);
+  const [taskTrigger, setTaskTrigger] = useState<AnalysisTaskTrigger | null>(null);
+  const [taskLastError, setTaskLastError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<CvAnalysis | null>(null);
+  const [cvId, setCvId] = useState<string | null>(null);
+  // Read and immediately clear the sessionStorage flag on the first render.
+  // DashboardPageContent is inside <Suspense> with useSearchParams(), so Next.js
+  // only renders it on the client — sessionStorage is always available here.
+  // Using lazy initializer avoids a redundant setState-in-effect cycle.
+  const [optimisticTrigger, setOptimisticTrigger] = useState<AnalysisTaskTrigger | null>(() => {
+    try {
+      const flag = readAndClearProfileUpdatePending();
+      return flag?.trigger ?? null;
+    } catch {
+      return null;
+    }
+  });
+  const [showStalledBanner, setShowStalledBanner] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -174,6 +195,7 @@ function DashboardPageContent() {
             }
           : null
       );
+      setCvId(activeCv?.id ?? null);
 
       // Both queries below depend on the active CV's id, so they can only
       // run once the cvs query above has resolved. Most-recent-first: the
@@ -184,7 +206,7 @@ function DashboardPageContent() {
         const [taskResult, analysisResult] = await Promise.all([
           supabase
             .from("analysis_tasks")
-            .select("status")
+            .select("status, trigger, last_error")
             .eq("cv_id", activeCv.id)
             .order("created_at", { ascending: false })
             .limit(1)
@@ -201,6 +223,8 @@ function DashboardPageContent() {
         if (!isMounted) return;
 
         setTaskStatus(taskResult.data?.status ?? null);
+        setTaskTrigger((taskResult.data?.trigger as AnalysisTaskTrigger | undefined) ?? null);
+        setTaskLastError(taskResult.data?.last_error ?? null);
         setAnalysis((analysisResult.data as CvAnalysis | null) ?? null);
       }
 
@@ -212,6 +236,109 @@ function DashboardPageContent() {
       isMounted = false;
     };
   }, [router]);
+
+  // Poll for task and analysis updates while a task is actively running, or
+  // while the optimistic flag is active (before the DB task row is visible).
+  // Fires every 2.5 s; stops once the task reaches a terminal state and the
+  // optimistic trigger is cleared. This makes the "analyzing" spinner resolve
+  // without a manual page refresh.
+  useEffect(() => {
+    if (!cvId) return;
+    const shouldPoll =
+      taskStatus === "pending" ||
+      taskStatus === "processing" ||
+      (optimisticTrigger !== null && !showStalledBanner);
+    if (!shouldPoll) return;
+
+    let active = true;
+
+    const intervalId = setInterval(async () => {
+      if (!active) return;
+      const supabase = createClient();
+      const [taskResult, analysisResult] = await Promise.all([
+        supabase
+          .from("analysis_tasks")
+          .select("status, trigger, last_error")
+          .eq("cv_id", cvId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("cv_analyses")
+          .select("*")
+          .eq("cv_id", cvId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+      if (!active) return;
+
+      const newStatus = taskResult.data?.status ?? null;
+
+      // Clear the optimistic state once the task reaches a terminal status,
+      // and dismiss any stalled banner that may have been shown.
+      if (optimisticTrigger !== null && (newStatus === "completed" || newStatus === "failed")) {
+        setOptimisticTrigger(null);
+        setShowStalledBanner(false);
+      }
+
+      setTaskStatus(newStatus);
+      setTaskTrigger((taskResult.data?.trigger as AnalysisTaskTrigger | undefined) ?? null);
+      setTaskLastError(taskResult.data?.last_error ?? null);
+      setAnalysis((analysisResult.data as CvAnalysis | null) ?? null);
+    }, 2_500);
+
+    return () => {
+      active = false;
+      clearInterval(intervalId);
+    };
+  }, [taskStatus, cvId, optimisticTrigger, showStalledBanner]);
+
+  // 20-second timeout: if no DB task row appears after the optimistic flag
+  // was set, stop the infinite spinner and show a recoverable stalled banner.
+  // One final refetch is performed in case the task appeared just before the
+  // timeout fired. The banner clears automatically if the task is eventually
+  // found via normal polling resumption (pending → completed/failed).
+  useEffect(() => {
+    if (optimisticTrigger === null || showStalledBanner) return;
+
+    const id = setTimeout(async () => {
+      setShowStalledBanner(true);
+      setOptimisticTrigger(null);
+
+      if (!cvId) return;
+      const supabase = createClient();
+      const [taskResult, analysisResult] = await Promise.all([
+        supabase
+          .from("analysis_tasks")
+          .select("status, trigger, last_error")
+          .eq("cv_id", cvId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+        supabase
+          .from("cv_analyses")
+          .select("*")
+          .eq("cv_id", cvId)
+          .order("created_at", { ascending: false })
+          .limit(1)
+          .maybeSingle(),
+      ]);
+
+      const newStatus = taskResult.data?.status ?? null;
+      // If the task appeared, no need to show the stalled banner.
+      if (newStatus !== null) {
+        setShowStalledBanner(false);
+      }
+      setTaskStatus(newStatus);
+      setTaskTrigger((taskResult.data?.trigger as AnalysisTaskTrigger | undefined) ?? null);
+      setTaskLastError(taskResult.data?.last_error ?? null);
+      setAnalysis((analysisResult.data as CvAnalysis | null) ?? null);
+    }, OPTIMISTIC_TIMEOUT_MS);
+
+    return () => clearTimeout(id);
+  }, [optimisticTrigger, showStalledBanner, cvId]);
+
 
   if (isLoading) {
     return (
@@ -236,6 +363,17 @@ function DashboardPageContent() {
   // has been approved — no job matching exists yet, so this is never
   // true for a real user today (see LockedMatchesNotice).
   const isProfileApproved = analysis?.review_status === "approved" && analysis?.is_current === true;
+
+  // Derive the effective task state to pass to CvProfileSection. When
+  // the optimistic trigger is active (flag was set, no DB task yet),
+  // synthesise a "pending" task so deriveCvProfileState returns "analyzing"
+  // immediately — hiding the old "Ready for review" profile during the gap.
+  const { effectiveTaskStatus, effectiveTaskTrigger } = computeEffectiveTaskState(
+    taskStatus,
+    taskTrigger,
+    optimisticTrigger,
+    showStalledBanner
+  );
 
   return (
     <div className="min-h-screen bg-bg">
@@ -272,9 +410,18 @@ function DashboardPageContent() {
                 cv={cv}
                 preferences={preferences}
                 preferencesComplete={preferencesComplete}
-                taskStatus={taskStatus}
+                taskStatus={effectiveTaskStatus}
+                taskTrigger={effectiveTaskTrigger}
+                taskLastError={taskLastError}
                 analysis={analysis}
                 onNavigateToPreferences={() => setActiveTab("preferences")}
+                onAnalysisUpdated={(updated) => setAnalysis(updated)}
+                onTaskStarted={(trigger) => {
+                  setTaskStatus("pending");
+                  setTaskTrigger(trigger);
+                  setTaskLastError(null);
+                }}
+                updateStalled={showStalledBanner}
               />
             )}
             {activeTab === "preferences" && (

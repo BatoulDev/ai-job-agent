@@ -1,3 +1,4 @@
+
 "use client";
 
 import { useEffect, useId, useMemo, useRef, useState } from "react";
@@ -42,8 +43,10 @@ export default function MultiSelectCombobox({
   otherLabel = "Other",
   customPlaceholder = "Type and press Enter",
   helperText,
+  error,
   disabled = false,
   emptyMessage = "No matches found.",
+  inputRef,
 }: {
   id: string;
   label: string;
@@ -57,8 +60,10 @@ export default function MultiSelectCombobox({
   otherLabel?: string;
   customPlaceholder?: string;
   helperText?: string;
+  error?: string | null;
   disabled?: boolean;
   emptyMessage?: string;
+  inputRef?: React.RefObject<HTMLInputElement | null>;
 }) {
   const [isOpen, setIsOpen] = useState(false);
   const [query, setQuery] = useState("");
@@ -67,7 +72,10 @@ export default function MultiSelectCombobox({
   const [customDraft, setCustomDraft] = useState("");
   const [customEntryError, setCustomEntryError] = useState<string | null>(null);
   const containerRef = useRef<HTMLDivElement>(null);
+  const internalInputRef = useRef<HTMLInputElement>(null);
+  const resolvedInputRef = inputRef ?? internalInputRef;
   const listboxId = useId();
+  const errorId = useId();
 
   const selectedOptions = useMemo(
     () => selectedValues.map((v) => options.find((o) => o.value === v)).filter((o): o is ComboboxOption => !!o),
@@ -253,6 +261,7 @@ export default function MultiSelectCombobox({
       )}
 
       <input
+        ref={resolvedInputRef}
         id={id}
         role="combobox"
         aria-expanded={isCustomEntryMode ? false : isOpen}
@@ -261,6 +270,8 @@ export default function MultiSelectCombobox({
           !isCustomEntryMode && activeOption ? `${listboxId}-${activeOption.value}` : undefined
         }
         aria-autocomplete="list"
+        aria-invalid={error ? true : undefined}
+        aria-describedby={error ? errorId : undefined}
         autoComplete="off"
         type="text"
         placeholder={atMax ? "Maximum reached" : isCustomEntryMode ? customPlaceholder : placeholder}
@@ -279,7 +290,7 @@ export default function MultiSelectCombobox({
           setActiveIndex(0);
         }}
         onKeyDown={handleKeyDown}
-        className={comboboxFieldClass}
+        className={`${comboboxFieldClass}${error ? " border-red-400 ring-1 ring-red-400" : ""}`}
       />
 
       {isOpen && !isCustomEntryMode && (
@@ -332,6 +343,8 @@ export default function MultiSelectCombobox({
 
       {customEntryError ? (
         <p className="mt-1.5 text-xs leading-relaxed text-red-600">{customEntryError}</p>
+      ) : error ? (
+        <p id={errorId} className="mt-1.5 text-xs leading-relaxed text-red-600">{error}</p>
       ) : atMax ? (
         <p className="mt-1.5 text-xs leading-relaxed text-muted">
           Maximum of {maxSelections} reached — remove one to add another.

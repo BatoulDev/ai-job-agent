@@ -6,6 +6,7 @@ import Link from "next/link";
 import OnboardingShell from "@/components/onboarding/OnboardingShell";
 import GiftModal from "@/components/onboarding/GiftModal";
 import { createClient } from "@/lib/supabase/client";
+import { setProfileUpdatePending } from "@/lib/optimisticProfileUpdate";
 
 const ACCEPTED_FORMATS = ".pdf";
 const MAX_FILE_SIZE_BYTES = 5 * 1024 * 1024;
@@ -164,6 +165,16 @@ function UploadCvPageContent() {
     // remove the previous one.
     if (existingCv?.storage_path && existingCv.storage_path !== storagePath) {
       await supabase.storage.from("cvs").remove([existingCv.storage_path]);
+    }
+
+    // Signal the dashboard to show an optimistic progress panel before
+    // the analysis_tasks row becomes visible to polling. The flag is
+    // set before the redirect so it survives navigation to preferences
+    // and then to /dashboard.
+    try {
+      setProfileUpdatePending("cv_replaced");
+    } catch {
+      // sessionStorage unavailable — degrade gracefully
     }
 
     setIsUploading(false);

@@ -1,7 +1,11 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
-This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
 <!-- END:nextjs-agent-rules -->
 
 # AI Job Agent — Project Engineering Rules
@@ -459,3 +463,135 @@ A feature or fix is done only when:
 - Documentation or environment examples were updated when needed.
 - No temporary debug code, unsafe bypass, or incomplete placeholder remains.
 - Remaining limitations and risks are reported honestly.
+
+## 26. Scalability and concurrency
+
+- Design server-side flows to support multiple concurrent users safely.
+- Never store user-specific state in global variables, module-level mutable objects, or process memory.
+- Assume multiple application instances may handle requests simultaneously.
+- Do not rely on in-memory locks, counters, queues, caches, or scheduled tasks for production correctness.
+- Use database constraints, transactions, and idempotency keys to prevent duplicate writes and race conditions.
+- Important state transitions must be atomic.
+- Use pagination or cursor-based loading for potentially large datasets.
+- Never fetch an unbounded number of users, jobs, applications, notifications, or analysis records.
+- Apply explicit, reasonable query limits.
+- Avoid loading full database rows when only selected fields are needed.
+- Do not perform heavy AI, CV-processing, email, matching, or bulk database work inside a normal web request when it may exceed request limits.
+- Long-running work should use a durable background-job mechanism with persisted status.
+- Background work must support safe retries without creating duplicate results or external actions.
+- Do not assume that one server process or one deployment instance will always be running.
+- Review database indexes and query plans for frequently used filters, joins, sorting, and authorization conditions.
+- Use connection pooling suitable for the deployed serverless or production environment.
+- Measure performance before claiming that a flow scales.
+
+## 27. API protection and abuse prevention
+
+- Apply server-side rate limiting to authentication, CV upload, AI generation, job matching, checkout, email, and other expensive or abuse-sensitive endpoints.
+- Rate limits must use a shared production-safe store when multiple server instances are possible.
+- Do not rely only on client-side cooldowns or disabled buttons.
+- Enforce request body size limits and reject unexpectedly large payloads.
+- Validate request content types.
+- Use explicit allowlists for accepted fields; do not pass arbitrary client objects directly into database writes.
+- Protect mutations against replay and duplicate submission.
+- Use idempotency keys for payment, email, application, AI-generation, and other costly or externally visible operations where appropriate.
+- Verify webhook signatures using the raw request payload and reject invalid, expired, or replayed webhook events.
+- Never trust subscription or payment status supplied by the browser.
+- Return generic public errors while retaining sanitized diagnostic context on the server.
+- Add bot or abuse protection to public forms when evidence shows it is needed.
+- Do not expose unlimited AI or external-API usage through an unauthenticated endpoint.
+
+## 28. Authentication and session security
+
+- Use the authentication routes and session helpers already established by the repository.
+- Search for the canonical authentication route before adding login, signup, logout, callback, or password-reset links.
+- Preserve only validated relative `next` destinations.
+- Reject external, protocol-relative, encoded-external, or malformed redirect destinations to prevent open redirects.
+- Enforce authorization at every server entry point, including Server Components, Route Handlers, Server Actions, RPC calls, and Storage operations.
+- Never treat middleware alone as sufficient authorization.
+- Revalidate the authenticated user and ownership before sensitive reads or writes.
+- Do not accept a user ID from the client as proof of identity.
+- Use secure, HTTP-only, SameSite cookies according to the authentication provider’s supported implementation.
+- Do not place access tokens or sensitive session values in URLs, localStorage, logs, or analytics.
+- Handle expired and revoked sessions safely.
+- Sensitive account changes should require recent authentication when supported.
+- Test authenticated, unauthenticated, unauthorized, expired-session, and cross-user access cases.
+- Authentication errors must not reveal whether an unrelated account exists.
+
+## 29. CV uploads, Storage, and personal data
+
+- Treat CVs and extracted profile data as sensitive personal information.
+- Store private CV files in non-public storage.
+- Enforce Storage policies so users can access only their own files.
+- Use generated storage paths; do not trust client-provided bucket paths or filenames.
+- Validate file type using server-verified content where practical, not only the filename extension or browser MIME type.
+- Restrict accepted formats and enforce a documented maximum file size.
+- Reject executable, unsupported, malformed, or suspicious uploads.
+- Do not render uploaded HTML or other active content.
+- Use time-limited signed URLs when temporary private-file access is needed.
+- Do not expose permanent public CV URLs.
+- Prevent one user from replacing, reading, or deleting another user’s CV.
+- Define safe deletion behavior for replaced CVs, deleted accounts, and abandoned uploads.
+- Never place CV contents or extracted personal data in analytics, error tracking, client logs, or public caches.
+- Document data retention and user-deletion behavior before production launch.
+
+## 30. AI security, reliability, and cost control
+
+- Treat CV text, job descriptions, company content, and scraped or imported text as untrusted input.
+- External content must never override system instructions, authorization rules, user approval requirements, or tool restrictions.
+- Defend AI workflows against prompt injection and malicious document content.
+- Keep trusted instructions structurally separate from untrusted content.
+- Never allow model output alone to authorize a payment, application, email, database permission change, or other external action.
+- Validate structured AI output against an explicit runtime schema before storing or using it.
+- Apply input-size, output-size, timeout, and token limits.
+- Use model and cost limits appropriate to the user’s active entitlement.
+- Prevent concurrent duplicate AI requests for the same operation.
+- Persist job status for long-running AI tasks.
+- Support safe retry, cancellation, timeout, and failure states.
+- Never mark an AI task successful until its required result was validated and persisted.
+- Do not log full CV text, cover letters, prompts containing personal data, or raw model responses with sensitive content.
+- Record safe operational metadata such as model, duration, token usage, outcome, and operation ID when appropriate.
+- Cache AI results only when ownership, privacy, freshness, and invalidation rules are correct.
+- AI-generated match scores and explanations must be presented as assistance, not guaranteed facts.
+
+## 31. Performance budgets and verification
+
+- Define and measure performance for critical routes instead of describing the application as fast without evidence.
+- Avoid large initial client bundles and unnecessary hydration.
+- Use dynamic imports for genuinely heavy client-only features.
+- Paginate large dashboard lists and load secondary data progressively.
+- Optimize images, fonts, and third-party scripts.
+- Avoid blocking the initial page render on non-critical external services.
+- Review generated bundle size after adding large dependencies.
+- Prevent sequential server requests when independent requests can safely run concurrently.
+- Avoid accidental waterfalls between Server and Client Components.
+- Check database query count and response size for critical flows.
+- Add representative load or concurrency testing before claiming support for a large number of simultaneous users.
+- Performance testing must use safe non-production data and must not trigger real emails, payments, applications, or unrestricted AI costs.
+- Record the tested scenario, concurrency level, latency, error rate, environment, and limitations.
+- A successful local test does not prove production scalability.
+
+## 32. Security headers and production hardening
+
+- Configure an appropriate Content Security Policy before public production launch.
+- Configure secure headers including protections against MIME sniffing, framing, unsafe referrer leakage, and unnecessary browser permissions.
+- Do not use permissive CORS settings for authenticated APIs.
+- Allow only explicitly approved origins, methods, and headers where cross-origin access is required.
+- Keep production source maps and error reporting configured so sensitive source or user data is not publicly exposed.
+- Disable or protect development-only routes, debug tools, test accounts, seed endpoints, and internal dashboards in production.
+- Run dependency and secret scanning before production deployment.
+- Review authentication, authorization, RLS, Storage policies, webhook verification, and payment flows before launch.
+- Document a process for rotating compromised credentials without code changes.
+- Apply security patches through deliberate dependency updates with regression testing.
+
+## 33. Data lifecycle, backups, and recovery
+
+- Define account deletion and personal-data deletion behavior before public launch.
+- Users must not retain access to private resources after account deletion or authorization removal.
+- Use soft deletion only when there is a documented product, audit, or recovery requirement.
+- Do not keep sensitive personal data indefinitely without a defined reason.
+- Database backups must be configured and restoration must be tested before claiming disaster recovery readiness.
+- A backup is not considered reliable until a restore procedure has been verified.
+- Define rollback or forward-fix handling for failed migrations.
+- Do not assume that application rollback automatically rolls back a database schema.
+- Critical asynchronous operations must support recovery after process restart or deployment.
+- Document expected behavior when Supabase, the AI provider, email provider, payment provider, or job source is temporarily unavailable.

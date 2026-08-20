@@ -9,46 +9,69 @@ import {
   type RequestChangesPayload,
 } from "@/lib/cvAnalysis/profileState";
 import type { CvAnalysis } from "@/lib/cvAnalysis/types";
-import type { AnalysisTaskStatus } from "@/lib/analysisTasks/types";
+import type { AnalysisTaskStatus, AnalysisTaskTrigger } from "@/lib/analysisTasks/types";
+import { confirmCvAnalysisRequest } from "@/lib/cvAnalysis/confirm.client";
 
 export type { CvRecord };
 
-// No approval or revision backend endpoint exists yet — see
-// DATABASE_PLAN.md's Phase 4B addendum ("Approval transaction
-// (documented, not implemented)"). These two handlers are real,
-// connected, and safe: they never write to the database or pretend an
-// action succeeded. Once a real endpoint exists, only these two
-// functions need to change — every dialog/component above already
-// expects exactly this async { ok, message } contract.
-//
-// Future UX contract for a successful approval (not implemented — no
-// approval or matching backend exists yet, see LockedMatchesNotice and
-// NewMatchesSection for the matching side):
-//   Approve Profile confirmed
-//     → brief transient state: "Finding your best job matches…"
-//     → user lands on / stays on the dashboard (New Matches tab)
-//     → matching runs in the background, NOT a full-screen blocking loader
-//     → New Matches shows a "finding matches" processing message until
-//       real results exist (see NewMatchesSection.tsx)
-async function approveProfile(): Promise<{ ok: boolean; message?: string }> {
-  return {
-    ok: false,
-    message:
-      "Approving isn't available yet — this will be enabled once profile approval is implemented on the backend.",
-  };
-}
+// Maps the RequestChanges reason to the API feedbackType and task trigger.
+const REASON_TO_FEEDBACK_TYPE: Record<string, "cv_correction" | "recommendation_feedback" | "user_request"> = {
+  incorrect_cv_information: "cv_correction",
+  change_ai_recommendations: "recommendation_feedback",
+  other: "user_request",
+};
 
-async function requestProfileChanges(
+async function submitFeedback(
   payload: RequestChangesPayload
-): Promise<{ ok: boolean; message?: string }> {
-  // Prepared for a future backend action — logged for local visibility
-  // only, never persisted or claimed as submitted.
-  console.info("[CV Profile] Request Changes payload (not yet submitted anywhere real):", payload);
-  return {
-    ok: false,
-    message:
-      "Submitting change requests isn't available yet — this will be enabled once the review endpoint is implemented on the backend.",
-  };
+): Promise<{ ok: boolean; message?: string; trigger?: AnalysisTaskTrigger }> {
+  const feedbackType = REASON_TO_FEEDBACK_TYPE[payload.reason];
+  if (!feedbackType) {
+    return { ok: false, message: "Unexpected change reason." };
+  }
+
+  let response: Response;
+  try {
+    response = await fetch("/api/cv-analysis/submit-feedback", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        analysisId: payload.analysisId,
+        feedbackType,
+        feedbackText: payload.feedback ?? "",
+        affectedSection: payload.affectedSection,
+      }),
+    });
+  } catch {
+    return { ok: false, message: "Could not reach the server. Please try again." };
+  }
+
+  let data: unknown;
+  try {
+    data = await response.json();
+  } catch {
+    return { ok: false, message: "Unexpected response from server." };
+  }
+
+  if (!response.ok) {
+    const errMsg =
+      typeof data === "object" &&
+      data !== null &&
+      "error" in data &&
+      typeof (data as { error: unknown }).error === "string"
+        ? (data as { error: string }).error
+        : "Something went wrong. Please try again.";
+    return { ok: false, message: errMsg };
+  }
+
+  const trigger =
+    typeof data === "object" &&
+    data !== null &&
+    "trigger" in data &&
+    typeof (data as { trigger: unknown }).trigger === "string"
+      ? (data as { trigger: string }).trigger as AnalysisTaskTrigger
+      : (feedbackType as AnalysisTaskTrigger);
+
+  return { ok: true, trigger };
 }
 
 export default function CvProfileSection({
@@ -56,20 +79,54 @@ export default function CvProfileSection({
   preferences,
   preferencesComplete,
   taskStatus,
+  taskTrigger,
+  taskLastError,
   analysis,
   onNavigateToPreferences,
+  onAnalysisUpdated,
+  onTaskStarted,
+  updateStalled,
 }: {
   cv: CvRecord | null;
   preferences: PreferencesData | null;
   preferencesComplete: boolean;
   taskStatus: AnalysisTaskStatus | null;
+  taskTrigger: AnalysisTaskTrigger | null;
+  taskLastError?: string | null;
   analysis: CvAnalysis | null;
   onNavigateToPreferences: () => void;
+  onAnalysisUpdated: (analysis: CvAnalysis) => void;
+  onTaskStarted: (trigger: AnalysisTaskTrigger) => void;
+  updateStalled?: boolean;
 }) {
+  async function approveProfile(): Promise<{ ok: boolean; message?: string }> {
+    if (!analysis) {
+      return { ok: false, message: "No analysis available to approve." };
+    }
+    const result = await confirmCvAnalysisRequest(analysis.id);
+    if (result.ok && result.analysis) {
+      onAnalysisUpdated(result.analysis);
+    }
+    return {
+      ok: result.ok,
+      message: result.message ?? (result.ok ? "Your profile has been approved." : "Something went wrong. Please try again."),
+    };
+  }
+
+  async function requestProfileChanges(
+    payload: RequestChangesPayload
+  ): Promise<{ ok: boolean; message?: string }> {
+    const result = await submitFeedback(payload);
+    if (result.ok && result.trigger) {
+      onTaskStarted(result.trigger);
+    }
+    return { ok: result.ok, message: result.message };
+  }
+
   const state = deriveCvProfileState({
     hasActiveCv: !!cv,
     preferencesComplete,
-    task: taskStatus ? { status: taskStatus } : null,
+    task: taskStatus ? { status: taskStatus, last_error: taskLastError ?? null } : null,
     analysis: analysis
       ? {
           status: analysis.status,
@@ -107,11 +164,13 @@ export default function CvProfileSection({
 
       <AiCareerProfileSection
         state={state}
+        taskTrigger={taskTrigger}
         analysis={analysis}
         preferences={preferences}
         onApprove={approveProfile}
         onRequestChanges={requestProfileChanges}
         onNavigateToPreferences={onNavigateToPreferences}
+        updateStalled={updateStalled}
       />
     </div>
   );

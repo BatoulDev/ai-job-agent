@@ -8,7 +8,7 @@
     "start": "next start",
     "lint": "eslint",
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
-    "test:db": "node --test tests/db/",
+    "test:db": "node --test tests/db/*.test.mjs",
     "seed:local": "node scripts/seed-local-automation-users.mjs",
     "seed:local:dry-run": "node scripts/seed-local-automation-users.mjs --dry-run",
     "seed:local:cleanup": "node scripts/seed-local-automation-users.mjs --cleanup"
