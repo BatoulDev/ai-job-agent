@@ -18,6 +18,14 @@ concurrency:
 permissions:
   contents: read
 
+# tests/db/*.test.mjs (npm run test:db) are intentionally NOT run here yet.
+# They need a live local Supabase stack (Postgres + GoTrue + PostgREST +
+# Storage) with this project's migrations applied, which is not yet proven
+# reliable on GitHub-hosted runners for this repo — see the "DB tests in CI"
+# section of docs/PRODUCTION_READINESS.md for the exact blocker and the
+# planned rollout (a separate, initially non-required job using
+# supabase/setup-cli + `supabase start`, validated with a manual run before
+# it gates merges). Do not add a db-tests step here until that's done.
 jobs:
   quality-checks:
     name: quality-checks
@@ -40,6 +48,12 @@ jobs:
 
       - name: Type check
         run: npx tsc --noEmit
+
+      - name: Unit tests
+        run: npm run test:unit
+
+      - name: Workflow tests
+        run: npm run test:workflow
 
       - name: Build
         run: npm run build

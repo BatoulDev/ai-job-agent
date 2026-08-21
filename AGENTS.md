@@ -595,3 +595,16 @@ A feature or fix is done only when:
 - Do not assume that application rollback automatically rolls back a database schema.
 - Critical asynchronous operations must support recovery after process restart or deployment.
 - Document expected behavior when Supabase, the AI provider, email provider, payment provider, or job source is temporarily unavailable.
+
+## 34. Production-readiness audit guardrails
+
+These guardrails were added following the 2026-08-21 production-readiness and security audit. See `docs/PRODUCTION_READINESS.md` for the full, living tracker — the sole source of truth for what is actually verified, not this file.
+
+- AGENTS.md is a development guardrail, not proof that a security control exists. A rule being written here does not mean the corresponding protection is implemented. Implementation must be verified through code, configuration, database policies, tests, deployed infrastructure, and operational evidence.
+- `npm test` must execute all unit, workflow, and DB test suites (`test:unit`, `test:workflow`, `test:db`). Running only a subset locally does not satisfy §11's "relevant automated tests" requirement.
+- CI is not considered successful unless the required test suites actually ran as part of the pipeline — check the job list itself, not just an overall green status. A CI run that only lints, type-checks, and builds has not validated behavior.
+- Changes to authentication, API routes, file uploads, feedback submission, profile updates, or AI-task creation must preserve the existing authorization checks, input validation, and rate-limit expectations for those surfaces — including where rate limiting itself is not yet implemented (tracked in `docs/PRODUCTION_READINESS.md`). Do not weaken or remove a check while working on something unrelated in the same file.
+- Uploaded files must eventually be validated by file content/signature (e.g. a PDF magic-number check), not only MIME type and extension. The current multi-layer MIME/size validation (client, Storage bucket, RPC) is necessary but not sufficient on its own.
+- Account deletion and privacy (GDPR-readiness) workflows remain deployment blockers until implemented. Do not describe a deployment as ready while these are still absent, regardless of what else passes.
+- Never change, activate, publish, or overwrite a live n8n workflow without explicit user approval. Edit the versioned source (`n8n-workflows/*.ts` / `*.json`) and get explicit sign-off before importing or publishing to the running n8n instance.
+- Never commit credentials or expose secrets in reports, command output, or logs — including local Supabase demo keys, `.env`/`.env.local` contents, or values printed by CLI tools (e.g. `supabase status`). Report presence/absence and file paths, never values.
