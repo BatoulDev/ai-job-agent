@@ -11,7 +11,8 @@
     "test": "npm run test:unit && npm run test:workflow && npm run test:db",
     "test:unit": "node --test tests/unit/*.test.mjs",
     "test:workflow": "node --test tests/workflow/*.test.mjs",
-    "test:db": "node --test tests/db/*.test.mjs",
+    "test:db": "node scripts/run-db-tests.mjs",
+    "test:db:crash-sweep:report": "node scripts/db-test-crash-recovery-sweep.mjs",
     "seed:local": "node scripts/seed-local-automation-users.mjs",
     "seed:local:dry-run": "node scripts/seed-local-automation-users.mjs --dry-run",
     "seed:local:cleanup": "node scripts/seed-local-automation-users.mjs --cleanup"

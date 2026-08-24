@@ -5,90 +5,10 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import AuthLayout from "@/components/auth/AuthLayout";
 import AuthCard from "@/components/auth/AuthCard";
+import PasswordField from "@/components/auth/PasswordField";
 import { createClient } from "@/lib/supabase/client";
-
-const MIN_PASSWORD_LENGTH = 8;
-
-const fieldClass =
-  "w-full rounded-xl border border-slate-200 bg-bg px-4 py-2.5 pr-11 text-sm text-text placeholder:text-muted/60 outline-none transition-colors focus:border-primary focus:ring-2 focus:ring-primary/20";
-
-function EyeIcon({ open }: { open: boolean }) {
-  return open ? (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z" />
-      <circle cx="12" cy="12" r="3" />
-    </svg>
-  ) : (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-      aria-hidden="true"
-    >
-      <path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94" />
-      <path d="M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19" />
-      <line x1="1" y1="1" x2="23" y2="23" />
-    </svg>
-  );
-}
-
-function PasswordField({
-  id,
-  label,
-  placeholder,
-  autoComplete,
-  show,
-  onToggle,
-}: {
-  id: string;
-  label: string;
-  placeholder?: string;
-  autoComplete?: string;
-  show: boolean;
-  onToggle: () => void;
-}) {
-  return (
-    <div>
-      <label htmlFor={id} className="mb-1.5 block text-sm font-medium text-text">
-        {label}
-      </label>
-      <div className="relative">
-        <input
-          id={id}
-          name={id}
-          type={show ? "text" : "password"}
-          placeholder={placeholder}
-          autoComplete={autoComplete}
-          required
-          className={fieldClass}
-        />
-        <button
-          type="button"
-          onClick={onToggle}
-          aria-label={show ? `Hide ${label.toLowerCase()}` : `Show ${label.toLowerCase()}`}
-          className="absolute right-3 top-1/2 -translate-y-1/2 rounded-md p-0.5 text-muted transition-colors hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
-        >
-          <EyeIcon open={show} />
-        </button>
-      </div>
-    </div>
-  );
-}
+import { useRetryCountdown } from "@/lib/authRateLimit/useRetryCountdown";
+import { MIN_PASSWORD_LENGTH } from "@/lib/authValidation/password";
 
 type PageState = "loading" | "no_session" | "form";
 
@@ -97,8 +17,7 @@ export default function ResetPasswordPage() {
   const [pageState, setPageState] = useState<PageState>("loading");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
+  const { retryCountdown, startRetryCountdown } = useRetryCountdown();
 
   useEffect(() => {
     const supabase = createClient();
@@ -109,7 +28,7 @@ export default function ResetPasswordPage() {
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (isSubmitting) return;
+    if (isSubmitting || retryCountdown > 0) return;
     setErrorMessage(null);
 
     const formData = new FormData(event.currentTarget);
@@ -128,21 +47,51 @@ export default function ResetPasswordPage() {
     }
 
     setIsSubmitting(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.updateUser({ password });
 
-    if (error) {
-      setErrorMessage(
-        error.message.includes("same password")
-          ? "Your new password must be different from your current one."
-          : "Failed to update your password. Please try again."
-      );
+    // Routed through our own server (src/app/api/auth/update-password/
+    // route.ts) rather than calling supabase.auth.updateUser() directly,
+    // so repeated attempts against this authenticated recovery session are
+    // rate-limited server-side, consistent with every other auth surface.
+    let response: Response;
+    try {
+      response = await fetch("/api/auth/update-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ password }),
+      });
+    } catch {
+      setErrorMessage("Could not reach the server. Please try again.");
       setIsSubmitting(false);
+      return;
+    }
+
+    let data: unknown;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const message =
+        typeof data === "object" && data !== null && "error" in data && typeof (data as { error: unknown }).error === "string"
+          ? (data as { error: string }).error
+          : "Failed to update your password. Please try again.";
+      setErrorMessage(message);
+      setIsSubmitting(false);
+      if (response.status === 429) {
+        const retryAfterSeconds =
+          typeof data === "object" && data !== null && "retryAfterSeconds" in data && typeof (data as { retryAfterSeconds: unknown }).retryAfterSeconds === "number"
+            ? (data as { retryAfterSeconds: number }).retryAfterSeconds
+            : Number(response.headers.get("Retry-After")) || 60;
+        startRetryCountdown(retryAfterSeconds);
+      }
       return;
     }
 
     // Sign out after a successful password change to prevent session fixation
     // and force the user to log in with the new password.
+    const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login?message=password_changed");
   };
@@ -216,32 +165,31 @@ export default function ResetPasswordPage() {
             </div>
           )}
 
-          <div>
-            <PasswordField
-              id="password"
-              label="New password"
-              placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
-              autoComplete="new-password"
-              show={showPassword}
-              onToggle={() => setShowPassword((v) => !v)}
-            />
-            <p className="mt-1.5 text-xs leading-relaxed text-muted">
-              Minimum {MIN_PASSWORD_LENGTH} characters required.
-            </p>
-          </div>
+          <PasswordField
+            id="password"
+            label="New password"
+            placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
+            autoComplete="new-password"
+            helperText={`Minimum ${MIN_PASSWORD_LENGTH} characters required.`}
+          />
 
           <PasswordField
             id="confirm"
             label="Confirm new password"
             placeholder="Re-enter your new password"
             autoComplete="new-password"
-            show={showConfirm}
-            onToggle={() => setShowConfirm((v) => !v)}
           />
+
+          {retryCountdown > 0 && (
+            <p role="status" aria-live="polite" className="text-center text-sm text-muted">
+              You can try again in{" "}
+              <span className="font-medium text-text">{retryCountdown}s</span>
+            </p>
+          )}
 
           <button
             type="submit"
-            disabled={isSubmitting}
+            disabled={isSubmitting || retryCountdown > 0}
             className="w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isSubmitting ? "Updating password..." : "Set new password"}

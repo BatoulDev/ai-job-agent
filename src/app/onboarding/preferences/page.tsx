@@ -59,6 +59,32 @@ interface ReferenceData {
   locations: JobLocation[];
 }
 
+// save_job_preferences() (supabase/migrations/20260819100000_flexible_requires_location.sql)
+// and the job_preferences eligibility trigger
+// (20260806090090_enforce_job_preferences_eligibility_trigger.sql) raise a
+// small, stable set of known validation/eligibility messages that are safe
+// to show directly — every other error (a raw Postgres/Supabase message we
+// don't author) must never reach the UI as-is.
+const SAFE_PREFERENCES_ERROR_SUBSTRINGS = [
+  "invalid or inactive",
+  "Select between 1 and 5 target roles",
+  "At least one preferred location is required",
+  "Unsupported work arrangement for users residing outside Lebanon",
+  "Job-market coverage",
+];
+
+function mapPreferencesError(message: string): string {
+  if (message === "Not authenticated") {
+    // Handled by a redirect at the call site, not shown as text — this
+    // branch only guards against it being passed here by mistake.
+    return "Your session has expired. Please log in again and retry.";
+  }
+  if (SAFE_PREFERENCES_ERROR_SUBSTRINGS.some((s) => message.includes(s))) {
+    return message;
+  }
+  return "We couldn't save your preferences right now. Please try again.";
+}
+
 function toOptions<T extends { name: string }>(
   rows: T[],
   getValue: (row: T) => string,
@@ -364,8 +390,11 @@ export default function PreferencesPage() {
       .eq("id", userId);
 
     if (profileError) {
-      setErrorMessage(`Could not save your profile: ${profileError.message}`);
+      // Never surface profileError.message (raw Postgres/Supabase text).
+      // No bespoke validation trigger exists on profiles for this update —
+      // an error here is always an unexpected internal issue.
       setIsSaving(false);
+      setErrorMessage("We couldn't save your profile right now. Please try again.");
       return;
     }
 
@@ -382,8 +411,12 @@ export default function PreferencesPage() {
     });
 
     if (prefError) {
-      setErrorMessage(`Could not save your preferences: ${prefError.message}`);
       setIsSaving(false);
+      if (prefError.message === "Not authenticated") {
+        router.push("/login?next=/onboarding/preferences");
+        return;
+      }
+      setErrorMessage(mapPreferencesError(prefError.message));
       return;
     }
 

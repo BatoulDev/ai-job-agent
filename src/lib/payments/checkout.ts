@@ -23,6 +23,18 @@ export class NotAuthenticatedError extends Error {
   }
 }
 
+// create_payment_attempt's own quota (PT429, see
+// supabase/migrations/20260822160000_add_payment_attempt_create_rate_limit.sql)
+// — never raised for a reused in-flight attempt, only for a genuinely new
+// one past the rolling-window limit. message is the hand-authored, safe
+// string from the RPC itself, never raw Postgres internals.
+export class CheckoutRateLimitedError extends Error {
+  constructor(message: string) {
+    super(message);
+    this.name = "CheckoutRateLimitedError";
+  }
+}
+
 // Creates (or reuses, if one is already in flight) a payment attempt for
 // the signed-in user and returns whether Whish is actually configured.
 // Never activates a subscription and never fabricates a checkout URL —
@@ -48,7 +60,23 @@ export async function startCheckout(
   });
 
   if (error || !data) {
-    throw new Error(error?.message ?? "Failed to create payment attempt");
+    if (error?.code === "PT429") {
+      throw new CheckoutRateLimitedError(error.message);
+    }
+    // student_unavailable_outside_lebanon (raised by the residence-guard
+    // trigger on public.payment_attempts, see
+    // supabase/migrations/20260806090120_add_student_plan_residence_guard.sql)
+    // is a known, stable, hand-authored exception — the route handler
+    // matches this exact string to return a distinct 422. Every other
+    // message is treated as unknown/internal and never surfaced.
+    if (error?.message === "student_unavailable_outside_lebanon") {
+      throw new Error("student_unavailable_outside_lebanon");
+    }
+    // Preserve the real cause server-side (code/message only — this RPC
+    // never includes CV content or other sensitive data in its exceptions)
+    // before throwing a generic error the route can safely surface.
+    console.error("create_payment_attempt RPC error:", error?.code, error?.message);
+    throw new Error("Failed to create payment attempt");
   }
 
   const paymentAttempt = data as PaymentAttemptRow;

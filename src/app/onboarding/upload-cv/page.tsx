@@ -129,7 +129,12 @@ function UploadCvPageContent() {
       });
 
     if (storageError) {
-      setUploadError(`Upload failed: ${storageError.message}`);
+      // Storage-level rejections (mime/size limits enforced by the "cvs"
+      // bucket itself, see 20260714153105_create_cvs_storage_bucket.sql) are
+      // a second line of defense behind client-side validation and should
+      // be rare in normal use. Never surface storageError.message — it's an
+      // internal Supabase Storage API string, not something we author.
+      setUploadError("We couldn't process your CV right now. Please try again shortly.");
       setIsUploading(false);
       return;
     }
@@ -152,10 +157,39 @@ function UploadCvPageContent() {
         .from("cvs")
         .remove([storagePath]);
 
+      // replace_cv() (supabase/migrations/20260811090000_restrict_cv_to_pdf.sql,
+      // 20260821090000_add_ai_task_and_cv_replace_rate_limits.sql) raises a
+      // small set of known, stable errors. Map each to a safe message —
+      // never surface dbError.message/cleanupError.message (raw Postgres
+      // text) to the user.
+      const isRateLimited = dbError.code === "PT429";
+      // errcode 'check_violation' (Postgres 23514): server-side MIME-type
+      // guard rejected the upload. Client-side validateFile() already
+      // blocks non-PDF files, so this is a defense-in-depth case (e.g. a
+      // tampered request) — reuse the same product message as the client
+      // check for consistency.
+      const isValidationError =
+        dbError.code === "23514" ||
+        dbError.message.includes("storage_path must be scoped");
+      // Session expired/was revoked between the auth check above and this
+      // call. Treat like the initial auth check: send the user to log in
+      // again rather than showing a dead-end error.
+      const isAuthError = dbError.message === "Not authenticated";
+
+      if (isAuthError) {
+        setIsUploading(false);
+        router.push("/login?next=/onboarding/upload-cv");
+        return;
+      }
+
       setUploadError(
-        cleanupError
-          ? `Upload could not be saved (${dbError.message}). Cleanup of the uploaded file also failed — please contact support.`
-          : `Upload could not be saved: ${dbError.message}`
+        isRateLimited
+          ? "You've reached the CV upload limit. Please try again in a bit."
+          : isValidationError
+            ? "Please upload a PDF file."
+            : cleanupError
+              ? "We couldn't process your CV right now, and the uploaded file could not be cleaned up. Please contact support."
+              : "We couldn't process your CV right now. Please try again shortly."
       );
       setIsUploading(false);
       return;

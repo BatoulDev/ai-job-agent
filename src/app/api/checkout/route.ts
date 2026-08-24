@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { isPayablePlanCode } from "@/lib/plans/types";
-import { startCheckout, NotAuthenticatedError } from "@/lib/payments/checkout";
+import { startCheckout, NotAuthenticatedError, CheckoutRateLimitedError } from "@/lib/payments/checkout";
 
 // Starts (or resumes) a paid-plan checkout attempt for the signed-in user.
 // Never activates a subscription and never returns a fabricated checkout
@@ -30,6 +30,10 @@ export async function POST(request: Request) {
   } catch (error) {
     if (error instanceof NotAuthenticatedError) {
       return NextResponse.json({ error: "Not authenticated" }, { status: 401 });
+    }
+
+    if (error instanceof CheckoutRateLimitedError) {
+      return NextResponse.json({ error: error.message }, { status: 429 });
     }
 
     // A known, expected validation outcome (Student is only available to

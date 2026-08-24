@@ -1,8 +1,3 @@
-// GENERATED FILE — do not hand-edit. Regenerate with `npm run db:types`
-// (runs `supabase gen types typescript --local`, local database only).
-// Existing feature-level types (e.g. src/lib/cvAnalysis/types.ts) remain
-// manually maintained per this project's established convention; use this
-// file to check them against the real schema, not to replace them wholesale.
 export type Json =
   | string
   | number
@@ -39,6 +34,67 @@ export type Database = {
   }
   public: {
     Tables: {
+      analysis_feedback: {
+        Row: {
+          affected_section: string | null
+          analysis_task_id: string | null
+          created_at: string
+          cv_id: string
+          feedback_text: string
+          feedback_type: string
+          id: string
+          source_analysis_id: string | null
+          superseded_at: string | null
+          user_id: string
+        }
+        Insert: {
+          affected_section?: string | null
+          analysis_task_id?: string | null
+          created_at?: string
+          cv_id: string
+          feedback_text: string
+          feedback_type: string
+          id?: string
+          source_analysis_id?: string | null
+          superseded_at?: string | null
+          user_id: string
+        }
+        Update: {
+          affected_section?: string | null
+          analysis_task_id?: string | null
+          created_at?: string
+          cv_id?: string
+          feedback_text?: string
+          feedback_type?: string
+          id?: string
+          source_analysis_id?: string | null
+          superseded_at?: string | null
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "analysis_feedback_analysis_task_id_fkey"
+            columns: ["analysis_task_id"]
+            isOneToOne: false
+            referencedRelation: "analysis_tasks"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analysis_feedback_cv_id_fkey"
+            columns: ["cv_id"]
+            isOneToOne: false
+            referencedRelation: "cvs"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "analysis_feedback_source_analysis_id_fkey"
+            columns: ["source_analysis_id"]
+            isOneToOne: false
+            referencedRelation: "cv_analyses"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       analysis_tasks: {
         Row: {
           attempt_count: number
@@ -47,10 +103,12 @@ export type Database = {
           created_at: string
           cv_id: string
           failed_at: string | null
+          followup_trigger: string | null
           id: string
           idempotency_key: string
           last_error: string | null
           max_attempts: number
+          needs_followup: boolean
           preferences_version: number | null
           started_at: string | null
           status: string
@@ -67,10 +125,12 @@ export type Database = {
           created_at?: string
           cv_id: string
           failed_at?: string | null
+          followup_trigger?: string | null
           id?: string
           idempotency_key: string
           last_error?: string | null
           max_attempts?: number
+          needs_followup?: boolean
           preferences_version?: number | null
           started_at?: string | null
           status?: string
@@ -87,10 +147,12 @@ export type Database = {
           created_at?: string
           cv_id?: string
           failed_at?: string | null
+          followup_trigger?: string | null
           id?: string
           idempotency_key?: string
           last_error?: string | null
           max_attempts?: number
+          needs_followup?: boolean
           preferences_version?: number | null
           started_at?: string | null
           status?: string
@@ -219,6 +281,30 @@ export type Database = {
           id?: string
           metadata?: Json
           user_id?: string | null
+        }
+        Relationships: []
+      }
+      auth_rate_limit_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          identifier_hash: string
+          identifier_kind: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          identifier_hash: string
+          identifier_kind: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          identifier_hash?: string
+          identifier_kind?: string
         }
         Relationships: []
       }
@@ -678,6 +764,7 @@ export type Database = {
           job_market_coverage: string | null
           job_type: string | null
           location: string | null
+          selection_version: number
           target_roles: string | null
           updated_at: string
           user_id: string
@@ -694,6 +781,7 @@ export type Database = {
           job_market_coverage?: string | null
           job_type?: string | null
           location?: string | null
+          selection_version?: number
           target_roles?: string | null
           updated_at?: string
           user_id: string
@@ -710,6 +798,7 @@ export type Database = {
           job_market_coverage?: string | null
           job_type?: string | null
           location?: string | null
+          selection_version?: number
           target_roles?: string | null
           updated_at?: string
           user_id?: string
@@ -1146,6 +1235,27 @@ export type Database = {
           },
         ]
       }
+      rate_limit_events: {
+        Row: {
+          action: string
+          created_at: string
+          id: string
+          user_id: string
+        }
+        Insert: {
+          action: string
+          created_at?: string
+          id?: string
+          user_id: string
+        }
+        Update: {
+          action?: string
+          created_at?: string
+          id?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           activated_at: string | null
@@ -1390,6 +1500,49 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      charge_feedback_task_quota: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      claim_analysis_task: {
+        Args: { p_batch_size?: number }
+        Returns: {
+          attempt_count: number
+          available_at: string
+          completed_at: string | null
+          created_at: string
+          cv_id: string
+          failed_at: string | null
+          followup_trigger: string | null
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          max_attempts: number
+          needs_followup: boolean
+          preferences_version: number | null
+          started_at: string | null
+          status: string
+          superseded_at: string | null
+          task_type: string
+          trigger: string
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "analysis_tasks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
+      clear_auth_attempts: {
+        Args: {
+          p_action: string
+          p_identifier_hash: string
+          p_identifier_kind: string
+        }
+        Returns: undefined
+      }
       confirm_cv_analysis: {
         Args: { p_analysis_id: string }
         Returns: {
@@ -1438,7 +1591,12 @@ export type Database = {
         }
       }
       create_analysis_task: {
-        Args: { p_cv_id: string; p_trigger: string; p_user_id: string }
+        Args: {
+          p_charge_feedback_quota?: boolean
+          p_cv_id: string
+          p_trigger: string
+          p_user_id: string
+        }
         Returns: {
           attempt_count: number
           available_at: string
@@ -1446,10 +1604,12 @@ export type Database = {
           created_at: string
           cv_id: string
           failed_at: string | null
+          followup_trigger: string | null
           id: string
           idempotency_key: string
           last_error: string | null
           max_attempts: number
+          needs_followup: boolean
           preferences_version: number | null
           started_at: string | null
           status: string
@@ -1520,6 +1680,7 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      enqueue_preferences_analysis_task: { Args: never; Returns: undefined }
       expire_subscription: {
         Args: { p_user_id: string }
         Returns: {
@@ -1544,6 +1705,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      fail_stale_analysis_tasks: {
+        Args: { p_lease_minutes?: number }
+        Returns: number
       }
       get_onboarding_readiness: { Args: never; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
@@ -1688,6 +1853,19 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      reserve_auth_attempt: {
+        Args: {
+          p_action: string
+          p_identifier_hash: string
+          p_identifier_kind: string
+          p_limit: number
+          p_window_minutes: number
+        }
+        Returns: {
+          allowed: boolean
+          retry_after_seconds: number
+        }[]
+      }
       save_cover_letter_edit: {
         Args: { p_cover_letter_id: string; p_edited_content: string }
         Returns: {
@@ -1735,6 +1913,7 @@ export type Database = {
           job_market_coverage: string | null
           job_type: string | null
           location: string | null
+          selection_version: number
           target_roles: string | null
           updated_at: string
           user_id: string
@@ -1744,6 +1923,32 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "job_preferences"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      submit_analysis_feedback: {
+        Args: {
+          p_affected_section?: string
+          p_analysis_id: string
+          p_feedback_text: string
+          p_feedback_type: string
+        }
+        Returns: {
+          affected_section: string | null
+          analysis_task_id: string | null
+          created_at: string
+          cv_id: string
+          feedback_text: string
+          feedback_type: string
+          id: string
+          source_analysis_id: string | null
+          superseded_at: string | null
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "analysis_feedback"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -1794,6 +1999,10 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      update_profile_name_and_retry_analysis: {
+        Args: { p_full_name: string }
+        Returns: Json
       }
     }
     Enums: {

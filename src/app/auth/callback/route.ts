@@ -1,20 +1,9 @@
 import { NextResponse, type NextRequest } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { getOnboardingReadiness } from "@/lib/entitlements/readiness";
+import { resolvePostAuthDestination } from "@/lib/entitlements/postAuthDestination";
 import { isSafeRedirectPath } from "@/lib/safeRedirect";
-
-function onboardingStepToPath(nextStep: string): string {
-  switch (nextStep) {
-    case "upload_cv":
-      return "/onboarding/upload-cv";
-    case "preferences":
-      return "/onboarding/preferences";
-    case "dashboard":
-      return "/dashboard";
-    default:
-      return "/dashboard";
-  }
-}
+import { getOrCreateSessionIdentifier } from "@/lib/authRateLimit/identifiers";
+import { AUTH_RATE_LIMIT_POLICIES, reserveAuthAttempt } from "@/lib/authRateLimit/rateLimit";
 
 export async function GET(request: NextRequest) {
   const { searchParams, origin } = new URL(request.url);
@@ -31,6 +20,24 @@ export async function GET(request: NextRequest) {
 
   if (!code) {
     return NextResponse.redirect(new URL("/login", origin));
+  }
+
+  // Defense-in-depth against a script hammering this endpoint with garbage
+  // `code` values from one browser session (see
+  // src/lib/authRateLimit/rateLimit.ts for the generous threshold chosen
+  // specifically so a real one-click provider redirect, or a real
+  // reset-link click, is never affected). Fails closed, consistent with
+  // every other auth surface: if the limiter itself cannot be verified,
+  // this request is not allowed to proceed.
+  const sessionHash = await getOrCreateSessionIdentifier();
+  const callbackGate = await reserveAuthAttempt(
+    "oauth_callback",
+    "session",
+    sessionHash,
+    AUTH_RATE_LIMIT_POLICIES.oauth_callback_session
+  );
+  if (callbackGate === null || !callbackGate.allowed) {
+    return NextResponse.redirect(new URL("/login?error=too_many_attempts", origin));
   }
 
   const supabase = await createClient();
@@ -50,21 +57,23 @@ export async function GET(request: NextRequest) {
   }
 
   // For Google OAuth sign-ins, derive the correct landing page from the
-  // user's onboarding state so new users reach onboarding and returning
-  // users reach the dashboard.
+  // user's onboarding state — via the same authoritative resolver used by
+  // email/password login (src/app/api/auth/login/route.ts) — so new users
+  // reach onboarding and returning users reach the dashboard, never the
+  // reverse. Never derived from a client-supplied flag: the resolver's
+  // entire decision comes from get_onboarding_readiness(), evaluated
+  // server-side against this request's own just-established session.
   try {
-    const readiness = await getOnboardingReadiness();
-    if (!readiness.authenticated) {
+    const destination = await resolvePostAuthDestination();
+    if (destination.kind === "unauthenticated") {
       return NextResponse.redirect(new URL("/login", origin));
     }
-    if (readiness.nextStep === "profile_missing") {
+    if (destination.kind === "profile_missing") {
       return NextResponse.redirect(
         new URL("/login?error=auth_error", origin)
       );
     }
-    return NextResponse.redirect(
-      new URL(onboardingStepToPath(readiness.nextStep), origin)
-    );
+    return NextResponse.redirect(new URL(destination.path, origin));
   } catch {
     return NextResponse.redirect(new URL("/dashboard", origin));
   }

@@ -6,8 +6,11 @@ import { useRouter, useSearchParams } from "next/navigation";
 import AuthLayout from "@/components/auth/AuthLayout";
 import AuthCard from "@/components/auth/AuthCard";
 import FormField from "@/components/auth/FormField";
-import { createClient } from "@/lib/supabase/client";
+import PasswordField from "@/components/auth/PasswordField";
 import { isSafeRedirectPath } from "@/lib/safeRedirect";
+import { useRetryCountdown } from "@/lib/authRateLimit/useRetryCountdown";
+import { startGoogleOAuth } from "@/lib/authRateLimit/startGoogleOAuth";
+import { isValidEmailFormat, normalizeEmail } from "@/lib/authValidation/email";
 
 const ERROR_MESSAGES: Record<string, string> = {
   google_auth_failed:
@@ -16,6 +19,8 @@ const ERROR_MESSAGES: Record<string, string> = {
     "Your sign-in link has expired or already been used. Please request a new one.",
   auth_error:
     "Authentication failed. If the issue persists, please contact support.",
+  too_many_attempts:
+    "Too many attempts. Please wait a bit and try again.",
 };
 
 function GoogleIcon() {
@@ -58,59 +63,121 @@ function LoginPageContent() {
   const [errorMessage, setErrorMessage] = useState<string | null>(
     errorParam ? (ERROR_MESSAGES[errorParam] ?? "An unexpected error occurred. Please try again.") : null
   );
+  const { retryCountdown, startRetryCountdown, resetRetryCountdown } = useRetryCountdown();
+  const googleCountdown = useRetryCountdown();
+
+  // The countdown/disabled-button state above is a client-side courtesy
+  // tied to whichever email last got rate-limited — it is never the real
+  // gate (that's reserve_auth_attempt(), scoped per-identifier server-
+  // side). Without this, editing either field after a block leaves the
+  // form looking stuck for a *different* account typed into the same
+  // form (e.g. a shared device), even though that account's own request
+  // would succeed. Resetting it here is safe: a resubmit for the account
+  // that's actually still blocked is simply re-rejected by the server
+  // with a freshly recalculated retry_after_seconds.
+  const handleCredentialsChange = () => {
+    if (retryCountdown === 0) return;
+    resetRetryCountdown();
+    setErrorMessage(null);
+  };
 
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
+    if (isSubmitting || retryCountdown > 0) return;
     setErrorMessage(null);
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
+    const email = normalizeEmail(String(formData.get("email") ?? ""));
     const password = String(formData.get("password") ?? "");
 
     if (!email || !password) {
       setErrorMessage("Please enter your email and password.");
       return;
     }
+    if (!isValidEmailFormat(email)) {
+      setErrorMessage("Please enter a valid email address.");
+      return;
+    }
 
     setIsSubmitting(true);
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
 
-    if (error) {
-      setErrorMessage(
-        error.message === "Invalid login credentials"
-          ? "Incorrect email or password."
-          : error.message
-      );
+    // Routed through our own server (src/app/api/auth/login/route.ts)
+    // rather than calling supabase.auth.signInWithPassword() directly, so
+    // repeated attempts are rate-limited server-side (defense-in-depth —
+    // see that route for why) instead of relying only on this disabled
+    // button, which a script could ignore entirely.
+    let response: Response;
+    try {
+      response = await fetch("/api/auth/login", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email, password }),
+      });
+    } catch {
+      setErrorMessage("Could not reach the server. Please try again.");
       setIsSubmitting(false);
       return;
     }
 
+    let data: unknown;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    if (!response.ok) {
+      const message =
+        typeof data === "object" && data !== null && "error" in data && typeof (data as { error: unknown }).error === "string"
+          ? (data as { error: string }).error
+          : "Something went wrong. Please try again.";
+      setErrorMessage(message);
+      setIsSubmitting(false);
+      if (response.status === 429) {
+        const retryAfterSeconds =
+          typeof data === "object" && data !== null && "retryAfterSeconds" in data && typeof (data as { retryAfterSeconds: unknown }).retryAfterSeconds === "number"
+            ? (data as { retryAfterSeconds: number }).retryAfterSeconds
+            : Number(response.headers.get("Retry-After")) || 60;
+        startRetryCountdown(retryAfterSeconds);
+      }
+      return;
+    }
+
+    // Precedence: an explicit, safe `next` (e.g. a deep link into a
+    // protected route) always wins over the readiness-derived destination —
+    // same precedence documented in src/app/auth/callback/route.ts. Absent
+    // that, use the server-computed `destination` from the authoritative
+    // resolver (src/lib/entitlements/postAuthDestination.ts) rather than a
+    // hardcoded "/dashboard", so a returning user with no active CV yet is
+    // routed to onboarding here exactly as they would be via Google OAuth.
     const next = searchParams.get("next");
-    router.push(isSafeRedirectPath(next) ? next : "/dashboard");
+    const destination =
+      typeof data === "object" && data !== null && "destination" in data && typeof (data as { destination: unknown }).destination === "string"
+        ? (data as { destination: string }).destination
+        : "/dashboard";
+    router.push(isSafeRedirectPath(next) ? next : destination);
   };
 
   const handleGoogleSignIn = async () => {
-    if (isGoogleLoading || isSubmitting) return;
+    if (isGoogleLoading || isSubmitting || googleCountdown.retryCountdown > 0) return;
     setErrorMessage(null);
     setIsGoogleLoading(true);
 
-    const supabase = createClient();
-    const { error } = await supabase.auth.signInWithOAuth({
-      provider: "google",
-      options: {
-        redirectTo: `${window.location.origin}/auth/callback`,
-      },
-    });
+    // Gated server-side (src/app/api/auth/oauth-init/route.ts) before the
+    // actual redirect to Google — see that route for why this exists and
+    // its documented limitation.
+    const result = await startGoogleOAuth();
 
-    if (error) {
-      setErrorMessage("Failed to start Google sign-in. Please try again.");
+    if (!result.ok) {
+      setErrorMessage(result.error ?? "Failed to start Google sign-in. Please try again.");
       setIsGoogleLoading(false);
+      if (result.retryAfterSeconds) {
+        googleCountdown.startRetryCountdown(result.retryAfterSeconds);
+      }
     }
-    // On success, signInWithOAuth redirects the browser — no further action.
+    // On success, signInWithOAuth already redirected the browser — no
+    // further action needed; isGoogleLoading intentionally stays true
+    // until navigation away from this page.
   };
 
   return (
@@ -153,12 +220,19 @@ function LoginPageContent() {
           <button
             type="button"
             onClick={handleGoogleSignIn}
-            disabled={isGoogleLoading || isSubmitting}
+            disabled={isGoogleLoading || isSubmitting || googleCountdown.retryCountdown > 0}
             className="flex w-full items-center justify-center gap-3 rounded-full border border-slate-300 bg-white px-6 py-3 text-sm font-semibold text-text shadow-sm transition-colors hover:bg-slate-50 disabled:cursor-not-allowed disabled:opacity-60"
           >
             <GoogleIcon />
             {isGoogleLoading ? "Redirecting..." : "Continue with Google"}
           </button>
+
+          {googleCountdown.retryCountdown > 0 && (
+            <p role="status" aria-live="polite" className="text-center text-sm text-muted">
+              You can try Google sign-in again in{" "}
+              <span className="font-medium text-text">{googleCountdown.retryCountdown}s</span>
+            </p>
+          )}
 
           <div className="relative flex items-center gap-3">
             <div className="h-px flex-1 bg-slate-200" />
@@ -166,7 +240,7 @@ function LoginPageContent() {
             <div className="h-px flex-1 bg-slate-200" />
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} onChange={handleCredentialsChange} className="space-y-5">
             <FormField
               id="email"
               label="Email"
@@ -174,10 +248,9 @@ function LoginPageContent() {
               placeholder="you@example.com"
               autoComplete="email"
             />
-            <FormField
+            <PasswordField
               id="password"
               label="Password"
-              type="password"
               placeholder="Your password"
               autoComplete="current-password"
             />
@@ -191,9 +264,20 @@ function LoginPageContent() {
               </Link>
             </div>
 
+            {retryCountdown > 0 && (
+              <p
+                role="status"
+                aria-live="polite"
+                className="text-center text-sm text-muted"
+              >
+                You can try again in{" "}
+                <span className="font-medium text-text">{retryCountdown}s</span>
+              </p>
+            )}
+
             <button
               type="submit"
-              disabled={isSubmitting || isGoogleLoading}
+              disabled={isSubmitting || isGoogleLoading || retryCountdown > 0}
               className="w-full rounded-full bg-primary px-6 py-3 text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-colors hover:bg-primary-dark disabled:cursor-not-allowed disabled:opacity-60"
             >
               {isSubmitting ? "Logging in..." : "Log in"}
