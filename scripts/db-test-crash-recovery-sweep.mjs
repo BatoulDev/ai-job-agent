@@ -32,23 +32,16 @@ import { fileURLToPath } from "node:url";
 import path from "node:path";
 import { adminClient, assertExpectedLocalProject } from "../tests/db/localTestGuard.mjs";
 import { deleteFixtureUsers } from "../tests/db/fixtureCleanup.mjs";
+// Pure marker logic lives in db-test-fixture-marker.mjs — deliberately
+// dependency-free (no localTestGuard.mjs, no Supabase client) so
+// tests/unit/crash-sweep-marker.test.mjs can import it with zero
+// environment configured. Re-exported here for backward compatibility with
+// any existing import of isCrashSweepFixtureEmail from this module.
+import { isCrashSweepFixtureEmail } from "./db-test-fixture-marker.mjs";
 
-// [a-z0-9+-]+ (not just [a-z0-9-]+) so this also matches the plus-tagged
-// fixture form tests/db/auth-credential-policy.test.mjs uses to prove
-// plus-addressing is preserved end-to-end (db-test-plus-<uuid>+test@test.local)
-// — still anchored to the literal "db-test-" prefix and "@test.local"
-// domain, so nothing outside that exact shape (a real user, any other
-// domain, the fixed seed personas below) can ever match.
-const MARKER_RE = /^db-test-[a-z0-9+-]+@test\.local$/i;
+export { isCrashSweepFixtureEmail };
+
 const DEFAULT_MAX_AGE_MINUTES = 60;
-
-// Exported so tests/unit/crash-sweep-marker.test.mjs can prove exactly what
-// this marker does and does not match — without needing a live database —
-// most importantly that it can never match a real/manual user's email or
-// one of the fixed seed personas from scripts/seed-local-automation-users.mjs.
-export function isCrashSweepFixtureEmail(email) {
-  return typeof email === "string" && MARKER_RE.test(email);
-}
 
 function redactEmail(email) {
   const [local, domain] = email.split("@");
