@@ -54,57 +54,31 @@ async function removeStorageForUser(userId) {
   );
 }
 
-// public.bump_job_preferences_version_for_child() (an AFTER INSERT OR
-// DELETE trigger on job_preference_target_roles/job_preference_locations,
-// added in 20260806090070/20260806090080) UPDATEs the parent
-// job_preferences row whenever a child join row changes. When a user with
-// at least one target role or location is deleted, Postgres's single
-// auth.users cascade deletes job_preferences AND its child join rows in
-// the same statement — the child rows' AFTER DELETE trigger then tries to
+// RESOLVED by supabase/migrations/20260824170000_fix_job_preferences_account_deletion_cascade.sql
+// (2026-08-24) — this used to be a pre-delete-the-children workaround for a
+// genuine account-deletion defect: public.bump_job_preferences_version_for_child()
+// (an AFTER INSERT OR DELETE trigger on job_preference_target_roles/
+// job_preference_locations, added in 20260806090070/20260806090080) UPDATEd
+// the parent job_preferences row whenever a child join row changed. When a
+// user with at least one target role or location was deleted, Postgres's
+// single auth.users cascade deleted job_preferences AND its child join rows
+// in the same statement — the child rows' AFTER DELETE trigger then tried to
 // UPDATE the parent job_preferences row that the SAME cascading statement
-// is already deleting, which Postgres rejects with "tuple to be updated
+// was already deleting, which Postgres rejected with "tuple to be updated
 // was already modified by an operation triggered by the current command".
-// GoTrue's admin deleteUser endpoint surfaces that as an opaque
-// AuthRetryableFetchError (500, empty body) — reproduced directly against
-// local Postgres/GoTrue while building this cleanup path, independent of
-// any test-runner concurrency. This is a genuine account-deletion bug
-// (not just a test-fixture issue): deleting ANY real user with saved job
-// preferences that include a reference role/location would hit the same
-// error — see docs/PRODUCTION_READINESS.md.
+// GoTrue's admin deleteUser endpoint surfaced that as an opaque
+// AuthRetryableFetchError (500, empty body).
 //
-// Workaround, scoped to fixture cleanup only (no schema/trigger change
-// here — that's a separate, deliberate fix): delete the child join rows
-// as their own statement, before the user (and therefore job_preferences)
-// is touched at all. The trigger's UPDATE then hits a parent row that
-// is not itself mid-deletion, succeeds normally, and the now-childless
-// job_preferences row cascades away cleanly with the auth user afterward.
-async function removeJobPreferencesChildrenForUser(userId) {
-  await retryWithBackoff(
-    async () => {
-      const { data: prefs, error: prefsError } = await adminClient
-        .from("job_preferences")
-        .select("id")
-        .eq("user_id", userId)
-        .maybeSingle();
-      if (prefsError) throw new Error(`job_preferences lookup failed: ${prefsError.message}`);
-      if (!prefs) return;
-
-      const { error: rolesError } = await adminClient
-        .from("job_preference_target_roles")
-        .delete()
-        .eq("job_preference_id", prefs.id);
-      if (rolesError) throw new Error(`job_preference_target_roles cleanup failed: ${rolesError.message}`);
-
-      const { error: locationsError } = await adminClient
-        .from("job_preference_locations")
-        .delete()
-        .eq("job_preference_id", prefs.id);
-      if (locationsError) throw new Error(`job_preference_locations cleanup failed: ${locationsError.message}`);
-    },
-    { label: `job_preferences children cleanup for ${redactId(userId)}` }
-  );
-}
-
+// The fix migration removed those child triggers entirely (versioning for
+// join-table changes already happens exactly once inside save_job_preferences
+// via selection_version, since 20260818090000 — the triggers were redundant
+// with that path even outside of deletion). admin.deleteUser() now succeeds
+// directly for every onboarding state, proven without any child-row
+// pre-deletion by tests/db/account-deletion-cascade.test.mjs. This
+// pre-deletion step is intentionally NOT restored here — keeping it would
+// silently mask a future regression of the same schema defect, since
+// ordinary fixture cleanup would keep working around it instead of failing
+// loudly the way admin.deleteUser() now correctly does on its own.
 async function removeAuthUser(userId) {
   await retryWithBackoff(
     async () => {
@@ -147,7 +121,6 @@ export async function deleteFixtureUsers(users) {
     if (!user?.id) continue;
     try {
       await removeStorageForUser(user.id);
-      await removeJobPreferencesChildrenForUser(user.id);
       await removeAuthUser(user.id);
       const [userGone, storageGone] = await Promise.all([verifyUserGone(user.id), verifyStorageGone(user.id)]);
       if (!userGone || !storageGone) {
