@@ -87,6 +87,16 @@ export async function POST(request: Request) {
   });
 
   if (error) {
+    // Shared feedback-category rate limit (create_analysis_task ->
+    // charge_feedback_task_quota, see
+    // supabase/migrations/20260821090000_add_ai_task_and_cv_replace_rate_limits.sql).
+    // Stable error code, never the raw Postgres message.
+    if (error.code === "PT429") {
+      return NextResponse.json(
+        { error: "You've requested too many new analyses recently. Please wait a bit and try again." },
+        { status: 429 }
+      );
+    }
     if (error.message === "Analysis not found.") {
       return NextResponse.json({ error: "Analysis not found" }, { status: 404 });
     }

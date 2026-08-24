@@ -17,6 +17,7 @@ import {
   deleteTestUsers,
   uploadFakeCv,
   insertFakeAnalysis,
+  resetRateLimits,
 } from "./helpers.mjs";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -77,12 +78,23 @@ async function markTaskComplete(taskId) {
   assert.equal(error, null, `markTaskComplete error: ${error?.message}`);
 }
 
+// Clears active tasks AND the ai_task_create rate-limit cooldown (added by
+// 20260821090000_add_ai_task_and_cv_replace_rate_limits.sql) so each test
+// below can freely trigger a genuinely-new task via submit_analysis_feedback
+// without tripping the production 10-minute cooldown from the previous
+// test's task creation moments earlier. The real cooldown is exercised, with
+// explicit timestamp control, only in tests/db/rate-limits.test.mjs.
+async function resetTaskState(userId) {
+  for (const t of await getActiveTasks(userId)) await markTaskComplete(t.id);
+  await resetRateLimits(userId);
+}
+
 // ── Option 1: cv_correction ───────────────────────────────────────────────────
 
 describe("Option 1 — cv_correction (Incorrect CV information)", () => {
   test("submit_analysis_feedback creates a feedback row and a cv_correction task", async () => {
     // Clean state: ensure no active tasks before this test.
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     const { data: row, error } = await submitFeedback(userA.client, {
       p_feedback_type: "cv_correction",
@@ -121,7 +133,7 @@ describe("Option 1 — cv_correction (Incorrect CV information)", () => {
   });
 
   test("affected_section is optional — null is accepted", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     const { data: row, error } = await submitFeedback(userA.client, {
       p_feedback_type: "cv_correction",
@@ -139,7 +151,7 @@ describe("Option 1 — cv_correction (Incorrect CV information)", () => {
 
 describe("Option 3 — recommendation_feedback (Change AI recommendations)", () => {
   test("submit_analysis_feedback creates a recommendation_feedback task", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     const { data: row, error } = await submitFeedback(userA.client, {
       p_feedback_type: "recommendation_feedback",
@@ -164,7 +176,7 @@ describe("Option 3 — recommendation_feedback (Change AI recommendations)", () 
 
 describe("Option 5 — user_request (Something else)", () => {
   test("submit_analysis_feedback creates a user_request task", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     const { data: row, error } = await submitFeedback(userA.client, {
       p_feedback_type: "user_request",
@@ -189,7 +201,7 @@ describe("Option 5 — user_request (Something else)", () => {
 
 describe("Task deduplication", () => {
   test("second submit while a task is pending returns the same task, still inserts a new feedback row", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     const { data: row1, error: err1 } = await submitFeedback(userA.client, {
       p_feedback_type: "cv_correction",
@@ -228,7 +240,7 @@ describe("Task deduplication", () => {
 
 describe("RLS isolation", () => {
   test("authenticated user can only read their own analysis_feedback rows", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     // userA submits feedback.
     const { data: row, error } = await submitFeedback(userA.client, {
@@ -282,7 +294,7 @@ describe("Authorization and ownership", () => {
   });
 
   test("feedback text shorter than 10 characters is rejected", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     const { error } = await submitFeedback(userA.client, {
       p_feedback_text: "Too short",
@@ -295,7 +307,7 @@ describe("Authorization and ownership", () => {
   });
 
   test("feedback text longer than 2000 characters is rejected", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     const { error } = await submitFeedback(userA.client, {
       p_feedback_text: "x".repeat(2001),
@@ -308,7 +320,7 @@ describe("Authorization and ownership", () => {
   });
 
   test("affected_section longer than 200 characters is rejected", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     const { error } = await submitFeedback(userA.client, {
       p_feedback_text: "My education section shows the wrong degree.",
@@ -322,7 +334,7 @@ describe("Authorization and ownership", () => {
   });
 
   test("invalid feedback_type is rejected", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     const { error } = await submitFeedback(userA.client, {
       p_feedback_type: "invalid_type",

@@ -5,7 +5,7 @@ import Link from "next/link";
 import AuthLayout from "@/components/auth/AuthLayout";
 import AuthCard from "@/components/auth/AuthCard";
 import FormField from "@/components/auth/FormField";
-import { createClient } from "@/lib/supabase/client";
+import { isValidEmailFormat, normalizeEmail } from "@/lib/authValidation/email";
 
 const RESEND_COOLDOWN_SECONDS = 60;
 
@@ -149,9 +149,9 @@ function ForgotPasswordPage() {
   const countdownRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const submitButtonRef = useRef<HTMLButtonElement>(null);
 
-  const startCountdown = useCallback(() => {
+  const startCountdown = useCallback((seconds: number = RESEND_COOLDOWN_SECONDS) => {
     if (countdownRef.current) clearInterval(countdownRef.current);
-    setCountdown(RESEND_COOLDOWN_SECONDS);
+    setCountdown(seconds);
     countdownRef.current = setInterval(() => {
       setCountdown((prev) => {
         if (prev <= 1) {
@@ -174,40 +174,86 @@ function ForgotPasswordPage() {
     setTimeout(() => submitButtonRef.current?.focus(), 0);
   }, []);
 
+  // Same rationale as login/page.tsx and signup/page.tsx: the countdown
+  // shown here is a client-side courtesy tied to whichever email was last
+  // submitted, never the real gate (src/app/api/auth/forgot-password/
+  // route.ts). Resetting it when the email changes stops a different
+  // address typed into the same form (e.g. a shared device) from looking
+  // stuck behind someone else's cooldown — the server re-checks and
+  // re-arms this correctly on the next real submit either way.
+  const handleEmailChange = () => {
+    if (countdown === 0) return;
+    if (countdownRef.current) clearInterval(countdownRef.current);
+    setCountdown(0);
+    setErrorMessage(null);
+  };
+
   const handleSubmit = async (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     if (isSubmitting || countdown > 0) return;
     setErrorMessage(null);
 
     const formData = new FormData(event.currentTarget);
-    const email = String(formData.get("email") ?? "").trim();
+    const email = normalizeEmail(String(formData.get("email") ?? ""));
     if (!email) {
       setErrorMessage("Please enter your email address.");
       return;
     }
-
-    setIsSubmitting(true);
-    const supabase = createClient();
-    const redirectTo = `${window.location.origin}/auth/callback?next=/reset-password`;
-
-    const { error } = await supabase.auth.resetPasswordForEmail(email, {
-      redirectTo,
-    });
-
-    setIsSubmitting(false);
-
-    if (error) {
-      // Supabase returns an error for hard rate limits (e.g. 429).
-      // Show a safe, non-revealing message — never disclose account existence.
-      setErrorMessage(
-        "Please wait a little longer before requesting another email."
-      );
+    if (!isValidEmailFormat(email)) {
+      setErrorMessage("Please enter a valid email address.");
       return;
     }
 
-    // The Supabase API always returns success for resetPasswordForEmail
-    // regardless of whether an account exists, to prevent enumeration.
-    // Show the modal and start the resend cooldown.
+    setIsSubmitting(true);
+
+    // Routed through our own server (src/app/api/auth/forgot-password/
+    // route.ts) rather than calling supabase.auth.resetPasswordForEmail()
+    // directly, so repeated requests — including ones that target many
+    // different emails from the same browser — are rate-limited
+    // server-side. That route always returns the same generic response
+    // shape for an allowed request regardless of whether the email exists.
+    let response: Response;
+    try {
+      response = await fetch("/api/auth/forgot-password", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+    } catch {
+      setIsSubmitting(false);
+      setErrorMessage("Could not reach the server. Please try again.");
+      return;
+    }
+
+    let data: unknown;
+    try {
+      data = await response.json();
+    } catch {
+      data = null;
+    }
+
+    setIsSubmitting(false);
+
+    if (!response.ok) {
+      const message =
+        typeof data === "object" && data !== null && "error" in data && typeof (data as { error: unknown }).error === "string"
+          ? (data as { error: string }).error
+          : "Please wait a little longer before requesting another email.";
+      setErrorMessage(message);
+      if (response.status === 429) {
+        const retryAfterSeconds =
+          typeof data === "object" && data !== null && "retryAfterSeconds" in data && typeof (data as { retryAfterSeconds: unknown }).retryAfterSeconds === "number"
+            ? (data as { retryAfterSeconds: number }).retryAfterSeconds
+            : Number(response.headers.get("Retry-After")) || RESEND_COOLDOWN_SECONDS;
+        startCountdown(retryAfterSeconds);
+      }
+      return;
+    }
+
+    // Enumeration-safe by construction — the server always returns this
+    // same shape for an allowed request regardless of whether the email
+    // belongs to a real account. Show the modal and start the ordinary
+    // resend cooldown.
     setShowModal(true);
     startCountdown();
   };
@@ -233,7 +279,7 @@ function ForgotPasswordPage() {
             </p>
           }
         >
-          <form onSubmit={handleSubmit} className="space-y-5">
+          <form onSubmit={handleSubmit} onChange={handleEmailChange} className="space-y-5">
             {errorMessage && (
               <div
                 role="alert"

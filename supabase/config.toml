@@ -179,7 +179,10 @@ enable_anonymous_sign_ins = false
 # Allow/disallow testing manual linking of accounts
 enable_manual_linking = false
 # Passwords shorter than this value will be rejected as weak. Minimum 6, recommended 8 or more.
-minimum_password_length = 6
+# Kept in sync with src/lib/authValidation/password.ts's MIN_PASSWORD_LENGTH (8) — see
+# docs/PRODUCTION_READINESS.md's "Password policy consistency" row. The production dashboard's
+# value must be set to match separately; this file only governs local dev.
+minimum_password_length = 8
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
 password_requirements = ""

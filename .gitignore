@@ -30,8 +30,11 @@ yarn-debug.log*
 yarn-error.log*
 .pnpm-debug.log*
 
-# env files (can opt-in for committing if needed)
+# env files — real values are always ignored; .env.example is a tracked
+# template (variable names and safe placeholders only, see AGENTS.md §21)
+# so a fresh clone or CI can discover which variables to set.
 .env*
+!.env.example
 
 # vercel
 .vercel

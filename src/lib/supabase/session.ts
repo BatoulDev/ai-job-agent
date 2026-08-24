@@ -2,6 +2,7 @@ import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { supabasePublishableKey, supabaseUrl } from "./env";
 import { isSafeRedirectPath } from "@/lib/safeRedirect";
+import { onboardingStepToPath } from "@/lib/entitlements/onboardingStep";
 
 // Route groups gated by src/proxy.ts. Prefix match: "/onboarding" also
 // covers "/onboarding/preferences" and "/onboarding/upload-cv".
@@ -63,7 +64,27 @@ export async function updateSession(request: NextRequest) {
 
   if (user && isAuthOnly) {
     const next = request.nextUrl.searchParams.get("next");
-    const redirectUrl = new URL(isSafeRedirectPath(next) ? next : "/dashboard", request.url);
+    if (isSafeRedirectPath(next)) {
+      return withCookiesFrom(response, NextResponse.redirect(new URL(next, request.url)));
+    }
+    // Same authoritative resolver every other post-auth entry point uses
+    // (src/lib/entitlements/postAuthDestination.ts, shared with
+    // src/app/api/auth/login/route.ts and src/app/auth/callback/route.ts)
+    // — an already-authenticated visitor landing back on /login or /signup
+    // (e.g. the browser back button right after signing in) must be routed
+    // by the same onboarding-state rules as a fresh sign-in, never
+    // unconditionally to /dashboard. Calls the RPC directly rather than
+    // importing getOnboardingReadiness()/resolvePostAuthDestination(): both
+    // use next/headers' cookies(), which isn't available in this
+    // proxy/edge request-scoped context — this function already has its
+    // own request-bound Supabase client above, so only the pure
+    // onboardingStepToPath mapping is reused here.
+    const { data: readiness } = await supabase.rpc("get_onboarding_readiness");
+    const nextStep =
+      readiness && typeof readiness === "object" && typeof (readiness as { next_step?: unknown }).next_step === "string"
+        ? (readiness as { next_step: string }).next_step
+        : "dashboard";
+    const redirectUrl = new URL(onboardingStepToPath(nextStep), request.url);
     return withCookiesFrom(response, NextResponse.redirect(redirectUrl));
   }
 

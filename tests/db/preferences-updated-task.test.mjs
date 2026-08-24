@@ -28,6 +28,7 @@ import {
   deleteTestUsers,
   uploadFakeCv,
   insertFakeAnalysis,
+  resetRateLimits,
 } from "./helpers.mjs";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -118,6 +119,19 @@ async function markTaskComplete(taskId) {
   assert.equal(error, null, `markTaskComplete error: ${error?.message}`);
 }
 
+// Clears active tasks AND the ai_task_create rate-limit cooldown (added by
+// 20260821090000_add_ai_task_and_cv_replace_rate_limits.sql) so each test
+// below can freely trigger a genuinely-new preferences_updated task without
+// tripping the production 10-minute cooldown from an earlier test's task
+// creation moments before. The real cooldown is exercised, with explicit
+// timestamp control, only in tests/db/rate-limits.test.mjs.
+async function resetTaskState(userId) {
+  for (const t of await getActiveTasks(userId)) {
+    await markTaskComplete(t.id);
+  }
+  await resetRateLimits(userId);
+}
+
 async function getAnalysis(userId) {
   const { data, error } = await adminClient
     .from("cv_analyses")
@@ -188,13 +202,12 @@ describe("Case 4 — saving identical preferences creates no task", () => {
     //
     // Strategy: do one save to anchor the state, complete any created task,
     // then save again with IDENTICAL values and verify no new task appears.
+    await resetTaskState(userA.id);
     const err1 = await savePrefs(userA.client, { p_job_type: "internship" });
     assert.equal(err1, null, `anchor save failed: ${err1?.message}`);
 
     // Complete any task that may have been created by the anchor save.
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     const tasksBefore = await getAllTasks(userA.id);
     const countBefore = tasksBefore.length;
@@ -215,9 +228,7 @@ describe("Case 4 — saving identical preferences creates no task", () => {
 describe("Case 1 — direct column change creates exactly one preferences_updated task", () => {
   test("changing job_type creates one preferences_updated task", async () => {
     // Ensure clean state.
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     const tasksBefore = await getAllTasks(userA.id);
     const countBefore = tasksBefore.length;
@@ -240,9 +251,7 @@ describe("Case 1 — direct column change creates exactly one preferences_update
 
 describe("Case 2 — target-role change creates exactly one preferences_updated task", () => {
   test("adding a second reference role creates one preferences_updated task", async () => {
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     const tasksBefore = await getAllTasks(userA.id);
     const countBefore = tasksBefore.length;
@@ -265,9 +274,7 @@ describe("Case 2 — target-role change creates exactly one preferences_updated 
   });
 
   test("removing a reference role creates one preferences_updated task", async () => {
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     const tasksBefore = await getAllTasks(userA.id);
     const countBefore = tasksBefore.length;
@@ -292,9 +299,7 @@ describe("Case 2 — target-role change creates exactly one preferences_updated 
 
 describe("Case 3 — location change creates exactly one preferences_updated task", () => {
   test("switching from remote to flexible with a location creates one preferences_updated task", async () => {
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     const tasksBefore = await getAllTasks(userA.id);
     const countBefore = tasksBefore.length;
@@ -321,9 +326,7 @@ describe("Case 3 — location change creates exactly one preferences_updated tas
 
 describe("Case 5 — repeating the same save creates no duplicate task", () => {
   test("two rapid identical saves produce at most one task total", async () => {
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     // First save — creates a task (direct column change: job_type full-time → part-time).
     const err1 = await savePrefs(userA.client, {
@@ -362,9 +365,7 @@ describe("Case 5 — repeating the same save creates no duplicate task", () => {
 
 describe("Case 9 — pending/processing task deduplication", () => {
   test("a new preferences change while a task is pending returns the existing task, not a second", async () => {
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     // Create a pending task manually (simulating a preferences_updated task
     // that the worker has not yet claimed).
@@ -414,9 +415,7 @@ describe("Case 9 — pending/processing task deduplication", () => {
 
 describe("Case 10 — analysis staleness: marked stale only when appropriate", () => {
   test("an approved is_current analysis is marked stale when preferences change", async () => {
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     const { data: activeCv } = await adminClient
       .from("cvs")
@@ -470,9 +469,7 @@ describe("Case 10 — analysis staleness: marked stale only when appropriate", (
   });
 
   test("saving identical preferences does NOT mark a current analysis stale", async () => {
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     const { data: activeCv } = await adminClient
       .from("cvs")
@@ -488,9 +485,7 @@ describe("Case 10 — analysis staleness: marked stale only when appropriate", (
       p_target_role_ids: [roleSlug1],
     });
     assert.equal(anchorErr, null);
-    for (const t of await getActiveTasks(userA.id)) {
-      await markTaskComplete(t.id);
-    }
+    await resetTaskState(userA.id);
 
     // Insert a fresh approved is_current analysis.
     const analysis = await insertFakeAnalysis(userA, activeCv.id, {

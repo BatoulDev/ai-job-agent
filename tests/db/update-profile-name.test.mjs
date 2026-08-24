@@ -16,6 +16,7 @@ import {
   createAnonClient,
   deleteTestUsers,
   uploadFakeCv,
+  resetRateLimits,
 } from "./helpers.mjs";
 
 // ── Fixtures ──────────────────────────────────────────────────────────────────
@@ -74,6 +75,18 @@ async function markTaskComplete(taskId) {
   assert.equal(error, null, `markTaskComplete error: ${error?.message}`);
 }
 
+// Clears active tasks AND the ai_task_create rate-limit cooldown (added by
+// 20260821090000_add_ai_task_and_cv_replace_rate_limits.sql) so each test
+// below can freely trigger a genuinely-new task via
+// update_profile_name_and_retry_analysis without tripping the production
+// 10-minute cooldown from an earlier test's task creation moments before.
+// The real cooldown is exercised, with explicit timestamp control, only in
+// tests/db/rate-limits.test.mjs.
+async function resetTaskState(userId) {
+  for (const t of await getActiveTasks(userId)) await markTaskComplete(t.id);
+  await resetRateLimits(userId);
+}
+
 // ── Core update behaviour ─────────────────────────────────────────────────────
 
 describe("update_profile_name_and_retry_analysis — name update", () => {
@@ -84,7 +97,7 @@ describe("update_profile_name_and_retry_analysis — name update", () => {
     assert.equal(profile.full_name, "New Name A");
 
     // clean up task
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
   });
 
   test("trims leading and trailing whitespace", async () => {
@@ -93,7 +106,7 @@ describe("update_profile_name_and_retry_analysis — name update", () => {
     const profile = await getProfile(userA.id);
     assert.equal(profile.full_name, "Trimmed Name");
 
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
   });
 
   test("returns ok:true and has_active_task:true when active CV exists", async () => {
@@ -102,7 +115,7 @@ describe("update_profile_name_and_retry_analysis — name update", () => {
     assert.equal(data.ok, true);
     assert.equal(data.has_active_task, true);
 
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
   });
 
   test("returns has_active_task:false when user has no active CV", async () => {
@@ -141,11 +154,11 @@ describe("update_profile_name_and_retry_analysis — validation", () => {
     const { error } = await updateName(userA.client, name);
     assert.equal(error, null, `200-char name rejected: ${error?.message}`);
 
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     // restore a sensible name for later tests
     await updateName(userA.client, "Valid Name A");
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
   });
 });
 
@@ -153,7 +166,7 @@ describe("update_profile_name_and_retry_analysis — validation", () => {
 
 describe("update_profile_name_and_retry_analysis — task deduplication", () => {
   test("queues exactly one task after a single name update", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     await updateName(userA.client, "Dedup Test Name");
     const tasks = await getActiveTasks(userA.id);
@@ -172,7 +185,7 @@ describe("update_profile_name_and_retry_analysis — task deduplication", () => 
   });
 
   test("does not create a duplicate when an active task already exists", async () => {
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
 
     // First update creates the task.
     await updateName(userA.client, "First Update");
@@ -202,6 +215,8 @@ describe("update_profile_name_and_retry_analysis — security", () => {
   });
 
   test("userA cannot update userB's profile", async () => {
+    await resetTaskState(userA.id);
+
     // The RPC uses auth.uid() internally — there is no parameter to supply
     // a target user_id. Calling it as userA only ever touches userA's row.
     await updateName(userA.client, "UserA Overwrite Attempt");
@@ -214,6 +229,6 @@ describe("update_profile_name_and_retry_analysis — security", () => {
       "userA must not be able to overwrite userB's full_name"
     );
 
-    for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
+    await resetTaskState(userA.id);
   });
 });
