@@ -19,16 +19,23 @@ import CvProfileSection, {
 import PreferencesSection, {
   type PreferencesData,
 } from "@/components/dashboard/PreferencesSection";
+import PreferencesReminderModal from "@/components/dashboard/PreferencesReminderModal";
+import PreferencesReminderBanner from "@/components/dashboard/PreferencesReminderBanner";
 import { DASHBOARD_STATS } from "@/lib/dashboardData";
 import { createClient } from "@/lib/supabase/client";
 import type { CvAnalysis } from "@/lib/cvAnalysis/types";
 import type { AnalysisTaskStatus, AnalysisTaskTrigger } from "@/lib/analysisTasks/types";
 import { isPreferencesComplete } from "@/lib/cvAnalysis/profileState";
+import { isProfileMatchingEligible } from "@/lib/cvAnalysis/matchingEligibility";
 import {
   readAndClearProfileUpdatePending,
   computeEffectiveTaskState,
   OPTIMISTIC_TIMEOUT_MS,
 } from "@/lib/optimisticProfileUpdate";
+import {
+  hasShownPreferencesReminder,
+  markPreferencesReminderShown,
+} from "@/lib/dashboardPreferencesReminder";
 
 const TABS: DashboardTab[] = [
   { id: "new-matches", label: "New Matches" },
@@ -60,6 +67,7 @@ function DashboardPageContent() {
   const [taskLastError, setTaskLastError] = useState<string | null>(null);
   const [analysis, setAnalysis] = useState<CvAnalysis | null>(null);
   const [cvId, setCvId] = useState<string | null>(null);
+  const [latestPreferencesVersion, setLatestPreferencesVersion] = useState<number | null>(null);
   // Read and immediately clear the sessionStorage flag on the first render.
   // DashboardPageContent is inside <Suspense> with useSearchParams(), so Next.js
   // only renders it on the client — sessionStorage is always available here.
@@ -73,6 +81,7 @@ function DashboardPageContent() {
     }
   });
   const [showStalledBanner, setShowStalledBanner] = useState(false);
+  const [showPreferencesReminder, setShowPreferencesReminder] = useState(false);
 
   useEffect(() => {
     let isMounted = true;
@@ -100,7 +109,7 @@ function DashboardPageContent() {
         supabase
           .from("job_preferences")
           .select(
-            "id, work_arrangement, job_type, experience_level, additional_notes, job_market_coverage, custom_target_roles, custom_locations"
+            "id, version, work_arrangement, job_type, experience_level, additional_notes, job_market_coverage, custom_target_roles, custom_locations"
           )
           .eq("user_id", user.id)
           .maybeSingle(),
@@ -124,6 +133,7 @@ function DashboardPageContent() {
 
       const profile = profileResult.data;
       const prefs = prefResult.data;
+      setLatestPreferencesVersion(prefs?.version ?? null);
 
       // Role/location names now live in join tables — fetch the selected
       // reference rows' display names alongside the custom_* free-text
@@ -169,18 +179,17 @@ function DashboardPageContent() {
             }
           : null
       );
-      setPreferencesComplete(
-        isPreferencesComplete({
-          countryOfResidence: profile.country_of_residence,
-          hasUniversity: !!(profile.university_id || profile.custom_university),
-          hasMajor: !!(profile.major_id || profile.custom_major),
-          hasTargetRole: allRoleNames.length > 0,
-          workArrangement: prefs?.work_arrangement ?? null,
-          jobType: prefs?.job_type ?? null,
-          experienceLevel: prefs?.experience_level ?? null,
-          hasLocation: allLocationNames.length > 0,
-        })
-      );
+      const prefsComplete = isPreferencesComplete({
+        countryOfResidence: profile.country_of_residence,
+        hasUniversity: !!(profile.university_id || profile.custom_university),
+        hasMajor: !!(profile.major_id || profile.custom_major),
+        hasTargetRole: allRoleNames.length > 0,
+        workArrangement: prefs?.work_arrangement ?? null,
+        jobType: prefs?.job_type ?? null,
+        experienceLevel: prefs?.experience_level ?? null,
+        hasLocation: allLocationNames.length > 0,
+      });
+      setPreferencesComplete(prefsComplete);
 
       const activeCv = cvResult.data;
       setCv(
@@ -196,6 +205,18 @@ function DashboardPageContent() {
           : null
       );
       setCvId(activeCv?.id ?? null);
+
+      // Show the "complete your job preferences" reminder modal at most
+      // once per browser/login session for a user who has an active CV but
+      // incomplete preferences — never for a user with no CV yet (they
+      // belong in onboarding, not here) or one whose preferences are
+      // already complete. markPreferencesReminderShown/
+      // hasShownPreferencesReminder are the only state touched; nothing is
+      // written to the database by showing or dismissing this modal.
+      if (activeCv && !prefsComplete && !hasShownPreferencesReminder(user.id)) {
+        setShowPreferencesReminder(true);
+        markPreferencesReminderShown(user.id);
+      }
 
       // Both queries below depend on the active CV's id, so they can only
       // run once the cvs query above has resolved. Most-recent-first: the
@@ -359,10 +380,10 @@ function DashboardPageContent() {
   }
 
   const displayName = fullName || email;
-  // "Get matches" stays locked until the user's latest CURRENT analysis
-  // has been approved — no job matching exists yet, so this is never
-  // true for a real user today (see LockedMatchesNotice).
-  const isProfileApproved = analysis?.review_status === "approved" && analysis?.is_current === true;
+  // "Get matches" stays locked until the user's latest analysis is fully
+  // matching-eligible — see isProfileMatchingEligible for the exact
+  // conditions and why this replaced a narrower approved/is_current check.
+  const isProfileApproved = isProfileMatchingEligible(analysis, latestPreferencesVersion);
 
   // Derive the effective task state to pass to CvProfileSection. When
   // the optimistic trigger is active (flag was set, no DB task yet),
@@ -391,6 +412,12 @@ function DashboardPageContent() {
         </div>
 
         <StatsGrid stats={DASHBOARD_STATS} />
+
+        {!!cv && !preferencesComplete && (
+          <div className="mt-8">
+            <PreferencesReminderBanner />
+          </div>
+        )}
 
         <div className="mt-8 flex flex-col gap-8 lg:flex-row">
           <DashboardTabs tabs={TABS} activeTab={activeTab} onChange={setActiveTab} />
@@ -436,6 +463,11 @@ function DashboardPageContent() {
           </main>
         </div>
       </div>
+
+      <PreferencesReminderModal
+        open={showPreferencesReminder}
+        onClose={() => setShowPreferencesReminder(false)}
+      />
     </div>
   );
 }

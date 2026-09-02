@@ -416,6 +416,42 @@ return [{ json: { taskId, patchBody } }];
   }
 });
 
+// ── 4b-route. Decide whether this task needs full CV re-extraction ────────────
+// Automation-1 audit fix: every trigger previously ran the identical full
+// pipeline (download, extract, full-schema GPT-4o call), regardless of
+// whether the CV itself had changed. preferences_updated, recommendation_
+// feedback, and user_request never touch the CV — only preferences or
+// recommendations changed — so they must reuse the existing verified CV
+// facts and skip signing/downloading/extracting entirely, per the audit's
+// fix-order item 5. onboarding_completed, cv_replaced, and cv_correction
+// still need the real CV text (a new CV, or a user-flagged fact correction
+// that requires re-reading the document) and take the unchanged full path.
+// Any unrecognized/null trigger safely defaults to the full path too.
+// TRUE (output 0): full extraction → Sign Storage URL (unchanged).
+// FALSE (output 1): lightweight reuse → Load Prior CV Facts (new).
+const LIGHTWEIGHT_TRIGGERS = ['preferences_updated', 'recommendation_feedback', 'user_request'];
+
+const checkNeedsFullExtraction = node({
+  type: 'n8n-nodes-base.if',
+  version: 2.2,
+  config: {
+    name: 'Check Needs Full Extraction',
+    parameters: {
+      conditions: {
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+        conditions: LIGHTWEIGHT_TRIGGERS.map((trig) => ({
+          id: 'trigger-not-' + trig,
+          leftValue: expr('={{ $json.taskTrigger }}'),
+          rightValue: trig,
+          operator: { type: 'string', operation: 'notEquals' }
+        })),
+        combinator: 'and'
+      },
+      options: {}
+    }
+  }
+});
+
 // ── 4c. Generate a 120-second signed download URL ─────────────────────────────
 const signStorageUrl = node({
   type: 'n8n-nodes-base.httpRequest',
@@ -474,6 +510,112 @@ const extractPdfText = node({
       binaryPropertyName: 'data'
     },
     output: [{ json: { text: 'Sample extracted CV text...' } }]
+  }
+});
+
+// ── 4e-lite. Lightweight path only: load the most recent completed CV
+// analysis for this CV to reuse its verified facts, instead of downloading
+// and re-extracting the CV. Scoped to cvId (already validated as the
+// user's own active CV by Validate CV Context).
+const loadPriorCvFacts = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Load Prior CV Facts',
+    continueOnFail: true,
+    // Bug fix (found during controlled end-to-end verification, live n8n
+    // execution 37265): without alwaysOutputData, a genuine zero-row result
+    // (no prior completed analysis to reuse facts from — e.g. the very
+    // first task ever claimed for a CV happens to carry a lightweight
+    // trigger) produces ZERO output items, so the downstream Normalize CV
+    // Context node — whose job is to detect exactly this case and raise
+    // the explicit 'PERMANENT: no prior completed CV analysis exists...'
+    // error — never runs at all. The per-item chain goes silently dark and
+    // the task is left stuck at status='processing' indefinitely (until the
+    // 10-minute stale-task lease sweep eventually retries it into the same
+    // failure). alwaysOutputData:true guarantees a sentinel {} item so
+    // Normalize CV Context always runs and fails explicitly and promptly,
+    // matching the same pattern already used by Load Task Feedback / Load
+    // Preference Roles / Load Preference Locations for the identical reason.
+    alwaysOutputData: true,
+    parameters: {
+      method: 'GET',
+      url: expr("={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/cv_analyses?cv_id=eq.{{ $('Validate CV Context').item.json.cvId }}&status=eq.completed&select=professional_summary,skills,education,work_experience,projects,certifications,languages,contact_info,extracted_text&order=created_at.desc&limit=1"),
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'supabaseApi',
+      sendHeaders: true,
+      headerParameters: {
+        parameters: [
+          { name: 'Accept', value: 'application/json' }
+        ]
+      }
+    },
+    credentials: { supabaseApi: supabaseCred },
+    output: [{ json: [{ professional_summary: 'Prior summary', skills: [], education: [], work_experience: [], projects: [], certifications: [], languages: [], contact_info: null, extracted_text: 'prior text' }] }]
+  }
+});
+
+// ── 4e-norm. Converge the full-extraction path (Extract PDF Text) and the
+// lightweight-reuse path (Load Prior CV Facts) into one consistent shape so
+// every downstream node (Build OpenAI Request, Parse AI Response, Validate
+// CV Ownership) reads a single contract regardless of which branch ran.
+// Whichever branch executed for this item is the only one whose named-node
+// output is available via $() lookups here — never reference both.
+const normalizeCvContext = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'Normalize CV Context',
+    continueOnFail: true,
+    parameters: {
+      jsCode: `
+const taskCtx = $('Validate CV Context').item.json;
+const isLightweight = ${JSON.stringify(LIGHTWEIGHT_TRIGGERS)}.includes(taskCtx.taskTrigger);
+const input = $input.item.json;
+
+if (isLightweight) {
+  if (input?.error) {
+    throw new Error('RETRYABLE: failed to load prior CV facts: ' + JSON.stringify(input.error));
+  }
+  const rows = input;
+  const priorRow = Array.isArray(rows)
+    ? (rows[0] ?? null)
+    : (rows && typeof rows === 'object' && (rows.skills !== undefined) ? rows : null);
+
+  if (!priorRow) {
+    // No prior completed analysis exists to reuse facts from — this
+    // trigger only ever fires for a CV that already has one, so this is
+    // an unexpected state, not an ordinary retry case.
+    throw new Error('PERMANENT: no prior completed CV analysis exists to base a lightweight refresh on');
+  }
+
+  return [{
+    json: {
+      isLightweight: true,
+      cvText: null,
+      priorFacts: {
+        professional_summary: priorRow.professional_summary ?? null,
+        skills: Array.isArray(priorRow.skills) ? priorRow.skills : [],
+        education: Array.isArray(priorRow.education) ? priorRow.education : [],
+        work_experience: Array.isArray(priorRow.work_experience) ? priorRow.work_experience : [],
+        projects: Array.isArray(priorRow.projects) ? priorRow.projects : [],
+        certifications: Array.isArray(priorRow.certifications) ? priorRow.certifications : [],
+        languages: Array.isArray(priorRow.languages) ? priorRow.languages : [],
+        contact_info: (priorRow.contact_info && typeof priorRow.contact_info === 'object') ? priorRow.contact_info : null,
+        extracted_text: priorRow.extracted_text ?? null
+      }
+    }
+  }];
+}
+
+// Full-extraction path — arrived via Extract PDF Text.
+if (input?.error) {
+  throw new Error('RETRYABLE: PDF extraction failed: ' + input.error);
+}
+return [{ json: { isLightweight: false, cvText: input?.text || '', priorFacts: null } }];
+`
+    },
+    output: [{ json: { isLightweight: false, cvText: 'Sample extracted CV text...', priorFacts: null } }]
   }
 });
 
@@ -657,9 +799,22 @@ const loadTaskFeedback = node({
 });
 
 // ── 4j. Build the GPT-4o request body ─────────────────────────────────────────
-// Reads extract output and merged preferences; field names in the JSON schema
-// match src/lib/cvAnalysis/types.ts exactly so the Career Profile frontend
-// renders all sections without remapping.
+// Reads the normalized CV context (full text, or reused prior facts — see
+// Normalize CV Context) and merged preferences; field names in the JSON
+// schema match src/lib/cvAnalysis/types.ts exactly so the Career Profile
+// frontend renders all sections without remapping.
+//
+// Two request shapes:
+//   - Full (isLightweight=false): asks for the complete 16-field schema
+//     (CV facts + recommendations) from the actual CV text, exactly as
+//     before this fix.
+//   - Lightweight (isLightweight=true): asks ONLY for the 6 recommendation
+//     fields, given the already-verified prior CV facts (never re-sent as
+//     something to extract, only as fixed context) plus preferences and
+//     any feedback. CV facts are never part of this request's output
+//     schema at all — Parse AI Response copies them verbatim from
+//     priorFacts, so even a non-compliant model response can't overwrite
+//     them (structural guarantee, not a prompt request).
 const buildOpenAIRequest = node({
   type: 'n8n-nodes-base.code',
   version: 2,
@@ -669,11 +824,11 @@ const buildOpenAIRequest = node({
     parameters: {
       jsCode: `
 const taskCtx    = $('Validate CV Context').item.json;
-const extractOut = $('Extract PDF Text').item.json;
+const normCtx    = $('Normalize CV Context').item.json;
 const mergedPrefs = $('Merge Preference Data').item.json;
 
-if (extractOut?.error) {
-  throw new Error('RETRYABLE: PDF extraction failed: ' + extractOut.error);
+if (normCtx?.error) {
+  throw new Error(normCtx.error);
 }
 
 // A PERMANENT error from Merge Preference Data (e.g. user_id mismatch) must
@@ -682,13 +837,8 @@ if (mergedPrefs?.error && String(mergedPrefs.error).includes('PERMANENT:')) {
   throw new Error(mergedPrefs.error);
 }
 
-const cvText = extractOut?.text || '';
-if (!cvText.trim()) {
-  throw new Error('PERMANENT: PDF produced no extractable text (may be scanned/image-only)');
-}
-
 // If preference merge failed for a non-permanent reason, continue with empty
-// preferences — CV facts are still extracted correctly and stored.
+// preferences — CV facts are still extracted/reused correctly and stored.
 const preferenceSnapshot = mergedPrefs?.preferenceSnapshot || {
   target_roles: [], preferred_locations: [], work_arrangement: null,
   job_market_coverage: null, job_type: null, experience_level: null,
@@ -700,42 +850,83 @@ const preferenceSnapshot = mergedPrefs?.preferenceSnapshot || {
 const feedbackItem = $('Load Task Feedback').item.json;
 const feedbackRow = (feedbackItem && feedbackItem.feedback_type) ? feedbackItem : null;
 
-let systemPrompt =
-  'You are an expert CV analyst. Extract structured professional information from ' +
-  'the CV text and generate a career profile informed by the job preferences.\\n\\n' +
-  'Return ONLY a valid JSON object with EXACTLY these fields. No markdown, no explanation.\\n\\n' +
-  '{\\n' +
-  '  "candidate_name": "Full name as it appears on the CV header or contact section, or null if not found",\\n' +
-  '  "candidate_email": "Email address as it appears on the CV, or null if not found",\\n' +
-  '  "professional_summary": "2-4 sentence plain-text summary, or null",\\n' +
-  '  "skills": ["skill1", "skill2"],\\n' +
-  '  "education": [{"institution":"","degree":"","field_of_study":"","start_date":"","end_date":""}],\\n' +
-  '  "work_experience": [{"organization":"","title":"","start_date":"","end_date":"","highlights":["point1","point2"]}],\\n' +
-  '  "projects": [{"name":"","description":"","technologies":[]}],\\n' +
-  '  "certifications": [{"name":"","issuer":"","year":null}],\\n' +
-  '  "languages": [{"language":"","proficiency":""}],\\n' +
-  '  "contact_info": {"links":[],"location":null},\\n' +
-  '  "profile_level": "junior",\\n' +
-  '  "recommended_roles": ["role1"],\\n' +
-  '  "strongest_areas": ["area1"],\\n' +
-  '  "career_recommendations": ["recommendation1"],\\n' +
-  '  "search_focus": ["focus1"],\\n' +
-  '  "development_areas": ["area1"]\\n' +
-  '}\\n\\n' +
-  'Field rules:\\n' +
-  '- Extract ONLY information present in the CV. Never invent details.\\n' +
-  '- profile_level MUST be exactly one of: internship, entry-level, junior, mid-level, senior, open-to-all\\n' +
-  '- education[].field_of_study: the subject/major studied, or empty string if unknown.\\n' +
-  '- education[].start_date / end_date: "YYYY" or "YYYY-MM" or empty string.\\n' +
-  '- work_experience[].organization: company or institution name.\\n' +
-  '- work_experience[].highlights: array of short bullet strings (not a single description string).\\n' +
-  '- languages[].proficiency: one of Native, Fluent, Advanced, Intermediate, Basic \\u2014 or empty string.\\n' +
-  '- contact_info.links: array of public profile URLs (LinkedIn, GitHub, portfolio). Never include email or phone.\\n' +
-  '- contact_info.location: city/country string or null.\\n' +
-  '- Use [] for missing arrays, null or empty string for missing scalars.\\n' +
-  '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and preferences.\\n' +
-  '- candidate_name: copy the name exactly from the CV header or contact section. null if absent.\\n' +
-  '- candidate_email: copy the email exactly from the CV. null if absent.';
+const isLightweight = !!normCtx.isLightweight;
+
+let systemPrompt;
+let userParts;
+
+if (isLightweight) {
+  const priorFacts = normCtx.priorFacts || {};
+
+  systemPrompt =
+    'You are refreshing an AI Job Agent career profile\\'s RECOMMENDATIONS ONLY. ' +
+    'The candidate\\'s CV facts below are already extracted and verified — they are ' +
+    'fixed context, not something for you to extract, change, or repeat. Base your ' +
+    'recommendations strictly on the CV FACTS and JOB PREFERENCES provided.\\n\\n' +
+    'Return ONLY a valid JSON object with EXACTLY these fields. No markdown, no explanation.\\n\\n' +
+    '{\\n' +
+    '  "profile_level": "junior",\\n' +
+    '  "recommended_roles": ["role1"],\\n' +
+    '  "strongest_areas": ["area1"],\\n' +
+    '  "career_recommendations": ["recommendation1"],\\n' +
+    '  "search_focus": ["focus1"],\\n' +
+    '  "development_areas": ["area1"]\\n' +
+    '}\\n\\n' +
+    'Field rules:\\n' +
+    '- profile_level MUST be exactly one of: internship, entry-level, junior, mid-level, senior, open-to-all\\n' +
+    '- Every recommendation must be grounded in the CV FACTS given below \\u2014 never invent skills, experience, or education not present there.\\n' +
+    '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and preferences.\\n' +
+    '- Use [] for missing arrays.';
+
+  userParts = [
+    'JOB PREFERENCES:\\n' + JSON.stringify(preferenceSnapshot, null, 2),
+    'CV FACTS (already verified \\u2014 fixed context, do not restate or alter):\\n' + JSON.stringify(priorFacts, null, 2)
+  ];
+} else {
+  const cvText = normCtx.cvText || '';
+  if (!cvText.trim()) {
+    throw new Error('PERMANENT: PDF produced no extractable text (may be scanned/image-only)');
+  }
+
+  systemPrompt =
+    'You are an expert CV analyst. Extract structured professional information from ' +
+    'the CV text and generate a career profile informed by the job preferences.\\n\\n' +
+    'Return ONLY a valid JSON object with EXACTLY these fields. No markdown, no explanation.\\n\\n' +
+    '{\\n' +
+    '  "candidate_name": "Full name as it appears on the CV header or contact section, or null if not found",\\n' +
+    '  "candidate_email": "Email address as it appears on the CV, or null if not found",\\n' +
+    '  "professional_summary": "2-4 sentence plain-text summary, or null",\\n' +
+    '  "skills": ["skill1", "skill2"],\\n' +
+    '  "education": [{"institution":"","degree":"","field_of_study":"","start_date":"","end_date":""}],\\n' +
+    '  "work_experience": [{"organization":"","title":"","start_date":"","end_date":"","highlights":["point1","point2"]}],\\n' +
+    '  "projects": [{"name":"","description":"","technologies":[]}],\\n' +
+    '  "certifications": [{"name":"","issuer":"","year":null}],\\n' +
+    '  "languages": [{"language":"","proficiency":""}],\\n' +
+    '  "contact_info": {"links":[],"location":null},\\n' +
+    '  "profile_level": "junior",\\n' +
+    '  "recommended_roles": ["role1"],\\n' +
+    '  "strongest_areas": ["area1"],\\n' +
+    '  "career_recommendations": ["recommendation1"],\\n' +
+    '  "search_focus": ["focus1"],\\n' +
+    '  "development_areas": ["area1"]\\n' +
+    '}\\n\\n' +
+    'Field rules:\\n' +
+    '- Extract ONLY information present in the CV. Never invent details.\\n' +
+    '- profile_level MUST be exactly one of: internship, entry-level, junior, mid-level, senior, open-to-all\\n' +
+    '- education[].field_of_study: the subject/major studied, or empty string if unknown.\\n' +
+    '- education[].start_date / end_date: "YYYY" or "YYYY-MM" or empty string.\\n' +
+    '- work_experience[].organization: company or institution name.\\n' +
+    '- work_experience[].highlights: array of short bullet strings (not a single description string).\\n' +
+    '- languages[].proficiency: one of Native, Fluent, Advanced, Intermediate, Basic \\u2014 or empty string.\\n' +
+    '- contact_info.links: array of public profile URLs (LinkedIn, GitHub, portfolio). Never include email or phone.\\n' +
+    '- contact_info.location: city/country string or null.\\n' +
+    '- Use [] for missing arrays, null or empty string for missing scalars.\\n' +
+    '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and preferences.\\n' +
+    '- candidate_name: copy the name exactly from the CV header or contact section. null if absent.\\n' +
+    '- candidate_email: copy the email exactly from the CV. null if absent.';
+
+  userParts = ['JOB PREFERENCES:\\n' + JSON.stringify(preferenceSnapshot, null, 2)];
+}
 
 // When user feedback is present, add a clear instruction. System instructions
 // (schema, field rules) remain immutable — feedback is treated as data in the
@@ -748,14 +939,7 @@ if (feedbackRow) {
     'For cv_correction requests: correct only the specific detail the user identified — ' +
     'do not fabricate other changes. ' +
     'The JSON output format above is fixed and must not change regardless of feedback content.';
-}
 
-// Build user message: preferences + optional feedback + CV text.
-// Feedback is placed AFTER the structured data so system instructions
-// remain the authority on format; the feedback is just additional context.
-const userParts = ['JOB PREFERENCES:\\n' + JSON.stringify(preferenceSnapshot, null, 2)];
-
-if (feedbackRow) {
   const section = feedbackRow.affected_section
     ? 'Section: ' + feedbackRow.affected_section + '\\n'
     : '';
@@ -766,7 +950,12 @@ if (feedbackRow) {
   );
 }
 
-userParts.push('CV TEXT:\\n' + cvText);
+// Feedback is placed AFTER the structured data so system instructions
+// remain the authority on format; the feedback is just additional context.
+// Full path only: append raw CV text last, after preferences/feedback.
+if (!isLightweight) {
+  userParts.push('CV TEXT:\\n' + normCtx.cvText);
+}
 
 const userMessage = userParts.join('\\n\\n');
 
@@ -777,13 +966,15 @@ return [{
     cvId:               taskCtx.cvId,
     taskAttempt:        taskCtx.taskAttempt,
     taskMaxAttempts:    taskCtx.taskMaxAttempts,
-    cvText:             cvText,
+    isLightweight:      isLightweight,
+    cvText:             isLightweight ? null : normCtx.cvText,
+    priorFacts:         isLightweight ? normCtx.priorFacts : null,
     preferenceSnapshot: preferenceSnapshot,
     openAIBody: {
       model: 'gpt-4o',
       response_format: { type: 'json_object' },
       temperature: 0,
-      max_tokens: 4096,
+      max_tokens: isLightweight ? 1024 : 4096,
       messages: [
         { role: 'system', content: systemPrompt },
         { role: 'user', content: userMessage }
@@ -793,7 +984,7 @@ return [{
 }];
 `
     },
-    output: [{ json: { taskId: 'task-uuid', userId: 'user-uuid', cvId: 'cv-uuid', taskAttempt: 1, taskMaxAttempts: 3, cvText: 'CV text', preferenceSnapshot: { target_roles: [], preferred_locations: [] }, openAIBody: { model: 'gpt-4o' } } }]
+    output: [{ json: { taskId: 'task-uuid', userId: 'user-uuid', cvId: 'cv-uuid', taskAttempt: 1, taskMaxAttempts: 3, isLightweight: false, cvText: 'CV text', priorFacts: null, preferenceSnapshot: { target_roles: [], preferred_locations: [] }, openAIBody: { model: 'gpt-4o' } } }]
   }
 });
 
@@ -833,6 +1024,20 @@ const callOpenAI = node({
 // so the Career Profile frontend renders all sections without remapping.
 // status:'completed' is explicitly set so the review/approval RPCs accept the row
 // (both guard on v_row.status = 'completed' — the column default is 'processing').
+//
+// safeStrArr/safeObjArr validate element types, not just Array.isArray —
+// Automation-1 audit fix: a non-string element in a string[] field (e.g.
+// career_recommendations) previously passed through unvalidated and crashed
+// the CV Profile page on render. Mirrors the DB-level backstop in
+// supabase/migrations/20260825100020_validate_cv_analysis_array_shapes.sql
+// so a malformed model response is caught here, with a clear error, rather
+// than surfacing as an opaque Postgres constraint-violation on insert.
+//
+// Lightweight path (isLightweight=true): every CV-fact field is copied
+// verbatim from reqCtx.priorFacts — never from the model's response, even
+// if the model returned CV-fact-shaped keys anyway. This is what makes "CV
+// facts remain unchanged" a structural guarantee instead of a prompt
+// request. Only the 6 recommendation fields come from the fresh response.
 const parseAIResponse = node({
   type: 'n8n-nodes-base.code',
   version: 2,
@@ -876,11 +1081,38 @@ if (!allowedLevels.includes(parsed.profile_level)) {
   parsed.profile_level = null;
 }
 
-const safeArr = v => Array.isArray(v) ? v : [];
+const safeStrArr = v => Array.isArray(v) ? v.filter(x => typeof x === 'string') : [];
+const safeObjArr = v => Array.isArray(v) ? v.filter(x => x && typeof x === 'object' && !Array.isArray(x)) : [];
 const safeObj = v => (v && typeof v === 'object' && !Array.isArray(v)) ? v : null;
 const safeStr = v => (typeof v === 'string' && v.trim()) ? v.trim() : null;
 
 const prefs = reqCtx.preferenceSnapshot || {};
+const isLightweight = !!reqCtx.isLightweight;
+const priorFacts = reqCtx.priorFacts || {};
+
+const cvFacts = isLightweight
+  ? {
+      extracted_text:       priorFacts.extracted_text ?? null,
+      professional_summary: priorFacts.professional_summary ?? null,
+      skills:                safeStrArr(priorFacts.skills),
+      education:             safeObjArr(priorFacts.education),
+      work_experience:       safeObjArr(priorFacts.work_experience),
+      projects:              safeObjArr(priorFacts.projects),
+      certifications:        safeObjArr(priorFacts.certifications),
+      languages:             safeObjArr(priorFacts.languages),
+      contact_info:          safeObj(priorFacts.contact_info)
+    }
+  : {
+      extracted_text:       reqCtx.cvText || null,
+      professional_summary: safeStr(parsed.professional_summary),
+      skills:                safeStrArr(parsed.skills),
+      education:             safeObjArr(parsed.education),
+      work_experience:       safeObjArr(parsed.work_experience),
+      projects:              safeObjArr(parsed.projects),
+      certifications:        safeObjArr(parsed.certifications),
+      languages:             safeObjArr(parsed.languages),
+      contact_info:          safeObj(parsed.contact_info)
+    };
 
 return [{
   json: {
@@ -888,8 +1120,13 @@ return [{
     taskAttempt:     reqCtx.taskAttempt,
     taskMaxAttempts: reqCtx.taskMaxAttempts,
     outcome: 'success',
-    candidate_name:  safeStr(parsed.candidate_name),
-    candidate_email: safeStr(parsed.candidate_email),
+    isLightweight: isLightweight,
+    // Lightweight tasks never re-read the CV, so there is no fresh name to
+    // compare against the account — Validate CV Ownership skips its check
+    // for these (ownership was already established when priorFacts' own
+    // analysis was originally created).
+    candidate_name:  isLightweight ? null : safeStr(parsed.candidate_name),
+    candidate_email: isLightweight ? null : safeStr(parsed.candidate_email),
     insertBody: {
       user_id:                reqCtx.userId,
       cv_id:                  reqCtx.cvId,
@@ -901,29 +1138,29 @@ return [{
       ai_provider:            'openai',
       ai_model:               'gpt-4o',
       analyzed_at:            new Date().toISOString(),
-      extracted_text:         reqCtx.cvText || null,
+      extracted_text:         cvFacts.extracted_text,
       preference_snapshot:    prefs,
       preferences_version:    typeof prefs.preferences_version === 'number' ? prefs.preferences_version : null,
-      professional_summary:   safeStr(parsed.professional_summary),
-      skills:                 safeArr(parsed.skills),
-      education:              safeArr(parsed.education),
-      work_experience:        safeArr(parsed.work_experience),
-      projects:               safeArr(parsed.projects),
-      certifications:         safeArr(parsed.certifications),
-      languages:              safeArr(parsed.languages),
-      contact_info:           safeObj(parsed.contact_info),
+      professional_summary:   cvFacts.professional_summary,
+      skills:                 cvFacts.skills,
+      education:              cvFacts.education,
+      work_experience:        cvFacts.work_experience,
+      projects:               cvFacts.projects,
+      certifications:         cvFacts.certifications,
+      languages:               cvFacts.languages,
+      contact_info:           cvFacts.contact_info,
       profile_level:          parsed.profile_level || null,
-      recommended_roles:      safeArr(parsed.recommended_roles),
-      strongest_areas:        safeArr(parsed.strongest_areas),
-      career_recommendations: safeArr(parsed.career_recommendations),
-      search_focus:           safeArr(parsed.search_focus),
-      development_areas:      safeArr(parsed.development_areas)
+      recommended_roles:      safeStrArr(parsed.recommended_roles),
+      strongest_areas:        safeStrArr(parsed.strongest_areas),
+      career_recommendations: safeStrArr(parsed.career_recommendations),
+      search_focus:           safeStrArr(parsed.search_focus),
+      development_areas:      safeStrArr(parsed.development_areas)
     }
   }
 }];
 `
     },
-    output: [{ json: { taskId: 'task-uuid', taskAttempt: 1, taskMaxAttempts: 3, outcome: 'success', insertBody: { status: 'completed' } } }]
+    output: [{ json: { taskId: 'task-uuid', taskAttempt: 1, taskMaxAttempts: 3, outcome: 'success', isLightweight: false, insertBody: { status: 'completed' } } }]
   }
 });
 
@@ -987,6 +1224,11 @@ const passthrough = {
   insertBody: parseCtx?.insertBody
 };
 
+// Also the lightweight-task path: Parse AI Response sets candidate_name to
+// null whenever isLightweight is true (no fresh CV text was read this
+// execution, so there is nothing new to compare), which lands here and
+// correctly skips re-validation — ownership was already established when
+// the reused prior facts' own analysis was originally created.
 if (!candidateName || !accountName) {
   return [{ json: { ...passthrough, ownershipStatus: 'unable_to_verify', ownershipDetail: null } }];
 }
@@ -1162,21 +1404,48 @@ if (parseSucceeded && !insertError) {
   // row is touched (see DUPLICATE-INSERT SAFETY in the file header).
   patchBody = { status: 'completed', completed_at: new Date().toISOString() };
 } else {
+  // Only one of the two branches after Check Needs Full Extraction ever
+  // runs for a given item (Sign Storage URL/Download CV Binary/Extract PDF
+  // Text for a full task, Load Prior CV Facts for a lightweight one) —
+  // $('Node Name') throws for a node that didn't execute in this item's
+  // path, so every branch-specific lookup below must be guarded. Nodes
+  // that run on every path regardless of branch (everything from Merge
+  // Preference Data onward, plus Load CV Row before the branch) are safe
+  // to reference directly, unchanged from before this fix.
+  function safeNodeError(name) {
+    try {
+      return $(name).item.json?.error;
+    } catch (e) {
+      return undefined;
+    }
+  }
+
   // Walk the error chain to find the first informative message.
+  //
+  // Build OpenAI Request is checked before Call OpenAI: when Build OpenAI
+  // Request fails to construct a request (e.g. it inherited an upstream
+  // PERMANENT error via continueOnFail), Call OpenAI still runs against the
+  // resulting missing/invalid body and produces its own generic secondary
+  // symptom (e.g. "invalid JSON body"). That symptom must never outrank the
+  // root cause. Call OpenAI's error still surfaces normally whenever Build
+  // OpenAI Request succeeded but the OpenAI call itself genuinely failed
+  // (timeout, rate limit, non-2xx response, malformed API response, etc.).
   const rawError = (
     insertError ||
     parseResult?.error ||
-    $('Call OpenAI').item.json?.error ||
     $('Build OpenAI Request').item.json?.error ||
+    $('Call OpenAI').item.json?.error ||
     $('Validate CV Ownership').item.json?.error ||
     $('Load User Profile').item.json?.error ||
     $('Merge Preference Data').item.json?.error ||
     $('Load Preference Locations').item.json?.error ||
     $('Load Preference Roles').item.json?.error ||
     $('Load Preferences').item.json?.error ||
-    $('Extract PDF Text').item.json?.error ||
-    $('Download CV Binary').item.json?.error ||
-    $('Sign Storage URL').item.json?.error ||
+    safeNodeError('Normalize CV Context') ||
+    safeNodeError('Load Prior CV Facts') ||
+    safeNodeError('Extract PDF Text') ||
+    safeNodeError('Download CV Binary') ||
+    safeNodeError('Sign Storage URL') ||
     validateCtx?.error ||
     $('Load CV Row').item.json?.error ||
     'Unknown processing error'
@@ -1251,10 +1520,12 @@ export default workflow('cv-analysis-worker', 'CV Analysis Worker')
     .onEachBatch(
       loadCvRow
         .to(validateCvContext)
-        .to(checkContextValid)   // TRUE → signStorageUrl; FALSE → handleContextFailure
-        .to(signStorageUrl)      // connected from checkContextValid output[0]
+        .to(checkContextValid)   // TRUE → checkNeedsFullExtraction; FALSE → handleContextFailure
+        .to(checkNeedsFullExtraction)  // connected from checkContextValid output[0]; TRUE → signStorageUrl; FALSE → loadPriorCvFacts
+        .to(signStorageUrl)      // connected from checkNeedsFullExtraction output[0]
         .to(downloadCvBinary)
         .to(extractPdfText)
+        .to(normalizeCvContext)  // full-path branch; also receives from loadPriorCvFacts (lightweight branch)
         .to(loadPreferences)
         .to(loadPreferenceRoles)
         .to(loadPreferenceLocations)
@@ -1273,5 +1544,8 @@ export default workflow('cv-analysis-worker', 'CV Analysis Worker')
     )
   );
 // FALSE branches (declared separately — SDK cannot express multi-output in .to() chain):
-// checkContextValid[1]   → handleContextFailure   → updateTaskStatus
-// checkOwnershipValid[1] → handleOwnershipMismatch → updateTaskStatus
+// checkContextValid[1]         → handleContextFailure   → updateTaskStatus
+// checkOwnershipValid[1]       → handleOwnershipMismatch → updateTaskStatus
+// checkNeedsFullExtraction[1]  → loadPriorCvFacts → normalizeCvContext (input 0, same node the
+//                                 full path's extractPdfText also feeds — a genuine two-parent
+//                                 convergence node, applied in cv-analysis-worker.json)

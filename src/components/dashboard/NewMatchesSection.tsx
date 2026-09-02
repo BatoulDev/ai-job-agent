@@ -1,26 +1,16 @@
-import MatchCard from "./MatchCard";
-import { NEW_MATCHES } from "@/lib/dashboardData";
+import EmptyTabState from "./EmptyTabState";
 
-// This component is only ever reached once LockedMatchesNotice's gate
-// (dashboard/page.tsx's isProfileApproved) is satisfied — no job-matching
-// automation exists yet, so that gate is never actually open for a real
-// user today. The content below is still the pre-existing mock data, not
-// wired to anything real.
-//
-// Future UX contract (not implemented — no matching backend exists yet):
-// immediately after approval, before real matches exist, this component
-// should show a processing state here — not a full-screen loader —
-// reading exactly:
-//   "We're finding high-quality matches for you. Your first matches will
-//   appear here soon."
-// That requires a real backend signal (e.g. a matching-run status) this
-// phase does not add. See the CV Analysis / job-matching backend phases.
+// Gated by dashboard/page.tsx's isProfileApproved (the full matching-
+// eligibility condition — see is_cv_analysis_matching_eligible() in
+// supabase/migrations/20260825100010_add_matching_eligibility_gate.sql).
+// No job-ingestion or matching worker exists yet, so real matches are
+// never available — this renders an honest empty state, not a placeholder
+// for fake results (Automation-1 audit item 7).
 export default function NewMatchesSection() {
   return (
-    <div className="space-y-6">
-      {NEW_MATCHES.map((match) => (
-        <MatchCard key={match.id} match={match} />
-      ))}
-    </div>
+    <EmptyTabState
+      title="No matches yet"
+      message="Your AI Job Agent hasn't found any job matches yet. Once job matching is live, new opportunities will appear here for your review."
+    />
   );
 }

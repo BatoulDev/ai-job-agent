@@ -54,12 +54,24 @@ function UploadCvPageContent() {
     () => searchParams.get("gift") === "1"
   );
 
-  // "Not now" and the popup's X button both call this — dismissing the gift
-  // offer sends the user back to the landing page, not deeper into
-  // onboarding, and never to /news (that's the "Claim free gift" link only).
+  // "Not now", the popup's X button, Escape, and backdrop click all call
+  // this — dismissing the gift offer must keep the user on this page and
+  // continue onboarding, never redirect to the landing page (that was the
+  // bug: it used to call router.push("/")). Only the "gift" query param is
+  // stripped; any other query params already on this URL are preserved
+  // as-is. router.replace (not push) so the dismissal doesn't add a new
+  // history entry — Back from here goes to whatever preceded the gift URL,
+  // not immediately back into a URL with gift=1 that would reopen the
+  // modal.
   const closeGiftModal = () => {
     setShowGiftModal(false);
-    router.push("/");
+    const params = new URLSearchParams(searchParams.toString());
+    params.delete("gift");
+    const query = params.toString();
+    router.replace(
+      query ? `/onboarding/upload-cv?${query}` : "/onboarding/upload-cv",
+      { scroll: false }
+    );
   };
 
   const handleFiles = (files: FileList | null) => {

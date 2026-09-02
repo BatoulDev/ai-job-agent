@@ -38,3 +38,14 @@ html {
 body {
   background: var(--color-bg);
 }
+
+/* Suppresses browsers' own built-in password-reveal/clear controls so only
+   the application's custom PasswordField toggle button is ever shown.
+   Chrome/Firefox render no such control by default; Microsoft Edge does
+   (::-ms-reveal, ::-ms-clear), which otherwise renders a second eye icon
+   next to PasswordField's own button. This only hides that glyph — it does
+   not disable the browser's password manager, autocomplete, or paste. */
+input[type="password"]::-ms-reveal,
+input[type="password"]::-ms-clear {
+  display: none;
+}

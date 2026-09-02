@@ -505,8 +505,16 @@ async function ensurePreferences(userId, fixture) {
         job_type: fixture.preferences.job_type,
         experience_level: fixture.preferences.experience_level,
         additional_notes: fixture.preferences.additional_notes ?? null,
-        custom_target_roles: fixture.customTargetRoles ?? [],
-        custom_locations: fixture.customLocations ?? [],
+        // null (not []) when empty, matching save_job_preferences' own
+        // array_agg-over-zero-rows convention (supabase/migrations/
+        // 20260818090000_preferences_updated_lifecycle.sql) — array_agg
+        // over an empty set is NULL, never '{}'. Writing '{}' here made a
+        // fixture's first real RPC-based save look like a change (NULL IS
+        // DISTINCT FROM '{}' is true), spuriously bumping .version on a
+        // semantic no-op. See tests/db/preferences-seed-fixture-version-
+        // artifact.test.mjs for the reproduction and full explanation.
+        custom_target_roles: fixture.customTargetRoles?.length ? fixture.customTargetRoles : null,
+        custom_locations: fixture.customLocations?.length ? fixture.customLocations : null,
       },
       { onConflict: "user_id" }
     )

@@ -2,13 +2,15 @@ import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { hashUserIdentifier } from "@/lib/authRateLimit/identifiers";
 import { AUTH_RATE_LIMIT_POLICIES, clearAuthAttempts, reserveAuthAttempt } from "@/lib/authRateLimit/rateLimit";
-import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "@/lib/authValidation/password";
+import { PASSWORD_COMPOSITION_ERROR, getPasswordValidationError } from "@/lib/authValidation/password";
 
 const GENERIC_RATE_LIMIT_ERROR = "Too many attempts. Please wait a bit and try again.";
 
+// Shape check only — the specific validity message (composition vs. the
+// 72-char maximum) is generated separately in POST via
+// getPasswordValidationError, never folded into one generic outcome here.
 function parsePassword(raw: unknown): string | null {
-  if (typeof raw !== "string") return null;
-  if (raw.length < MIN_PASSWORD_LENGTH || raw.length > MAX_PASSWORD_LENGTH) return null;
+  if (typeof raw !== "string" || raw.length === 0) return null;
   return raw;
 }
 
@@ -37,10 +39,12 @@ export async function POST(request: Request) {
       : null;
 
   if (password === null) {
-    return NextResponse.json(
-      { error: `Password must be at least ${MIN_PASSWORD_LENGTH} characters.` },
-      { status: 400 }
-    );
+    return NextResponse.json({ error: PASSWORD_COMPOSITION_ERROR }, { status: 400 });
+  }
+
+  const passwordError = getPasswordValidationError(password);
+  if (passwordError) {
+    return NextResponse.json({ error: passwordError }, { status: 400 });
   }
 
   const supabase = await createClient();
@@ -77,10 +81,17 @@ export async function POST(request: Request) {
 
   if (updateError) {
     // Never surface updateError.message (raw Supabase Auth text) except
-    // for this one known, safe, stable substring.
-    const message = updateError.message.includes("same password")
-      ? "Your new password must be different from your current one."
-      : "Failed to update your password. Please try again.";
+    // for this one known, safe, stable substring. weak_password is
+    // defense-in-depth only (see getPasswordValidationError above and
+    // supabase/config.toml's password_requirements comment — GoTrue itself
+    // only checks minimum_password_length and its own 72-char ceiling, not
+    // composition).
+    const message =
+      updateError.code === "weak_password"
+        ? PASSWORD_COMPOSITION_ERROR
+        : updateError.message.includes("same password")
+          ? "Your new password must be different from your current one."
+          : "Failed to update your password. Please try again.";
     return NextResponse.json({ error: message }, { status: 422 });
   }
 

@@ -1,5 +1,6 @@
 "use client";
 
+import { useEffect, useLayoutEffect, useRef } from "react";
 import Link from "next/link";
 
 const GIFT_BULLETS = [
@@ -9,6 +10,13 @@ const GIFT_BULLETS = [
   "Free with your account",
 ];
 
+// Accessible dialog behavior (focus trap, initial focus, Escape-to-close,
+// return focus to whatever had focus before opening) mirrors
+// src/components/dashboard/cvProfile/Dialog.tsx's proven pattern, inlined
+// here rather than reused directly: that shared shell applies uniform
+// padding around its children, which would clip GiftModal's full-bleed
+// gradient header — this component's own visual layout is otherwise kept
+// pixel-identical to before.
 export default function GiftModal({
   open,
   onClose,
@@ -16,6 +24,55 @@ export default function GiftModal({
   open: boolean;
   onClose: () => void;
 }) {
+  const closeButtonRef = useRef<HTMLButtonElement>(null);
+  const panelRef = useRef<HTMLDivElement>(null);
+  const previouslyFocusedRef = useRef<HTMLElement | null>(null);
+  // Stable ref to onClose so the effect below only re-runs when `open`
+  // changes, never on every parent re-render.
+  const onCloseRef = useRef(onClose);
+  useLayoutEffect(() => {
+    onCloseRef.current = onClose;
+  });
+
+  useEffect(() => {
+    if (!open) return;
+
+    previouslyFocusedRef.current = document.activeElement as HTMLElement | null;
+    closeButtonRef.current?.focus();
+
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Escape") {
+        event.preventDefault();
+        onCloseRef.current();
+        return;
+      }
+      if (event.key !== "Tab") return;
+      const panel = panelRef.current;
+      if (!panel) return;
+      const focusable = Array.from(
+        panel.querySelectorAll<HTMLElement>('a[href], button:not([disabled])')
+      );
+      if (focusable.length === 0) return;
+      const first = focusable[0];
+      const last = focusable[focusable.length - 1];
+      if (event.shiftKey) {
+        if (document.activeElement === first) {
+          event.preventDefault();
+          last.focus();
+        }
+      } else if (document.activeElement === last) {
+        event.preventDefault();
+        first.focus();
+      }
+    }
+
+    document.addEventListener("keydown", handleKeyDown);
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      previouslyFocusedRef.current?.focus?.();
+    };
+  }, [open]);
+
   if (!open) return null;
 
   return (
@@ -27,17 +84,19 @@ export default function GiftModal({
       onClick={onClose}
     >
       <div
-        className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl"
+        ref={panelRef}
+        className="relative w-full max-w-md overflow-hidden rounded-3xl bg-white shadow-2xl outline-none"
         onClick={(event) => event.stopPropagation()}
       >
         <div className="relative overflow-hidden bg-gradient-to-br from-primary via-primary to-accent px-8 pb-8 pt-8 text-white">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(60%_60%_at_85%_0%,rgba(255,255,255,0.28),transparent)]" />
 
           <button
+            ref={closeButtonRef}
             type="button"
             onClick={onClose}
-            aria-label="Close"
-            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25"
+            aria-label="Close free gift offer and continue to Upload CV"
+            className="absolute right-4 top-4 flex h-8 w-8 items-center justify-center rounded-full bg-white/15 text-white transition-colors hover:bg-white/25 focus:outline-none focus-visible:ring-2 focus-visible:ring-white/60"
           >
             <svg
               width="16"
@@ -111,14 +170,15 @@ export default function GiftModal({
           <div className="mt-7 flex flex-col gap-3">
             <Link
               href="/news"
-              className="w-full rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-opacity hover:opacity-90"
+              className="w-full rounded-full bg-gradient-to-r from-primary to-accent px-6 py-3 text-center text-sm font-semibold text-white shadow-lg shadow-primary/25 transition-opacity hover:opacity-90 focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               Claim free gift
             </Link>
             <button
               type="button"
               onClick={onClose}
-              className="w-full rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-muted transition-colors hover:border-slate-300 hover:text-text"
+              aria-label="Not now, continue to Upload CV"
+              className="w-full rounded-full border border-slate-200 px-6 py-3 text-sm font-semibold text-muted transition-colors hover:border-slate-300 hover:text-text focus:outline-none focus-visible:ring-2 focus-visible:ring-primary/40"
             >
               Not now
             </button>

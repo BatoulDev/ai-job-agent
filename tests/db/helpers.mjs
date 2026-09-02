@@ -216,7 +216,37 @@ export async function uploadFakeCv(user, fileName = "fake-cv.pdf", { skipRateLim
 // the admin client — standing in for a future AI worker, which this
 // mission does not build. Not approved by default. No separate tracking
 // needed: cv_analyses.user_id is `on delete cascade` to auth.users.
+//
+// preferences_version defaults to the user's live job_preferences.version
+// (creating a minimal job_preferences row first if none exists yet) so a
+// fixture analysis is matching-eligible-shaped by default, matching
+// confirm_cv_analysis()/is_cv_analysis_matching_eligible()'s freshness gate
+// (supabase/migrations/20260825100000_harden_confirm_cv_analysis_freshness.sql,
+// 20260825100010_add_matching_eligibility_gate.sql). Pass an explicit
+// `preferences_version` override to deliberately construct a stale fixture.
 export async function insertFakeAnalysis(user, cvId, overrides = {}) {
+  let preferencesVersion = overrides.preferences_version;
+  if (preferencesVersion === undefined) {
+    const { data: prefsRow, error: prefsError } = await adminClient
+      .from("job_preferences")
+      .select("version")
+      .eq("user_id", user.id)
+      .maybeSingle();
+    if (prefsError) fail(`Failed to read job_preferences for ${user.email}: ${prefsError.message}`);
+
+    if (prefsRow) {
+      preferencesVersion = prefsRow.version;
+    } else {
+      const { data: created, error: createError } = await adminClient
+        .from("job_preferences")
+        .insert({ user_id: user.id, work_arrangement: "remote", job_type: "full-time", experience_level: "entry-level" })
+        .select("version")
+        .single();
+      if (createError) fail(`Failed to create default job_preferences for ${user.email}: ${createError.message}`);
+      preferencesVersion = created.version;
+    }
+  }
+
   const { data, error } = await adminClient
     .from("cv_analyses")
     .insert({
@@ -225,6 +255,7 @@ export async function insertFakeAnalysis(user, cvId, overrides = {}) {
       status: "completed",
       analyzed_at: new Date().toISOString(),
       preference_snapshot: {},
+      preferences_version: preferencesVersion,
       ...overrides,
     })
     .select()

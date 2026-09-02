@@ -397,11 +397,61 @@ test('Validate CV Context connects to Check Context Valid (not directly to Sign 
   );
 });
 
-test('Check Context Valid true branch (output 0) connects to Sign Storage URL', () => {
+// Automation-1 audit Phase 5: Check Context Valid's true branch now routes
+// through the trigger-based extraction-skip gate before reaching Sign
+// Storage URL, instead of connecting to it directly.
+test('Check Context Valid true branch (output 0) connects to Check Needs Full Extraction', () => {
   const trueBranch = wf.connections['Check Context Valid']?.main?.[0] ?? [];
   assert.ok(
+    trueBranch.some(c => c.node === 'Check Needs Full Extraction'),
+    '"Check Context Valid" true branch must connect to "Check Needs Full Extraction"'
+  );
+});
+
+test('Check Needs Full Extraction true branch (output 0) connects to Sign Storage URL', () => {
+  const trueBranch = wf.connections['Check Needs Full Extraction']?.main?.[0] ?? [];
+  assert.ok(
     trueBranch.some(c => c.node === 'Sign Storage URL'),
-    '"Check Context Valid" true branch must connect to "Sign Storage URL"'
+    '"Check Needs Full Extraction" true branch must connect to "Sign Storage URL"'
+  );
+});
+
+test('Check Needs Full Extraction false branch (output 1) connects to Load Prior CV Facts', () => {
+  const falseBranch = wf.connections['Check Needs Full Extraction']?.main?.[1] ?? [];
+  assert.ok(
+    falseBranch.some(c => c.node === 'Load Prior CV Facts'),
+    '"Check Needs Full Extraction" false branch must connect to "Load Prior CV Facts"'
+  );
+});
+
+test('Load Prior CV Facts connects to Normalize CV Context', () => {
+  const outbound = wf.connections['Load Prior CV Facts']?.main?.[0] ?? [];
+  assert.ok(
+    outbound.some(c => c.node === 'Normalize CV Context'),
+    '"Load Prior CV Facts" must connect to "Normalize CV Context"'
+  );
+});
+
+test('Extract PDF Text connects to Normalize CV Context (not directly to Load Preferences)', () => {
+  const outbound = wf.connections['Extract PDF Text']?.main?.[0] ?? [];
+  assert.ok(
+    outbound.some(c => c.node === 'Normalize CV Context'),
+    '"Extract PDF Text" must connect to "Normalize CV Context"'
+  );
+});
+
+test('Normalize CV Context connects to Load Preferences (branch convergence point)', () => {
+  const outbound = wf.connections['Normalize CV Context']?.main?.[0] ?? [];
+  assert.ok(
+    outbound.some(c => c.node === 'Load Preferences'),
+    '"Normalize CV Context" must connect to "Load Preferences"'
+  );
+});
+
+test('Build OpenAI Request reads from Normalize CV Context, not directly from Extract PDF Text', () => {
+  assert.ok(
+    tsRaw.includes(`$('Normalize CV Context')`),
+    'Build OpenAI Request must read the normalized CV context (full or reused) rather than Extract PDF Text directly'
   );
 });
 
@@ -1021,6 +1071,22 @@ test('Load Task Feedback has alwaysOutputData enabled (empty feedback must not h
     '"Load Task Feedback" must have alwaysOutputData: true — no feedback row on standard tasks would halt the workflow');
 });
 
+// Regression test for a real bug found during controlled end-to-end
+// verification (live execution 37265, 2026-08-25): a lightweight-trigger
+// task for a CV with no prior completed analysis (e.g. the very first task
+// ever claimed for that CV, if it happens to carry a lightweight trigger)
+// got an empty [] from Supabase. Without alwaysOutputData, that produced
+// ZERO output items, so Normalize CV Context — whose job is to detect
+// exactly this and raise an explicit PERMANENT error — never ran at all.
+// The per-item chain went silently dark and the task stuck at
+// status='processing' indefinitely instead of failing explicitly.
+test('Load Prior CV Facts has alwaysOutputData enabled (empty prior-facts result must not silently stall the task)', () => {
+  const n = wf.nodes.find(nd => nd.name === 'Load Prior CV Facts');
+  assert.ok(n, '"Load Prior CV Facts" node must exist');
+  assert.strictEqual(n.alwaysOutputData, true,
+    '"Load Prior CV Facts" must have alwaysOutputData: true — a genuine zero-row result (no prior analysis to reuse) must still reach Normalize CV Context, not silently stall the task');
+});
+
 test('Load Task Feedback URL queries analysis_feedback by analysis_task_id', () => {
   const n = wf.nodes.find(nd => nd.name === 'Load Task Feedback');
   assert.ok(n, '"Load Task Feedback" node must exist');
@@ -1060,17 +1126,21 @@ test('TypeScript source references Load Task Feedback node by name', () => {
 
 // ─── Build OpenAI Request: feedback integration ───────────────────────────────
 
-function runBuildOpenAIRequest({ taskCtxJson, extractOutJson, mergePrefsJson, feedbackItemJson }) {
+// Automation-1 audit Phase 5: Build OpenAI Request now reads the converged
+// "Normalize CV Context" output (isLightweight/cvText/priorFacts) instead of
+// Extract PDF Text directly, so it works uniformly for both the full and
+// lightweight-reuse branches.
+function runBuildOpenAIRequest({ taskCtxJson, normCtxJson, mergePrefsJson, feedbackItemJson }) {
   const node = wf.nodes.find(n => n.name === 'Build OpenAI Request');
   assert.ok(node, '"Build OpenAI Request" node must exist');
   const code = node.parameters.jsCode;
 
   const mockDollar = (nodeName) => {
     switch (nodeName) {
-      case 'Validate CV Context':  return { item: { json: taskCtxJson } };
-      case 'Extract PDF Text':     return { item: { json: extractOutJson } };
+      case 'Validate CV Context':   return { item: { json: taskCtxJson } };
+      case 'Normalize CV Context':  return { item: { json: normCtxJson } };
       case 'Merge Preference Data': return { item: { json: mergePrefsJson } };
-      case 'Load Task Feedback':   return { item: { json: feedbackItemJson } };
+      case 'Load Task Feedback':    return { item: { json: feedbackItemJson } };
       default: return { item: { json: null } };
     }
   };
@@ -1080,8 +1150,27 @@ function runBuildOpenAIRequest({ taskCtxJson, extractOutJson, mergePrefsJson, fe
   return new Function('$input', '$', code)(mockInput, mockDollar);
 }
 
-function makeExtractOut(text = 'Alice Smith\nSoftware Engineer with 3 years experience.') {
-  return { text };
+function makeNormCtx(text = 'Alice Smith\nSoftware Engineer with 3 years experience.') {
+  return { isLightweight: false, cvText: text, priorFacts: null };
+}
+
+function makeLightweightNormCtx(priorFacts = {}) {
+  return {
+    isLightweight: true,
+    cvText: null,
+    priorFacts: {
+      professional_summary: 'Experienced backend engineer.',
+      skills: ['Node.js', 'PostgreSQL'],
+      education: [{ institution: 'State University', degree: 'BSc Computer Science' }],
+      work_experience: [{ title: 'Backend Engineer', organization: 'Acme Corp', highlights: ['Built APIs'] }],
+      projects: [],
+      certifications: [],
+      languages: [{ language: 'English', proficiency: 'Native' }],
+      contact_info: null,
+      extracted_text: 'Alice Smith full original CV text...',
+      ...priorFacts,
+    },
+  };
 }
 
 function makeMergedPrefs(roles = ['Software Engineer'], locs = ['Remote']) {
@@ -1114,7 +1203,7 @@ test('Build OpenAI Request: no feedback row → single-section user message (JOB
   // Empty sentinel from alwaysOutputData — no feedback_type field.
   const result = runBuildOpenAIRequest({
     taskCtxJson: makeBuildCtx(),
-    extractOutJson: makeExtractOut(),
+    normCtxJson: makeNormCtx(),
     mergePrefsJson: makeMergedPrefs(),
     feedbackItemJson: {},
   });
@@ -1134,7 +1223,7 @@ test('Build OpenAI Request: with feedback row → three-section user message inc
   };
   const result = runBuildOpenAIRequest({
     taskCtxJson: makeBuildCtx(),
-    extractOutJson: makeExtractOut(),
+    normCtxJson: makeNormCtx(),
     mergePrefsJson: makeMergedPrefs(),
     feedbackItemJson: feedbackItem,
   });
@@ -1163,7 +1252,7 @@ test('Build OpenAI Request: feedback without affected_section omits Section: lin
   };
   const result = runBuildOpenAIRequest({
     taskCtxJson: makeBuildCtx(),
-    extractOutJson: makeExtractOut(),
+    normCtxJson: makeNormCtx(),
     mergePrefsJson: makeMergedPrefs(),
     feedbackItemJson: feedbackItem,
   });
@@ -1180,7 +1269,7 @@ test('Build OpenAI Request: feedback → system prompt contains USER FEEDBACK NO
   };
   const result = runBuildOpenAIRequest({
     taskCtxJson: makeBuildCtx(),
-    extractOutJson: makeExtractOut(),
+    normCtxJson: makeNormCtx(),
     mergePrefsJson: makeMergedPrefs(),
     feedbackItemJson: feedbackItem,
   });
@@ -1192,7 +1281,7 @@ test('Build OpenAI Request: feedback → system prompt contains USER FEEDBACK NO
 test('Build OpenAI Request: no feedback → system prompt does NOT contain USER FEEDBACK NOTE', () => {
   const result = runBuildOpenAIRequest({
     taskCtxJson: makeBuildCtx(),
-    extractOutJson: makeExtractOut(),
+    normCtxJson: makeNormCtx(),
     mergePrefsJson: makeMergedPrefs(),
     feedbackItemJson: {},
   });
@@ -1218,7 +1307,7 @@ test('Build OpenAI Request: reads preferences from Merge Preference Data node (n
 test('Build OpenAI Request: output always contains taskId, userId, cvId, openAIBody', () => {
   const result = runBuildOpenAIRequest({
     taskCtxJson: makeBuildCtx({ taskId: 'my-task', userId: 'my-user', cvId: 'my-cv' }),
-    extractOutJson: makeExtractOut(),
+    normCtxJson: makeNormCtx(),
     mergePrefsJson: makeMergedPrefs(),
     feedbackItemJson: {},
   });
@@ -1233,7 +1322,7 @@ test('Build OpenAI Request: empty CV text throws PERMANENT error', () => {
   assert.throws(
     () => runBuildOpenAIRequest({
       taskCtxJson: makeBuildCtx(),
-      extractOutJson: { text: '   ' },
+      normCtxJson: makeNormCtx('   '),
       mergePrefsJson: makeMergedPrefs(),
       feedbackItemJson: {},
     }),
@@ -1242,17 +1331,289 @@ test('Build OpenAI Request: empty CV text throws PERMANENT error', () => {
   );
 });
 
+// ─── Build OpenAI Request: lightweight (reuse) path ────────────────────────────
+
+test('Build OpenAI Request: lightweight path never includes CV TEXT and requests recommendations only', () => {
+  const result = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeLightweightNormCtx(),
+    mergePrefsJson: makeMergedPrefs(),
+    feedbackItemJson: {},
+  });
+  const messages = result[0].json.openAIBody.messages;
+  const userMsg = messages.find(m => m.role === 'user')?.content ?? '';
+  const sysMsg = messages.find(m => m.role === 'system')?.content ?? '';
+
+  assert.ok(!userMsg.includes('CV TEXT:'), 'lightweight path must never send the raw CV text');
+  assert.ok(userMsg.includes('CV FACTS'), 'lightweight path must include the reused CV facts as context');
+  assert.ok(userMsg.includes('Backend Engineer'), 'reused prior facts must actually appear in the prompt');
+  assert.ok(!sysMsg.includes('"skills":'), 'lightweight schema must not ask the model to return CV-fact fields');
+  assert.ok(sysMsg.includes('"recommended_roles"'), 'lightweight schema must still ask for recommendation fields');
+  assert.equal(result[0].json.isLightweight, true);
+  assert.equal(result[0].json.cvText, null, 'lightweight output must not carry a cvText value forward');
+  assert.ok(result[0].json.priorFacts, 'lightweight output must carry priorFacts forward for Parse AI Response');
+});
+
+test('Build OpenAI Request: lightweight path with feedback still includes USER FEEDBACK', () => {
+  const feedbackItem = {
+    feedback_type: 'recommendation_feedback',
+    affected_section: null,
+    feedback_text: 'Please suggest more platform engineering roles instead.',
+  };
+  const result = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeLightweightNormCtx(),
+    mergePrefsJson: makeMergedPrefs(),
+    feedbackItemJson: feedbackItem,
+  });
+  const userMsg = result[0].json.openAIBody.messages.find(m => m.role === 'user')?.content ?? '';
+  assert.ok(userMsg.includes('USER FEEDBACK (recommendation_feedback):'), 'feedback must still reach the lightweight prompt');
+  assert.ok(userMsg.includes('platform engineering'), 'feedback text must be present');
+});
+
+test('Build OpenAI Request: lightweight path uses a smaller max_tokens budget than the full path', () => {
+  const lightweight = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeLightweightNormCtx(),
+    mergePrefsJson: makeMergedPrefs(),
+    feedbackItemJson: {},
+  });
+  const full = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeNormCtx(),
+    mergePrefsJson: makeMergedPrefs(),
+    feedbackItemJson: {},
+  });
+  assert.ok(
+    lightweight[0].json.openAIBody.max_tokens < full[0].json.openAIBody.max_tokens,
+    'a recommendations-only request should budget fewer output tokens than a full extraction'
+  );
+});
+
 test('Build OpenAI Request: PERMANENT merge error propagates', () => {
   assert.throws(
     () => runBuildOpenAIRequest({
       taskCtxJson: makeBuildCtx(),
-      extractOutJson: makeExtractOut(),
+      normCtxJson: makeNormCtx(),
       mergePrefsJson: { error: 'PERMANENT: job_preferences user_id does not match task user_id' },
       feedbackItemJson: {},
     }),
     /PERMANENT/,
     'PERMANENT preference merge error must propagate'
   );
+});
+
+// ─── Normalize CV Context: branch convergence ──────────────────────────────────
+
+function runNormalizeCvContext({ taskCtxJson, inputJson }) {
+  const node = wf.nodes.find(n => n.name === 'Normalize CV Context');
+  assert.ok(node, '"Normalize CV Context" node must exist');
+  const code = node.parameters.jsCode;
+
+  const mockDollar = (nodeName) => {
+    switch (nodeName) {
+      case 'Validate CV Context': return { item: { json: taskCtxJson } };
+      default: return { item: { json: null } };
+    }
+  };
+  const mockInput = { item: { json: inputJson } };
+  // eslint-disable-next-line no-new-func
+  return new Function('$input', '$', code)(mockInput, mockDollar);
+}
+
+test('Normalize CV Context: full-path trigger takes cvText from Extract PDF Text output', () => {
+  const result = runNormalizeCvContext({
+    taskCtxJson: { taskTrigger: 'cv_replaced' },
+    inputJson: { text: 'Extracted CV text here.' },
+  });
+  assert.equal(result[0].json.isLightweight, false);
+  assert.equal(result[0].json.cvText, 'Extracted CV text here.');
+  assert.equal(result[0].json.priorFacts, null);
+});
+
+test('Normalize CV Context: onboarding_completed/cv_correction/null trigger also take the full path', () => {
+  for (const trigger of ['onboarding_completed', 'cv_correction', null, undefined, 'something_unrecognized']) {
+    const result = runNormalizeCvContext({
+      taskCtxJson: { taskTrigger: trigger },
+      inputJson: { text: 'Extracted text.' },
+    });
+    assert.equal(result[0].json.isLightweight, false, `trigger=${trigger} must take the full path`);
+  }
+});
+
+test('Normalize CV Context: preferences_updated/recommendation_feedback/user_request reuse prior facts', () => {
+  for (const trigger of ['preferences_updated', 'recommendation_feedback', 'user_request']) {
+    const result = runNormalizeCvContext({
+      taskCtxJson: { taskTrigger: trigger },
+      inputJson: [{ professional_summary: 'Prior summary', skills: ['A', 'B'], extracted_text: 'Prior text' }],
+    });
+    assert.equal(result[0].json.isLightweight, true, `trigger=${trigger} must take the lightweight path`);
+    assert.equal(result[0].json.cvText, null);
+    assert.equal(result[0].json.priorFacts.professional_summary, 'Prior summary');
+    assert.deepEqual(result[0].json.priorFacts.skills, ['A', 'B']);
+  }
+});
+
+test('Normalize CV Context: lightweight trigger with no prior completed analysis fails PERMANENT, not silently full-path', () => {
+  assert.throws(
+    () => runNormalizeCvContext({
+      taskCtxJson: { taskTrigger: 'preferences_updated' },
+      inputJson: [], // Supabase returned no rows.
+    }),
+    /PERMANENT.*no prior completed CV analysis/,
+    'must fail permanently rather than guess at facts or silently attempt a full path mid-graph'
+  );
+});
+
+// The real production shape: Load Prior CV Facts' alwaysOutputData sentinel
+// for a genuine zero-row Supabase result is {} (an empty object), not [] —
+// matching the exact pattern already used by Load Task Feedback/Load
+// Preference Roles/Load Preference Locations. Both shapes must be handled
+// identically (reproduces the live-execution 37265 scenario precisely).
+test('Normalize CV Context: alwaysOutputData {} sentinel (the real production shape) also fails PERMANENT', () => {
+  assert.throws(
+    () => runNormalizeCvContext({
+      taskCtxJson: { taskTrigger: 'preferences_updated' },
+      inputJson: {}, // alwaysOutputData sentinel for a genuine zero-row result.
+    }),
+    /PERMANENT.*no prior completed CV analysis/,
+    'the {} alwaysOutputData sentinel must be treated identically to an empty array'
+  );
+});
+
+// ─── Parse AI Response: lightweight path reuses CV facts verbatim ─────────────
+// Automation-1 audit fix: for a lightweight (preferences_updated /
+// recommendation_feedback / user_request) task, CV-fact fields must come
+// from reqCtx.priorFacts, never from the model's response — even if the
+// model returns CV-fact-shaped keys anyway. This is the structural
+// guarantee behind "CV facts remain unchanged" (previously only a prompt
+// request, not enforced by code).
+
+function runParseAIResponse({ reqCtxJson, aiResponseJson }) {
+  const node = wf.nodes.find(n => n.name === 'Parse AI Response');
+  assert.ok(node, '"Parse AI Response" node must exist');
+  const code = node.parameters.jsCode;
+
+  const mockDollar = (nodeName) => {
+    switch (nodeName) {
+      case 'Build OpenAI Request': return { item: { json: reqCtxJson } };
+      default: return { item: { json: null } };
+    }
+  };
+  const mockInput = { item: { json: aiResponseJson } };
+  // eslint-disable-next-line no-new-func
+  return new Function('$input', '$', code)(mockInput, mockDollar);
+}
+
+function makeAiResponse(contentObj) {
+  return { choices: [{ message: { content: JSON.stringify(contentObj) } }] };
+}
+
+function makeReqCtx(overrides = {}) {
+  return {
+    taskId: 'task-uuid-1',
+    taskAttempt: 1,
+    taskMaxAttempts: 3,
+    isLightweight: false,
+    cvText: 'Alice Smith full CV text...',
+    priorFacts: null,
+    preferenceSnapshot: { preferences_version: 1 },
+    userId: 'user-uuid-1',
+    cvId: 'cv-uuid-1',
+    ...overrides,
+  };
+}
+
+test('Parse AI Response: full path takes CV facts from the model response', () => {
+  const result = runParseAIResponse({
+    reqCtxJson: makeReqCtx({ isLightweight: false, cvText: 'Real CV text' }),
+    aiResponseJson: makeAiResponse({
+      skills: ['Python', 'Django'],
+      professional_summary: 'A summary from the model.',
+      recommended_roles: ['Backend Engineer'],
+    }),
+  });
+  const insertBody = result[0].json.insertBody;
+  assert.deepEqual(insertBody.skills, ['Python', 'Django']);
+  assert.equal(insertBody.professional_summary, 'A summary from the model.');
+  assert.equal(insertBody.extracted_text, 'Real CV text');
+});
+
+test('Parse AI Response: lightweight path takes CV facts from priorFacts, ignoring the model response entirely', () => {
+  const priorFacts = {
+    professional_summary: 'Original verified summary.',
+    skills: ['Node.js', 'PostgreSQL'],
+    education: [{ institution: 'State University', degree: 'BSc' }],
+    work_experience: [],
+    projects: [],
+    certifications: [],
+    languages: [],
+    contact_info: null,
+    extracted_text: 'Original extracted text.',
+  };
+  const result = runParseAIResponse({
+    reqCtxJson: makeReqCtx({ isLightweight: true, cvText: null, priorFacts }),
+    // The model response deliberately includes CV-fact-shaped keys with
+    // DIFFERENT values, to prove they are never read for the lightweight path.
+    aiResponseJson: makeAiResponse({
+      skills: ['Should Never Appear'],
+      professional_summary: 'Should never appear either.',
+      recommended_roles: ['Platform Engineer'],
+      strongest_areas: ['System design'],
+      career_recommendations: ['Apply to platform teams.'],
+      search_focus: ['Remote roles'],
+      development_areas: ['Public speaking'],
+      profile_level: 'mid-level',
+    }),
+  });
+  const insertBody = result[0].json.insertBody;
+
+  // CV facts: verbatim from priorFacts, never the model's conflicting values.
+  assert.deepEqual(insertBody.skills, ['Node.js', 'PostgreSQL']);
+  assert.equal(insertBody.professional_summary, 'Original verified summary.');
+  assert.deepEqual(insertBody.education, [{ institution: 'State University', degree: 'BSc' }]);
+  assert.equal(insertBody.extracted_text, 'Original extracted text.');
+
+  // Recommendation fields: from the fresh model response, as intended.
+  assert.deepEqual(insertBody.recommended_roles, ['Platform Engineer']);
+  assert.deepEqual(insertBody.strongest_areas, ['System design']);
+  assert.deepEqual(insertBody.career_recommendations, ['Apply to platform teams.']);
+  assert.equal(insertBody.profile_level, 'mid-level');
+
+  assert.equal(result[0].json.isLightweight, true);
+});
+
+test('Parse AI Response: lightweight path sets candidate_name/candidate_email to null (skips ownership re-check)', () => {
+  const result = runParseAIResponse({
+    reqCtxJson: makeReqCtx({ isLightweight: true, cvText: null, priorFacts: { skills: [] } }),
+    aiResponseJson: makeAiResponse({ candidate_name: 'Someone Else', recommended_roles: [] }),
+  });
+  assert.equal(result[0].json.candidate_name, null, 'lightweight path must never derive a fresh candidate_name');
+  assert.equal(result[0].json.candidate_email, null);
+});
+
+test('Parse AI Response: a non-string element in a string[] field is dropped, not inserted (defense against malformed AI output)', () => {
+  const result = runParseAIResponse({
+    reqCtxJson: makeReqCtx({ isLightweight: false, cvText: 'Real CV text' }),
+    aiResponseJson: makeAiResponse({
+      // Reproduces the live-observed crash shape: an object where a string was expected.
+      career_recommendations: ['A valid recommendation.', { title: 'invalid', detail: 'shape' }, 'Another valid one.'],
+      skills: ['Real skill', 42, null, 'Another real skill'],
+    }),
+  });
+  const insertBody = result[0].json.insertBody;
+  assert.deepEqual(insertBody.career_recommendations, ['A valid recommendation.', 'Another valid one.']);
+  assert.deepEqual(insertBody.skills, ['Real skill', 'Another real skill']);
+});
+
+test('Parse AI Response: a non-object element in an object[] field is dropped, not inserted', () => {
+  const result = runParseAIResponse({
+    reqCtxJson: makeReqCtx({ isLightweight: false, cvText: 'Real CV text' }),
+    aiResponseJson: makeAiResponse({
+      education: [{ institution: 'Real University' }, 'a stray string', null, 42],
+    }),
+  });
+  assert.deepEqual(result[0].json.insertBody.education, [{ institution: 'Real University' }]);
 });
 
 // ─── Merge Preference Data: combine regression (bug fix verification) ─────────
@@ -1273,4 +1634,113 @@ test('Merge Preference Data: combines both reference roles AND custom_target_rol
   assert.ok(roles.includes('Product Manager'), 'reference role must be included');
   assert.ok(roles.includes('Marketing Manager'), 'custom role must be included alongside reference roles');
   assert.equal(roles.length, 2, 'must have exactly one reference + one custom role');
+});
+
+// ─── Build Task Update: error-priority ordering (last_error masking fix) ──────
+//
+// Live execution 37265 showed a task fail with last_error "The value in the
+// 'JSON Body' field is not valid JSON" — Call OpenAI's own generic secondary
+// symptom of receiving no valid request body — masking the real root cause,
+// Normalize CV Context's "PERMANENT: no prior completed CV analysis exists...".
+// Build OpenAI Request had already surfaced that same root cause as its own
+// .error (it wraps/rethrows whatever upstream problem occurred), but the old
+// chain checked Call OpenAI before Build OpenAI Request, so the wrapper's
+// error always won whenever both were present.
+
+function runBuildTaskUpdate({
+  parseResultJson = {},
+  insertResultJson = {},
+  validateCtxJson = {},
+  splitCtxJson = {},
+  nodeJsons = {},
+  throwFor = [],
+}) {
+  const node = wf.nodes.find(n => n.name === 'Build Task Update');
+  assert.ok(node, '"Build Task Update" node must exist');
+  const code = node.parameters.jsCode;
+
+  const fixedNodes = {
+    'Parse AI Response': parseResultJson,
+    'Validate CV Context': validateCtxJson,
+    'Split Tasks': splitCtxJson,
+    ...nodeJsons,
+  };
+
+  const mockDollar = (nodeName) => {
+    if (throwFor.includes(nodeName)) {
+      // Mirrors real n8n behavior: $('Node') throws when that node did not
+      // execute for this item's path (e.g. the other branch's nodes).
+      throw new Error(`did not execute: ${nodeName}`);
+    }
+    if (nodeName in fixedNodes) {
+      return { item: { json: fixedNodes[nodeName] } };
+    }
+    return { item: { json: {} } };
+  };
+  const mockInput = { item: { json: insertResultJson } };
+  // eslint-disable-next-line no-new-func
+  return new Function('$input', '$', code)(mockInput, mockDollar);
+}
+
+function makeParseResultCtx(overrides = {}) {
+  return { taskId: 'task-uuid-1', taskAttempt: 1, taskMaxAttempts: 3, ...overrides };
+}
+
+test('Build Task Update: a PERMANENT root cause from Build OpenAI Request is preserved, not masked by Call OpenAI\'s generic secondary error', () => {
+  const result = runBuildTaskUpdate({
+    parseResultJson: makeParseResultCtx(),
+    nodeJsons: {
+      'Build OpenAI Request': { error: 'PERMANENT: no prior completed CV analysis exists for this lightweight task' },
+      'Call OpenAI': { error: "The value in the 'JSON Body' field is not valid JSON" },
+    },
+  });
+  assert.equal(
+    result[0].json.patchBody.last_error,
+    'no prior completed CV analysis exists for this lightweight task',
+    'the specific, more informative upstream error must win over the generic downstream wrapper symptom'
+  );
+  assert.equal(result[0].json.patchBody.status, 'failed', 'PERMANENT errors must still go straight to failed regardless of attempt count');
+});
+
+test('Build Task Update: Call OpenAI\'s own genuine error still surfaces when Build OpenAI Request succeeded', () => {
+  const result = runBuildTaskUpdate({
+    parseResultJson: makeParseResultCtx({ taskAttempt: 1, taskMaxAttempts: 3 }),
+    nodeJsons: {
+      'Build OpenAI Request': {},
+      'Call OpenAI': { error: 'RATE_LIMIT: OpenAI returned 429' },
+    },
+  });
+  assert.equal(
+    result[0].json.patchBody.last_error,
+    'OpenAI returned 429',
+    'a real Call OpenAI failure (no upstream Build OpenAI Request error) must still be reported verbatim'
+  );
+  assert.equal(result[0].json.patchBody.status, 'pending', 'rate-limit errors below max attempts still retry, unchanged');
+  assert.ok(result[0].json.patchBody.available_at, 'retry path still schedules available_at');
+});
+
+test('Build Task Update: retry/backoff and terminal-status transitions are unchanged by the reorder', () => {
+  // Below max attempts + non-permanent, non-rate-limit error -> pending retry with 30s-base backoff.
+  const retrying = runBuildTaskUpdate({
+    parseResultJson: makeParseResultCtx({ taskAttempt: 2, taskMaxAttempts: 3 }),
+    nodeJsons: { 'Build OpenAI Request': { error: 'RETRYABLE: transient network error' } },
+  });
+  assert.equal(retrying[0].json.patchBody.status, 'pending');
+  assert.equal(retrying[0].json.patchBody.last_error, 'transient network error');
+
+  // At max attempts, even a non-permanent error must terminate as failed.
+  const exhausted = runBuildTaskUpdate({
+    parseResultJson: makeParseResultCtx({ taskAttempt: 3, taskMaxAttempts: 3 }),
+    nodeJsons: { 'Build OpenAI Request': { error: 'RETRYABLE: transient network error' } },
+  });
+  assert.equal(exhausted[0].json.patchBody.status, 'failed', 'exhausting max attempts must still terminate the task regardless of error priority ordering');
+});
+
+test('Build Task Update: success path is unaffected by the error-chain reorder', () => {
+  const result = runBuildTaskUpdate({
+    parseResultJson: { ...makeParseResultCtx(), outcome: 'success' },
+    insertResultJson: {},
+  });
+  assert.equal(result[0].json.patchBody.status, 'completed');
+  assert.ok(result[0].json.patchBody.completed_at);
 });

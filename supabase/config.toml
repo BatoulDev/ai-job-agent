@@ -185,6 +185,13 @@ enable_manual_linking = false
 minimum_password_length = 8
 # Passwords that do not meet the following requirements will be rejected as weak. Supported values
 # are: `letters_digits`, `lower_upper_letters_digits`, `lower_upper_letters_digits_symbols`
+# Left unset deliberately: this app's policy (src/lib/authValidation/password.ts's
+# PASSWORD_REQUIREMENTS — uppercase + special character required, lowercase/number optional) does
+# not match any of GoTrue's built-in options, which all require BOTH lowercase and a digit. Picking
+# one of them would make GoTrue reject passwords this app considers valid (e.g. no digit). Password
+# composition is enforced at the app layer instead (client + src/app/api/auth/{signup,update-
+# password}/route.ts). See docs/PRODUCTION_READINESS.md — the hosted dashboard's equivalent setting
+# must also stay off/unset for the same reason; only its minimum length should be set to 8.
 password_requirements = ""
 
 # Configure passkey sign-ins.

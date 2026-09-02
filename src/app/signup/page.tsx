@@ -11,7 +11,7 @@ import { isSafeRedirectPath } from "@/lib/safeRedirect";
 import { useRetryCountdown } from "@/lib/authRateLimit/useRetryCountdown";
 import { startGoogleOAuth } from "@/lib/authRateLimit/startGoogleOAuth";
 import { isValidEmailFormat, normalizeEmail } from "@/lib/authValidation/email";
-import { MIN_PASSWORD_LENGTH } from "@/lib/authValidation/password";
+import { MIN_PASSWORD_LENGTH, PASSWORD_HINT, getPasswordValidationError } from "@/lib/authValidation/password";
 
 const UPLOAD_CV_PATH = "/onboarding/upload-cv";
 const NEWS_PATH = "/news";
@@ -140,10 +140,14 @@ function SignupPageContent() {
       setErrorMessage("Please enter a valid email address.");
       return;
     }
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setErrorMessage(
-        `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
-      );
+    // Client-side check first — if it already proves the password invalid,
+    // never call the signup API at all. Focus the field so the failure is
+    // unambiguous. The message itself distinguishes "too long" from every
+    // other composition failure (see getPasswordValidationError).
+    const passwordError = getPasswordValidationError(password);
+    if (passwordError) {
+      setErrorMessage(passwordError);
+      document.getElementById("password")?.focus();
       return;
     }
 
@@ -299,6 +303,7 @@ function SignupPageContent() {
               label="Password"
               placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
               autoComplete="new-password"
+              helperText={PASSWORD_HINT}
             />
 
             {retryCountdown > 0 && (

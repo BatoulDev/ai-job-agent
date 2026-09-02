@@ -1712,6 +1712,12 @@ export type Database = {
       }
       get_onboarding_readiness: { Args: never; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
+      is_cv_analysis_matching_eligible: {
+        Args: { p_analysis_id: string }
+        Returns: boolean
+      }
+      jsonb_is_object_array: { Args: { v: Json }; Returns: boolean }
+      jsonb_is_string_array: { Args: { v: Json }; Returns: boolean }
       mark_notification_read: {
         Args: { p_notification_id: string }
         Returns: {

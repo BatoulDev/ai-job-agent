@@ -3,7 +3,7 @@ import { createClient } from "@/lib/supabase/server";
 import { getOrCreateSessionIdentifier, hashEmailIdentifier } from "@/lib/authRateLimit/identifiers";
 import { AUTH_RATE_LIMIT_POLICIES, clearAuthAttempts, reserveAuthAttempt } from "@/lib/authRateLimit/rateLimit";
 import { isValidEmailFormat, normalizeEmail } from "@/lib/authValidation/email";
-import { MIN_PASSWORD_LENGTH, MAX_PASSWORD_LENGTH } from "@/lib/authValidation/password";
+import { PASSWORD_COMPOSITION_ERROR, getPasswordValidationError } from "@/lib/authValidation/password";
 
 const MAX_NAME_LENGTH = 200;
 const GENERIC_RATE_LIMIT_ERROR = "Too many signup attempts. Please wait and try again.";
@@ -39,6 +39,11 @@ interface SignupBody {
   fullName: string;
 }
 
+// Deliberately does NOT validate password composition/length — that's done
+// separately in POST below via getPasswordValidationError(), which returns
+// a specific message (the 72-char maximum is only ever mentioned when the
+// password actually exceeds it) rather than folding every possible password
+// failure into this function's single generic "malformed request" outcome.
 function parseBody(raw: unknown): SignupBody | null {
   if (typeof raw !== "object" || raw === null) return null;
   const b = raw as Record<string, unknown>;
@@ -49,13 +54,7 @@ function parseBody(raw: unknown): SignupBody | null {
   if (typeof email !== "string") return null;
   const normalizedEmail = normalizeEmail(email);
   if (!isValidEmailFormat(normalizedEmail)) return null;
-  if (
-    typeof password !== "string" ||
-    password.length < MIN_PASSWORD_LENGTH ||
-    password.length > MAX_PASSWORD_LENGTH
-  ) {
-    return null;
-  }
+  if (typeof password !== "string" || password.length === 0) return null;
   if (typeof fullName !== "string" || fullName.trim().length === 0 || fullName.length > MAX_NAME_LENGTH) {
     return null;
   }
@@ -88,11 +87,17 @@ export async function POST(request: Request) {
 
   if (!body) {
     return NextResponse.json(
-      {
-        error: `Please provide your name, a valid email, and a password of at least ${MIN_PASSWORD_LENGTH} characters.`,
-      },
+      { error: "Please provide your name, a valid email, and a password." },
       { status: 400 }
     );
+  }
+
+  // Checked separately from parseBody so a too-long password gets its own
+  // specific message (mentioning the 72-char maximum) rather than being
+  // folded into the generic "malformed request" response above.
+  const passwordError = getPasswordValidationError(body.password);
+  if (passwordError) {
+    return NextResponse.json({ error: passwordError }, { status: 400 });
   }
 
   const emailHash = hashEmailIdentifier(body.email);
@@ -145,8 +150,8 @@ export async function POST(request: Request) {
 
   if (error) {
     // Never surface error.message (raw Supabase Auth text) or error.code
-    // to the client in any branch below — only the three hand-authored
-    // messages in this file are ever returned.
+    // to the client in any branch below — only the hand-authored messages
+    // in this file are ever returned.
     if (error.status === 429) {
       return NextResponse.json({ error: GENERIC_RATE_LIMIT_ERROR }, { status: 429 });
     }
@@ -155,6 +160,18 @@ export async function POST(request: Request) {
         { error: SIGNUP_CONFLICT_ERROR, code: SIGNUP_CONFLICT_CODE },
         { status: 409 }
       );
+    }
+    // GoTrue's own password_requirements is deliberately left unset
+    // (supabase/config.toml — its built-in options don't match this app's
+    // "uppercase + special, lowercase/digit optional" policy without
+    // over-requiring), so this only ever fires for GoTrue's own length
+    // bounds (minimum_password_length, and the hard 72-char bcrypt ceiling
+    // — see MAX_PASSWORD_LENGTH's comment), both of which
+    // getPasswordValidationError() above already blocks — defense-in-depth
+    // for the case the two ever drift, mapped to the same safe, specific
+    // composition message rather than the generic fallback below.
+    if (error.code === "weak_password") {
+      return NextResponse.json({ error: PASSWORD_COMPOSITION_ERROR }, { status: 422 });
     }
     // A genuinely unexpected failure (network/server/GoTrue-internal) —
     // log only a safe operational identifier (status + stable code, never
