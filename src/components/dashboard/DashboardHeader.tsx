@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import BrandMark from "@/components/BrandMark";
 import { createClient } from "@/lib/supabase/client";
+import { clearPreferencesReminderShown } from "@/lib/dashboardPreferencesReminder";
 
 function getInitials(name: string): string {
   const parts = name.trim().split(/\s+/).filter(Boolean);
@@ -22,6 +23,11 @@ export default function DashboardHeader({
 
   const handleLogout = async () => {
     setIsLoggingOut(true);
+    // So a genuinely new login (even in the same browser tab) can show the
+    // "complete your job preferences" reminder again while still
+    // incomplete, rather than being suppressed by the previous session's
+    // flag — see src/lib/dashboardPreferencesReminder.ts.
+    clearPreferencesReminderShown();
     const supabase = createClient();
     await supabase.auth.signOut();
     router.push("/login");

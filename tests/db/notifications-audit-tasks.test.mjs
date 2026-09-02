@@ -1,7 +1,7 @@
 // Phase 10 — Notifications, audit events, automation tasks.
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
-import { adminClient, assertExpectedLocalProject, createTestUser, deleteTestUsers } from "./helpers.mjs";
+import { adminClient, assertExpectedLocalProject, createTestUser, deleteTestUsers, insertFakeAnalysis } from "./helpers.mjs";
 
 let userA;
 let userB;
@@ -98,11 +98,11 @@ test("real approval RPCs write a corresponding audit event", async () => {
     p_mime_type: "application/pdf",
   });
 
-  const { data: analysis } = await adminClient
-    .from("cv_analyses")
-    .insert({ user_id: userA.id, cv_id: cv.id, status: "completed", preference_snapshot: {} })
-    .select()
-    .single();
+  // insertFakeAnalysis defaults preferences_version to the user's live
+  // job_preferences.version (creating one if needed) so this fixture is
+  // matching-eligible-shaped and confirm_cv_analysis's freshness gate
+  // (20260825100000_harden_confirm_cv_analysis_freshness.sql) accepts it.
+  const analysis = await insertFakeAnalysis(userA, cv.id, { status: "completed" });
   const { data: confirmed } = await userA.client.rpc("confirm_cv_analysis", { p_analysis_id: analysis.id });
 
   const { data: match } = await adminClient

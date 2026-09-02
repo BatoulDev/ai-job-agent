@@ -3,38 +3,57 @@
 import { useState } from "react";
 import Dialog from "./Dialog";
 
-// No approval backend endpoint exists yet (see DATABASE_PLAN.md's Phase
-// 4B "Approval transaction (documented, not implemented)"). This dialog
-// is fully built and wired to a real handler, but that handler is
-// explicitly honest about not being able to save anything yet — it must
-// never flip local state to pretend review_status became "approved".
+// Approval calls the real confirm_cv_analysis() RPC (see
+// src/lib/cvAnalysis/confirm.client.ts and
+// src/app/api/cv-analysis/confirm/route.ts). On success the dialog closes
+// itself immediately and hands the parent a message to show outside the
+// (now closed) dialog via onApproved — see AiCareerProfileSection's
+// approvedNotice state. On failure the dialog stays open with the error
+// shown inline so the user can retry or cancel. While a request is in
+// flight, both buttons are disabled and Escape/backdrop-click cannot close
+// the dialog, so a slow network can't be raced into a duplicate submit.
+//
+// Automation 2 note: once a real matching-task queue exists, this dialog's
+// confirm action should become a single atomic step that validates
+// freshness, approves the profile, and creates/reuses the matching task —
+// only at that point should the buttons change from Cancel/Approve Profile
+// to Cancel/Start Matching. No such queue exists yet, so the label stays
+// "Approve Profile" for now.
 export default function ApproveProfileDialog({
   open,
   onClose,
   onConfirm,
+  onApproved,
 }: {
   open: boolean;
   onClose: () => void;
   onConfirm: () => Promise<{ ok: boolean; message?: string }>;
+  onApproved: (message: string) => void;
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [notice, setNotice] = useState<string | null>(null);
+  const [errorNotice, setErrorNotice] = useState<string | null>(null);
 
   const handleConfirm = async () => {
+    if (isSubmitting) return;
     setIsSubmitting(true);
-    setNotice(null);
+    setErrorNotice(null);
+
     const result = await onConfirm();
     setIsSubmitting(false);
-    setNotice(
-      result.message ??
-        (result.ok
-          ? "Approved."
-          : "Approving isn't available yet — this will be enabled in a future update.")
-    );
+
+    if (result.ok) {
+      setErrorNotice(null);
+      onClose();
+      onApproved(result.message ?? "Your profile has been approved.");
+      return;
+    }
+
+    setErrorNotice(result.message ?? "Something went wrong. Please try again.");
   };
 
   const handleClose = () => {
-    setNotice(null);
+    if (isSubmitting) return;
+    setErrorNotice(null);
     onClose();
   };
 
@@ -48,9 +67,9 @@ export default function ApproveProfileDialog({
         You can still update your preferences or replace your CV later.
       </p>
 
-      {notice && (
-        <p role="status" className="mt-4 rounded-xl bg-bg px-4 py-3 text-sm text-text">
-          {notice}
+      {errorNotice && (
+        <p role="alert" className="mt-4 rounded-xl bg-red-50 px-4 py-3 text-sm text-red-700">
+          {errorNotice}
         </p>
       )}
 
@@ -58,7 +77,8 @@ export default function ApproveProfileDialog({
         <button
           type="button"
           onClick={handleClose}
-          className="flex-1 rounded-full border border-slate-200 py-2.5 text-sm font-semibold text-text transition-colors hover:border-slate-300"
+          disabled={isSubmitting}
+          className="flex-1 rounded-full border border-slate-200 py-2.5 text-sm font-semibold text-text transition-colors hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
         >
           Cancel
         </button>

@@ -92,7 +92,7 @@ test("admin can update a user password without changing their subscription", asy
   // Supabase auth flow; the browser client's updateUser() is tested by E2E).
   const { error: updateError } = await adminClient.auth.admin.updateUserById(
     user.id,
-    { password: "new-test-password-123!" }
+    { password: "New-test-password-123!" }
   );
   assert.equal(
     updateError,

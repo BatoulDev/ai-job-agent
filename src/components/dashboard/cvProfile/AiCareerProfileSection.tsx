@@ -3,7 +3,14 @@
 import { useState, useEffect, useRef } from "react";
 import { createPortal } from "react-dom";
 import Link from "next/link";
-import type { CvAnalysis } from "@/lib/cvAnalysis/types";
+import type {
+  CvAnalysis,
+  CvEducationEntry,
+  CvWorkExperienceEntry,
+  CvProjectEntry,
+  CvCertificationEntry,
+  CvLanguageEntry,
+} from "@/lib/cvAnalysis/types";
 import type { CvProfileState, RequestChangesPayload } from "@/lib/cvAnalysis/profileState";
 import type { PreferencesData } from "@/components/dashboard/PreferencesSection";
 import ApproveProfileDialog from "./ApproveProfileDialog";
@@ -18,15 +25,40 @@ function formatDate(iso: string) {
   });
 }
 
+// Defensive against malformed historical data: a row inserted before the
+// AI-output shape validation existed (or any future insert path that
+// somehow bypasses it) could contain a non-string element in what the type
+// system promises is a string[]. React throws rendering a raw object as a
+// child, which previously took down the entire CV Profile page — see
+// supabase/migrations/20260825100020_validate_cv_analysis_array_shapes.sql
+// for the matching DB-level backstop. Coerce/drop anything that isn't
+// actually a non-empty string instead of trusting the declared type.
+function toDisplayStrings(items: unknown): string[] {
+  if (!Array.isArray(items)) return [];
+  return items
+    .map((item) => (typeof item === "string" ? item : null))
+    .filter((item): item is string => !!item && item.trim().length > 0);
+}
+
+// Same defensive intent as toDisplayStrings, for the object[] fields
+// (education, work_experience, projects, certifications, languages): drops
+// any element that isn't a plain object, so a stray null/string/number in
+// historical data can't throw when a field is read off it.
+function toDisplayObjects<T>(items: unknown): T[] {
+  if (!Array.isArray(items)) return [];
+  return items.filter((item): item is T => !!item && typeof item === "object" && !Array.isArray(item));
+}
+
 function TagList({ items }: { items: string[] }) {
-  if (items.length === 0) {
+  const safeItems = toDisplayStrings(items);
+  if (safeItems.length === 0) {
     return <p className="text-sm text-muted">Not available yet.</p>;
   }
   return (
     <div className="flex flex-wrap gap-2">
-      {items.map((item) => (
+      {safeItems.map((item, index) => (
         <span
-          key={item}
+          key={`${index}-${item}`}
           className="inline-flex max-w-full items-center break-words rounded-full bg-bg px-3 py-1 text-xs font-medium text-text"
         >
           {item}
@@ -37,13 +69,14 @@ function TagList({ items }: { items: string[] }) {
 }
 
 function BulletList({ items }: { items: string[] }) {
-  if (items.length === 0) {
+  const safeItems = toDisplayStrings(items);
+  if (safeItems.length === 0) {
     return <p className="text-sm text-muted">Not available yet.</p>;
   }
   return (
     <ul className="space-y-2">
-      {items.map((item) => (
-        <li key={item} className="flex items-start gap-2 text-sm text-text">
+      {safeItems.map((item, index) => (
+        <li key={`${index}-${item}`} className="flex items-start gap-2 text-sm text-text">
           <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-primary" />
           <span className="break-words">{item}</span>
         </li>
@@ -62,23 +95,31 @@ function FactBlock({ label, children }: { label: string; children: React.ReactNo
 }
 
 function CvInformationGroup({ analysis }: { analysis: CvAnalysis }) {
+  const education = toDisplayObjects<CvEducationEntry>(analysis.education);
+  const workExperience = toDisplayObjects<CvWorkExperienceEntry>(analysis.work_experience);
+  const projects = toDisplayObjects<CvProjectEntry>(analysis.projects);
+  const certifications = toDisplayObjects<CvCertificationEntry>(analysis.certifications);
+  const languages = toDisplayObjects<CvLanguageEntry>(analysis.languages);
+
   return (
     <div className="space-y-6">
       <h3 className="font-display text-base font-semibold text-text">CV Information</h3>
       <FactBlock label="Professional Summary">
         <p className="text-sm leading-relaxed text-text">
-          {analysis.professional_summary || "Not available yet."}
+          {typeof analysis.professional_summary === "string" && analysis.professional_summary
+            ? analysis.professional_summary
+            : "Not available yet."}
         </p>
       </FactBlock>
       <FactBlock label="Skills">
         <TagList items={analysis.skills} />
       </FactBlock>
       <FactBlock label="Education">
-        {analysis.education.length === 0 ? (
+        {education.length === 0 ? (
           <p className="text-sm text-muted">Not available yet.</p>
         ) : (
           <ul className="space-y-3">
-            {analysis.education.map((entry, index) => (
+            {education.map((entry, index) => (
               <li key={index} className="text-sm text-text">
                 <p className="font-medium">{entry.degree || "Degree"}{entry.field_of_study ? ` · ${entry.field_of_study}` : ""}</p>
                 <p className="text-muted">{entry.institution}</p>
@@ -88,31 +129,34 @@ function CvInformationGroup({ analysis }: { analysis: CvAnalysis }) {
         )}
       </FactBlock>
       <FactBlock label="Work Experience">
-        {analysis.work_experience.length === 0 ? (
+        {workExperience.length === 0 ? (
           <p className="text-sm text-muted">Not available yet.</p>
         ) : (
           <ul className="space-y-4">
-            {analysis.work_experience.map((entry, index) => (
-              <li key={index} className="text-sm text-text">
-                <p className="font-medium">{entry.title} · {entry.organization}</p>
-                {entry.highlights && entry.highlights.length > 0 && (
-                  <ul className="mt-1.5 space-y-1">
-                    {entry.highlights.map((highlight, i) => (
-                      <li key={i} className="text-muted">— {highlight}</li>
-                    ))}
-                  </ul>
-                )}
-              </li>
-            ))}
+            {workExperience.map((entry, index) => {
+              const highlights = toDisplayStrings(entry.highlights);
+              return (
+                <li key={index} className="text-sm text-text">
+                  <p className="font-medium">{entry.title} · {entry.organization}</p>
+                  {highlights.length > 0 && (
+                    <ul className="mt-1.5 space-y-1">
+                      {highlights.map((highlight, i) => (
+                        <li key={i} className="text-muted">— {highlight}</li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              );
+            })}
           </ul>
         )}
       </FactBlock>
       <FactBlock label="Projects">
-        {analysis.projects.length === 0 ? (
+        {projects.length === 0 ? (
           <p className="text-sm text-muted">Not available yet.</p>
         ) : (
           <ul className="space-y-2">
-            {analysis.projects.map((entry, index) => (
+            {projects.map((entry, index) => (
               <li key={index} className="text-sm text-text">
                 <span className="font-medium">{entry.name}</span>
                 {entry.description ? ` — ${entry.description}` : ""}
@@ -121,19 +165,19 @@ function CvInformationGroup({ analysis }: { analysis: CvAnalysis }) {
           </ul>
         )}
       </FactBlock>
-      {analysis.certifications.length > 0 && (
+      {certifications.length > 0 && (
         <FactBlock label="Certifications">
-          <BulletList items={analysis.certifications.map((c) => c.name)} />
+          <BulletList items={certifications.map((c) => c.name).filter((name): name is string => typeof name === "string")} />
         </FactBlock>
       )}
       <FactBlock label="Languages">
-        {analysis.languages.length === 0 ? (
+        {languages.length === 0 ? (
           <p className="text-sm text-muted">Not available yet.</p>
         ) : (
           <TagList
-            items={analysis.languages.map((l) =>
-              l.proficiency ? `${l.language} (${l.proficiency})` : l.language
-            )}
+            items={languages
+              .filter((l) => typeof l.language === "string" && l.language)
+              .map((l) => (l.proficiency ? `${l.language} (${l.proficiency})` : l.language))}
           />
         )}
       </FactBlock>
@@ -372,6 +416,15 @@ export default function AiCareerProfileSection({
 }) {
   const [showApprove, setShowApprove] = useState(false);
   const [showRequestChanges, setShowRequestChanges] = useState(false);
+  const [approvedNotice, setApprovedNotice] = useState<string | null>(null);
+
+  // Small, auto-dismissing success message shown outside the (now closed)
+  // approve dialog — see ApproveProfileDialog's onApproved.
+  useEffect(() => {
+    if (!approvedNotice) return;
+    const id = setTimeout(() => setApprovedNotice(null), 5000);
+    return () => clearTimeout(id);
+  }, [approvedNotice]);
 
   // Show the processing popup during any active update: optimistic (flag set,
   // no DB task yet), pending task, or processing task. Not shown when the
@@ -407,6 +460,15 @@ export default function AiCareerProfileSection({
         Combines your verified CV facts with your current career
         preferences to recommend roles and next steps.
       </p>
+
+      {approvedNotice && (
+        <p
+          role="status"
+          className="mt-4 rounded-xl border border-success/20 bg-success/5 px-4 py-3 text-sm font-medium text-success"
+        >
+          {approvedNotice}
+        </p>
+      )}
 
       {preferences && state !== "no_cv" && state !== "no_preferences" && !isProcessing && (
         <div className="mt-5">
@@ -547,6 +609,7 @@ export default function AiCareerProfileSection({
             open={showApprove}
             onClose={() => setShowApprove(false)}
             onConfirm={onApprove}
+            onApproved={(message) => setApprovedNotice(message)}
           />
           <RequestChangesDialog
             open={showRequestChanges}

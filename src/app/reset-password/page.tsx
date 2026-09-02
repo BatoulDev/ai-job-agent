@@ -8,7 +8,7 @@ import AuthCard from "@/components/auth/AuthCard";
 import PasswordField from "@/components/auth/PasswordField";
 import { createClient } from "@/lib/supabase/client";
 import { useRetryCountdown } from "@/lib/authRateLimit/useRetryCountdown";
-import { MIN_PASSWORD_LENGTH } from "@/lib/authValidation/password";
+import { MIN_PASSWORD_LENGTH, PASSWORD_HINT, getPasswordValidationError } from "@/lib/authValidation/password";
 
 type PageState = "loading" | "no_session" | "form";
 
@@ -35,14 +35,15 @@ export default function ResetPasswordPage() {
     const password = String(formData.get("password") ?? "");
     const confirm = String(formData.get("confirm") ?? "");
 
-    if (password.length < MIN_PASSWORD_LENGTH) {
-      setErrorMessage(
-        `Password must be at least ${MIN_PASSWORD_LENGTH} characters.`
-      );
+    const passwordError = getPasswordValidationError(password);
+    if (passwordError) {
+      setErrorMessage(passwordError);
+      document.getElementById("password")?.focus();
       return;
     }
     if (password !== confirm) {
       setErrorMessage("Passwords do not match.");
+      document.getElementById("confirm")?.focus();
       return;
     }
 
@@ -170,7 +171,7 @@ export default function ResetPasswordPage() {
             label="New password"
             placeholder={`At least ${MIN_PASSWORD_LENGTH} characters`}
             autoComplete="new-password"
-            helperText={`Minimum ${MIN_PASSWORD_LENGTH} characters required.`}
+            helperText={PASSWORD_HINT}
           />
 
           <PasswordField

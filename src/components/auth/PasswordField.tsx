@@ -47,6 +47,9 @@ function EyeIcon({ open }: { open: boolean }) {
 // "Provide show/hide controls using type=button, keyboard support,
 // focus-safe behavior, and dynamic aria-label". Show/hide state is local
 // and self-contained; it never reads or logs the password value itself.
+// Uncontrolled by design — every caller (including Signup/Reset Password)
+// reads the value from FormData on submit, exactly like every other field
+// in these forms.
 export default function PasswordField({
   id,
   label,
@@ -60,9 +63,14 @@ export default function PasswordField({
   placeholder?: string;
   autoComplete?: string;
   required?: boolean;
+  // Compact single-line hint rendered below the field (e.g. PASSWORD_HINT
+  // from @/lib/authValidation/password) and wired via aria-describedby so
+  // screen readers announce it as the field's description, not a separate
+  // disconnected paragraph.
   helperText?: string;
 }) {
   const [show, setShow] = useState(false);
+  const helperId = helperText ? `${id}-hint` : undefined;
 
   return (
     <div>
@@ -77,6 +85,7 @@ export default function PasswordField({
           placeholder={placeholder}
           autoComplete={autoComplete}
           required={required}
+          aria-describedby={helperId}
           className={fieldClass}
         />
         <button
@@ -89,7 +98,9 @@ export default function PasswordField({
         </button>
       </div>
       {helperText && (
-        <p className="mt-1.5 text-xs leading-relaxed text-muted">{helperText}</p>
+        <p id={helperId} className="mt-1 text-xs leading-relaxed text-muted">
+          {helperText}
+        </p>
       )}
     </div>
   );
