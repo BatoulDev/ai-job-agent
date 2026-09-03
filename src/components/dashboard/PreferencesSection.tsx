@@ -7,9 +7,17 @@ export interface PreferencesData {
   jobType: string | null;
   experienceLevel: string | null;
   additionalNotes: string | null;
+  lebanonLocationScope: string | null;
+  internationalSearchEnabled: boolean;
 }
 
 const NOT_SET = "Not set yet";
+
+const LEBANON_LOCATION_SCOPE_LABELS: Record<string, string> = {
+  selected_only: "Only my selected locations",
+  selected_and_nearby: "My selected locations and nearby areas",
+  anywhere_in_lebanon: "Anywhere in Lebanon",
+};
 
 export default function PreferencesSection({
   preferences,
@@ -22,6 +30,16 @@ export default function PreferencesSection({
     { label: "Work arrangement", value: preferences?.workArrangement },
     { label: "Job type", value: preferences?.jobType },
     { label: "Experience level", value: preferences?.experienceLevel },
+    {
+      label: "Lebanese location flexibility",
+      value: preferences?.lebanonLocationScope
+        ? LEBANON_LOCATION_SCOPE_LABELS[preferences.lebanonLocationScope] ?? preferences.lebanonLocationScope
+        : null,
+    },
+    {
+      label: "International search",
+      value: preferences ? (preferences.internationalSearchEnabled ? "Enabled" : "Disabled") : null,
+    },
   ];
 
   return (

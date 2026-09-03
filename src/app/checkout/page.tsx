@@ -14,6 +14,9 @@ const PLAN_DISPLAY_NAMES: Record<PayablePlanCode, string> = {
 interface CheckoutState {
   status: "loading" | "error" | "not_available" | "ready" | "ineligible";
   message?: string;
+  amount?: number;
+  currency?: string;
+  isUpgrade?: boolean;
 }
 
 function CheckoutPageContent() {
@@ -60,13 +63,21 @@ function CheckoutPageContent() {
           return;
         }
 
-        const data = (await response.json()) as { whishConfigured: boolean };
+        const data = (await response.json()) as {
+          whishConfigured: boolean;
+          paymentAttempt?: { amount: number; currency: string; is_upgrade: boolean };
+        };
         if (!isMounted) return;
 
         setState(
           data.whishConfigured
             ? { status: "ready" }
-            : { status: "not_available" }
+            : {
+                status: "not_available",
+                amount: data.paymentAttempt?.amount,
+                currency: data.paymentAttempt?.currency,
+                isUpgrade: data.paymentAttempt?.is_upgrade,
+              }
         );
       } catch {
         if (isMounted) setState({ status: "error" });
@@ -151,15 +162,22 @@ function CheckoutPageContent() {
           {state.status === "not_available" && (
             <>
               <h1 className="font-display text-xl font-semibold text-text">
-                {planName} plan checkout
+                {state.isUpgrade ? "Upgrade to Pro" : `${planName} plan checkout`}
               </h1>
               <p className="mt-3 text-sm leading-relaxed text-muted">
                 Online payment is not available yet. Please try again later.
               </p>
+              {typeof state.amount === "number" && state.currency && (
+                <p className="mt-3 text-sm leading-relaxed text-text">
+                  {state.isUpgrade
+                    ? `Your verified upgrade price would be ${state.amount.toFixed(2)} ${state.currency} — the remaining balance after your Student credit is applied.`
+                    : `${planName} is ${state.amount.toFixed(2)} ${state.currency}.`}
+                </p>
+              )}
               <p className="mt-3 text-xs leading-relaxed text-muted">
                 We&apos;ve saved your interest in the {planName} plan — no
                 payment has been requested or taken. You can keep using your
-                Free plan in the meantime.
+                current plan in the meantime.
               </p>
               <Link
                 href="/dashboard"

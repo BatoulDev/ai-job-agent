@@ -102,6 +102,7 @@ describe("job_preferences version-bump anomaly: seed-fixture artifact, not a pro
       p_custom_locations: [],
       p_target_role_ids: [],
       p_location_ids: [],
+      p_lebanon_location_scope: "selected_only",
     });
     assert.equal(rpcError, null, `save_job_preferences failed: ${rpcError?.message}`);
 
@@ -128,6 +129,7 @@ describe("job_preferences version-bump anomaly: seed-fixture artifact, not a pro
       p_custom_locations: [],
       p_target_role_ids: [],
       p_location_ids: [],
+      p_lebanon_location_scope: "selected_only",
     });
     assert.equal(firstError, null, `first save_job_preferences failed: ${firstError?.message}`);
 
@@ -148,6 +150,7 @@ describe("job_preferences version-bump anomaly: seed-fixture artifact, not a pro
       p_custom_locations: [],
       p_target_role_ids: [],
       p_location_ids: [],
+      p_lebanon_location_scope: "selected_only",
     });
     assert.equal(secondError, null, `second save_job_preferences failed: ${secondError?.message}`);
 

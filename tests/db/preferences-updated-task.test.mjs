@@ -82,6 +82,7 @@ async function savePrefs(userClient, overrides = {}) {
     p_custom_locations: [],
     p_target_role_ids: [roleSlug1],
     p_location_ids: [],
+    p_lebanon_location_scope: "selected_only",
   };
   const { error } = await userClient.rpc("save_job_preferences", {
     ...defaults,

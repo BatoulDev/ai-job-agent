@@ -21,6 +21,7 @@ import PreferencesSection, {
 } from "@/components/dashboard/PreferencesSection";
 import PreferencesReminderModal from "@/components/dashboard/PreferencesReminderModal";
 import PreferencesReminderBanner from "@/components/dashboard/PreferencesReminderBanner";
+import InternationalPreferencesReminderBanner from "@/components/dashboard/InternationalPreferencesReminderBanner";
 import { DASHBOARD_STATS } from "@/lib/dashboardData";
 import { createClient } from "@/lib/supabase/client";
 import type { CvAnalysis } from "@/lib/cvAnalysis/types";
@@ -61,6 +62,8 @@ function DashboardPageContent() {
   const [fullName, setFullName] = useState<string | null>(null);
   const [preferences, setPreferences] = useState<PreferencesData | null>(null);
   const [preferencesComplete, setPreferencesComplete] = useState(false);
+  const [internationalSearchEnabled, setInternationalSearchEnabled] = useState(false);
+  const [internationalPreferencesComplete, setInternationalPreferencesComplete] = useState(true);
   const [cv, setCv] = useState<CvRecord | null>(null);
   const [taskStatus, setTaskStatus] = useState<AnalysisTaskStatus | null>(null);
   const [taskTrigger, setTaskTrigger] = useState<AnalysisTaskTrigger | null>(null);
@@ -98,18 +101,18 @@ function DashboardPageContent() {
         return;
       }
 
-      const [profileResult, prefResult, cvResult] = await Promise.all([
+      const [profileResult, prefResult, cvResult, readinessResult] = await Promise.all([
         supabase
           .from("profiles")
           .select(
-            "full_name, country_of_residence, university_id, custom_university, major_id, custom_major"
+            "full_name, university_id, custom_university, major_id, custom_major"
           )
           .eq("id", user.id)
           .maybeSingle(),
         supabase
           .from("job_preferences")
           .select(
-            "id, version, work_arrangement, job_type, experience_level, additional_notes, job_market_coverage, custom_target_roles, custom_locations"
+            "id, version, work_arrangement, job_type, experience_level, additional_notes, job_market_coverage, custom_target_roles, custom_locations, lebanon_location_scope, international_search_enabled"
           )
           .eq("user_id", user.id)
           .maybeSingle(),
@@ -119,7 +122,17 @@ function DashboardPageContent() {
           .eq("user_id", user.id)
           .eq("is_active", true)
           .maybeSingle(),
+        // International readiness is derived once, server-side, by the
+        // same canonical RPC used for onboarding routing — never
+        // re-derived client-side, so it can't drift from the real gate.
+        supabase.rpc("get_onboarding_readiness"),
       ]);
+
+      const readinessRow = readinessResult.data as
+        | { international_search_enabled?: boolean; international_preferences_complete?: boolean }
+        | null;
+      setInternationalSearchEnabled(readinessRow?.international_search_enabled ?? false);
+      setInternationalPreferencesComplete(readinessRow?.international_preferences_complete ?? true);
 
       if (!isMounted) return;
 
@@ -176,11 +189,12 @@ function DashboardPageContent() {
               jobType: prefs.job_type,
               experienceLevel: prefs.experience_level,
               additionalNotes: prefs.additional_notes,
+              lebanonLocationScope: prefs.lebanon_location_scope,
+              internationalSearchEnabled: prefs.international_search_enabled,
             }
           : null
       );
       const prefsComplete = isPreferencesComplete({
-        countryOfResidence: profile.country_of_residence,
         hasUniversity: !!(profile.university_id || profile.custom_university),
         hasMajor: !!(profile.major_id || profile.custom_major),
         hasTargetRole: allRoleNames.length > 0,
@@ -188,6 +202,7 @@ function DashboardPageContent() {
         jobType: prefs?.job_type ?? null,
         experienceLevel: prefs?.experience_level ?? null,
         hasLocation: allLocationNames.length > 0,
+        lebanonLocationScope: prefs?.lebanon_location_scope ?? null,
       });
       setPreferencesComplete(prefsComplete);
 
@@ -416,6 +431,12 @@ function DashboardPageContent() {
         {!!cv && !preferencesComplete && (
           <div className="mt-8">
             <PreferencesReminderBanner />
+          </div>
+        )}
+
+        {!!cv && preferencesComplete && internationalSearchEnabled && !internationalPreferencesComplete && (
+          <div className="mt-8">
+            <InternationalPreferencesReminderBanner />
           </div>
         )}
 
