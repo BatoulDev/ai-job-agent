@@ -54,6 +54,7 @@ async function savePrefs(overrides = {}) {
     p_custom_locations: [],
     p_target_role_ids: [],
     p_location_ids: [],
+    p_lebanon_location_scope: "selected_only",
   };
   const { error } = await user.client.rpc("save_job_preferences", { ...defaults, ...overrides });
   assert.equal(error, null, `save_job_preferences failed: ${error?.message}`);

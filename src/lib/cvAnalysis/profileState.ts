@@ -76,11 +76,14 @@ export function deriveCvProfileState({
 }
 
 // Mirrors get_onboarding_readiness()'s v_preferences_complete computation
-// exactly (supabase/migrations/20260819100000_flexible_requires_location.sql
-// supersedes 20260806090110) — kept in sync deliberately, not reinvented.
-// A preferred location is required when workArrangement is onsite/hybrid/flexible.
+// exactly (supabase/migrations/20260902090010_plan_aware_job_preferences.sql
+// supersedes 20260819100000/20260806090110) — kept in sync deliberately,
+// not reinvented. A preferred location is required when workArrangement is
+// onsite/hybrid/flexible. country_of_residence is no longer part of this
+// computation: it is a system-level Lebanon constant (defaulted
+// automatically at signup, see handle_new_user), never collected from the
+// user — see the branch's dependency-impact report for why.
 export function isPreferencesComplete(input: {
-  countryOfResidence: string | null;
   hasUniversity: boolean;
   hasMajor: boolean;
   hasTargetRole: boolean;
@@ -88,17 +91,18 @@ export function isPreferencesComplete(input: {
   jobType: string | null;
   experienceLevel: string | null;
   hasLocation: boolean;
+  lebanonLocationScope: string | null;
 } | null): boolean {
   if (!input) return false;
 
   return !!(
-    input.countryOfResidence &&
     input.hasUniversity &&
     input.hasMajor &&
     input.hasTargetRole &&
     input.workArrangement &&
     input.jobType &&
     input.experienceLevel &&
+    input.lebanonLocationScope &&
     (!(input.workArrangement === "onsite" || input.workArrangement === "hybrid" || input.workArrangement === "flexible") || input.hasLocation)
   );
 }

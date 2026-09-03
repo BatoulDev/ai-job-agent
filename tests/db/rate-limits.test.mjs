@@ -515,6 +515,7 @@ describe("CV replacement always results in a scheduled analysis (no silent skip)
       p_custom_locations: [],
       p_target_role_ids: [],
       p_location_ids: [],
+      p_lebanon_location_scope: "selected_only",
     });
     assert.equal(prefsErr.error, null, `preferences save must succeed: ${prefsErr.error?.message}`);
 
@@ -575,6 +576,7 @@ describe("CV replacement always results in a scheduled analysis (no silent skip)
       p_custom_locations: [],
       p_target_role_ids: [],
       p_location_ids: [],
+      p_lebanon_location_scope: "selected_only",
     });
     assert.equal(prefsErr, null, `preferences save must succeed: ${prefsErr?.message}`);
 
@@ -1061,6 +1063,7 @@ describe("Feedback-category quota (5 per rolling hour, shared bucket)", () => {
       p_custom_locations: [],
       p_target_role_ids: [],
       p_location_ids: [],
+      p_lebanon_location_scope: "selected_only",
     });
     assert.equal(anchorErr.error, null, `anchor save failed: ${anchorErr.error?.message}`);
     for (const t of await getActiveTasks(userA.id)) await markTaskComplete(t.id);
@@ -1080,6 +1083,7 @@ describe("Feedback-category quota (5 per rolling hour, shared bucket)", () => {
       p_custom_locations: [],
       p_target_role_ids: [],
       p_location_ids: [],
+      p_lebanon_location_scope: "selected_only",
     });
     assert.equal(prefsErr, null, `preferences save must succeed regardless of the exhausted feedback quota: ${prefsErr?.message}`);
 

@@ -72,6 +72,7 @@ async function savePrefs(userClient, overrides = {}) {
     p_custom_locations: [],
     p_target_role_ids: [roleSlug],
     p_location_ids: [],
+    p_lebanon_location_scope: "selected_only",
   };
   const { error } = await userClient.rpc("save_job_preferences", {
     ...defaults,
@@ -89,6 +90,13 @@ async function directUpsertPrefs(userId, fields) {
   const dbFields = Object.fromEntries(
     Object.entries(rawFields).map(([k, v]) => [k, Array.isArray(v) && v.length === 0 ? null : v])
   );
+  // lebanon_location_scope is required for preferences_complete (see
+  // get_onboarding_readiness) — default it the same way the
+  // 20260902090010 migration backfills pre-existing rows, unless a test
+  // explicitly overrides it (e.g. to exercise the null/incomplete case).
+  if (!("lebanon_location_scope" in dbFields)) {
+    dbFields.lebanon_location_scope = "selected_only";
+  }
   const { error } = await adminClient
     .from("job_preferences")
     .upsert({ user_id: userId, ...dbFields }, { onConflict: "user_id" });

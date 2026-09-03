@@ -95,6 +95,7 @@ describe("State C — active CV and complete preferences (every analysis state)"
       p_custom_locations: [],
       p_target_role_ids: [roleSlug],
       p_location_ids: [],
+      p_lebanon_location_scope: "selected_only",
     });
     assert.equal(error, null, `save_job_preferences failed: ${error?.message}`);
   });

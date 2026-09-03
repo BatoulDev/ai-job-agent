@@ -687,6 +687,39 @@ export type Database = {
           },
         ]
       }
+      job_preference_authorized_countries: {
+        Row: {
+          country_code: string
+          created_at: string
+          job_preference_id: string
+        }
+        Insert: {
+          country_code: string
+          created_at?: string
+          job_preference_id: string
+        }
+        Update: {
+          country_code?: string
+          created_at?: string
+          job_preference_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_preference_authorized_countries_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "job_preference_authorized_countries_job_preference_id_fkey"
+            columns: ["job_preference_id"]
+            isOneToOne: false
+            referencedRelation: "job_preferences"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_preference_locations: {
         Row: {
           created_at: string
@@ -713,6 +746,39 @@ export type Database = {
           },
           {
             foreignKeyName: "job_preference_locations_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
+      job_preference_relocation_locations: {
+        Row: {
+          created_at: string
+          job_preference_id: string
+          location_id: string
+        }
+        Insert: {
+          created_at?: string
+          job_preference_id: string
+          location_id: string
+        }
+        Update: {
+          created_at?: string
+          job_preference_id?: string
+          location_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_preference_relocation_locations_job_preference_id_fkey"
+            columns: ["job_preference_id"]
+            isOneToOne: false
+            referencedRelation: "job_preferences"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "job_preference_relocation_locations_location_id_fkey"
             columns: ["location_id"]
             isOneToOne: false
             referencedRelation: "locations"
@@ -761,15 +827,19 @@ export type Database = {
           custom_target_roles: string[] | null
           experience_level: string | null
           id: string
+          international_search_enabled: boolean
           job_market_coverage: string | null
           job_type: string | null
+          lebanon_location_scope: string | null
           location: string | null
           selection_version: number
           target_roles: string | null
           updated_at: string
           user_id: string
           version: number
+          willing_to_relocate: boolean | null
           work_arrangement: string | null
+          work_authorization_status: string | null
         }
         Insert: {
           additional_notes?: string | null
@@ -778,15 +848,19 @@ export type Database = {
           custom_target_roles?: string[] | null
           experience_level?: string | null
           id?: string
+          international_search_enabled?: boolean
           job_market_coverage?: string | null
           job_type?: string | null
+          lebanon_location_scope?: string | null
           location?: string | null
           selection_version?: number
           target_roles?: string | null
           updated_at?: string
           user_id: string
           version?: number
+          willing_to_relocate?: boolean | null
           work_arrangement?: string | null
+          work_authorization_status?: string | null
         }
         Update: {
           additional_notes?: string | null
@@ -795,15 +869,19 @@ export type Database = {
           custom_target_roles?: string[] | null
           experience_level?: string | null
           id?: string
+          international_search_enabled?: boolean
           job_market_coverage?: string | null
           job_type?: string | null
+          lebanon_location_scope?: string | null
           location?: string | null
           selection_version?: number
           target_roles?: string | null
           updated_at?: string
           user_id?: string
           version?: number
+          willing_to_relocate?: boolean | null
           work_arrangement?: string | null
+          work_authorization_status?: string | null
         }
         Relationships: []
       }
@@ -879,11 +957,45 @@ export type Database = {
         }
         Relationships: []
       }
+      location_nearby_areas: {
+        Row: {
+          created_at: string
+          location_id: string
+          nearby_location_id: string
+        }
+        Insert: {
+          created_at?: string
+          location_id: string
+          nearby_location_id: string
+        }
+        Update: {
+          created_at?: string
+          location_id?: string
+          nearby_location_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "location_nearby_areas_location_id_fkey"
+            columns: ["location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["slug"]
+          },
+          {
+            foreignKeyName: "location_nearby_areas_nearby_location_id_fkey"
+            columns: ["nearby_location_id"]
+            isOneToOne: false
+            referencedRelation: "locations"
+            referencedColumns: ["slug"]
+          },
+        ]
+      }
       locations: {
         Row: {
           country_code: string
           created_at: string
           is_active: boolean
+          is_relocation_market: boolean
           name: string
           slug: string
           sort_order: number
@@ -893,6 +1005,7 @@ export type Database = {
           country_code?: string
           created_at?: string
           is_active?: boolean
+          is_relocation_market?: boolean
           name: string
           slug: string
           sort_order?: number
@@ -902,6 +1015,7 @@ export type Database = {
           country_code?: string
           created_at?: string
           is_active?: boolean
+          is_relocation_market?: boolean
           name?: string
           slug?: string
           sort_order?: number
@@ -1064,17 +1178,25 @@ export type Database = {
       payment_attempts: {
         Row: {
           amount: number
+          billing_period: string | null
           checkout_url: string | null
           created_at: string
+          credit_amount: number | null
           currency: string
           failure_code: string | null
           failure_message: string | null
           id: string
           idempotency_key: string
+          is_upgrade: boolean
           metadata: Json | null
+          period_end: string | null
+          period_start: string | null
           plan_code: string
+          price_version_id: string | null
           provider: string
           provider_payment_id: string | null
+          purchase_type: string
+          source_plan_code: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1082,17 +1204,25 @@ export type Database = {
         }
         Insert: {
           amount: number
+          billing_period?: string | null
           checkout_url?: string | null
           created_at?: string
+          credit_amount?: number | null
           currency: string
           failure_code?: string | null
           failure_message?: string | null
           id?: string
           idempotency_key: string
+          is_upgrade?: boolean
           metadata?: Json | null
+          period_end?: string | null
+          period_start?: string | null
           plan_code: string
+          price_version_id?: string | null
           provider: string
           provider_payment_id?: string | null
+          purchase_type?: string
+          source_plan_code?: string | null
           status?: string
           updated_at?: string
           user_id: string
@@ -1100,17 +1230,25 @@ export type Database = {
         }
         Update: {
           amount?: number
+          billing_period?: string | null
           checkout_url?: string | null
           created_at?: string
+          credit_amount?: number | null
           currency?: string
           failure_code?: string | null
           failure_message?: string | null
           id?: string
           idempotency_key?: string
+          is_upgrade?: boolean
           metadata?: Json | null
+          period_end?: string | null
+          period_start?: string | null
           plan_code?: string
+          price_version_id?: string | null
           provider?: string
           provider_payment_id?: string | null
+          purchase_type?: string
+          source_plan_code?: string | null
           status?: string
           updated_at?: string
           user_id?: string
@@ -1123,6 +1261,62 @@ export type Database = {
             isOneToOne: false
             referencedRelation: "plans"
             referencedColumns: ["plan_code"]
+          },
+          {
+            foreignKeyName: "payment_attempts_price_version_id_fkey"
+            columns: ["price_version_id"]
+            isOneToOne: false
+            referencedRelation: "price_versions"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "payment_attempts_source_plan_code_fkey"
+            columns: ["source_plan_code"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["plan_code"]
+          },
+        ]
+      }
+      plan_prices: {
+        Row: {
+          billing_period: string
+          created_at: string
+          currency: string
+          plan_code: string
+          price_amount: number
+          price_version_id: string
+        }
+        Insert: {
+          billing_period: string
+          created_at?: string
+          currency?: string
+          plan_code: string
+          price_amount: number
+          price_version_id: string
+        }
+        Update: {
+          billing_period?: string
+          created_at?: string
+          currency?: string
+          plan_code?: string
+          price_amount?: number
+          price_version_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "plan_prices_plan_code_fkey"
+            columns: ["plan_code"]
+            isOneToOne: false
+            referencedRelation: "plans"
+            referencedColumns: ["plan_code"]
+          },
+          {
+            foreignKeyName: "plan_prices_price_version_id_fkey"
+            columns: ["price_version_id"]
+            isOneToOne: false
+            referencedRelation: "price_versions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1162,6 +1356,30 @@ export type Database = {
           plan_code?: string
           price_amount?: number
           updated_at?: string
+        }
+        Relationships: []
+      }
+      price_versions: {
+        Row: {
+          created_at: string
+          effective_at: string
+          id: string
+          is_active: boolean
+          label: string
+        }
+        Insert: {
+          created_at?: string
+          effective_at?: string
+          id?: string
+          is_active?: boolean
+          label: string
+        }
+        Update: {
+          created_at?: string
+          effective_at?: string
+          id?: string
+          is_active?: boolean
+          label?: string
         }
         Relationships: []
       }
@@ -1265,7 +1483,11 @@ export type Database = {
           current_period_start: string | null
           expired_at: string | null
           id: string
+          next_period_end: string | null
+          next_period_start: string | null
+          next_price_version_id: string | null
           plan_code: string
+          price_version_id: string | null
           provider: string
           provider_customer_id: string | null
           provider_subscription_id: string | null
@@ -1281,7 +1503,11 @@ export type Database = {
           current_period_start?: string | null
           expired_at?: string | null
           id?: string
+          next_period_end?: string | null
+          next_period_start?: string | null
+          next_price_version_id?: string | null
           plan_code: string
+          price_version_id?: string | null
           provider: string
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
@@ -1297,7 +1523,11 @@ export type Database = {
           current_period_start?: string | null
           expired_at?: string | null
           id?: string
+          next_period_end?: string | null
+          next_period_start?: string | null
+          next_price_version_id?: string | null
           plan_code?: string
+          price_version_id?: string | null
           provider?: string
           provider_customer_id?: string | null
           provider_subscription_id?: string | null
@@ -1307,11 +1537,25 @@ export type Database = {
         }
         Relationships: [
           {
+            foreignKeyName: "subscriptions_next_price_version_id_fkey"
+            columns: ["next_price_version_id"]
+            isOneToOne: false
+            referencedRelation: "price_versions"
+            referencedColumns: ["id"]
+          },
+          {
             foreignKeyName: "subscriptions_plan_code_fkey"
             columns: ["plan_code"]
             isOneToOne: false
             referencedRelation: "plans"
             referencedColumns: ["plan_code"]
+          },
+          {
+            foreignKeyName: "subscriptions_price_version_id_fkey"
+            columns: ["price_version_id"]
+            isOneToOne: false
+            referencedRelation: "price_versions"
+            referencedColumns: ["id"]
           },
         ]
       }
@@ -1396,6 +1640,7 @@ export type Database = {
           p_period_end: string
           p_period_start: string
           p_plan_code: string
+          p_price_version_id?: string
           p_provider: string
           p_provider_customer_id: string
           p_provider_subscription_id: string
@@ -1409,7 +1654,11 @@ export type Database = {
           current_period_start: string | null
           expired_at: string | null
           id: string
+          next_period_end: string | null
+          next_period_start: string | null
+          next_price_version_id: string | null
           plan_code: string
+          price_version_id: string | null
           provider: string
           provider_customer_id: string | null
           provider_subscription_id: string | null
@@ -1485,7 +1734,11 @@ export type Database = {
           current_period_start: string | null
           expired_at: string | null
           id: string
+          next_period_end: string | null
+          next_period_start: string | null
+          next_price_version_id: string | null
           plan_code: string
+          price_version_id: string | null
           provider: string
           provider_customer_id: string | null
           provider_subscription_id: string | null
@@ -1657,17 +1910,25 @@ export type Database = {
         Args: { p_plan_code: string }
         Returns: {
           amount: number
+          billing_period: string | null
           checkout_url: string | null
           created_at: string
+          credit_amount: number | null
           currency: string
           failure_code: string | null
           failure_message: string | null
           id: string
           idempotency_key: string
+          is_upgrade: boolean
           metadata: Json | null
+          period_end: string | null
+          period_start: string | null
           plan_code: string
+          price_version_id: string | null
           provider: string
           provider_payment_id: string | null
+          purchase_type: string
+          source_plan_code: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1691,7 +1952,11 @@ export type Database = {
           current_period_start: string | null
           expired_at: string | null
           id: string
+          next_period_end: string | null
+          next_period_start: string | null
+          next_price_version_id: string | null
           plan_code: string
+          price_version_id: string | null
           provider: string
           provider_customer_id: string | null
           provider_subscription_id: string | null
@@ -1709,6 +1974,22 @@ export type Database = {
       fail_stale_analysis_tasks: {
         Args: { p_lease_minutes?: number }
         Returns: number
+      }
+      get_active_price_version: {
+        Args: never
+        Returns: {
+          created_at: string
+          effective_at: string
+          id: string
+          is_active: boolean
+          label: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "price_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       get_onboarding_readiness: { Args: never; Returns: Json }
       is_admin: { Args: never; Returns: boolean }
@@ -1750,17 +2031,25 @@ export type Database = {
         }
         Returns: {
           amount: number
+          billing_period: string | null
           checkout_url: string | null
           created_at: string
+          credit_amount: number | null
           currency: string
           failure_code: string | null
           failure_message: string | null
           id: string
           idempotency_key: string
+          is_upgrade: boolean
           metadata: Json | null
+          period_end: string | null
+          period_start: string | null
           plan_code: string
+          price_version_id: string | null
           provider: string
           provider_payment_id: string | null
+          purchase_type: string
+          source_plan_code: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1782,17 +2071,25 @@ export type Database = {
         }
         Returns: {
           amount: number
+          billing_period: string | null
           checkout_url: string | null
           created_at: string
+          credit_amount: number | null
           currency: string
           failure_code: string | null
           failure_message: string | null
           id: string
           idempotency_key: string
+          is_upgrade: boolean
           metadata: Json | null
+          period_end: string | null
+          period_start: string | null
           plan_code: string
+          price_version_id: string | null
           provider: string
           provider_payment_id: string | null
+          purchase_type: string
+          source_plan_code: string | null
           status: string
           updated_at: string
           user_id: string
@@ -1804,6 +2101,20 @@ export type Database = {
           isOneToOne: true
           isSetofReturn: false
         }
+      }
+      promote_due_subscription_period: {
+        Args: { p_user_id: string }
+        Returns: undefined
+      }
+      quote_student_to_pro_upgrade: {
+        Args: { p_user_id: string }
+        Returns: {
+          amount: number
+          billing_period: string
+          credit_amount: number
+          currency: string
+          price_version_id: string
+        }[]
       }
       reject_match: {
         Args: { p_match_id: string }
@@ -1903,11 +2214,17 @@ export type Database = {
           p_custom_locations: string[]
           p_custom_target_roles: string[]
           p_experience_level: string
+          p_international_search_enabled?: boolean
           p_job_market_coverage: string
           p_job_type: string
+          p_lebanon_location_scope?: string
           p_location_ids: string[]
+          p_relocation_location_ids?: string[]
           p_target_role_ids: string[]
+          p_willing_to_relocate?: boolean
           p_work_arrangement: string
+          p_work_authorization_country_ids?: string[]
+          p_work_authorization_status?: string
         }
         Returns: {
           additional_notes: string | null
@@ -1916,15 +2233,19 @@ export type Database = {
           custom_target_roles: string[] | null
           experience_level: string | null
           id: string
+          international_search_enabled: boolean
           job_market_coverage: string | null
           job_type: string | null
+          lebanon_location_scope: string | null
           location: string | null
           selection_version: number
           target_roles: string | null
           updated_at: string
           user_id: string
           version: number
+          willing_to_relocate: boolean | null
           work_arrangement: string | null
+          work_authorization_status: string | null
         }
         SetofOptions: {
           from: "*"

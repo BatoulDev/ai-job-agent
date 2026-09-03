@@ -22,6 +22,15 @@ export interface OnboardingReadiness {
   hasActiveAnalysisTask: boolean;
   onboardingComplete: boolean;
   nextStep: OnboardingNextStep;
+  // International (Pro-only) readiness is intentionally SEPARATE from
+  // preferencesComplete/onboardingComplete (AGENTS.md: "do not use one
+  // ambiguous boolean"). Disabled international search is a complete,
+  // valid state on its own — internationalPreferencesComplete is true in
+  // that case. Only an enabled-but-incomplete configuration is false.
+  // Actual matching eligibility additionally requires the canonical
+  // CV-analysis gate (is_cv_analysis_matching_eligible), not covered here.
+  internationalSearchEnabled: boolean;
+  internationalPreferencesComplete: boolean;
 }
 
 interface ReadinessRow {
@@ -38,6 +47,8 @@ interface ReadinessRow {
   has_active_analysis_task?: boolean;
   onboarding_complete?: boolean;
   next_step: string;
+  international_search_enabled?: boolean;
+  international_preferences_complete?: boolean;
 }
 
 // Trusted server-side readiness check. Wraps the public.get_onboarding_readiness()
@@ -73,5 +84,7 @@ export async function getOnboardingReadiness(): Promise<OnboardingReadiness> {
     hasActiveAnalysisTask: row.has_active_analysis_task ?? false,
     onboardingComplete: row.onboarding_complete ?? false,
     nextStep: (row.next_step as OnboardingNextStep) ?? "login",
+    internationalSearchEnabled: row.international_search_enabled ?? false,
+    internationalPreferencesComplete: row.international_preferences_complete ?? true,
   };
 }

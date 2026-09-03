@@ -1,8 +1,13 @@
 import PricingCta from "./PricingCta";
 import type { PlanCode } from "@/lib/plans/types";
 import { createClient } from "@/lib/supabase/server";
-import { LEBANON_COUNTRY_CODE } from "@/lib/countries/types";
 
+// Confirmed MVP market: this product supports only users currently
+// residing in Lebanon (AGENTS.md). There is no selectable residence
+// experience — Student is always available, and Pro's only geographic
+// difference is the optional (Pro-only) international job search
+// configured in onboarding/settings, not a resident-country distinction.
+//
 // Marketing copy below (price, limits) must match the canonical values in
 // public.plans exactly (supabase/migrations/20260802090000_create_plans.sql).
 // That table — not this file — is what server-side entitlement and
@@ -67,41 +72,43 @@ const PLANS: {
     period: "/ month",
     offer: "Launch offer",
     features: [
-      "Expanded MENA + region-friendly job coverage",
-      "Local, hybrid, remote, and timezone-friendly opportunities",
+      "Everything in Student, for Lebanon-based matching",
+      "Optional: expand your search outside Lebanon",
+      "Verified international remote roles that accept Lebanon-based applicants",
+      "Optional relocation to Saudi Arabia, Qatar, Kuwait, or the UAE",
       "Up to 45 curated matches per month",
       "Match score + missing skills explanation",
       "15 AI-tailored cover letters per month",
       "Up to 3 cover letter revisions per cover letter",
       "Application tracking dashboard",
       "Email-apply jobs sent only after final approval",
-      "Best for users targeting wider local, remote, MENA, and region-friendly opportunities",
     ],
     cta: "Go Pro",
     highlighted: false,
   },
 ];
 
-// Server Component: reads the signed-in user's known country of residence
-// (if any) to decide whether to mark Student unavailable, per AGENTS.md
-// §8 ("If country of residence is known and is outside Lebanon, mark
-// Student as unavailable"). Anonymous visitors and users who haven't set
-// a residence yet always see Student as available — we never guess.
+// Server Component: reads the signed-in user's current subscription only
+// to relabel the Pro card as an upgrade for an active Student (never to
+// gate availability — Student is always available; MVP supports only
+// Lebanon-based users, so there is no residence-based restriction here).
+// The displayed upgrade price, if any, is never computed here — the
+// server-verified amount comes back from create_payment_attempt at
+// checkout time (src/app/checkout/page.tsx), never a client estimate.
 export default async function Pricing() {
   const supabase = await createClient();
   const {
     data: { user },
   } = await supabase.auth.getUser();
 
-  let studentUnavailable = false;
+  let isActiveStudent = false;
   if (user) {
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("country_of_residence")
-      .eq("id", user.id)
+    const { data: subscription } = await supabase
+      .from("subscriptions")
+      .select("plan_code, status")
+      .eq("user_id", user.id)
       .maybeSingle();
-    studentUnavailable =
-      !!profile?.country_of_residence && profile.country_of_residence !== LEBANON_COUNTRY_CODE;
+    isActiveStudent = subscription?.plan_code === "student" && subscription?.status === "active";
   }
 
   return (
@@ -119,26 +126,20 @@ export default async function Pricing() {
           </p>
         </div>
 
-        <div className="mx-auto mt-6 max-w-3xl rounded-2xl border border-accent/20 bg-accent/5 px-5 py-4 text-center text-sm leading-relaxed text-text">
-          Living outside Lebanon? You can use the Pro plan to receive remote
-          opportunities available to applicants in your country. The Student
-          plan is currently limited to users based in Lebanon.
-        </div>
-
         <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-3">
           {PLANS.map((plan) => {
-            const isUnavailableStudent = plan.planCode === "student" && studentUnavailable;
+            const isUpgradeCard = plan.planCode === "pro" && isActiveStudent;
 
             return (
             <div
               key={plan.name}
               className={`relative flex flex-col rounded-3xl border p-8 ${
-                plan.highlighted && !isUnavailableStudent
+                plan.highlighted
                   ? "border-primary bg-primary text-white shadow-xl shadow-primary/20 lg:-translate-y-3"
                   : "border-slate-200 bg-bg text-text"
-              } ${isUnavailableStudent ? "opacity-75" : ""}`}
+              }`}
             >
-              {plan.badge && !isUnavailableStudent && (
+              {plan.badge && (
                 <span className="absolute -top-3 left-8 rounded-full bg-accent px-3 py-1 text-xs font-semibold text-white">
                   {plan.badge}
                 </span>
@@ -221,25 +222,19 @@ export default async function Pricing() {
                 ))}
               </ul>
 
-              {isUnavailableStudent ? (
-                <div className="mt-8 rounded-full border border-slate-300 py-2.5 text-center text-sm font-semibold text-muted">
-                  Not available outside Lebanon
-                </div>
-              ) : (
-                <PricingCta
-                  planCode={plan.planCode}
-                  className={`mt-8 block rounded-full py-2.5 text-center text-sm font-semibold transition-colors ${
-                    plan.highlighted
-                      ? "bg-white text-primary hover:bg-white/90"
-                      : "bg-primary text-white hover:bg-primary-dark"
-                  }`}
-                >
-                  {plan.cta}
-                </PricingCta>
-              )}
-              {isUnavailableStudent && (
-                <p className="mt-2 text-center text-xs leading-relaxed text-muted">
-                  Student is only available to users residing in Lebanon.
+              <PricingCta
+                planCode={plan.planCode}
+                className={`mt-8 block rounded-full py-2.5 text-center text-sm font-semibold transition-colors ${
+                  plan.highlighted
+                    ? "bg-white text-primary hover:bg-white/90"
+                    : "bg-primary text-white hover:bg-primary-dark"
+                }`}
+              >
+                {isUpgradeCard ? "Upgrade to Pro" : plan.cta}
+              </PricingCta>
+              {isUpgradeCard && (
+                <p className={`mt-2 text-center text-xs leading-relaxed ${plan.highlighted ? "text-white/70" : "text-muted"}`}>
+                  As an active Student, you only pay the verified difference — calculated at checkout.
                 </p>
               )}
             </div>

@@ -24,6 +24,23 @@ export type JobMarketCoverage =
   | "remote_mena"
   | "remote_worldwide";
 
+// Matches job_preferences_lebanon_location_scope_check exactly (see
+// supabase/migrations/20260902090010_plan_aware_job_preferences.sql).
+// Required by save_job_preferences for every save going forward (nullable
+// at the column level only for pre-existing rows, backfilled to
+// selected_only).
+export type LebanonLocationScope =
+  | "selected_only"
+  | "selected_and_nearby"
+  | "anywhere_in_lebanon";
+
+// Matches job_preferences_work_authorization_status_check exactly. Only
+// meaningful when willing_to_relocate = true.
+export type WorkAuthorizationStatus =
+  | "needs_employer_support"
+  | "already_authorized"
+  | "unsure";
+
 // Full public.job_preferences row shape (see
 // supabase/migrations/20260714153055_create_job_preferences.sql,
 // supabase/migrations/20260805090000_add_job_preferences_versioning.sql, and
@@ -49,6 +66,19 @@ export interface JobPreferences {
   additional_notes: string | null;
   custom_target_roles: string[] | null;
   custom_locations: string[] | null;
+  // Required for every save going forward (see save_job_preferences,
+  // 20260902090010_plan_aware_job_preferences.sql). Nullable at the
+  // column level only for pre-existing rows (backfilled to
+  // selected_only).
+  lebanon_location_scope: LebanonLocationScope | null;
+  // Pro-only. Never true unless the owning user's current plan is pro —
+  // enforced server-side by enforce_job_preferences_eligibility_trigger
+  // regardless of write path. false is a complete, intentional state.
+  international_search_enabled: boolean;
+  // Only meaningful when international_search_enabled = true.
+  willing_to_relocate: boolean | null;
+  // Only meaningful when willing_to_relocate = true.
+  work_authorization_status: WorkAuthorizationStatus | null;
   // Server-computed only (see bump_job_preferences_version in
   // 20260805090000_add_job_preferences_versioning.sql) — increments on
   // every update that changes real preference data, ignoring any

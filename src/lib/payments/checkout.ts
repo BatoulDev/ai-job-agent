@@ -9,6 +9,10 @@ export interface PaymentAttemptRow {
   currency: string;
   status: string;
   checkout_url: string | null;
+  // Set only by create_payment_attempt itself when a verified, in-period
+  // active Student subscription made this a discounted upgrade — never a
+  // client-supplied value. amount already reflects the discount when true.
+  is_upgrade: boolean;
 }
 
 export interface StartCheckoutResult {
