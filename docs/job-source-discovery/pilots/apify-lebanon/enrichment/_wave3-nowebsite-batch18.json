@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0392",
+    "canonical_name": "Double bubble",
+    "google_category": "Dessert shop",
+    "address": "Dam w farez, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 71 160 003",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0393",
+    "canonical_name": "Lamaica Design",
+    "google_category": "Furniture manufacturer",
+    "address": "CRRR+65C, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 580 684",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0394",
+    "canonical_name": "سوق النحاسين",
+    "google_category": "Gift shop",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0396",
+    "canonical_name": "Hazertah Public School",
+    "google_category": "Public educational institution",
+    "address": "VVJ9+F7W, Hazerta, Lebanon",
+    "city": "Hazerta",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0397",
+    "canonical_name": "Ecole officielle de Kaa-el-Rim",
+    "google_category": "Government school",
+    "address": "VVMG+5FX, Lebanon - Bekaa - Zahle, Qaa El Rim, Lebanon",
+    "city": "Qaa El Rim",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0398",
+    "canonical_name": "Azm school",
+    "google_category": "Elementary school",
+    "address": "VV36+VWM, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0399",
+    "canonical_name": "Al Iman School baalbeck",
+    "google_category": "Secondary school",
+    "address": "شارع مدرسة الايمان, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 8 372 005",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0400",
+    "canonical_name": "Forkan High School",
+    "google_category": "High school",
+    "address": "RVX7+QJ5 شارع الفرقان، قرية, Lebanon",
+    "city": "قرية",
+    "phone": "+961 7 723 722",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0401",
+    "canonical_name": "Tarak parves",
+    "google_category": "High school",
+    "address": "VV36+VWM, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0402",
+    "canonical_name": "Minaplaza",
+    "google_category": "High school",
+    "address": "VV36+VWM, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  }
+]

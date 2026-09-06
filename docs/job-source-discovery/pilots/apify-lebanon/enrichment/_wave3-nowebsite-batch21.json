@@ -1,0 +1,72 @@
+[
+  {
+    "internal_row_id": "pilot-0439",
+    "canonical_name": "Al Nashe' Al Hadis school",
+    "google_category": "General education school",
+    "address": "RV89+3X6, Taalbaiya, Lebanon",
+    "city": "Taalbaiya",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0440",
+    "canonical_name": "Averroes College Taalbaya",
+    "google_category": "Hauptschule (lower-tier secondary school)",
+    "address": "Taalbaiya, Lebanon",
+    "city": "Taalbaiya",
+    "phone": "+961 3 376 664",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0441",
+    "canonical_name": "مدرسة الثقافة",
+    "google_category": "Secondary school",
+    "address": "RV8C+9M9, Taalbaiya, Lebanon",
+    "city": "Taalbaiya",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0442",
+    "canonical_name": "Beyond Association",
+    "google_category": "Educational institution",
+    "address": "RV8R+8M8, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0443",
+    "canonical_name": "SANAD: The Home Hospice Organization of Lebanon Beqaa",
+    "google_category": "Hospice",
+    "address": "Zahle main road, near St. Charbel Church, Fakhry Building 1st Floor, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 71 274 865",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0445",
+    "canonical_name": "UNHCR Zahle",
+    "google_category": "Corporate office",
+    "address": "Maalaqah, Lebanon",
+    "city": "Maalaqah",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0446",
+    "canonical_name": "7ay al amarcen",
+    "google_category": "Group home",
+    "address": "VV36+VWM bineyet arout Luna, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  }
+]

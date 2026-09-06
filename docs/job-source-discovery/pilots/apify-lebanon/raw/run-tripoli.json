@@ -1,0 +1,4019 @@
+{
+  "run_id": "run-tripoli",
+  "apify_run_id": "WDA3yTicYdjVYl5Ab",
+  "dataset_id": "bZXNyJJ2V8ZR5Hnav",
+  "status": "SUCCEEDED",
+  "usageTotalUsd": 0.1852,
+  "startedAt": "2026-09-05T10:47:40.386Z",
+  "finishedAt": "2026-09-05T10:49:22.063Z",
+  "input": {
+    "searchStringsArray": [
+      "distribution company",
+      "factory"
+    ],
+    "locationQuery": "Tripoli, Lebanon",
+    "maxCrawledPlacesPerSearch": 30,
+    "language": "en",
+    "skipClosedPlaces": true,
+    "website": "allPlaces",
+    "scrapePlaceDetailPage": false,
+    "scrapeContacts": false,
+    "scrapeSocialMediaProfiles": {
+      "facebooks": false,
+      "instagrams": false,
+      "youtubes": false,
+      "tiktoks": false,
+      "twitters": false
+    },
+    "maximumLeadsEnrichmentRecords": 0,
+    "verifyLeadsEnrichmentEmails": false,
+    "maxReviews": 0,
+    "maxImages": 0,
+    "maxQuestions": 0,
+    "scrapeReviewsPersonalData": false,
+    "scrapeTableReservationProvider": false,
+    "scrapeOrderOnline": false,
+    "scrapeDirectories": false,
+    "includeWebResults": false,
+    "enableCompetitorAnalysis": false
+  },
+  "term_region_map": null,
+  "item_count": 40,
+  "items": [
+    {
+      "title": "هادي فرحه غاز ومي",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Gas company",
+      "address": "صيدليه الشفاء, طلعت الخناق ابو سمره بجانب, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "صيدليه الشفاء, طلعت الخناق ابو سمره بجانب",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 76 700 787",
+      "phoneUnformatted": "+96176700787",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.424419,
+        "lng": 35.8374374
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ44ubIl33IRURnsWSa4JH6nM",
+      "categories": [
+        "Gas company"
+      ],
+      "fid": "0x1521f75d229b8be3:0x73ea47826b92c59e",
+      "cid": "8352567084388107678",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 5,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.285Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "10 AM to 6 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%87%D8%A7%D8%AF%D9%8A%20%D9%81%D8%B1%D8%AD%D9%87%20%D8%BA%D8%A7%D8%B2%20%D9%88%D9%85%D9%8A&query_place_id=ChIJ44ubIl33IRURnsWSa4JH6nM",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 1,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=TosHHXczcDgbsDUrrNRmKQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=188.74147&pitch=0&thumbfov=100",
+      "kgmid": "/g/11ys7rfjyf",
+      "businessProfileId": "7782841125216375626"
+    },
+    {
+      "title": "Speed delivery",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Distribution service",
+      "address": "CRCV+9HM, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRCV+9HM",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4209375,
+        "lng": 35.8439375
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJIQXGLFr3IRUReI_ysPuO_sA",
+      "categories": [
+        "Distribution service"
+      ],
+      "fid": "0x1521f75a2cc60521:0xc0fe8efbb0f28f78",
+      "cid": "13906709911023292280",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.286Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Speed%20delivery&query_place_id=ChIJIQXGLFr3IRUReI_ysPuO_sA",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=Q_hdy7dwPOAgSfWDjMs0dg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=346.65768&pitch=0&thumbfov=100",
+      "kgmid": "/g/11rm__3fhq",
+      "businessProfileId": null
+    },
+    {
+      "title": "Marie Sharp’s Distribution",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Distribution service",
+      "address": "Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://m.facebook.com/profile.php?id=1581901538697301&ref=content_filter",
+      "phone": "+961 70 177 740",
+      "phoneUnformatted": "+96170177740",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4393812,
+        "lng": 35.8277641
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJy7hx22_xIRURd59RPIvsGEw",
+      "categories": [
+        "Distribution service"
+      ],
+      "fid": "0x1521f16fdb71b8cb:0x4c18ec8b3c519f77",
+      "cid": "5483392629080170359",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.286Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Marie%20Sharp%E2%80%99s%20Distribution&query_place_id=ChIJy7hx22_xIRURd59RPIvsGEw",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=Zc4ceB_RX_LIU2lFMVgJOw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=325.5978&pitch=0&thumbfov=100",
+      "kgmid": "/g/11h0yhq_q8",
+      "businessProfileId": null
+    },
+    {
+      "title": "Smarta Solutions",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Distribution service",
+      "address": "AlZaylaa (Nada) Center, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "AlZaylaa (Nada) Center",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.smarta.ws/",
+      "phone": "+961 76 000 198",
+      "phoneUnformatted": "+96176000198",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4353018,
+        "lng": 35.8337622
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJI4dYoK72IRUR3NaWKSsFDQA",
+      "categories": [
+        "Distribution service",
+        "Solar energy company"
+      ],
+      "fid": "0x1521f6aea0588723:0xd052b2996d6dc",
+      "cid": "3664857636722396",
+      "reviewsCount": 6,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 3,
+        "fiveStar": 1
+      },
+      "imagesCount": 26,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.287Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 2 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Smarta%20Solutions&query_place_id=ChIJI4dYoK72IRUR3NaWKSsFDQA",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnZOo7NZR-jG3_SWch1L8owSYOe6AAvuASbjsUuEvbxFgXiSWQebQH_AVVi4jcyarszgFS_b151Ax4W9Ho-nBQeIp97vTNLbFrRf_3Mf_eEAdnOVhRXWIqG0xa3DzERVQNpMkNh=w564-h240-k-no",
+      "kgmid": "/g/11bwytwsm4",
+      "businessProfileId": "15015223985875027159"
+    },
+    {
+      "title": "Care Corner SARL",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Distribution service",
+      "address": "Iskandar Gharib, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Iskandar Gharib",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.carecorner.cc/",
+      "phone": "+961 3 008 505",
+      "phoneUnformatted": "+9613008505",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4382777,
+        "lng": 35.830433
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJLaQPiBn3IRURiYakdYOv70A",
+      "categories": [
+        "Distribution service"
+      ],
+      "fid": "0x1521f719880fa42d:0x40efaf8375a48689",
+      "cid": "4679151517010527881",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 4,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.287Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Care%20Corner%20SARL&query_place_id=ChIJLaQPiBn3IRURiYakdYOv70A",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=jsmbjXyhmzNt0jrlegrscg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=356.87778&pitch=0&thumbfov=100",
+      "kgmid": "/g/11x__kkgq4",
+      "businessProfileId": "2663108342227317339"
+    },
+    {
+      "title": "بلال خشوف للانترنت",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Distribution service",
+      "address": "Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 053 039",
+      "phoneUnformatted": "+9613053039",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4356586,
+        "lng": 35.8409182
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJxYNEFKb2IRURN45yGlvT0uE",
+      "categories": [
+        "Distribution service"
+      ],
+      "fid": "0x1521f6a6144483c5:0xe1d2d35b1a728e37",
+      "cid": "16272300791882223159",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 12,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.287Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%A8%D9%84%D8%A7%D9%84%20%D8%AE%D8%B4%D9%88%D9%81%20%D9%84%D9%84%D8%A7%D9%86%D8%AA%D8%B1%D9%86%D8%AA&query_place_id=ChIJxYNEFKb2IRURN45yGlvT0uE",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmvT2yFg8j99RQSS7S4hxGvbpDqgck_HEELttOTG2s6v5N8bqnvbbU8_9jRH6dXZnDhTTcXTE4SRHirc3OX9jfndlHz4FiONYy6_DaBbUXxPws8Dl9psdwb7PUTloHNm0Zuj-X_=w408-h306-k-no",
+      "kgmid": "/g/11c1rfjkzy",
+      "businessProfileId": "11489317041518069363"
+    },
+    {
+      "title": "The Net Global",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Distribution service",
+      "address": "Fawzi Qawiqji, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Fawzi Qawiqji",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.thenetglobal.group/",
+      "phone": "+961 81 070 648",
+      "phoneUnformatted": "+96181070648",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4346073,
+        "lng": 35.8349844
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 2,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJlZRA65b3IRURDG28W6mtZCE",
+      "categories": [
+        "Distribution service"
+      ],
+      "fid": "0x1521f796eb409495:0x2164ada95bbc6d0c",
+      "cid": "2406239043822841100",
+      "reviewsCount": 2,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 0,
+        "fiveStar": 0
+      },
+      "imagesCount": 10,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.287Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 1 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=The%20Net%20Global&query_place_id=ChIJlZRA65b3IRURDG28W6mtZCE",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnStwCm9q3wn360yXCCSebn8kItQezqL3xKt4pACD49Ng0TMwBcwn2Gz9uZcFpjTQyHai6vtdh7vvt5aTKEYHx3eEs0CU6mN55eL6QWFX8SWKhTOyV-TqlQ7gXMBUCCUChkvGy9=w408-h408-k-no",
+      "kgmid": "/g/11l28f68f5",
+      "businessProfileId": "234659129669427690"
+    },
+    {
+      "title": "Distribution Center of Lebanon DCL",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Butcher shop",
+      "address": "CRQJ+68W, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRQJ+68W",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 204 536",
+      "phoneUnformatted": "+9613204536",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4381029,
+        "lng": 35.8308267
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJjTPpyYr3IRURlFeVAcZ4SWQ",
+      "categories": [
+        "Butcher shop"
+      ],
+      "fid": "0x1521f78ac9e9338d:0x644978c601955794",
+      "cid": "7226439868918093716",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.288Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Distribution%20Center%20of%20Lebanon%20DCL&query_place_id=ChIJjTPpyYr3IRURlFeVAcZ4SWQ",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 16,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkvC2QYCzeNBVkJzWPGWvnONqOYe3ENakfkB5bxR_S7kCWapLCGksl6Tb3DDu4Z-hZBj2YVfmmkgs5P6Aa7A4N3B8V3GRQ9chPDZyY8XgWk5geGp6KprapKdker_5Kxdxs2t9XN=w426-h240-k-no",
+      "kgmid": "/g/11kr7dtzm0",
+      "businessProfileId": null
+    },
+    {
+      "title": "DXN Organic shop",
+      "subTitle": "dxn",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Distribution service",
+      "address": "lebanon, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "lebanon",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.facebook.com/profile.php?id=100093411904962",
+      "phone": "+961 70 872 152",
+      "phoneUnformatted": "+96170872152",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4345947,
+        "lng": 35.8361633
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJv0wzUtz3IRURCAEQUZJM-mM",
+      "categories": [
+        "Distribution service",
+        "Organic shop"
+      ],
+      "fid": "0x1521f7dc52334cbf:0x63fa4c9251100108",
+      "cid": "7204154745241469192",
+      "reviewsCount": null,
+      "imagesCount": 54,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.288Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=DXN%20Organic%20shop&query_place_id=ChIJv0wzUtz3IRURCAEQUZJM-mM",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 20,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnWhP09MpTFnFQod1m8tP5y-Y2JooT7Nz7-wtUGg3Jkm6iCTb8dzl1p0V78-73Epig7Zmzf35faZUvnwuEI1GSoCOhk0d5u_bE2gZbTI731YxJUb94onZnqOv8bKqkp_vLL0KJsUvnrJQAd=w426-h240-k-no",
+      "kgmid": "/g/11v0j4xljh",
+      "businessProfileId": "5806675670123149048"
+    },
+    {
+      "title": "All Brands Factory Outlet",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Surplus store",
+      "address": "Facing Honda Motors, Bhesas Road, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Facing Honda Motors, Bhesas Road",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://allbrandsfactoryoutlet.com/",
+      "phone": "+961 71 732 617",
+      "phoneUnformatted": "+96171732617",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4247426,
+        "lng": 35.8320934
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJrQQdLrT2IRURSwkTIXLDOz0",
+      "categories": [
+        "Surplus store",
+        "Outlet mall"
+      ],
+      "fid": "0x1521f6b42e1d04ad:0x3d3bc3722113094b",
+      "cid": "4412335154888116555",
+      "reviewsCount": 190,
+      "reviewsDistribution": {
+        "oneStar": 28,
+        "twoStar": 24,
+        "threeStar": 50,
+        "fourStar": 33,
+        "fiveStar": 55
+      },
+      "imagesCount": 86,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.339Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10 AM to 9 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "10 AM to 9 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Delivery": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ],
+        "Payments": [
+          {
+            "Credit cards": true
+          },
+          {
+            "Debit cards": true
+          },
+          {
+            "Credit cards": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=All%20Brands%20Factory%20Outlet&query_place_id=ChIJrQQdLrT2IRURSwkTIXLDOz0",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 1,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkBL1P7ylGTTy3sikySO198MZ0Eqha9uyopD_UT4wytoE-gqPKKMREa-gmqE9f1xX1XY8TlqBrSZBmTPWNet8mIHVCOT7zrU8H_fPjyqbGzeXv1JsGGqisBqXP4lYi3GsiP32af=w426-h240-k-no",
+      "kgmid": "/g/11ggqrkks7",
+      "businessProfileId": "13620088692106126924"
+    },
+    {
+      "title": "Tartoussi factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Manufacturer",
+      "address": "CRFM+9HX, Bohssas, Lebanon",
+      "neighborhood": null,
+      "street": "CRFM+9HX",
+      "city": "Bohssas",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4235564,
+        "lng": 35.834058
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJdwNESAD3IRURKNDENsCrTZw",
+      "categories": [
+        "Manufacturer"
+      ],
+      "fid": "0x1521f70048440377:0x9c4dabc036c4d028",
+      "cid": "11262847085164417064",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 0
+      },
+      "imagesCount": 4,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.339Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 5 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Tartoussi%20factory&query_place_id=ChIJdwNESAD3IRURKNDENsCrTZw",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWn5X8B5RDga81u1H7zCJziOimts9VIPUbOxS5GMXorfKZ7aOYTcAu4iRTNfreeaaMhdNyIhMw2QLpzcKOpUmF6iWPFenGE9pkJgeF9tvsmsc3eteqh2CJD2eHELWXvLGQqpWTg9rxQtNo20=w408-h306-k-no",
+      "kgmid": "/g/11x6vndqmf",
+      "businessProfileId": "12976956602934724479"
+    },
+    {
+      "title": "Abdul Salam ElRatel Furniture Factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Furniture manufacturer",
+      "address": "CRGP+VHW, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRGP+VHW",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.facebook.com/ratelfactory/",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4272302,
+        "lng": 35.8364425
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJucSbPr_3IRURu-sYm3VFvxM",
+      "categories": [
+        "Furniture manufacturer"
+      ],
+      "fid": "0x1521f7bf3e9bc4b9:0x13bf45759b18ebbb",
+      "cid": "1422932378687957947",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 14,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.339Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Abdul%20Salam%20ElRatel%20Furniture%20Factory&query_place_id=ChIJucSbPr_3IRURu-sYm3VFvxM",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmCoVSpyznBHRFVnrKvCnpJfng4pMt_2rRx8DYruHHTjwX9BuH33MNQCEWGpyHBtCd_45Vj9eIgw8-GxHAndIdFnaCnQAH8NNXMlrgnUeVzwRdaYon-k41VHqNxcc6KomXeVEXbJg=w408-h243-k-no",
+      "kgmid": "/g/11fmbkltxf",
+      "businessProfileId": null
+    },
+    {
+      "title": "Mr Donuts factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Restaurant",
+      "address": "CRGH+JJ4, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRGH+JJ4",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 6 412 841",
+      "phoneUnformatted": "+9616412841",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4265043,
+        "lng": 35.8290629
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.7,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJpzMseZX3IRURsojHSVByrLk",
+      "categories": [
+        "Restaurant"
+      ],
+      "fid": "0x1521f795792c33a7:0xb9ac725049c788b2",
+      "cid": "13379194282171664562",
+      "reviewsCount": 19,
+      "reviewsDistribution": {
+        "oneStar": 3,
+        "twoStar": 1,
+        "threeStar": 1,
+        "fourStar": 7,
+        "fiveStar": 7
+      },
+      "imagesCount": 30,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.339Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 12 AM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 12 AM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 12 AM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 12 AM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 12 AM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 12 AM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 12 AM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Delivery": true
+          },
+          {
+            "Drive-through": true
+          },
+          {
+            "Takeout": true
+          },
+          {
+            "Dine-in": true
+          }
+        ],
+        "Offerings": [
+          {
+            "Halal food": true
+          }
+        ],
+        "Dining options": [
+          {
+            "Breakfast": true
+          }
+        ],
+        "Atmosphere": [
+          {
+            "Casual": true
+          }
+        ],
+        "Children": [
+          {
+            "Good for kids": true
+          }
+        ],
+        "Parking": [
+          {
+            "Free street parking": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Mr%20Donuts%20factory&query_place_id=ChIJpzMseZX3IRURsojHSVByrLk",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWln4wQJ4Pkini07Ly0LJXAJaVvgVKL7gnC2gnfjbs6Dyx08L9lw4mvWujIIJpEaiel1VkTXz67y06Rw2PHPojvngi0HteYXA78fK2tjIT7OVOLfYHEpcnbeud27HwBIJidCVM99OA=w408-h272-k-no",
+      "kgmid": "/g/11gy2p6sr4",
+      "businessProfileId": null
+    },
+    {
+      "title": "Big M",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Chocolate factory",
+      "address": "Before Hospital Al-Zahraa - Under Tulip Cafe - Manar, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Before Hospital Al-Zahraa - Under Tulip Cafe - Manar",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.facebook.com/bigm.chocolate",
+      "phone": "+961 3 097 591",
+      "phoneUnformatted": "+9613097591",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.41754,
+        "lng": 35.8417081
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJnz64Td73IRURz1MErPMgB_I",
+      "categories": [
+        "Chocolate factory"
+      ],
+      "fid": "0x1521f7de4db83e9f:0xf20720f3ac0453cf",
+      "cid": "17439944312950641615",
+      "reviewsCount": 6,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 5
+      },
+      "imagesCount": 25,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.339Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 12 PM, 2 to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Delivery": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Big%20M&query_place_id=ChIJnz64Td73IRURz1MErPMgB_I",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=YByx-VNJ3pxSnKsCWqTYmg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=318.56076&pitch=0&thumbfov=100",
+      "kgmid": "/g/11rv3lqnbw",
+      "businessProfileId": "8718545645658168319"
+    },
+    {
+      "title": "Eduvate Learning factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Education center",
+      "address": "CRGH+FF7, Cheikh Hasan Khaled, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRGH+FF7, Cheikh Hasan Khaled",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 365 253",
+      "phoneUnformatted": "+96170365253",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4261736,
+        "lng": 35.8286664
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJMYXjRwD3IRURs6BIoqT54rw",
+      "categories": [
+        "Education center"
+      ],
+      "fid": "0x1521f70047e38531:0xbce2f9a4a248a0b3",
+      "cid": "13610715509359681715",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 4,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.340Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Eduvate%20Learning%20factory&query_place_id=ChIJMYXjRwD3IRURs6BIoqT54rw",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm-FQCdOk0EfwkirGsBjLpc89cHva5huQ-9N1M2eitlAsOybVkyjDCBqoK71Kgosszq2w6KBYk6_n1g8JJFwNFfev3w5owCq3fCJyJ8N4EIrGBC8P1s8_fAArBJk02i2ZGJyCXO=w408-h306-k-no",
+      "kgmid": "/g/11y68cj4lb",
+      "businessProfileId": null
+    },
+    {
+      "title": "ultra outlet",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Outlet store",
+      "address": "Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 286 938",
+      "phoneUnformatted": "+96170286938",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4345947,
+        "lng": 35.8361633
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJXzY-KGL3IRURrEMbPKVaUfM",
+      "categories": [
+        "Outlet store"
+      ],
+      "fid": "0x1521f762283e365f:0xf3515aa53c1b43ac",
+      "cid": "17532894490054575020",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.340Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 3 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=ultra%20outlet&query_place_id=ChIJXzY-KGL3IRURrEMbPKVaUfM",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=yUukoL6JEK20wEgrMZT2ZA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=271.6121&pitch=0&thumbfov=100",
+      "kgmid": "/g/11shvrt7rf",
+      "businessProfileId": "8140295936293157866"
+    },
+    {
+      "title": "Socks factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Store",
+      "address": "Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 514 982",
+      "phoneUnformatted": "+9613514982",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4421143,
+        "lng": 35.8311586
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJC4yqsAL1IRURIK_KNdGI7DE",
+      "categories": [
+        "Store"
+      ],
+      "fid": "0x1521f502b0aa8c0b:0x31ec88d135caaf20",
+      "cid": "3597400634494201632",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.340Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "11 AM to 7 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "11 AM to 7 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "11 AM to 7 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "11 AM to 7 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "11 AM to 7 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "11 AM to 7 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Delivery": true
+          },
+          {
+            "In-store pickup": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Socks%20factory&query_place_id=ChIJC4yqsAL1IRURIK_KNdGI7DE",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=9IhH2FijAcBaIBHziiukCw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=135.88466&pitch=0&thumbfov=100",
+      "kgmid": "/g/11rjvy12w5",
+      "businessProfileId": "17370026016602020844"
+    },
+    {
+      "title": "Ghassa Clothes Factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Clothes and fabric wholesaler",
+      "address": "Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 114 798",
+      "phoneUnformatted": "+9613114798",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4448189,
+        "lng": 35.8578606
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ_ZHZAzv0IRURLapv7SFe2lQ",
+      "categories": [
+        "Clothes and fabric wholesaler"
+      ],
+      "fid": "0x1521f43b03d991fd:0x54da5e21ed6faa2d",
+      "cid": "6114302943919319597",
+      "reviewsCount": 7,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 7
+      },
+      "imagesCount": 13,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.340Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7:30 AM to 7 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7:30 AM to 6:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7:30 AM to 7 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7:30 AM to 7 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7:30 AM to 7 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "7:30 AM to 4 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Ghassa%20Clothes%20Factory&query_place_id=ChIJ_ZHZAzv0IRURLapv7SFe2lQ",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 11,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmWDSmajQbjuwF17bGM_3NQo5GuAIv9R53KRxYRx_YOPJrNJMZd-XCKXQt_t-pVrgSkdUAX3YAtzY3M3BuFaQ3NMc-D6rvE9l0Va-lW8xERCY_0iu2DsNdR-wtbo1ymYRRjnEk=w408-h544-k-no",
+      "kgmid": "/g/11f4t6svx0",
+      "businessProfileId": "1110894577954454311"
+    },
+    {
+      "title": "Sara Outlet store",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Outlet store",
+      "address": "CRRM+R28, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRRM+R28",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 81 132 060",
+      "phoneUnformatted": "+96181132060",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4420318,
+        "lng": 35.8325723
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJSbENGkz1IRURRW1Vfew2K3I",
+      "categories": [
+        "Outlet store"
+      ],
+      "fid": "0x1521f54c1a0db149:0x722b36ec7d556d45",
+      "cid": "8226729533665275205",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.340Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "In-store shopping": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Sara%20Outlet%20store&query_place_id=ChIJSbENGkz1IRURRW1Vfew2K3I",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 12,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=y3mXfV8Bel1b8xl1jZP6rA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=32.13204&pitch=0&thumbfov=100",
+      "kgmid": "/g/11p3h4s898",
+      "businessProfileId": null
+    },
+    {
+      "title": "Smoothing concrete and floors",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Concrete factory",
+      "address": "Miryata, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Miryata",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4348302,
+        "lng": 35.835968
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJC6pleOn3IRURtC5D8QycoYE",
+      "categories": [
+        "Concrete factory"
+      ],
+      "fid": "0x1521f7e97865aa0b:0x81a19c0cf1432eb4",
+      "cid": "9340918681544371892",
+      "reviewsCount": null,
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.340Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7:30 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Smoothing%20concrete%20and%20floors&query_place_id=ChIJC6pleOn3IRURtC5D8QycoYE",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 13,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmZedc5moU6Kf0jKlvMEc1bZ4d4299Z7yozMVnu8dbIEMshmkAFs7tDsI9eg0yNUjClPxEb0HXo_HNdeom88Mv8yuYPiEHw3hpPpO6ra3iOY9cfIfQmh0fxIOzfuS43OiLonbZmUhnwDh8=w493-h240-k-no",
+      "kgmid": "/g/11z4z9msm8",
+      "businessProfileId": "7615749880629367988"
+    },
+    {
+      "title": "Happy Sleep Factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Mattress store",
+      "address": "مرج زهور, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "مرج زهور",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 997 997",
+      "phoneUnformatted": "+96170997997",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4227148,
+        "lng": 35.8395554
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJtbmBeAn3IRURs2fOXLylsWE",
+      "categories": [
+        "Mattress store"
+      ],
+      "fid": "0x1521f7097881b9b5:0x61b1a5bc5cce67b3",
+      "cid": "7039589920986261427",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.340Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Happy%20Sleep%20Factory&query_place_id=ChIJtbmBeAn3IRURs2fOXLylsWE",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 14,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmOcYBGuz_1IehQ_TTk7afZa-pTUSi-Sz_MpMz5YXuf2Fy20Gy5XKtao34W_gU4n88U3_3mTd0BtXJmIMQT7F8fidJDDGxvnWQCmoJwYq2kh6bWKIXaaQcKrUtGvZ7O6JpxO6DD57Pd2oU=w521-h240-k-no",
+      "kgmid": "/g/11sk54c29g",
+      "businessProfileId": "8862271847311215433"
+    },
+    {
+      "title": "Masbanat Awaida, Since 1880",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Historical landmark",
+      "address": "الشارع الرئيسي, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "الشارع الرئيسي",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.masbanatawaida.com/",
+      "phone": "+961 6 431 768",
+      "phoneUnformatted": "+9616431768",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4398937,
+        "lng": 35.8432811
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.8,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJU9xVyR30IRURdzhMWeI0shU",
+      "categories": [
+        "Historical landmark",
+        "Outlet store"
+      ],
+      "fid": "0x1521f41dc955dc53:0x15b234e2594c3877",
+      "cid": "1563370167416404087",
+      "reviewsCount": 83,
+      "reviewsDistribution": {
+        "oneStar": 2,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 6,
+        "fiveStar": 74
+      },
+      "imagesCount": 98,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.340Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Onsite services": true
+          }
+        ],
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible restroom": false
+          },
+          {
+            "Wheelchair accessible seating": false
+          }
+        ],
+        "Children": [
+          {
+            "Good for kids": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Masbanat%20Awaida%2C%20Since%201880&query_place_id=ChIJU9xVyR30IRURdzhMWeI0shU",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 15,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnjRqsvSpE9RoMX8sKf-Wi6iDKNHSF2JRKWMAkoqzWgsXiyE3D0NlPHNWHaIEeyIUxlgeY2otUnfC0K_ohCiVRNICaOCKfwkIDjRPe9TZHGOdmonb9R8oHm9pbqMb9g47GBUFBhog=w408-h544-k-no",
+      "kgmid": "/g/11g879wzks",
+      "businessProfileId": "7903872603350648448"
+    },
+    {
+      "title": "Tripoli Soap Factory Khan el masriyen",
+      "subTitle": "صابون طرابلس، خان المصريين",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Beauty products wholesaler",
+      "address": "Khan El Massryiin, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Khan El Massryiin",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://tripoli-soap.com/",
+      "phone": "+961 3 161 284",
+      "phoneUnformatted": "+9613161284",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4362972,
+        "lng": 35.8450152
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.6,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJE4JHiK73IRURKrsF6AcShO8",
+      "categories": [
+        "Beauty products wholesaler",
+        "Health and beauty shop"
+      ],
+      "fid": "0x1521f7ae88478213:0xef841207e805bb2a",
+      "cid": "17258939497157344042",
+      "reviewsCount": 11,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 10
+      },
+      "imagesCount": 905,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.340Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 7:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 7:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 7:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 7:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 7:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 7:30 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "8 AM to 7:30 PM"
+        }
+      ],
+      "additionalOpeningHours": {
+        "Delivery": [
+          {
+            "day": "Monday",
+            "hours": "9 AM–5 PM"
+          },
+          {
+            "day": "Tuesday",
+            "hours": "9 AM–5 PM"
+          },
+          {
+            "day": "Wednesday",
+            "hours": "9 AM–5 PM"
+          },
+          {
+            "day": "Thursday",
+            "hours": "9 AM–5 PM"
+          },
+          {
+            "day": "Friday",
+            "hours": "9 AM–5 PM"
+          },
+          {
+            "day": "Saturday",
+            "hours": "Closed"
+          },
+          {
+            "day": "Sunday",
+            "hours": "9 AM–5 PM"
+          }
+        ],
+        "Online service hours": [
+          {
+            "day": "Monday",
+            "hours": "Open 24 hours"
+          },
+          {
+            "day": "Tuesday",
+            "hours": "Open 24 hours"
+          },
+          {
+            "day": "Wednesday",
+            "hours": "Open 24 hours"
+          },
+          {
+            "day": "Thursday",
+            "hours": "Open 24 hours"
+          },
+          {
+            "day": "Friday",
+            "hours": "9 AM–5 PM"
+          },
+          {
+            "day": "Saturday",
+            "hours": "Open 24 hours"
+          },
+          {
+            "day": "Sunday",
+            "hours": "Open 24 hours"
+          }
+        ]
+      },
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "From the business": [
+          {
+            "Identifies as women-owned": true
+          }
+        ],
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible seating": true
+          }
+        ],
+        "Payments": [
+          {
+            "Credit cards": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Tripoli%20Soap%20Factory%20Khan%20el%20masriyen&query_place_id=ChIJE4JHiK73IRURKrsF6AcShO8",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 16,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkNhrGMlLZBAvqCqtCDVwH5YjGUAB-_x6TkVckV_tjCY-VaG5Wd-P7Xalm4GVFigo_bbFKCZC85k9HujKnmU1re4zWYgYXG7NX7a7_S2tbOsjpli2aMQ37YpPqsuQujNmXotSk=w408-h306-k-no",
+      "kgmid": "/g/11g1lv9h51",
+      "businessProfileId": "18016157328883740004"
+    },
+    {
+      "title": "Pompi juice factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Warehouse",
+      "address": "FR3R+55J, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "FR3R+55J",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.452911,
+        "lng": 35.840324
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJO9CLOAD1IRURa4w557LFCaM",
+      "categories": [
+        "Warehouse"
+      ],
+      "fid": "0x1521f500388bd03b:0xa309c5b2e7398c6b",
+      "cid": "11748138475146808427",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.341Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Pompi%20juice%20factory&query_place_id=ChIJO9CLOAD1IRURa4w557LFCaM",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=Sfy7CRZkbV0HqbigaytQdQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=184.74796&pitch=0&thumbfov=100",
+      "kgmid": "/g/11vsyqrm23",
+      "businessProfileId": null
+    },
+    {
+      "title": "Z closet outlet",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Outlet store",
+      "address": "Al tarbi3a, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Al tarbi3a",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 583 690",
+      "phoneUnformatted": "+96170583690",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4373699,
+        "lng": 35.8451035
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ-YcpQw_1IRURnwJ_K09Dowk",
+      "categories": [
+        "Outlet store"
+      ],
+      "fid": "0x1521f50f432987f9:0x9a3434f2b7f029f",
+      "cid": "694472774856409759",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:47.341Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 1:30 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Z%20closet%20outlet&query_place_id=ChIJ-YcpQw_1IRURnwJ_K09Dowk",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4223574387094,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=3-w6VreR7UvlKNWrAWiI3w&cb_client=search.gws-prod.gps&w=408&h=240&yaw=2.004837&pitch=0&thumbfov=100",
+      "kgmid": "/g/11wxw_y57y",
+      "businessProfileId": "3241006429598571491"
+    },
+    {
+      "title": "chimaly iron factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Iron works",
+      "address": "CVR3+2G6 jabal mohsen, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CVR3+2G6 jabal mohsen",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4400428,
+        "lng": 35.853756
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJEbjxfuX1IRUROvblH33amHQ",
+      "categories": [
+        "Iron works"
+      ],
+      "fid": "0x1521f5e57ef1b811:0x7498da7d1fe5f63a",
+      "cid": "8401705335800591930",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:51.265Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=chimaly%20iron%20factory&query_place_id=ChIJEbjxfuX1IRUROvblH33amHQ",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4152731774188,35.85384203571326,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 16,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=g8WFDWDqxtGNv4rpCrmJLg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=82.72682&pitch=0&thumbfov=100",
+      "kgmid": "/g/11tgd7y80x",
+      "businessProfileId": null
+    },
+    {
+      "title": "The Sign Factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Model design company",
+      "address": "CRWM+QVV, tripoli municipal stadium street, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRWM+QVV, tripoli municipal stadium street",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 111 089",
+      "phoneUnformatted": "+96170111089",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4469989,
+        "lng": 35.8346779
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJg8GdCHz1IRUR5ubiOe_6iM0",
+      "categories": [
+        "Model design company"
+      ],
+      "fid": "0x1521f57c089dc183:0xcd88faef39e2e6e6",
+      "cid": "14810363279983175398",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:47:57.267Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=The%20Sign%20Factory&query_place_id=ChIJg8GdCHz1IRUR5ubiOe_6iM0",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4152731774188,35.82808707857347,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 20,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11gyvspvz6",
+      "businessProfileId": null
+    },
+    {
+      "title": "CUBS",
+      "subTitle": "كيبس",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Sewing company",
+      "address": "CVV3+7G, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CVV3+7G",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 79 143 205",
+      "phoneUnformatted": "+96179143205",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4431875,
+        "lng": 35.8538125
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJOePfGkv1IRUR9M09K0AAARM",
+      "categories": [
+        "Sewing company"
+      ],
+      "fid": "0x1521f54b1adfe339:0x130100402b3dcdf4",
+      "cid": "1369376037300719092",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 8,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:48:01.587Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=CUBS&query_place_id=ChIJOePfGkv1IRUR9M09K0AAARM",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4436102225812,35.85384203571326,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmlrI-8OhZEzWceaxaZGRgj-MGDiQoyTT7P9eeRcyqMS0X-UFg6PDZdXQmgiiEW4S1F-0DfZ2bhKlh2VHdWGxDsdf4I4BNhHaUADYoWIBwX5pUQQt79ZErFORTnf64Q7zvrawrD=w408-h272-k-no",
+      "kgmid": "/g/11sqxht7c5",
+      "businessProfileId": "7945094288752719295"
+    },
+    {
+      "title": "Ahmed Meit Factory Furniture",
+      "subTitle": "Ahmad Ma3it Furniture Factory 70782254",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Furniture manufacturer",
+      "address": "قرب مستوصف العزم، شارع الغرباء، خلف براد البيسار, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "قرب مستوصف العزم، شارع الغرباء، خلف براد البيسار",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 782 254",
+      "phoneUnformatted": "+96170782254",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.441781,
+        "lng": 35.8454466
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.8,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJM9l4th70IRURTzIxcS2726g",
+      "categories": [
+        "Furniture manufacturer",
+        "Furniture store"
+      ],
+      "fid": "0x1521f41eb678d933:0xa8dbbb2d7131324f",
+      "cid": "12167524622118498895",
+      "reviewsCount": 8,
+      "reviewsDistribution": {
+        "oneStar": 2,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 0,
+        "fiveStar": 5
+      },
+      "imagesCount": 753,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:48:01.588Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Ahmed%20Meit%20Factory%20Furniture&query_place_id=ChIJM9l4th70IRURTzIxcS2726g",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4436102225812,35.85384203571326,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 12,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkRgl74zyeG20nG2TH8Fjq_JLk5UO1NhXQCgLhLGdVP6XQiFpwlTCzVTEYsDucuoff3UCDeNF2_WT30EnIrUcik9NUDh8ad5YU31iihToAK5QC7hJKFNn61gScQhohA883VZsXtaA=w408-h544-k-no",
+      "kgmid": "/g/11cs5sy_tm",
+      "businessProfileId": "7468083105889766199"
+    },
+    {
+      "title": "Salwa Soap Factory",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Corporate office",
+      "address": "CRRR+7XW, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRRR+7XW",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4407409,
+        "lng": 35.8424571
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJc-5ATBz0IRURI2O84NYWYeE",
+      "categories": [
+        "Corporate office"
+      ],
+      "fid": "0x1521f41c4c40ee73:0xe16116d6e0bc6323",
+      "cid": "16240286843423974179",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:48:01.588Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Salwa%20Soap%20Factory&query_place_id=ChIJc-5ATBz0IRURI2O84NYWYeE",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4436102225812,35.85384203571326,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 20,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=oNhZsuJSWa2qTmYThlGCKg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=249.25748&pitch=0&thumbfov=100",
+      "kgmid": "/g/11csqxwg5q",
+      "businessProfileId": null
+    },
+    {
+      "title": "Bongoût Chocolatier & Confisseris",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Chocolate factory",
+      "address": "Houwalla Bldg # 1, Azmie Street, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Houwalla Bldg # 1, Azmie Street",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 6 431 503",
+      "phoneUnformatted": "+9616431503",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4387048,
+        "lng": 35.8374839
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ4Yx7Faj2IRURM6AxwQHfb-8",
+      "categories": [
+        "Chocolate factory"
+      ],
+      "fid": "0x1521f6a8157b8ce1:0xef6fdf01c131a033",
+      "cid": "17253253896108875827",
+      "reviewsCount": 2,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 2
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:48:13.330Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9:30 AM to 7 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9:30 AM to 7 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9:30 AM to 7 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9:30 AM to 7 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9:30 AM to 7 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9:30 AM to 7 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9:30 AM to 12 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Bongo%C3%BBt%20Chocolatier%20%26%20Confisseris&query_place_id=ChIJ4Yx7Faj2IRURM6AxwQHfb-8",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4436102225812,35.82808707857347,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl7x6QFQ1sZjQEj0RwHSkDgWfZwlteGRxRitc6mEb3_DcmJ9GLLJkBUS3gdOdTBtlRvyqISa5XQbeBhTDm2WGvOxGkhRf3T6ueOITP1XvDZ1hqpxyAmDdM3k368oqcJ-r0ax_2y=w424-h240-k-no",
+      "kgmid": "/g/11g9j4lrzs",
+      "businessProfileId": null
+    },
+    {
+      "title": "Shark",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Digital printing service",
+      "address": "bldg, tripoli,Cheikh Rachid Rida Street, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "bldg, tripoli,Cheikh Rachid Rida Street",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://sharkshoplb.com/",
+      "phone": "+961 6 440 199",
+      "phoneUnformatted": "+9616440199",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.435524,
+        "lng": 35.8395948
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJt5hMFV_1IRUR9dHOwspo1G0",
+      "categories": [
+        "Digital printing service",
+        "Copy shop",
+        "Graphic designer",
+        "Laser cutting service",
+        "Model design company",
+        "Promotional products supplier",
+        "Sign shop",
+        "3D printing service"
+      ],
+      "fid": "0x1521f55f154c98b7:0x6dd468cac2ced1f5",
+      "cid": "7914065665257820661",
+      "reviewsCount": 22,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 22
+      },
+      "imagesCount": 65,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:48:16.878Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Online appointments": true
+          },
+          {
+            "Onsite services": true
+          }
+        ],
+        "Accessibility": [
+          {
+            "Wheelchair accessible restroom": false
+          },
+          {
+            "Wheelchair accessible seating": false
+          }
+        ],
+        "Planning": [
+          {
+            "Appointment required": true
+          }
+        ],
+        "Parking": [
+          {
+            "Free street parking": true
+          },
+          {
+            "Paid parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Shark&query_place_id=ChIJt5hMFV_1IRUR9dHOwspo1G0",
+      "searchPageUrl": "https://www.google.com/maps/search/distribution%20company/@34.4365259612906,35.82808707857347,17z?hl=en",
+      "searchString": "distribution company",
+      "language": "en",
+      "rank": 13,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnU_8HY0b5ITwrNxK-MCEymkKl8OjjKnmLvQO0ymA9sy1DqysEfjwriGkwd-m6diN0U_HchYaQ98P8-mIpHz5NIsT2AvwjCuhY5SfAgv_Le272PlcsZFZuiwk9sm01fsgvgIDEdzRhpPv3B=w408-h408-k-no",
+      "kgmid": "/g/11h6yv4tht",
+      "businessProfileId": "9865275419052355184"
+    },
+    {
+      "title": "Petra Tissue - Malak & Co. for Trd. & Ind.",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Manufacturer",
+      "address": "Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.petratissue.com/",
+      "phone": "+961 6 625 510",
+      "phoneUnformatted": "+9616625510",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4531674,
+        "lng": 35.8404841
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJacbbAJD1IRURdqEQvaNoLlQ",
+      "categories": [
+        "Manufacturer"
+      ],
+      "fid": "0x1521f59000dbc669:0x542e68a3bd10a176",
+      "cid": "6065900800575578486",
+      "reviewsCount": 36,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 35
+      },
+      "imagesCount": 17,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:48:23.873Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7:30 AM to 3:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7:30 AM to 3:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7:30 AM to 3:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7:30 AM to 3:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7:30 AM to 3:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "7:30 AM to 3:30 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Petra%20Tissue%20-%20Malak%20%26%20Co.%20for%20Trd.%20%26%20Ind.&query_place_id=ChIJacbbAJD1IRURdqEQvaNoLlQ",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4577787451624,35.85384203571326,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 12,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlp7Phw-zLKzlqaFrAAgwt7ueOSCOFtXEYTLa1gMXteF2P0BmysWeSDOFo7ZN4TX-DcojTn9Lrcu6_7wrHbHUbcOCFU0aDqP_eN4Wo9ggkVwi-9bmOR4-yX0tgvGF1XVYFOtAK-=w426-h240-k-no",
+      "kgmid": "/g/11hyyrc325",
+      "businessProfileId": "9645481845383962595"
+    },
+    {
+      "title": "961Clothes",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Clothing store",
+      "address": "Thakafa, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Thakafa",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://961clothes.com/",
+      "phone": "+961 71 734 421",
+      "phoneUnformatted": "+96171734421",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.440411,
+        "lng": 35.836973
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJeSBsbmD1IRURpGpxX-435Gw",
+      "categories": [
+        "Clothing store"
+      ],
+      "fid": "0x1521f5606e6c2079:0x6ce437ee5f716aa4",
+      "cid": "7846457947729259172",
+      "reviewsCount": 8,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 8
+      },
+      "imagesCount": 16,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:48:33.194Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "10:30 AM to 2 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=961Clothes&query_place_id=ChIJeSBsbmD1IRURpGpxX-435Gw",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4436102225812,35.83667206428673,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlww-KRJ5DSnohUQrGTQ78-abI7OYVWo9HfwKMvjSs5AoaD_hhswwjfCnQL_4mBY4GMfJ25qm8h2FnUmqd0A5fXeW_NXxhjH9uzvpkyaZB-lvmNFJYLt5BdKZrE5CGD439Dch3T05GKsb00=w408-h640-k-no",
+      "kgmid": "/g/11xlzgs9pm",
+      "businessProfileId": "12812445414627387552"
+    },
+    {
+      "title": "soap sharkass",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Shopping mall",
+      "address": "CRPW+G3P, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRPW+G3P",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 208 817",
+      "phoneUnformatted": "+96170208817",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4363497,
+        "lng": 35.8451895
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.8,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJB_37zo33IRUR8rM3crcVJ1E",
+      "categories": [
+        "Shopping mall"
+      ],
+      "fid": "0x1521f78dcefbfd07:0x512715b77237b3f2",
+      "cid": "5847666518803330034",
+      "reviewsCount": 21,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 2,
+        "fiveStar": 18
+      },
+      "imagesCount": 43,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:48:39.149Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10 AM to 7 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10 AM to 7 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10 AM to 7 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10 AM to 7 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10 AM to 7 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10 AM to 7 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "10 AM to 7 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Onsite services": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=soap%20sharkass&query_place_id=ChIJB_37zo33IRUR8rM3crcVJ1E",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4294417,35.85384203571326,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnjUZ9MDcBL5SNoybeXigSfZtRl7RXAH3_GyNfwUaKl0n0fAaYiOTEI-cxm-I7xwWKhxunWnFL4tBPCj7hnllWE_MBNBqIsJuLCKHuXATBmxtCvle4PNyWzcbamG2-Asl_NFcv2=w408-h306-k-no",
+      "kgmid": "/g/11g_zf_sbs",
+      "businessProfileId": null
+    },
+    {
+      "title": "Al Masriyeen Caravanserai خان المصريين",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Historical landmark",
+      "address": "CRPW+F2R, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRPW+F2R",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4362402,
+        "lng": 35.8450121
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJQcOUZw33IRURvbJG2GhBC4E",
+      "categories": [
+        "Historical landmark"
+      ],
+      "fid": "0x1521f70d6794c341:0x810b4168d846b2bd",
+      "cid": "9298597774197437117",
+      "reviewsCount": 4,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 4
+      },
+      "imagesCount": 15,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:48:52.719Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Children": [
+          {
+            "Good for kids": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Al%20Masriyeen%20Caravanserai%20%D8%AE%D8%A7%D9%86%20%D8%A7%D9%84%D9%85%D8%B5%D8%B1%D9%8A%D9%8A%D9%86&query_place_id=ChIJQcOUZw33IRURvbJG2GhBC4E",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4365259612906,35.845257049999994,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk5qGA07YqB73hVVP0jk5YJkF7gS28Hz9gcCg5APa0div06pgUexhQwlqqVy57sNyw_3WIRoQmvAvD-8IIVtE3dpVPV8iWKbwA1LwIXNpZrwfKYQoowIqLuQguY7sp6YR4jsfrR3Q=w408-h906-k-no",
+      "kgmid": "/g/11fjw0hwgn",
+      "businessProfileId": null
+    },
+    {
+      "title": "Double bubble",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Dessert shop",
+      "address": "Dam w farez, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Dam w farez",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 160 003",
+      "phoneUnformatted": "+96171160003",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4264995,
+        "lng": 35.82797
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJXxj1bQD3IRURnP-ZwHOx-x0",
+      "categories": [
+        "Dessert shop"
+      ],
+      "fid": "0x1521f7006df5185f:0x1dfbb173c099ff9c",
+      "cid": "2160515556964958108",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 11,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:00.487Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "12 PM to 12 AM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "12 PM to 12 AM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "12 PM to 12 AM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "12 PM to 12 AM"
+        },
+        {
+          "day": "Friday",
+          "hours": "12 PM to 12 AM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "12 PM to 12 AM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "12 PM to 12 AM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Double%20bubble&query_place_id=ChIJXxj1bQD3IRURnP-ZwHOx-x0",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4294417,35.82808707857347,17z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmxEmfzDfkXDmaCvUz4PlvKqeEYgjIEKyHsdhPB3QzpjRIMGQXA6jTPNFPKeEx7fzidi94t1oLPMKZ1bprMDma67Jvyf5aczYDhSZHukLaPEw2ztvQ6JRy_6FQq3r8-cxulHRRSkZ_1s8xg=w408-h725-k-no",
+      "kgmid": "/g/11x79x4711",
+      "businessProfileId": "16975149282432878438"
+    },
+    {
+      "title": "Lamaica Design",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Furniture manufacturer",
+      "address": "CRRR+65C, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "CRRR+65C",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 580 684",
+      "phoneUnformatted": "+9613580684",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 34.4405703,
+        "lng": 35.8404041
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJAen3J631IRUR0Oj2w_uUkPU",
+      "categories": [
+        "Furniture manufacturer"
+      ],
+      "fid": "0x1521f5ad27f7e901:0xf59094fbc3f6e8d0",
+      "cid": "17694806744984119504",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:15.123Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Lamaica%20Design&query_place_id=ChIJAen3J631IRUR0Oj2w_uUkPU",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4398937,35.8432811,17.724679289372474z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 20,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=PBtepd3ZGwQ-AlU-VimddQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=0.23657982&pitch=0&thumbfov=100",
+      "kgmid": "/g/11h23_1lcd",
+      "businessProfileId": null
+    },
+    {
+      "title": "سوق النحاسين",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Gift shop",
+      "address": "Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4363571,
+        "lng": 35.8445001
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.6,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJVWMOgY33IRURbEdtFxi29tQ",
+      "categories": [
+        "Gift shop"
+      ],
+      "fid": "0x1521f78d810e6355:0xd4f6b618176d476c",
+      "cid": "15345652994900051820",
+      "reviewsCount": 16,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 3,
+        "fourStar": 1,
+        "fiveStar": 12
+      },
+      "imagesCount": 32,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:16.007Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 5 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ],
+        "Payments": [
+          {
+            "Cash-only": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%B3%D9%88%D9%82%20%D8%A7%D9%84%D9%86%D8%AD%D8%A7%D8%B3%D9%8A%D9%86&query_place_id=ChIJVWMOgY33IRURbEdtFxi29tQ",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4362972,35.8450152,17.72474138494591z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkhddQWZN-fh2U5O6iiXpQGTcpRXV2_3FJrRnXlNowkcix2aqnRVXfRsTutRctvLseSwOzfoB6fUD0GvUt35R6RT8ce-Nn0yRUU117ReACTyWr40jp7tFqnkhvxkjC3unfeUZJv=w408-h725-k-no",
+      "kgmid": "/g/11sfqm63yl",
+      "businessProfileId": "7995232865638849472"
+    },
+    {
+      "title": "AlSaboun Caravansaray",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Historic city center",
+      "address": "Old City, Tripoli, Lebanon",
+      "neighborhood": null,
+      "street": "Old City",
+      "city": "Tripoli",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 34.4355978,
+        "lng": 35.8438704
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.2,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJTeD3Jaf2IRURfLdngfkdt2A",
+      "categories": [
+        "Historic city center",
+        "Tourist attraction"
+      ],
+      "fid": "0x1521f6a725f7e04d:0x60b71df98167b77c",
+      "cid": "6969071905834252156",
+      "reviewsCount": 941,
+      "reviewsDistribution": {
+        "oneStar": 54,
+        "twoStar": 31,
+        "threeStar": 103,
+        "fourStar": 233,
+        "fiveStar": 520
+      },
+      "imagesCount": 1011,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:20.415Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Onsite services": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=AlSaboun%20Caravansaray&query_place_id=ChIJTeD3Jaf2IRURfLdngfkdt2A",
+      "searchPageUrl": "https://www.google.com/maps/search/factory/@34.4363571,35.8445001,18.72474035080752z?hl=en",
+      "searchString": "factory",
+      "language": "en",
+      "rank": 20,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkpHQkRYVj7JIRZ6FjXD2TJo-Abht9PUP1G8B9fBfJFk8QyxKpTeCjBlCSoYRTYhTAOZFkIkgGZM1xhzezefYGgPBFkC83wn07uZSmrFHN-dvFvJ_htmMOrrBEE0LOsszpLBjL90w=w408-h306-k-no",
+      "kgmid": "/g/1tk69y8j",
+      "businessProfileId": null
+    }
+  ]
+}

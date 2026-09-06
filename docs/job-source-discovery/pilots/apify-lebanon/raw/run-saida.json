@@ -1,0 +1,3045 @@
+{
+  "run_id": "run-saida",
+  "apify_run_id": "ft6priBgA37R8vPdf",
+  "dataset_id": "DgbcudFw2HwF0KqEX",
+  "status": "SUCCEEDED",
+  "usageTotalUsd": 0.1652,
+  "startedAt": "2026-09-05T10:49:32.008Z",
+  "finishedAt": "2026-09-05T10:50:12.653Z",
+  "input": {
+    "searchStringsArray": [
+      "hospital",
+      "logistics company"
+    ],
+    "locationQuery": "Saida, Lebanon",
+    "maxCrawledPlacesPerSearch": 30,
+    "language": "en",
+    "skipClosedPlaces": true,
+    "website": "allPlaces",
+    "scrapePlaceDetailPage": false,
+    "scrapeContacts": false,
+    "scrapeSocialMediaProfiles": {
+      "facebooks": false,
+      "instagrams": false,
+      "youtubes": false,
+      "tiktoks": false,
+      "twitters": false
+    },
+    "maximumLeadsEnrichmentRecords": 0,
+    "verifyLeadsEnrichmentEmails": false,
+    "maxReviews": 0,
+    "maxImages": 0,
+    "maxQuestions": 0,
+    "scrapeReviewsPersonalData": false,
+    "scrapeTableReservationProvider": false,
+    "scrapeOrderOnline": false,
+    "scrapeDirectories": false,
+    "includeWebResults": false,
+    "enableCompetitorAnalysis": false
+  },
+  "term_region_map": null,
+  "item_count": 33,
+  "items": [
+    {
+      "title": "HHUMC Hammoud Hospital University Medical Center مستشفى حمود الجامعي",
+      "subTitle": "مُستشفى حَمود",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "University hospital",
+      "address": "Dr. Ghassan Hammoud Street, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "Dr. Ghassan Hammoud Street",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://hhumc.org.lb/",
+      "phone": "+961 7 723 111",
+      "phoneUnformatted": "+9617723111",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.5600268,
+        "lng": 35.3753077
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJV2lsuz3wHhURmIZ4qaeHjS8",
+      "categories": [
+        "University hospital",
+        "Hospital"
+      ],
+      "fid": "0x151ef03dbb6c6957:0x2f8d87a7a9788698",
+      "cid": "3426544045671351960",
+      "reviewsCount": 136,
+      "reviewsDistribution": {
+        "oneStar": 42,
+        "twoStar": 5,
+        "threeStar": 15,
+        "fourStar": 24,
+        "fiveStar": 50
+      },
+      "imagesCount": 76,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:37.673Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Open 24 hours"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "From the business": [
+          {
+            "Identifies as women-owned": true
+          }
+        ],
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          },
+          {
+            "Wheelchair accessible restroom": true
+          }
+        ],
+        "Amenities": [
+          {
+            "Restroom": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=HHUMC%20Hammoud%20Hospital%20University%20Medical%20Center%20%D9%85%D8%B3%D8%AA%D8%B4%D9%81%D9%89%20%D8%AD%D9%85%D9%88%D8%AF%20%D8%A7%D9%84%D8%AC%D8%A7%D9%85%D8%B9%D9%8A&query_place_id=ChIJV2lsuz3wHhURmIZ4qaeHjS8",
+      "searchPageUrl": "https://www.google.com/maps/search/hospital/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "hospital",
+      "language": "en",
+      "rank": 1,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWn4BsFmyTlIKg7OE1Ufk7OwmMH3PHMF9uY5PpQ3wpYGplpQV2_XoRWPO2A1z9uJCrapJI7bH4gDImscmlE4edamxmH2vEinhV3P3Lh8ihMxiH3BzaBU82aAXT3QiB-ii47hzcoT=w426-h240-k-no",
+      "kgmid": "/g/1vxq9279",
+      "businessProfileId": "15175191673963218293"
+    },
+    {
+      "title": "HMC",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Hospital",
+      "address": "H939+8XP, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H939+8XP",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 7 726 008",
+      "phoneUnformatted": "+9617726008",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5533432,
+        "lng": 35.3699527
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJkbIzizfwHhURskudSImqjrQ",
+      "categories": [
+        "Hospital"
+      ],
+      "fid": "0x151ef0378b33b291:0xb48eaa89489d4bb2",
+      "cid": "13010523880125451186",
+      "reviewsCount": 24,
+      "reviewsDistribution": {
+        "oneStar": 3,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 2,
+        "fiveStar": 18
+      },
+      "imagesCount": 5,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:37.674Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Open 24 hours"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=HMC&query_place_id=ChIJkbIzizfwHhURskudSImqjrQ",
+      "searchPageUrl": "https://www.google.com/maps/search/hospital/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "hospital",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnYc9lAyUaUaTUbwQXuRZq7pxrhFssZ39iDVoT0rvRq4hwBtWJ5Sd2avL8mfEJ6SqUyMG375W6WB4RY-re8_eyQxQ82HqHLVAk0MOYlpRJfA27EwSMSRzDypvMcjcB7hrhKU8c6tQ=w426-h240-k-no",
+      "kgmid": "/g/11dfsxvpfr",
+      "businessProfileId": null
+    },
+    {
+      "title": "Saida Governmental Emergency Hospital (Turkish)",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Hospital",
+      "address": "Sidon, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 7 755 560",
+      "phoneUnformatted": "+9617755560",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.5833785,
+        "lng": 35.3882343
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJse1i8Ar7HhURaSrRg9ECggM",
+      "categories": [
+        "Hospital"
+      ],
+      "fid": "0x151efb0af062edb1:0x38202d183d12a69",
+      "cid": "252767627969112681",
+      "reviewsCount": 24,
+      "reviewsDistribution": {
+        "oneStar": 3,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 2,
+        "fiveStar": 18
+      },
+      "imagesCount": 31,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:37.675Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "8 AM to 3 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Saida%20Governmental%20Emergency%20Hospital%20(Turkish)&query_place_id=ChIJse1i8Ar7HhURaSrRg9ECggM",
+      "searchPageUrl": "https://www.google.com/maps/search/hospital/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "hospital",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmQX6aIWkpegNCv5twqPpGjlkZsILDqTyJB-kqBwRI4k99bLWKtZ8rW48euwy2_VYEYL-wJbzGDHKh_xtYzeJcnrkS6QAfhYAId2hHMVNRJ97Ti_TTAUXKDDHgOwdmFiCHti4DDss7Cwx8=w426-h240-k-no",
+      "kgmid": "/g/11m8vb38nc",
+      "businessProfileId": "14460067304582490890"
+    },
+    {
+      "title": "Marsa Global Logistics",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Import export company",
+      "address": "Eastern Autostrad Dandashli Bldg, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "Eastern Autostrad Dandashli Bldg",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.marsagloballogistics.com/",
+      "phone": "+961 3 094 832",
+      "phoneUnformatted": "+9613094832",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.5576968,
+        "lng": 35.3786585
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJtSK_UxbxHhUR6Tv0FhigmmI",
+      "categories": [
+        "Import export company"
+      ],
+      "fid": "0x151ef11653bf22b5:0x629aa01816f43be9",
+      "cid": "7105167387455142889",
+      "reviewsCount": null,
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:37.798Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 1 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Online appointments": true
+          }
+        ],
+        "Planning": [
+          {
+            "Appointment required": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Marsa%20Global%20Logistics&query_place_id=ChIJtSK_UxbxHhUR6Tv0FhigmmI",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.38921328540307,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=uBdW8maRQuOochzXS6qEZA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=272.54117&pitch=0&thumbfov=100",
+      "kgmid": "/g/11xcj91lm5",
+      "businessProfileId": "1095345329296459757"
+    },
+    {
+      "title": "DHL Service Point (SAIDA SERVICE CENTER)",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Logistics service",
+      "address": "ELIA AVENUE, ZEIDAN AND, HARIRI, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "ELIA AVENUE, ZEIDAN AND, HARIRI",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://locator.dhl.com/results?address=id:BEY006&language=en&lc=LB&resultUom=km&clientAppCode=GYD",
+      "phone": "+961 21 214 848",
+      "phoneUnformatted": "+96121214848",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.563752,
+        "lng": 35.380369
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJEVQR7BnwHhURuXLITkdA38w",
+      "categories": [
+        "Logistics service",
+        "Delivery service",
+        "Courier service",
+        "Shipping and mailing service",
+        "Shipping service"
+      ],
+      "fid": "0x151ef019ec115411:0xccdf40474ec872b9",
+      "cid": "14762588778552390329",
+      "reviewsCount": 84,
+      "reviewsDistribution": {
+        "oneStar": 11,
+        "twoStar": 1,
+        "threeStar": 11,
+        "fourStar": 19,
+        "fiveStar": 42
+      },
+      "imagesCount": 8,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:37.798Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 2 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=DHL%20Service%20Point%20(SAIDA%20SERVICE%20CENTER)&query_place_id=ChIJEVQR7BnwHhURuXLITkdA38w",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.38921328540307,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl6Dx9uLFM2JK_OR1m2J-BAyD-ZBKuQRZqRz9nMN-TUPpLRxadhAyugQ_i2gCy9CJK_CdQor2oJZ_kPEEcsPiScuIVbhjjub_Hgwv7qK6GROi3rlq6rfaU-3BhTe_KP1EvsGog=w427-h240-k-no",
+      "kgmid": "/g/11cn8z2tpt",
+      "businessProfileId": "3467824018628170162"
+    },
+    {
+      "title": "Lebanese Transport Company",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Transportation service",
+      "address": "H98G+367, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H98G+367",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 7 722 783",
+      "phoneUnformatted": "+9617722783",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5651554,
+        "lng": 35.3755511
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 2.8,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ0zOb6hbwHhURdmFAWy6LHis",
+      "categories": [
+        "Transportation service"
+      ],
+      "fid": "0x151ef016ea9b33d3:0x2b1e8b2e5b406176",
+      "cid": "3107073824147923318",
+      "reviewsCount": 5,
+      "reviewsDistribution": {
+        "oneStar": 2,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 1,
+        "fiveStar": 1
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:37.798Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Lebanese%20Transport%20Company&query_place_id=ChIJ0zOb6hbwHhURdmFAWy6LHis",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.38921328540307,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=LGDYSiG-Ui7SdXAuZSLUTA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=79.81002&pitch=0&thumbfov=100",
+      "kgmid": "/g/11by_z_g2h",
+      "businessProfileId": null
+    },
+    {
+      "title": "Relax Transport",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Taxi service",
+      "address": "قرب كوكتيل العقاد Saida - al wastani, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "قرب كوكتيل العقاد Saida - al wastani",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 840 333",
+      "phoneUnformatted": "+96170840333",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.566665,
+        "lng": 35.3789034
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJf5ZQ_8LxHhURwfjqFaXEUuQ",
+      "categories": [
+        "Taxi service"
+      ],
+      "fid": "0x151ef1c2ff50967f:0xe452c4a515eaf8c1",
+      "cid": "16452428602054211777",
+      "reviewsCount": null,
+      "imagesCount": 5,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:37.798Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Relax%20Transport&query_place_id=ChIJf5ZQ_8LxHhURwfjqFaXEUuQ",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.38921328540307,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnwojD8eKNkPbho696a7BF2ZNFo0-s2zXa0CwjJ0Gufyq60kWPaU0YwHZ72KqgIMv-m6on4rhFH0wcyIJ3prB2_kVrNRFHKjoPWTmpXmzaRxn7D2iw3aA11pkL3p3ZlOxJ6trD8pg=w487-h240-k-no",
+      "kgmid": "/g/11nmp1bpng",
+      "businessProfileId": "13421679558110584450"
+    },
+    {
+      "title": "smartline saida",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Logistics service",
+      "address": "H94F+R5G, Aabra, Lebanon",
+      "neighborhood": null,
+      "street": "H94F+R5G",
+      "city": "Aabra",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 76 545 251",
+      "phoneUnformatted": "+96176545251",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5570691,
+        "lng": 35.372948
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJB3_HMETxHhURBurMRHQw9C0",
+      "categories": [
+        "Logistics service"
+      ],
+      "fid": "0x151ef14430c77f07:0x2df4307444ccea06",
+      "cid": "3311324901952776710",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:37.798Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 9 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=smartline%20saida&query_place_id=ChIJB3_HMETxHhURBurMRHQw9C0",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.38921328540307,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=4tIKMRHqBDQF98x8KPEwJQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=189.51398&pitch=0&thumbfov=100",
+      "kgmid": "/g/11j7kpphgs",
+      "businessProfileId": null
+    },
+    {
+      "title": "VIP HAMDAN TRANSPORT",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Airport shuttle service",
+      "address": "صيدا،, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "صيدا،",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 76 045 107",
+      "phoneUnformatted": "+96176045107",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.555825,
+        "lng": 35.3780368
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ79NBWW3xHhURfI0F4jztkgg",
+      "categories": [
+        "Airport shuttle service",
+        "Taxi service"
+      ],
+      "fid": "0x151ef16d5941d3ef:0x892ed3ce2058d7c",
+      "cid": "617816944649014652",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 55,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible restroom": true
+          },
+          {
+            "Wheelchair accessible seating": true
+          },
+          {
+            "Wheelchair accessible entrance": false
+          }
+        ],
+        "Amenities": [
+          {
+            "Restroom": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=VIP%20HAMDAN%20TRANSPORT&query_place_id=ChIJ79NBWW3xHhURfI0F4jztkgg",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkqZXU5I-1ZWoBTuwJfQE4dV_nIKl5zFDR5HJ-PScAUG_hmLvkr8yDS5QpzNqKjflrhoADPrEHIRTtmwx1xGO7nB2YF6yaSXnt4GBNLF1egxTl5eBh9aNmIS_0KMJFFv-qEQsoO5Q=w408-h408-k-no",
+      "kgmid": "/g/11mwzc3gwq",
+      "businessProfileId": "4770636426965629022"
+    },
+    {
+      "title": "Towtruck S3oudi transport.",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Truck rental agency",
+      "address": "Sidon, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 897 256",
+      "phoneUnformatted": "+9613897256",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.5585178,
+        "lng": 35.379388
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ4zbknrfxHhURH8ny7TLn6GY",
+      "categories": [
+        "Truck rental agency"
+      ],
+      "fid": "0x151ef1b79ee436e3:0x66e8e732edf2c91f",
+      "cid": "7415430992392014111",
+      "reviewsCount": 8,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 8
+      },
+      "imagesCount": 11,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Payments": [
+          {
+            "Credit cards": true
+          },
+          {
+            "Credit cards": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Towtruck%20S3oudi%20transport.&query_place_id=ChIJ4zbknrfxHhURH8ny7TLn6GY",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm389e36wYNgYPjrGczGb9aF2P6Mr5A194Xg-WF3x_FMrHfQbcrlbgTUtHwICs2lqfwm7rqTCFOm-SvFQb3oSBZXfD0JGOMdF8aSsTnIc8-CyGDsUwBgLaZE5vtXE5lX3kPJu6Kk5yhBvg=w408-h408-k-no",
+      "kgmid": "/g/11y0mpt2fr",
+      "businessProfileId": "1511399580136444250"
+    },
+    {
+      "title": "Abu jamal Towr",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Transportation service",
+      "address": "H96F+2WQ غسان حمود، لبنان, Hay Iskandarani, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H96F+2WQ غسان حمود، لبنان, Hay Iskandarani",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5600848,
+        "lng": 35.3748611
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJNwBZF03xHhURMignnwYUKRc",
+      "categories": [
+        "Transportation service"
+      ],
+      "fid": "0x151ef14d17590037:0x172914069f272832",
+      "cid": "1668887155589982258",
+      "reviewsCount": null,
+      "imagesCount": 6,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Abu%20jamal%20Towr&query_place_id=ChIJNwBZF03xHhURMignnwYUKRc",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm6HXl90s4Amj4pwd3iV1To4i4sx_dok1jmYBO88qlt1uUifFX4y7hIi7XRNCOE9v7ol_QbuHWcy1O-DPiK192wkQPB8BrEhHwk0G1itL1hRYY25ELj4mUOLpXPmjxXD0j6rjE8=w408-h611-k-no",
+      "kgmid": "/g/11v0rjtv_5",
+      "businessProfileId": null
+    },
+    {
+      "title": "Parking",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Parking lot",
+      "address": "H96H+93W, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H96H+93W",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5609812,
+        "lng": 35.3776955
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJaVIb2RfwHhURUFETRoNEOfU",
+      "categories": [
+        "Parking lot"
+      ],
+      "fid": "0x151ef017d91b5269:0xf539448346135150",
+      "cid": "17670229943571927376",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Open 24 hours"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Parking&query_place_id=ChIJaVIb2RfwHhURUFETRoNEOfU",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkKVQGi1QbF4cJOqV-rg6pgTMf26j1xziQ0tuoiZQE6YY5QkmC7W3FuMxM2WMgmzzh-f7FpsswLzdhsTHb6P9GJk27xQz9JURzWNSaTN9jErnaZMpecCO47J96f9kYPAQmQYsIe=w408-h544-k-no",
+      "kgmid": "/g/11c1nkp8vb",
+      "businessProfileId": null
+    },
+    {
+      "title": "Ultra Taxi",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Taxi service",
+      "address": "Ryiad El Solh, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "Ryiad El Solh",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://ultrataxilebanon.com/",
+      "phone": "+961 71 399 775",
+      "phoneUnformatted": "+96171399775",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.5610654,
+        "lng": 35.3728737
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.8,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJqfWKq-TxHhURXELU7DBDHvc",
+      "categories": [
+        "Taxi service",
+        "Airport shuttle service",
+        "Chauffeur service",
+        "Minibus taxi service",
+        "Transportation service"
+      ],
+      "fid": "0x151ef1e4ab8af5a9:0xf71e4330ecd4425c",
+      "cid": "17806743854080344668",
+      "reviewsCount": 233,
+      "reviewsDistribution": {
+        "oneStar": 10,
+        "twoStar": 1,
+        "threeStar": 3,
+        "fourStar": 1,
+        "fiveStar": 218
+      },
+      "imagesCount": 38,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Ultra%20Taxi&query_place_id=ChIJqfWKq-TxHhURXELU7DBDHvc",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWngw9MmemrRgOdeDRpc_7uGr91ZbtdQ-raEWfmAnQUoI-dQ_c49nbidd3ztzQ9IeWlhmh8D7LiA7F0o7oBTAqddo1x6t5kWcIvp1SFiO83VDzghXHqavB-dE8EEh_6ORyZXY6jfYDfJQZ88=w426-h240-k-no",
+      "kgmid": "/g/11xlxm3gg3",
+      "businessProfileId": "4744619650872993147"
+    },
+    {
+      "title": "Parking",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Parking lot",
+      "address": "H95G+Q46, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H95G+Q46",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5594208,
+        "lng": 35.3752675
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJSYotyj3wHhUR5saubOMQRqs",
+      "categories": [
+        "Parking lot"
+      ],
+      "fid": "0x151ef03dca2d8a49:0xab4610e36caec6e6",
+      "cid": "12341570397822437094",
+      "reviewsCount": 2,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 2,
+        "fourStar": 0,
+        "fiveStar": 0
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Parking&query_place_id=ChIJSYotyj3wHhUR5saubOMQRqs",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 11,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11c0rn_mty",
+      "businessProfileId": null
+    },
+    {
+      "title": "Parking - Saida",
+      "subTitle": "موقف",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Parking",
+      "address": "H93G+VQC, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H93G+VQC",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5546835,
+        "lng": 35.3768985
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.7,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJSZY8CjvwHhUR7zv7hN7ZkhY",
+      "categories": [
+        "Parking"
+      ],
+      "fid": "0x151ef03b0a3c9649:0x1692d9de84fb3bef",
+      "cid": "1626601965171194863",
+      "reviewsCount": 23,
+      "reviewsDistribution": {
+        "oneStar": 2,
+        "twoStar": 1,
+        "threeStar": 8,
+        "fourStar": 3,
+        "fiveStar": 9
+      },
+      "imagesCount": 6,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Parking%20-%20Saida&query_place_id=ChIJSZY8CjvwHhUR7zv7hN7ZkhY",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 13,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnq2te10P4yFij2zfQpSOqgFj0hlAfu8BTJ32RFbLQOmBKrIYgyVELT2hOdMP_z6XhmuNiJ5HqwTsJrnhzTBqL4qfPOFKr39EBvo5MD6lQ4kpleiD-omUToxdE6lfwQ4S345HFrcw=w408-h725-k-no",
+      "kgmid": "/g/1vq898pm",
+      "businessProfileId": null
+    },
+    {
+      "title": "مرآب علي فاضل",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Parking lot",
+      "address": "H95J+747, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H95J+747",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 313 711",
+      "phoneUnformatted": "+9613313711",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5580186,
+        "lng": 35.3808337
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ_fJEagDxHhUR-PaKnSp-E8Q",
+      "categories": [
+        "Parking lot"
+      ],
+      "fid": "0x151ef1006a44f2fd:0xc4137e2a9d8af6f8",
+      "cid": "14128775177488234232",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D8%B1%D8%A2%D8%A8%20%D8%B9%D9%84%D9%8A%20%D9%81%D8%A7%D8%B6%D9%84&query_place_id=ChIJ_fJEagDxHhUR-PaKnSp-E8Q",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 14,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11mcf8_byr",
+      "businessProfileId": null
+    },
+    {
+      "title": "تكسيات الانطلاق",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Taxi service",
+      "address": "H96H+644, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H96H+644",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 7 720 802",
+      "phoneUnformatted": "+9617720802",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.560513,
+        "lng": 35.3778427
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJiXbubj3wHhURIC8KbU9Lawo",
+      "categories": [
+        "Taxi service"
+      ],
+      "fid": "0x151ef03d6eee7689:0xa6b4b4f6d0a2f20",
+      "cid": "750776567391203104",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 2,
+        "fourStar": 1,
+        "fiveStar": 0
+      },
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%AA%D9%83%D8%B3%D9%8A%D8%A7%D8%AA%20%D8%A7%D9%84%D8%A7%D9%86%D8%B7%D9%84%D8%A7%D9%82&query_place_id=ChIJiXbubj3wHhURIC8KbU9Lawo",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 16,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=xrWT1hdJ0T9p96zrbDdwvg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=133.68466&pitch=0&thumbfov=100",
+      "kgmid": "/g/11c561d1xl",
+      "businessProfileId": null
+    },
+    {
+      "title": "Spinneys Saida",
+      "subTitle": "سبينيس - صيدا",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Supermarket",
+      "address": "Sahl Al Sabagh Road, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "Sahl Al Sabagh Road",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.spinneys-lebanon.com/",
+      "phone": "+961 7 754 880",
+      "phoneUnformatted": "+9617754880",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.5589557,
+        "lng": 35.3794228
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ7YLVNT3wHhURPheYs3fWjGs",
+      "categories": [
+        "Supermarket",
+        "Hypermarket"
+      ],
+      "fid": "0x151ef03d35d582ed:0x6b8cd677b398173e",
+      "cid": "7749804868400322366",
+      "reviewsCount": 1794,
+      "reviewsDistribution": {
+        "oneStar": 139,
+        "twoStar": 67,
+        "threeStar": 285,
+        "fourStar": 508,
+        "fiveStar": 795
+      },
+      "imagesCount": 711,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:41.551Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8:30 AM to 10 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8:30 AM to 10 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8:30 AM to 10 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8:30 AM to 10 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8:30 AM to 10 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8:30 AM to 10 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "8:30 AM to 10 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Delivery": true
+          },
+          {
+            "In-store shopping": true
+          },
+          {
+            "Onsite services": true
+          }
+        ],
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          },
+          {
+            "Wheelchair accessible restroom": true
+          }
+        ],
+        "Offerings": [
+          {
+            "Bakery": true
+          },
+          {
+            "Food": true
+          }
+        ],
+        "Amenities": [
+          {
+            "Restroom": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ],
+        "Payments": [
+          {
+            "Credit cards": true
+          },
+          {
+            "Debit cards": true
+          }
+        ],
+        "Parking": [
+          {
+            "Free parking lot": true
+          },
+          {
+            "Free street parking": true
+          },
+          {
+            "On-site parking": true
+          },
+          {
+            "Paid parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Spinneys%20Saida&query_place_id=ChIJ7YLVNT3wHhURPheYs3fWjGs",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.557584165536625,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWljsrY84NrIa9AJjvuEvgoEAuzjMs0paqXO8lAz2ITm7OLFUmlBFp1p0ZQH1gaHI5SE0KhmsClf2qTTtCi-dj8WGHrNQ5BP8Rimc5h385V4GtAcez87MZBHBt3mwm_EV7f-Q4EHDA=w408-h306-k-no",
+      "kgmid": "/g/1tg132nr",
+      "businessProfileId": "773247564987575822"
+    },
+    {
+      "title": "شركة البيلاني لخدمات النقل",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Transportation service",
+      "address": "Coastal Area, Behind Shawarma Mahatta Lawyer Building, Ground Floor, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "Coastal Area, Behind Shawarma Mahatta Lawyer Building, Ground Floor",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 933 313",
+      "phoneUnformatted": "+9613933313",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.5747744,
+        "lng": 35.383296
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJBc19NdrxHhUREPSfC7yt5L0",
+      "categories": [
+        "Transportation service"
+      ],
+      "fid": "0x151ef1da357dcd05:0xbde4adbc0b9ff410",
+      "cid": "13683252591018898448",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 9,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:45.442Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 2 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 2 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%B4%D8%B1%D9%83%D8%A9%20%D8%A7%D9%84%D8%A8%D9%8A%D9%84%D8%A7%D9%86%D9%8A%20%D9%84%D8%AE%D8%AF%D9%85%D8%A7%D8%AA%20%D8%A7%D9%84%D9%86%D9%82%D9%84&query_place_id=ChIJBc19NdrxHhUREPSfC7yt5L0",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.579058072316954,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 1,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnHRv_E8KutnLAsv84u3fEaj2Idt8wYdG_iXFgk31PxWYnV7am3nbl2hQ8ovhXn2kO3w6qaHsd-x_FXgWUiXa94jC6jzDd-89q8qcEGe76F5OjpUPDFhr3TrSviG7zb_6pG7lMppQ=w426-h240-k-no",
+      "kgmid": "/g/11rqjfxk3b",
+      "businessProfileId": "6243599573562863708"
+    },
+    {
+      "title": "Golden Royal",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Shipping service",
+      "address": "H9GP+R8C Eastern boulevard, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H9GP+R8C Eastern boulevard",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.facebook.com/Golden-Royal-Abdolkarim-Allo-102051275475817/?ti=as",
+      "phone": "+961 71 437 487",
+      "phoneUnformatted": "+96171437487",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5770547,
+        "lng": 35.38575
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJrWb2sB7xHhUR-lj3kKHUBvI",
+      "categories": [
+        "Shipping service"
+      ],
+      "fid": "0x151ef11eb0f666ad:0xf206d4a190f758fa",
+      "cid": "17439860397425776890",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:45.442Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Golden%20Royal&query_place_id=ChIJrWb2sB7xHhUR-lj3kKHUBvI",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.579058072316954,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=dxWIud7Qm5_NIgZKHogU6A&cb_client=search.gws-prod.gps&w=408&h=240&yaw=285.76367&pitch=0&thumbfov=100",
+      "kgmid": "/g/11n_b9tt32",
+      "businessProfileId": null
+    },
+    {
+      "title": "Sidon Courts",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Bus stop",
+      "address": "Sidon, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.5771,
+        "lng": 35.382426
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ5xdcCAfwHhURSTjx9CibL2o",
+      "categories": [
+        "Bus stop"
+      ],
+      "fid": "0x151ef007085c17e7:0x6a2f9b28f4f13849",
+      "cid": "7651504892136208457",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:45.442Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Sidon%20Courts&query_place_id=ChIJ5xdcCAfwHhURSTjx9CibL2o",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.579058072316954,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=0coXmK3HD6f03l5e9RMPig&cb_client=search.gws-prod.gps&w=408&h=240&yaw=112.643875&pitch=0&thumbfov=100",
+      "kgmid": "/g/11myr6_wgh",
+      "businessProfileId": null
+    },
+    {
+      "title": "Aust",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Bus stop",
+      "address": "Sidon, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.580308,
+        "lng": 35.384545
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 1,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJdxWGg6n6HhURH9Izyt2z4EU",
+      "categories": [
+        "Bus stop"
+      ],
+      "fid": "0x151efaa983861577:0x45e0b3ddca33d21f",
+      "cid": "5035222148561752607",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 0
+      },
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:45.442Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Aust&query_place_id=ChIJdxWGg6n6HhURH9Izyt2z4EU",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.579058072316954,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=Zu9nxxgps35ni6AXNdEdSQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=113.000206&pitch=0&thumbfov=100",
+      "kgmid": "/g/11yvdjln8j",
+      "businessProfileId": null
+    },
+    {
+      "title": "Aust",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Bus stop",
+      "address": "Sidon, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.580422,
+        "lng": 35.384322
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJg4-znKn6HhURupT9DCyxwko",
+      "categories": [
+        "Bus stop"
+      ],
+      "fid": "0x151efaa99cb38f83:0x4ac2b12c0cfd94ba",
+      "cid": "5387062907043157178",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:45.442Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Aust&query_place_id=ChIJg4-znKn6HhURupT9DCyxwko",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.579058072316954,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=9sSnHJBF-H4vHfFsxEWMvw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=266.71732&pitch=0&thumbfov=100",
+      "kgmid": "/g/11yvdjwzhc",
+      "businessProfileId": null
+    },
+    {
+      "title": "Sidon Courts",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Bus stop",
+      "address": "Sidon, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.577285,
+        "lng": 35.382293
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJU5DgCQfwHhURYwBhaxnSaiQ",
+      "categories": [
+        "Bus stop"
+      ],
+      "fid": "0x151ef00709e09053:0x246ad2196b610063",
+      "cid": "2624140739514269795",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:45.442Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Sidon%20Courts&query_place_id=ChIJU5DgCQfwHhURYwBhaxnSaiQ",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.579058072316954,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=u6XlR8pEfs8wtNr0Q0s3oA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=11.570036&pitch=0&thumbfov=100",
+      "kgmid": "/g/11myr0hlz9",
+      "businessProfileId": null
+    },
+    {
+      "title": "Transland Trading",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Import export company",
+      "address": "hijazi center, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "hijazi center",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 402 010",
+      "phoneUnformatted": "+96170402010",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.545632,
+        "lng": 35.3744074
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJF_RihTDxHhUR8SktE01aknU",
+      "categories": [
+        "Import export company"
+      ],
+      "fid": "0x151ef1308562f417:0x75925a4d132d29f1",
+      "cid": "8471933136118032881",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 20,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:48.958Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Transland%20Trading&query_place_id=ChIJF_RihTDxHhUR8SktE01aknU",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.54326822768307,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkJv1Lj-8syCObeUUKT3OxSN_X-yBetabJEd-ZPYvOrInmcuc0-LzWKgj-VP77LOngzYEvVwrIpW8jcMgS1NB2ljyI0L8vxAtDAUS4QEtPypmhkPGgDqqKC1Yf12Lp5zI_21725=w648-h240-k-no",
+      "kgmid": "/g/11p_792966",
+      "businessProfileId": "639030871340172872"
+    },
+    {
+      "title": "Nakouzi Group",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Transportation service",
+      "address": "Sidon, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 81 846 001",
+      "phoneUnformatted": "+96181846001",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.5648225,
+        "lng": 35.3751073
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ-07EFr7xHhURMU6Va05kqPU",
+      "categories": [
+        "Transportation service"
+      ],
+      "fid": "0x151ef1be16c44efb:0xf5a8644e6b954e31",
+      "cid": "17701508623354908209",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 4,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:49.704Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Open 24 hours"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Nakouzi%20Group&query_place_id=ChIJ-07EFr7xHhURMU6Va05kqPU",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=q061-CAn_5J5AQhI9RF40w&cb_client=search.gws-prod.gps&w=408&h=240&yaw=106.26839&pitch=0&thumbfov=100",
+      "kgmid": "/g/11fqpsyj05",
+      "businessProfileId": "17751531397870473095"
+    },
+    {
+      "title": "BAU bus station",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Transportation service",
+      "address": "H98F+7VC, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H98F+7VC",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 81 000 873",
+      "phoneUnformatted": "+96181000873",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5656831,
+        "lng": 35.3746254
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJs4Yg9_XxHhUR4D5xS_X0U3E",
+      "categories": [
+        "Transportation service"
+      ],
+      "fid": "0x151ef1f5f72086b3:0x7153f4f54b713ee0",
+      "cid": "8166139883722718944",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:49.704Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "6:15 AM to 4:15 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "6:15 AM to 4:15 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "6:15 AM to 4:15 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "6:15 AM to 4:15 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "6:15 AM to 4:15 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=BAU%20bus%20station&query_place_id=ChIJs4Yg9_XxHhUR4D5xS_X0U3E",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=zm6ChOR7V50e2Rv2-wSXHw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=289.40887&pitch=0&thumbfov=100",
+      "kgmid": "/g/11j03pw8xl",
+      "businessProfileId": null
+    },
+    {
+      "title": "ATC Import & Export",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Shipping service",
+      "address": "H98J+723, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H98J+723",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 299 119",
+      "phoneUnformatted": "+96170299119",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5656351,
+        "lng": 35.3800365
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJV22gqu_xHhURSJjX9JHQMuI",
+      "categories": [
+        "Shipping service"
+      ],
+      "fid": "0x151ef1efaaa06d57:0xe232d091f4d79848",
+      "cid": "16299319326703851592",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:49.704Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=ATC%20Import%20%26%20Export&query_place_id=ChIJV22gqu_xHhURSJjX9JHQMuI",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=DBt-u67FEuk-jim-BWcMsw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=29.371313&pitch=0&thumbfov=100",
+      "kgmid": "/g/11n09wvd00",
+      "businessProfileId": null
+    },
+    {
+      "title": "Trendway shipping",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Transportation service",
+      "address": "H98J+62R, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H98J+62R",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 299 119",
+      "phoneUnformatted": "+96170299119",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.565619,
+        "lng": 35.38003
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJQb1g7pXxHhURD1W0wP1-ZmI",
+      "categories": [
+        "Transportation service"
+      ],
+      "fid": "0x151ef195ee60bd41:0x62667efdc0b4550f",
+      "cid": "7090494291666294031",
+      "reviewsCount": null,
+      "imagesCount": 7,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:49.705Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Trendway%20shipping&query_place_id=ChIJQb1g7pXxHhURD1W0wP1-ZmI",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWna0V7W2ho5_Y73mrvueg8xXfrHJqVwv2DpgYibdyCZIDHZyr77hyckYNEevfVBlEDU0K5RMSiUA7xVKYEcQHJCdGJkCI45uPHeJU0vvRwc2SrpaLDKZ-dkU2P5Wl4aPZdTqNxnvuCWolVV=w408-h467-k-no",
+      "kgmid": "/g/11thqyvx7z",
+      "businessProfileId": "16597239932168139527"
+    },
+    {
+      "title": "A4mex Saida",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Transportation service",
+      "address": "H98H+VWH, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H98H+VWH",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.a4mex.com/",
+      "phone": "+961 70 221 521",
+      "phoneUnformatted": "+96170221521",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5671857,
+        "lng": 35.3798723
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJG6gUgGnxHhURx95ZaP9BxqU",
+      "categories": [
+        "Transportation service"
+      ],
+      "fid": "0x151ef1698014a81b:0xa5c641ff6859dec7",
+      "cid": "11945307626870005447",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:49.705Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8:30 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8:30 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8:30 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8:30 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8:30 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8:30 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=A4mex%20Saida&query_place_id=ChIJG6gUgGnxHhURx95ZaP9BxqU",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=hmKFBXCqic2pAD11GyizXQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=180.42381&pitch=0&thumbfov=100",
+      "kgmid": "/g/11nms46hdr",
+      "businessProfileId": null
+    },
+    {
+      "title": "Nakib taxi company",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Transportation service",
+      "address": "حيً البراد مقابل صيدلية الزيباوي, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "حيً البراد مقابل صيدلية الزيباوي",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 261 849",
+      "phoneUnformatted": "+96171261849",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.56768,
+        "lng": 35.3807578
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJiVk4F34MCKMRNf5fF8Nm9XI",
+      "categories": [
+        "Transportation service"
+      ],
+      "fid": "0xa3080c7e17385989:0x72f566c3175ffe35",
+      "cid": "8283640077714718261",
+      "reviewsCount": 26,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 26
+      },
+      "imagesCount": 81,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:49.705Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Open 24 hours"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "From the business": [
+          {
+            "Identifies as women-owned": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Nakib%20taxi%20company&query_place_id=ChIJiVk4F34MCKMRNf5fF8Nm9XI",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlhnW4Hf7ZQG7XrCVy3dMvIMYSVNmw7I6AaHXXrJs6rdr28OfGfCPH17SKs86y_Hw5S4eD4PVTc1-vGuW_2PyZTE1YgOBTC6hy4MNSGsDH0v0G3mgPGDpw0svwDjCKrzwv7v8ZS=w408-h306-k-no",
+      "kgmid": "/g/11s5n13r_3",
+      "businessProfileId": "13541385182262616995"
+    },
+    {
+      "title": "Sidon Nejmeh Square",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Bus stop",
+      "address": "Sidon, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.565844,
+        "lng": 35.37568
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJkwjqyBbwHhURUpis-NjXfCk",
+      "categories": [
+        "Bus stop"
+      ],
+      "fid": "0x151ef016c8ea0893:0x297cd7d8f8ac9852",
+      "cid": "2989501579552135250",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:49.705Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Sidon%20Nejmeh%20Square&query_place_id=ChIJkwjqyBbwHhURUpis-NjXfCk",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=QZ7cV2BhNRcZ3Co8UGp7qw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=319.26544&pitch=0&thumbfov=100",
+      "kgmid": "/g/11myq_84mq",
+      "businessProfileId": null
+    },
+    {
+      "title": "Fastkargo",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Shipping service",
+      "address": "H98G+G67, Sidon, Lebanon",
+      "neighborhood": null,
+      "street": "H98G+G67",
+      "city": "Sidon",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 76 318 318",
+      "phoneUnformatted": "+96176318318",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.5659912,
+        "lng": 35.3758597
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJKXY5Gk7xHhURrQhL-_tfxug",
+      "categories": [
+        "Shipping service"
+      ],
+      "fid": "0x151ef14e1a397629:0xe8c65ffbfb4b08ad",
+      "cid": "16773199398045419693",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:49:49.705Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 1 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Fastkargo&query_place_id=ChIJKXY5Gk7xHhURrQhL-_tfxug",
+      "searchPageUrl": "https://www.google.com/maps/search/logistics%20company/@33.5647421344634,35.380626061801024,17z?hl=en",
+      "searchString": "logistics company",
+      "language": "en",
+      "rank": 12,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=KnFjjn8wfMRC6pw-Vppb9Q&cb_client=search.gws-prod.gps&w=408&h=240&yaw=357.98648&pitch=0&thumbfov=100",
+      "kgmid": "/g/11r_lb5m8c",
+      "businessProfileId": null
+    }
+  ]
+}

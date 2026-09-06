@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0105",
+    "canonical_name": "Khries Accounting & Auditing",
+    "google_category": "Accounting firm",
+    "address": "Bechara El Khoury, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 76 076 173",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0112",
+    "canonical_name": "Accounting and Financial Audit consultancy",
+    "google_category": "Accounting firm",
+    "address": "Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 71 990 853",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0117",
+    "canonical_name": "Monasaadeddine",
+    "google_category": "Accounting firm",
+    "address": "VGV2+GP6, beirut - laylake - near rawdat emem sadek school beirut, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0118",
+    "canonical_name": "Gulf Falcon",
+    "google_category": "Accounting firm",
+    "address": "VGV2+GP6 Coca Cola Street, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0119",
+    "canonical_name": "The Back Office Sarl",
+    "google_category": "Accounting firm",
+    "address": "VFWW+GC6, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 368 522",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0120",
+    "canonical_name": "UBIQ Innovations",
+    "google_category": "Financial institution",
+    "address": "Arab Bank Bldg., 5th Floor, Banks Street, Downtown, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 999 926",
+    "regions": "Greater Beirut",
+    "categories": "Telecom and fintech"
+  },
+  {
+    "internal_row_id": "pilot-0121",
+    "canonical_name": "Purpl Wallet",
+    "google_category": "Financial institution",
+    "address": "3rd Floor, Aya Tower, Armenia, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 70 208 534",
+    "regions": "Greater Beirut",
+    "categories": "Telecom and fintech"
+  },
+  {
+    "internal_row_id": "pilot-0127",
+    "canonical_name": "PinPay",
+    "google_category": "Corporate office",
+    "address": "VGR4+M66, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 660 781",
+    "regions": "Greater Beirut",
+    "categories": "Telecom and fintech"
+  },
+  {
+    "internal_row_id": "pilot-0128",
+    "canonical_name": "iarchitect",
+    "google_category": "Architecture firm",
+    "address": "Sannin street, Lebanon",
+    "city": "",
+    "phone": "+961 71 604 609",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Architecture and interior design"
+  },
+  {
+    "internal_row_id": "pilot-0133",
+    "canonical_name": "Robert Husseini Architects",
+    "google_category": "Architecture firm",
+    "address": "Right next to Juicy grill, Sea side road, Fouad Chehab, Jounieh, Lebanon",
+    "city": "Jounieh",
+    "phone": "+961 3 244 911",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Architecture and interior design"
+  }
+]

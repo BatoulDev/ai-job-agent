@@ -1,0 +1,4709 @@
+{
+  "run_id": "run-zahle",
+  "apify_run_id": "pE0iLMod0yy4lF22V",
+  "dataset_id": "YQ0we0F2djFIc82bQ",
+  "status": "SUCCEEDED",
+  "usageTotalUsd": 0.2652,
+  "startedAt": "2026-09-05T10:50:25.281Z",
+  "finishedAt": "2026-09-05T10:51:34.565Z",
+  "input": {
+    "searchStringsArray": [
+      "school",
+      "NGO"
+    ],
+    "locationQuery": "Zahle, Bekaa, Lebanon",
+    "maxCrawledPlacesPerSearch": 30,
+    "language": "en",
+    "skipClosedPlaces": true,
+    "website": "allPlaces",
+    "scrapePlaceDetailPage": false,
+    "scrapeContacts": false,
+    "scrapeSocialMediaProfiles": {
+      "facebooks": false,
+      "instagrams": false,
+      "youtubes": false,
+      "tiktoks": false,
+      "twitters": false
+    },
+    "maximumLeadsEnrichmentRecords": 0,
+    "verifyLeadsEnrichmentEmails": false,
+    "maxReviews": 0,
+    "maxImages": 0,
+    "maxQuestions": 0,
+    "scrapeReviewsPersonalData": false,
+    "scrapeTableReservationProvider": false,
+    "scrapeOrderOnline": false,
+    "scrapeDirectories": false,
+    "includeWebResults": false,
+    "enableCompetitorAnalysis": false
+  },
+  "term_region_map": null,
+  "item_count": 53,
+  "items": [
+    {
+      "title": "Hazertah Public School",
+      "subTitle": "مدرسة حضرة العامة",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Public educational institution",
+      "address": "VVJ9+F7W, Hazerta, Lebanon",
+      "neighborhood": null,
+      "street": "VVJ9+F7W",
+      "city": "Hazerta",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8812276,
+        "lng": 35.8682087
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJcQhUgDA1HxURBKwmM4XbLew",
+      "categories": [
+        "Public educational institution"
+      ],
+      "fid": "0x151f353080540871:0xec2ddb853326ac04",
+      "cid": "17018499932038278148",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.031Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Amenities": [
+          {
+            "Restroom": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Hazertah%20Public%20School&query_place_id=ChIJcQhUgDA1HxURBKwmM4XbLew",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 1,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11h0c0592v",
+      "businessProfileId": null
+    },
+    {
+      "title": "Ecole officielle de Kaa-el-Rim",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Government school",
+      "address": "VVMG+5FX, Lebanon - Bekaa - Zahle, Qaa El Rim, Lebanon",
+      "neighborhood": null,
+      "street": "VVMG+5FX, Lebanon - Bekaa - Zahle",
+      "city": "Qaa El Rim",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.882978,
+        "lng": 35.8762474
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJGze3BB41HxURa2oBxHRh9GI",
+      "categories": [
+        "Government school"
+      ],
+      "fid": "0x151f351e04b7371b:0x62f46174c4016a6b",
+      "cid": "7130431264166865515",
+      "reviewsCount": null,
+      "imagesCount": 12,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.032Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Ecole%20officielle%20de%20Kaa-el-Rim&query_place_id=ChIJGze3BB41HxURa2oBxHRh9GI",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkcqcLJsM4tSgpLgsHQEU1QYF4h0Y2fGIOGH1IT8Xdt_ZeWWhZ53UjrMUrUZs8d40b68rAP_2Jq64kijPBpwZkhJP0vWIxHtqaFxFlxt-j3omuvVnM_jzQD3k4xpEgMwA2Adwy1bQ=w408-h306-k-no",
+      "kgmid": "/g/11rss2z9y5",
+      "businessProfileId": null
+    },
+    {
+      "title": "Azm school",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Elementary school",
+      "address": "VV36+VWM, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "VV36+VWM",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.854721,
+        "lng": 35.862285
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJUdGYQgA1HxURxubBvBZNwI4",
+      "categories": [
+        "Elementary school"
+      ],
+      "fid": "0x151f35004298d151:0x8ec04d16bcc1e6c6",
+      "cid": "10286306308965656262",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.033Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Azm%20school&query_place_id=ChIJUdGYQgA1HxURxubBvBZNwI4",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11ld2ql__k",
+      "businessProfileId": null
+    },
+    {
+      "title": "Al Iman School baalbeck",
+      "subTitle": "مدرسة الإيمان بعلبك",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Secondary school",
+      "address": "شارع مدرسة الايمان, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "شارع مدرسة الايمان",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 8 372 005",
+      "phoneUnformatted": "+9618372005",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.854721,
+        "lng": 35.862285
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJa9c-fMejGBURtuF98FtdG-E",
+      "categories": [
+        "Secondary school"
+      ],
+      "fid": "0x1518a3c77c3ed76b:0xe11b5d5bf07de1b6",
+      "cid": "16220661132363162038",
+      "reviewsCount": null,
+      "imagesCount": 15,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.033Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 1 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "8 AM to 3 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Al%20Iman%20School%20baalbeck&query_place_id=ChIJa9c-fMejGBURtuF98FtdG-E",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmXskm8TBoU6bugllzkXD0Xm7uqnY8P5Z6Wj-L3cGPSwdyYDsqM1JD8-KkM3yqeKqpfNHcHytbPJmRxSkjtIRqgbXD11fSGk_upD12MV76b6axWeDwG5W_NQTJu1NsCzcLAKvJoaw=w426-h240-k-no",
+      "kgmid": "/g/11g8cggsy_",
+      "businessProfileId": "3708887333055198654"
+    },
+    {
+      "title": "Forkan High School",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "High school",
+      "address": "RVX7+QJ5 شارع الفرقان، قرية, Lebanon",
+      "neighborhood": null,
+      "street": "RVX7+QJ5 شارع الفرقان",
+      "city": "قرية",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 7 723 722",
+      "phoneUnformatted": "+9617723722",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8493901,
+        "lng": 35.8641236
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJQ6T4t801HxURI1jsrclwW4s",
+      "categories": [
+        "High school"
+      ],
+      "fid": "0x151f35cdb7f8a443:0x8b5b70c9adec5823",
+      "cid": "10041743805661337635",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.033Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Forkan%20High%20School&query_place_id=ChIJQ6T4t801HxURI1jsrclwW4s",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11mwylfqtz",
+      "businessProfileId": null
+    },
+    {
+      "title": "Tarak parves",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "High school",
+      "address": "VV36+VWM, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "VV36+VWM",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.854721,
+        "lng": 35.862285
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJQeCbxt01HxURlW5rcJkHrAw",
+      "categories": [
+        "High school"
+      ],
+      "fid": "0x151f35ddc69be041:0xcac0799706b6e95",
+      "cid": "913113180046847637",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.033Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Tarak%20parves&query_place_id=ChIJQeCbxt01HxURlW5rcJkHrAw",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11vd3m8dly",
+      "businessProfileId": null
+    },
+    {
+      "title": "Minaplaza",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "High school",
+      "address": "VV36+VWM, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "VV36+VWM",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.854721,
+        "lng": 35.862285
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJw1bRSPQ1HxUR22Uubr2hIdY",
+      "categories": [
+        "High school"
+      ],
+      "fid": "0x151f35f448d156c3:0xd621a1bd6e2e65db",
+      "cid": "15429791633317455323",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.033Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Minaplaza&query_place_id=ChIJw1bRSPQ1HxUR22Uubr2hIdY",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11vj2gzq_y",
+      "businessProfileId": null
+    },
+    {
+      "title": "English international school",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "English language school",
+      "address": "Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.854721,
+        "lng": 35.862285
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ9RqGc641HxURKq-VRuQMXnc",
+      "categories": [
+        "English language school"
+      ],
+      "fid": "0x151f35ae73861af5:0x775e0ce44695af2a",
+      "cid": "8601326512900517674",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 2,
+        "fourStar": 1,
+        "fiveStar": 0
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.033Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=English%20international%20school&query_place_id=ChIJ9RqGc641HxURKq-VRuQMXnc",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11fy_qplky",
+      "businessProfileId": null
+    },
+    {
+      "title": "COB",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "General education school",
+      "address": "VV2V+GPH, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "VV2V+GPH",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8513207,
+        "lng": 35.8943688
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ3wfsmz01HxUR4w-36a3ogOw",
+      "categories": [
+        "General education school"
+      ],
+      "fid": "0x151f353d9bec07df:0xec80e8ade9b70fe3",
+      "cid": "17041876823618031587",
+      "reviewsCount": null,
+      "imagesCount": 9,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.034Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=COB&query_place_id=ChIJ3wfsmz01HxUR4w-36a3ogOw",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkwNDfShpo6Ikc4wA6YgxvK5NQLdea_fWxVCBZM8u5xJp0i1hcd9brjyq4M0VistCxyiN7SLmQpj4dBG24V5seG_uAGsTvORqSom080R3hh9FZ7v4GELxvxY2NcBDBx7fYvgv4vuA=w408-h272-k-no",
+      "kgmid": "/g/11g73b92j2",
+      "businessProfileId": null
+    },
+    {
+      "title": "Evangelical School - المدرسة الإنجيلية",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "General education school",
+      "address": "VW23+53H, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "VW23+53H",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 8 800 979",
+      "phoneUnformatted": "+9618800979",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8504255,
+        "lng": 35.9027195
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJewwcITo1HxURz21OhfpiTf8",
+      "categories": [
+        "General education school"
+      ],
+      "fid": "0x151f353a211c0c7b:0xff4d62fa854e6dcf",
+      "cid": "18396468880996199887",
+      "reviewsCount": null,
+      "imagesCount": 7,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.034Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "6:30 PM to 2:35 AM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "6:30 PM to 2:35 AM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "6:30 PM to 2:35 AM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "6:30 PM to 2:35 AM"
+        },
+        {
+          "day": "Friday",
+          "hours": "6:30 PM to 2:35 AM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Evangelical%20School%20-%20%D8%A7%D9%84%D9%85%D8%AF%D8%B1%D8%B3%D8%A9%20%D8%A7%D9%84%D8%A5%D9%86%D8%AC%D9%8A%D9%84%D9%8A%D8%A9&query_place_id=ChIJewwcITo1HxURz21OhfpiTf8",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmHYS-YD3JJrvt8nWysZLXOa-d5zSa8QsM_QcLXssnUWZixf9yUtsLX5M5e8VaJk_cfmMhkro0OoL03QzQX6bWcKo0_A1NHGVEsiOlA3tA8zYLopQQjfvvcduVAvPiQkpp6Gvg=w426-h240-k-no",
+      "kgmid": "/g/1thsztqc",
+      "businessProfileId": null
+    },
+    {
+      "title": "National American School - NAS",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "K-12 school",
+      "address": "Ksara, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "Ksara",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.naszahleh.school/",
+      "phone": "+961 8 819 555",
+      "phoneUnformatted": "+9618819555",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8218189,
+        "lng": 35.8949126
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJVSrlu8E0HxURwPkpwRY1SqU",
+      "categories": [
+        "K-12 school"
+      ],
+      "fid": "0x151f34c1bbe52a55:0xa54a3516c129f9c0",
+      "cid": "11910390536381004224",
+      "reviewsCount": null,
+      "imagesCount": 14,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.034Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=National%20American%20School%20-%20NAS&query_place_id=ChIJVSrlu8E0HxURwPkpwRY1SqU",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 11,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkwaU4Xln8CjD70-OXtIxN3APZfGf2BvfBc3ImK8Vh3rhIbd-uXYxxzH9zVq1jTc2NZagGUfegEWRdG4r98zJyw-T76h_0U6A1wWNt-SdEO65IdlIR3X8GOi5tfIy28OmLutkvWBA=w408-h544-k-no",
+      "kgmid": "/g/11cnd9s01f",
+      "businessProfileId": "7893329245674987343"
+    },
+    {
+      "title": "Antonine Sisters School - CSJ Ksara",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "College",
+      "address": "Ksara, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Ksara",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.antonineszk.org/",
+      "phone": "+961 8 814 376",
+      "phoneUnformatted": "+9618814376",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8290298,
+        "lng": 35.8848216
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.7,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJCQtXF-40HxUR29KEYZqgTe8",
+      "categories": [
+        "College"
+      ],
+      "fid": "0x151f34ee17570b09:0xef4da09a6184d2db",
+      "cid": "17243615133192999643",
+      "reviewsCount": 96,
+      "reviewsDistribution": {
+        "oneStar": 6,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 6,
+        "fiveStar": 83
+      },
+      "imagesCount": 52,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.034Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7:20 AM to 2:45 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7:20 AM to 2:45 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7:20 AM to 2:45 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7:20 AM to 2:45 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7:20 AM to 2:45 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Antonine%20Sisters%20School%20-%20CSJ%20Ksara&query_place_id=ChIJCQtXF-40HxUR29KEYZqgTe8",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 12,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkzUfN1MUEqj63SSZSYrvPWhufeFXzmvXAu8ESKXxni9vCXHHkiv2n783bixQUmoz1_m8f1CqR38e29YLwXTzXhBahrkP6oqCI0It0xdd6xlIj5qW_HLS16AToqzgWN8N8DZYUg40i1WATb=w426-h240-k-no",
+      "kgmid": "/g/11bz0mdjgg",
+      "businessProfileId": "15931719984377183423"
+    },
+    {
+      "title": "Secondary Official Girls School In Zahleh",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Girls' high school",
+      "address": "36 40O St, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "36 40O St",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 8 821 529",
+      "phoneUnformatted": "+9618821529",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8505659,
+        "lng": 35.8948328
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJv_lFCz01HxURMfFf6c-AxAM",
+      "categories": [
+        "Girls' high school"
+      ],
+      "fid": "0x151f353d0b45f9bf:0x3c480cfe95ff131",
+      "cid": "271483508011036977",
+      "reviewsCount": null,
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.034Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Secondary%20Official%20Girls%20School%20In%20Zahleh&query_place_id=ChIJv_lFCz01HxURMfFf6c-AxAM",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 13,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmj-bLTTtXwR0LpvuSbBXOk-CgX9V3TNHXHPYSZBow6LrGd5n10qqvhwDyt98XMlNlLYN9xrhX-gYIrjGwiGwdh_-qbsOdWbWYLC3GOsGaIFZo6T3_LWmFQJtjetfqdahTHjbi1uQ=w408-h544-k-no",
+      "kgmid": "/g/11dz_pf9fr",
+      "businessProfileId": null
+    },
+    {
+      "title": "St. Georges School مدرسة مار جرجس",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "General education school",
+      "address": "278 43N St, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "278 43N St",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8476633,
+        "lng": 35.9043434
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJkfcXgDA1HxURuMgsPeAky-g",
+      "categories": [
+        "General education school"
+      ],
+      "fid": "0x151f35308017f791:0xe8cb24e03d2cc8b8",
+      "cid": "16774541782589163704",
+      "reviewsCount": null,
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.034Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=St.%20Georges%20School%20%D9%85%D8%AF%D8%B1%D8%B3%D8%A9%20%D9%85%D8%A7%D8%B1%20%D8%AC%D8%B1%D8%AC%D8%B3&query_place_id=ChIJkfcXgDA1HxURuMgsPeAky-g",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 14,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm2zh6gp-K5eKAgVbL9z_fvq3sgXMD74gtYY8OxceSaIMjNvwn7m0lmIX051g_610VLub3Tv_2jWpJCJm5aKk5fbCw0K5UV6fl_LH5bjlvwzxPiTzSKFGYLZTfYezJW2Pc5fa60=w426-h240-k-no",
+      "kgmid": "/g/11c44qp5qy",
+      "businessProfileId": null
+    },
+    {
+      "title": "Active Minds School - مدرسة العقول النشطة",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "General education school",
+      "address": "RVHJ+WRM, Saadnayel, Lebanon",
+      "neighborhood": null,
+      "street": "RVHJ+WRM",
+      "city": "Saadnayel",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 8 508 541",
+      "phoneUnformatted": "+9618508541",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8298385,
+        "lng": 35.8820521
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJNT533PE0HxURkVkE-VyNQoM",
+      "categories": [
+        "General education school"
+      ],
+      "fid": "0x151f34f1dc773e35:0x83428d5cf9045991",
+      "cid": "9458277597885782417",
+      "reviewsCount": null,
+      "imagesCount": 8,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.034Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7:30 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7:30 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7:30 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7:30 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Saturday",
+          "hours": "7:30 AM to 4 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Active%20Minds%20School%20-%20%D9%85%D8%AF%D8%B1%D8%B3%D8%A9%20%D8%A7%D9%84%D8%B9%D9%82%D9%88%D9%84%20%D8%A7%D9%84%D9%86%D8%B4%D8%B7%D8%A9&query_place_id=ChIJNT533PE0HxURkVkE-VyNQoM",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 15,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkIg4OxJiAecUZH7M0rX-63Kxj9qoRosAjDnW5_lGNb2w70y7kx19UYwnq8wta-xBrouXzs82Fy9XHiM0wIA7kpripQ5TFbv7H0lwpOMAFfT13y5v3bbFgAbflDUdh8JyIe9ocoMA=w408-h544-k-no",
+      "kgmid": "/g/11cs5xyr89",
+      "businessProfileId": null
+    },
+    {
+      "title": "Saydit El Zalzaleh Orthodox School",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Religious school",
+      "address": "RWV2+QC7, Saydit El Zalzaleh Zahle, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "RWV2+QC7, Saydit El Zalzaleh Zahle",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 180 679",
+      "phoneUnformatted": "+96170180679",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8444023,
+        "lng": 35.9010319
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJT4REXmY1HxURpIbOfE6z6YU",
+      "categories": [
+        "Religious school"
+      ],
+      "fid": "0x151f35665e44844f:0x85e9b34e7cce86a4",
+      "cid": "9649440826300728996",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.035Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 1 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 1 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 1 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 1 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 1 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Saydit%20El%20Zalzaleh%20Orthodox%20School&query_place_id=ChIJT4REXmY1HxURpIbOfE6z6YU",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 16,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11kkz9sl_v",
+      "businessProfileId": null
+    },
+    {
+      "title": "Hosh Al Oumara Secondary Public School; CERD 800",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "High school",
+      "address": "RWP4+JJC, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "RWP4+JJC",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8365532,
+        "lng": 35.9065164
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJZSpkgKI1HxUR87A6vpL-2zg",
+      "categories": [
+        "High school"
+      ],
+      "fid": "0x151f35a280642a65:0x38dbfe92be3ab0f3",
+      "cid": "4097148192233795827",
+      "reviewsCount": null,
+      "imagesCount": 8,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.035Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Hosh%20Al%20Oumara%20Secondary%20Public%20School%3B%20CERD%20800&query_place_id=ChIJZSpkgKI1HxUR87A6vpL-2zg",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmYG7tvRqP5m73BTk0s61q-t37nFBEeUiM04b2Vf0XhfW36AGzORKkPj1H8aLN3HXcnyAG26BZrIx1JI_5UchYFy0r5LbC11-zdGCOTLNiYuaVdJlP3_ZLKXjqxEpcJ76DTe4hwag=w408-h306-k-no",
+      "kgmid": "/g/11swvhqs93",
+      "businessProfileId": null
+    },
+    {
+      "title": "Ananiashouse Middle school",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Middle school",
+      "address": "RVWW+9C8, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "RVWW+9C8",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8459127,
+        "lng": 35.8960862
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJp2tBLaQ1HxUR5vIZ36FWdBg",
+      "categories": [
+        "Middle school"
+      ],
+      "fid": "0x151f35a42d416ba7:0x187456a1df19f2e6",
+      "cid": "1762128607441449702",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.035Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Ananiashouse%20Middle%20school&query_place_id=ChIJp2tBLaQ1HxUR5vIZ36FWdBg",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 18,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=Ms0GhETCS9LrCyGhmGM3nA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=217.05719&pitch=0&thumbfov=100",
+      "kgmid": "/g/11v5jk4btm",
+      "businessProfileId": null
+    },
+    {
+      "title": "SFM- St. Elie School",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Parochial school",
+      "address": "Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 8 818 250",
+      "phoneUnformatted": "+9618818250",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.844336,
+        "lng": 35.8860191
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJJ0W8Em81HxURbUdyMye775Q",
+      "categories": [
+        "Parochial school"
+      ],
+      "fid": "0x151f356f12bc4527:0x94efbb273372476d",
+      "cid": "10732002214088427373",
+      "reviewsCount": null,
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.035Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Open 24 hours"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=SFM-%20St.%20Elie%20School&query_place_id=ChIJJ0W8Em81HxURbUdyMye775Q",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk06QkJqPdZ_HzFu4Dcm4XU_zNCUDRy-u4zK_j8Qhl5yAFijY0AfMpGoJyHiUglnS5Kde_3yZIRqP5-gDYq8pD_2vkjxX7GMusXfcYgI2Xmvuv6smv3x7sbyl3EL31LhUTFrk5SD7zM1GFt=w408-h544-k-no",
+      "kgmid": "/g/11h4b4l72h",
+      "businessProfileId": "15948467162963999943"
+    },
+    {
+      "title": "Swandance zahle",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Dance school",
+      "address": "Arabi street rassié, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "Arabi street rassié",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.swandance.net/",
+      "phone": "+961 8 807 447",
+      "phoneUnformatted": "+9618807447",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8499984,
+        "lng": 35.8950901
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.8,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ4StmEj01HxURndJGiVuQRwU",
+      "categories": [
+        "Dance school",
+        "Aerial sports center",
+        "Dance company",
+        "Drama school",
+        "Fitness center",
+        "Gymnastics club",
+        "Karate club",
+        "Music school",
+        "Performing arts group"
+      ],
+      "fid": "0x151f353d12662be1:0x547905b8946d29d",
+      "cid": "380431416355639965",
+      "reviewsCount": 25,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 2,
+        "fiveStar": 22
+      },
+      "imagesCount": 74,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.035Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 to 10 AM, 4 to 9 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 to 10 AM, 3:30 to 9 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 to 10 AM, 3 to 9 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9:30 AM to 7 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Onsite services": true
+          }
+        ],
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": false
+          },
+          {
+            "Wheelchair accessible parking lot": false
+          }
+        ],
+        "Children": [
+          {
+            "Good for kids": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Swandance%20zahle&query_place_id=ChIJ4StmEj01HxURndJGiVuQRwU",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.876237444588284,35.868160971869,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 20,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlvR8CDSH7Po8c8EEw0eyRnVt2EHBpU51SCZSETfzUH-Ka4QE7kWaXuS70NiAdQ9ORKGYqbRxnjSmcSdA5WrydM4t8l_K1deNXdy-Lqtj_Oh9nf-v24XL5MnSPt0UD0GnG2IGKu=w408-h408-k-no",
+      "kgmid": "/g/11dz_pr3pq",
+      "businessProfileId": "15992978223629792606"
+    },
+    {
+      "title": "Charity Donation Headquarters",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "4th fl Al Maalouf bldg., Blvd. Main St Zahle, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "4th fl Al Maalouf bldg., Blvd. Main St Zahle",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.charitydonationfoundation.org/",
+      "phone": "+961 8 815 288",
+      "phoneUnformatted": "+9618815288",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8463933,
+        "lng": 35.9010709
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJPQXxSTA1HxURhcuYlrZqfic",
+      "categories": [
+        "Non-governmental organization",
+        "Charity",
+        "Non-profit organization"
+      ],
+      "fid": "0x151f353049f1053d:0x277e6ab69698cb85",
+      "cid": "2845829346987920261",
+      "reviewsCount": null,
+      "imagesCount": 5,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.298Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Charity%20Donation%20Headquarters&query_place_id=ChIJPQXxSTA1HxURhcuYlrZqfic",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 1,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk-CWECZu_6y3eKG4zF-1uKddxJZkRsDhm7OFVWrIEx54J8Ez7hNuw2B-KuMOa1oMP1I5s57eAsMxczvLF37Xy90_1ZyPyRZ6LNiO2grHepV0Iu2_uIe9x9A-5VvbKEZ6gWSa4K=w408-h725-k-no",
+      "kgmid": "/g/11ff1rq55n",
+      "businessProfileId": "15983708356420872633"
+    },
+    {
+      "title": "CrossTalk, Ecumenical Christian NGO - Zahle",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "Greek-Melkite Cathedral of Our Lady of Deliverance Our Lady of Deliverance Street, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "Greek-Melkite Cathedral of Our Lady of Deliverance Our Lady of Deliverance Street",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.mycrosstalk.org/",
+      "phone": "+961 3 254 310",
+      "phoneUnformatted": "+9613254310",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8462557,
+        "lng": 35.9019519
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJyebTtl01HxURf4BrDGTAMcY",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x151f355db6d3e6c9:0xc631c0640c6b807f",
+      "cid": "14281407429306187903",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.298Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "6:30 to 9 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Friday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=CrossTalk%2C%20Ecumenical%20Christian%20NGO%20-%20Zahle&query_place_id=ChIJyebTtl01HxURf4BrDGTAMcY",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11s67fmrdm",
+      "businessProfileId": "2185564854535746756"
+    },
+    {
+      "title": "Labora Zahle",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "RWQ6+PMH, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "RWQ6+PMH",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://laboraonline.com/",
+      "phone": "+961 8 829 799",
+      "phoneUnformatted": "+9618829799",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8393123,
+        "lng": 35.9117332
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJMStFQB81HxURDFOXx6feLrk",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x151f351f40452b31:0xb92edea7c797530c",
+      "cid": "13343847558134846220",
+      "reviewsCount": 5,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 2,
+        "fourStar": 0,
+        "fiveStar": 2
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.298Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 2 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Labora%20Zahle&query_place_id=ChIJMStFQB81HxURDFOXx6feLrk",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=4NpfYVQv_3CaOkQ4FSNtWw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=76.91794&pitch=0&thumbfov=100",
+      "kgmid": "/g/11dym51543",
+      "businessProfileId": null
+    },
+    {
+      "title": "Charity Donation Silo",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Charity",
+      "address": "RVXX+VXR, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "RVXX+VXR",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.charitydonationfoundation.org/",
+      "phone": "+961 81 170 806",
+      "phoneUnformatted": "+96181170806",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8497432,
+        "lng": 35.8998995
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJn82o-pE1HxURZpCdpCtNL80",
+      "categories": [
+        "Charity"
+      ],
+      "fid": "0x151f3591faa8cd9f:0xcd2f4d2ba49d9066",
+      "cid": "14785120951521349734",
+      "reviewsCount": null,
+      "imagesCount": 74,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.298Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Charity%20Donation%20Silo&query_place_id=ChIJn82o-pE1HxURZpCdpCtNL80",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkhwe2qk1mVGJWTfjy90XIu3huB745aU-G8lohG6blQBmQo6FGQ_HPjGhLCVliVhOgfTYUUkXdXnSFvxyf-pnOKfJcHLpIblQwHLR0dqmM5wns3pFVDmMzg93jEqBwfSlw6rBqT5Q=w426-h240-k-no",
+      "kgmid": "/g/11h2n75ypt",
+      "businessProfileId": null
+    },
+    {
+      "title": "مركز كنيسة الكرمة الحقيقّة للإغاثة",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Charity",
+      "address": "Unnamed Road, Lebanon",
+      "neighborhood": null,
+      "street": "Unnamed Road",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 81 105 883",
+      "phoneUnformatted": "+96181105883",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8439099,
+        "lng": 35.9203458
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.7,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJmZ07YKfLGBURbDydYNztWGY",
+      "categories": [
+        "Charity"
+      ],
+      "fid": "0x1518cba7603b9d99:0x6658eddc609d3c6c",
+      "cid": "7374905920588692588",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 2
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.299Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "From the business": [
+          {
+            "Identifies as women-owned": true
+          }
+        ],
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": false
+          },
+          {
+            "Wheelchair accessible restroom": false
+          },
+          {
+            "Wheelchair accessible seating": false
+          }
+        ],
+        "Crowd": [
+          {
+            "Transgender safespace": true
+          }
+        ],
+        "Recycling": [
+          {
+            "Clothing": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D8%B1%D9%83%D8%B2%20%D9%83%D9%86%D9%8A%D8%B3%D8%A9%20%D8%A7%D9%84%D9%83%D8%B1%D9%85%D8%A9%20%D8%A7%D9%84%D8%AD%D9%82%D9%8A%D9%82%D9%91%D8%A9%20%D9%84%D9%84%D8%A5%D8%BA%D8%A7%D8%AB%D8%A9&query_place_id=ChIJmZ07YKfLGBURbDydYNztWGY",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11hflv56r8",
+      "businessProfileId": "3349955653767838847"
+    },
+    {
+      "title": "Medair Zahle",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "Lebanon",
+      "neighborhood": null,
+      "street": "Lebanon",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://medair.org/",
+      "phone": "+961 71 157 388",
+      "phoneUnformatted": "+96171157388",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.83887,
+        "lng": 35.9215115
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.7,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ5Ted5dHKGBUR24nxZ2iLstk",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x1518cad1e59d37e5:0xd9b28b6867f189db",
+      "cid": "15686753732621601243",
+      "reviewsCount": 34,
+      "reviewsDistribution": {
+        "oneStar": 8,
+        "twoStar": 1,
+        "threeStar": 3,
+        "fourStar": 3,
+        "fiveStar": 19
+      },
+      "imagesCount": 4,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.299Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Medair%20Zahle&query_place_id=ChIJ5Ted5dHKGBUR24nxZ2iLstk",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlCPchCXA7WBI7lWjUeSz5fEh9xAgeV7mjBTB9mLzCg7eGlbEsvgiPRVlXSZArn0nW1hD0N2bX36bwEh5_DzI84yvJbVllVR69FxfONhe03R7iTp3YdGvRUXAMzSPSFrg08N3g=w426-h240-k-no",
+      "kgmid": "/g/11fz56f_sz",
+      "businessProfileId": "72291991828646045"
+    },
+    {
+      "title": "Oxfam Lebanon - Zahle",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-profit organization",
+      "address": "RWPC+J43, Maalaqah, Lebanon",
+      "neighborhood": null,
+      "street": "RWPC+J43",
+      "city": "Maalaqah",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.oxfam.org/",
+      "phone": "+961 1 611 823",
+      "phoneUnformatted": "+9611611823",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.83652,
+        "lng": 35.9202913
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.1,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJMU7529PKGBURImGdWcyXvm8",
+      "categories": [
+        "Non-profit organization"
+      ],
+      "fid": "0x1518cad3dbf94e31:0x6fbe97cc599d6122",
+      "cid": "8052040087717634338",
+      "reviewsCount": 8,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 1,
+        "threeStar": 4,
+        "fourStar": 0,
+        "fiveStar": 2
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.299Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8:30 AM to 5:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8:30 AM to 5:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8:30 AM to 5:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8:30 AM to 5:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Oxfam%20Lebanon%20-%20Zahle&query_place_id=ChIJMU7529PKGBURImGdWcyXvm8",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11dy1fvzhy",
+      "businessProfileId": null
+    },
+    {
+      "title": "Danish Refugee Council - Bekaa Office",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "Zahlé - Baalbek Hwy, Lebanon",
+      "neighborhood": null,
+      "street": "Zahlé - Baalbek Hwy",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.drc.ngo/",
+      "phone": "+961 8 931 928",
+      "phoneUnformatted": "+9618931928",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8369522,
+        "lng": 35.9199752
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.2,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJx5VEhJzLGBURNCpx8vMHy3o",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x1518cb9c844495c7:0x7acb07f3f2712a34",
+      "cid": "8848174637225421364",
+      "reviewsCount": 13,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 1,
+        "threeStar": 1,
+        "fourStar": 1,
+        "fiveStar": 9
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.299Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Danish%20Refugee%20Council%20-%20Bekaa%20Office&query_place_id=ChIJx5VEhJzLGBURNCpx8vMHy3o",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlILEUbhcn8ZT8sDoClUh5ZPLZsCdkMuNBAqBQAY13YUN4eB9dybnbf59bcmUJs4zqTXDSgTQ4QFBEVDzLGuHc4ZxeWT4vkA-cQEEAtAb9723yGkajSHwlP7gDN1swJsgN9ClnNKA=w408-h306-k-no",
+      "kgmid": "/g/11hz3_2vcj",
+      "businessProfileId": null
+    },
+    {
+      "title": "Salam LADC",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "Samir Sadir Building Next to Best Home، Floor، 1, Ksara, Lebanon",
+      "neighborhood": null,
+      "street": "Samir Sadir Building Next to Best Home، Floor، 1",
+      "city": "Ksara",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.salamladc.org/",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8287584,
+        "lng": 35.9004729
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.2,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJI8e4Y-gzHxUR1Hd2NM3mAiI",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x151f33e863b8c723:0x2202e6cd347677d4",
+      "cid": "2450774916265834452",
+      "reviewsCount": 6,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 4
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.299Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Salam%20LADC&query_place_id=ChIJI8e4Y-gzHxUR1Hd2NM3mAiI",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkls5pajdDKc1Qwti0B0jnnYI6VStcJuA3nHBHnSjnZtAKRk9e3TD1mt4myRJnrvBz8lRohI6Z3tb1tHBchsf4chR7ajjOucL4r_FOGEb1DpZSO5DxNcgvxgdn1rtUqCw9dwK6D=w408-h272-k-no",
+      "kgmid": "/g/11glw40myv",
+      "businessProfileId": "8482890562845401081"
+    },
+    {
+      "title": "We World Zahle office",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "RWJ3+GGV 3821, Saint George street, Ksara, Lebanon",
+      "neighborhood": null,
+      "street": "RWJ3+GGV 3821, Saint George street",
+      "city": "Ksara",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.weworld.it/en/what-we-do/global-projects/libano",
+      "phone": "+961 81 610 333",
+      "phoneUnformatted": "+96181610333",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8313661,
+        "lng": 35.9037956
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJEzY-rNk0HxUR3ANgnTznnig",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x151f34d9ac3e3613:0x289ee73c9d6003dc",
+      "cid": "2927031055361770460",
+      "reviewsCount": 12,
+      "reviewsDistribution": {
+        "oneStar": 2,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 2,
+        "fiveStar": 7
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.299Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=We%20World%20Zahle%20office&query_place_id=ChIJEzY-rNk0HxUR3ANgnTznnig",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=lWU38ff7GIc4EJoiibjcnw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=220.65852&pitch=0&thumbfov=100",
+      "kgmid": "/g/11f37jxt2g",
+      "businessProfileId": null
+    },
+    {
+      "title": "Dar Al Sadaka",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Social services organization",
+      "address": "RVMR+VMR, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "RVMR+VMR",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.daralsadaka.com/",
+      "phone": "+961 8 806 060",
+      "phoneUnformatted": "+9618806060",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8347287,
+        "lng": 35.8916356
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJd9XfLuc0HxUR5rfWwGCOong",
+      "categories": [
+        "Social services organization"
+      ],
+      "fid": "0x151f34e72edfd577:0x78a28e60c0d6b7e6",
+      "cid": "8692666776981780454",
+      "reviewsCount": 51,
+      "reviewsDistribution": {
+        "oneStar": 3,
+        "twoStar": 2,
+        "threeStar": 10,
+        "fourStar": 12,
+        "fiveStar": 24
+      },
+      "imagesCount": 17,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.299Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 3 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Dar%20Al%20Sadaka&query_place_id=ChIJd9XfLuc0HxUR5rfWwGCOong",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 11,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnPbq8EVVn2I3yIsmNZqzXNd7I6SLVZq5xb9zgjKApEFomxtl94sstnPMNH8V5PmuLhxikYFq-9Ssnodrj7jpDHSiq-TkY96_ZIq9zqbS8t1yF9PsSxSCNKLntWsCUMDHLNKAkFeg=w506-h240-k-no",
+      "kgmid": "/g/11c6t898sc",
+      "businessProfileId": null
+    },
+    {
+      "title": "himaya Zahle",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "RWG2+98G, Haouch El Oumaraa, Lebanon",
+      "neighborhood": null,
+      "street": "RWG2+98G",
+      "city": "Haouch El Oumaraa",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8259345,
+        "lng": 35.9008426
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJhQPMhVc1HxURo9Cxvy9Y1DY",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x151f355785cc0385:0x36d4582fbfb1d0a3",
+      "cid": "3950879735213576355",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.305Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=himaya%20Zahle&query_place_id=ChIJhQPMhVc1HxURo9Cxvy9Y1DY",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 13,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11jp11_4wk",
+      "businessProfileId": null
+    },
+    {
+      "title": "Dar Al Saada",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "RVMH+7GH, Unnamed Road, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "RVMH+7GH, Unnamed Road",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 570 932",
+      "phoneUnformatted": "+9613570932",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.833185,
+        "lng": 35.8788609
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.9,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ7XELk_A0HxURHNnqAAlJL-c",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x151f34f0930b71ed:0xe72f490900ead91c",
+      "cid": "16658613849685678364",
+      "reviewsCount": 12,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 4,
+        "fourStar": 1,
+        "fiveStar": 6
+      },
+      "imagesCount": 6,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.306Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10:30 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "10:30 AM to 6 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Dar%20Al%20Saada&query_place_id=ChIJ7XELk_A0HxURHNnqAAlJL-c",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 14,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmYY3z4lsqtxm9-ijgrKcniEYZhPim4H5FuL5e43LheVQuOwtX9sCnq_xeT3uZTsWYg2EBRmTUvkCMrMf0Ze_JP0E2lIdHP9ixEWPRkzviTv20PxbGfOpETEatnDxPyuD9I8O7K=w426-h240-k-no",
+      "kgmid": "/g/11f15g056_",
+      "businessProfileId": null
+    },
+    {
+      "title": "Triumphant mercy Zahle جمعية الرحمة المنتصرة زحلة",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "RWHC+CC7, Unnamed Road, Lebanon",
+      "neighborhood": null,
+      "street": "RWHC+CC7, Unnamed Road",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://tm-lebanon.com/",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8285446,
+        "lng": 35.9210624
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.8,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJG5NVurPLGBUR3hGuj9LqSo4",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x1518cbb3ba55931b:0x8e4aead28fae11de",
+      "cid": "10253265691736936926",
+      "reviewsCount": 4,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 3
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.306Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7:30 AM to 2:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7:30 AM to 2:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7:30 AM to 2:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7:30 AM to 2:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7:30 AM to 2:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Triumphant%20mercy%20Zahle%20%D8%AC%D9%85%D8%B9%D9%8A%D8%A9%20%D8%A7%D9%84%D8%B1%D8%AD%D9%85%D8%A9%20%D8%A7%D9%84%D9%85%D9%86%D8%AA%D8%B5%D8%B1%D8%A9%20%D8%B2%D8%AD%D9%84%D8%A9&query_place_id=ChIJG5NVurPLGBUR3hGuj9LqSo4",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 15,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkNtWh1TghZPy6Ng2fk3Se9XexhGmv3U6ZblryJU0_ilmV6Y_2caHagHwnGs3nP60IVkoL8we-UuTxQtMqvu8O5aX-b9IGY2Es2DvUyzO7Q1ImmJdTRZ71DwqJECO4C4LRGM8m08g=w453-h240-k-no",
+      "kgmid": "/g/11h3fs03wk",
+      "businessProfileId": null
+    },
+    {
+      "title": "Norwegian Refugee Council - Zahle office",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "RVGV+5JJ, Ksara, Lebanon",
+      "neighborhood": null,
+      "street": "RVGV+5JJ",
+      "city": "Ksara",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.nrc.no/",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8254515,
+        "lng": 35.8940151
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJG1GZgIk1HxURf5m7VB1m_I0",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x151f35898099511b:0x8dfc661d54bb997f",
+      "cid": "10231164729640589695",
+      "reviewsCount": 6,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 0,
+        "fiveStar": 4
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.306Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "6 AM to 10 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "6 AM to 10 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "6 AM to 10 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "6 AM to 10 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "6 AM to 10 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8:30 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "6 AM to 10 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Norwegian%20Refugee%20Council%20-%20Zahle%20office&query_place_id=ChIJG1GZgIk1HxURf5m7VB1m_I0",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 16,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=bg5CoxXdUPcne2LkrBMHyg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=295.87805&pitch=0&thumbfov=100",
+      "kgmid": "/g/11h2fg6s0h",
+      "businessProfileId": null
+    },
+    {
+      "title": "NABA",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "A4, Qasernaba, Lebanon",
+      "neighborhood": null,
+      "street": "A4",
+      "city": "Qasernaba",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://naba-lb.ngo/",
+      "phone": "+961 70 980 245",
+      "phoneUnformatted": "+96170980245",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.854721,
+        "lng": 35.862285
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJdxYjEes1HxUR4PJjAlJW3Dw",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x151f35eb11231677:0x3cdc56520263f2e0",
+      "cid": "4385475047379432160",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.306Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 AM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=NABA&query_place_id=ChIJdxYjEes1HxUR4PJjAlJW3Dw",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11zdtb7xv1",
+      "businessProfileId": "9612560493457562877"
+    },
+    {
+      "title": "EFADA",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "VW3M+6HH, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "VW3M+6HH",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 432 406",
+      "phoneUnformatted": "+9613432406",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8530545,
+        "lng": 35.934
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJQ3SZ47zKGBUROndieSmBeuk",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x1518cabce3997443:0xe97a81297962773a",
+      "cid": "16823901373126047546",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.306Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=EFADA&query_place_id=ChIJQ3SZ47zKGBUROndieSmBeuk",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 18,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=hMRMoVz0ZWUDTJ40dRf09w&cb_client=search.gws-prod.gps&w=408&h=240&yaw=359.64902&pitch=0&thumbfov=100",
+      "kgmid": "/g/11gfxmqq8s",
+      "businessProfileId": null
+    },
+    {
+      "title": "Michel Daher Social Foundation",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Non-governmental organization",
+      "address": "Delta Trading Building, Main road, Lebanon",
+      "neighborhood": null,
+      "street": "Delta Trading Building, Main road",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://daherfoundation.org/",
+      "phone": "+961 8 811 333",
+      "phoneUnformatted": "+9618811333",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8570108,
+        "lng": 35.9418942
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.6,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJvWtGfUnLGBURhlCof8HGmU8",
+      "categories": [
+        "Non-governmental organization"
+      ],
+      "fid": "0x1518cb497d466bbd:0x4f99c6c17fa85086",
+      "cid": "5735834134805762182",
+      "reviewsCount": 41,
+      "reviewsDistribution": {
+        "oneStar": 2,
+        "twoStar": 0,
+        "threeStar": 3,
+        "fourStar": 3,
+        "fiveStar": 33
+      },
+      "imagesCount": 5,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:35.306Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ],
+        "Recycling": [
+          {
+            "Clothing": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Michel%20Daher%20Social%20Foundation&query_place_id=ChIJvWtGfUnLGBURhlCof8HGmU8",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9024955,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmHHJhi8Fd3hRnrw2IDHVobrLsCzj-X6UFABkgOgClwlYT4L06ondsIVBzkTkStlv73IyeGn1QgBmsacVYkRhvnIl84yuuV3D7T24UZsbeniJRSSw72SwihW8c0_2kynrcRQPNd8-5f8syg=w519-h240-k-no",
+      "kgmid": "/g/11fl0_tsnp",
+      "businessProfileId": "18203025328436656210"
+    },
+    {
+      "title": "Al Mahaba Bedouin School",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "High school",
+      "address": "Ain Al Hima, Lebanon",
+      "neighborhood": null,
+      "street": "Ain Al Hima",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 097 372",
+      "phoneUnformatted": "+96171097372",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8137877,
+        "lng": 35.8999759
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJASUzAIw1HxUR1QQWS0jPLJg",
+      "categories": [
+        "High school"
+      ],
+      "fid": "0x151f358c00332501:0x982ccf484b1604d5",
+      "cid": "10965367102144644309",
+      "reviewsCount": null,
+      "imagesCount": 14,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.058Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7:30 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7:30 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7:30 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7:30 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7:30 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "7:30 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Al%20Mahaba%20Bedouin%20School&query_place_id=ChIJASUzAIw1HxUR1QQWS0jPLJg",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmNSfO6mi-iP8jbkCNro76K3vihR94IefzErx-U6ll8R1KGrQ5RXb719xUCszCyt0f3W3BW1OymOPtb-DFaSs0al8bntLHo-ufJa4NHpxYQxxh6YGWhUnqF8-089FAxRTJy9SoQ=w417-h240-k-no",
+      "kgmid": "/g/11f5q0c648",
+      "businessProfileId": "17167861575832929617"
+    },
+    {
+      "title": "UNRWA Jefna School",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "General education school",
+      "address": "RVCF+RJG, Taalbaiya, Lebanon",
+      "neighborhood": null,
+      "street": "RVCF+RJG",
+      "city": "Taalbaiya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8223358,
+        "lng": 35.8746187
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJq7G39Nw1HxURLb2b-wA5xcM",
+      "categories": [
+        "General education school"
+      ],
+      "fid": "0x151f35dcf4b7b1ab:0xc3c53900fb9bbd2d",
+      "cid": "14106744084192017709",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.058Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Open 24 hours"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=UNRWA%20Jefna%20School&query_place_id=ChIJq7G39Nw1HxURLb2b-wA5xcM",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=pzqbFFOyfsnkSN8cWvZ46w&cb_client=search.gws-prod.gps&w=408&h=240&yaw=226.26315&pitch=0&thumbfov=100",
+      "kgmid": "/g/11t4b3ptls",
+      "businessProfileId": null
+    },
+    {
+      "title": "مدرسة الصداقة",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Middle school",
+      "address": "RVCJ+FXF, Saadnayel, Lebanon",
+      "neighborhood": null,
+      "street": "RVCJ+FXF",
+      "city": "Saadnayel",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8211819,
+        "lng": 35.8824117
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJh7rZmLc1HxUR3BHKC3cWa6E",
+      "categories": [
+        "Middle school"
+      ],
+      "fid": "0x151f35b798d9ba87:0xa16b16770bca11dc",
+      "cid": "11631415163169149404",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.058Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D8%AF%D8%B1%D8%B3%D8%A9%20%D8%A7%D9%84%D8%B5%D8%AF%D8%A7%D9%82%D8%A9&query_place_id=ChIJh7rZmLc1HxUR3BHKC3cWa6E",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=ls-C1I8eR4tFaR02GUs__A&cb_client=search.gws-prod.gps&w=408&h=240&yaw=277.0735&pitch=0&thumbfov=100",
+      "kgmid": "/g/11v17fts00",
+      "businessProfileId": null
+    },
+    {
+      "title": "aljarmak school",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Middle school",
+      "address": "RVFH+QJ7, Saadnayel, Lebanon",
+      "neighborhood": null,
+      "street": "RVFH+QJ7",
+      "city": "Saadnayel",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8244026,
+        "lng": 35.8790521
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJzbJ5UXg1HxUR1NXBwM9TrtA",
+      "categories": [
+        "Middle school"
+      ],
+      "fid": "0x151f35785179b2cd:0xd0ae53cfc0c1d5d4",
+      "cid": "15037048357593929172",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.058Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=aljarmak%20school&query_place_id=ChIJzbJ5UXg1HxUR1NXBwM9TrtA",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=SUJ-28b5oFo06wtQlA157Q&cb_client=search.gws-prod.gps&w=408&h=240&yaw=138.1045&pitch=0&thumbfov=100",
+      "kgmid": "/g/11swn9_pyg",
+      "businessProfileId": null
+    },
+    {
+      "title": "The school",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "General education school",
+      "address": "RV9J+WHX, Saadnayel, Lebanon",
+      "neighborhood": null,
+      "street": "RV9J+WHX",
+      "city": "Saadnayel",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 044 966",
+      "phoneUnformatted": "+96170044966",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8198543,
+        "lng": 35.8814855
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJXyz04po1HxUR3hGCwkYFmG4",
+      "categories": [
+        "General education school"
+      ],
+      "fid": "0x151f359ae2f42c5f:0x6e980546c28211de",
+      "cid": "7969125342101246430",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.058Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=The%20school&query_place_id=ChIJXyz04po1HxUR3hGCwkYFmG4",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=pky-8KsAezXY4kZ74PVulg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=46.577587&pitch=0&thumbfov=100",
+      "kgmid": "/g/11nsvz_9t3",
+      "businessProfileId": null
+    },
+    {
+      "title": "Saadnayel Secondary Public School",
+      "subTitle": "ثانوية سعدنايل الرسمية",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Public educational institution",
+      "address": "RVCJ+P9C, Saadnayel, Lebanon",
+      "neighborhood": null,
+      "street": "RVCJ+P9C",
+      "city": "Saadnayel",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8218198,
+        "lng": 35.8808808
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJo6YTDI00HxURS3ZQz8AA3Gs",
+      "categories": [
+        "Public educational institution"
+      ],
+      "fid": "0x151f348d0c13a6a3:0x6bdc00c0cf50764b",
+      "cid": "7772087885046511179",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.059Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Amenities": [
+          {
+            "Restroom": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Saadnayel%20Secondary%20Public%20School&query_place_id=ChIJo6YTDI00HxURS3ZQz8AA3Gs",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=QKBuI6pAFP9zDIL_KOif7w&cb_client=search.gws-prod.gps&w=408&h=240&yaw=172.80185&pitch=0&thumbfov=100",
+      "kgmid": "/g/11cs2h2vhj",
+      "businessProfileId": null
+    },
+    {
+      "title": "Al Nashe' Al Hadis school",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "General education school",
+      "address": "RV89+3X6, Taalbaiya, Lebanon",
+      "neighborhood": null,
+      "street": "RV89+3X6",
+      "city": "Taalbaiya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8151556,
+        "lng": 35.869887
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJR5ZFKQA1HxUR6zsrn4wB5Vo",
+      "categories": [
+        "General education school"
+      ],
+      "fid": "0x151f350029459647:0x5ae5018c9f2b3beb",
+      "cid": "6549642936557714411",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.059Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Al%20Nashe'%20Al%20Hadis%20school&query_place_id=ChIJR5ZFKQA1HxUR6zsrn4wB5Vo",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=2xJIevJ0haodEsP4JXEhag&cb_client=search.gws-prod.gps&w=408&h=240&yaw=128.94527&pitch=0&thumbfov=100",
+      "kgmid": "/g/11whp9wn00",
+      "businessProfileId": null
+    },
+    {
+      "title": "Averroes College Taalbaya",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Hauptschule (lower-tier secondary school)",
+      "address": "Taalbaiya, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Taalbaiya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 376 664",
+      "phoneUnformatted": "+9613376664",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8163841,
+        "lng": 35.8756204
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJL8GBwIg0HxURNaSlAi6eApc",
+      "categories": [
+        "Hauptschule (lower-tier secondary school)",
+        "School"
+      ],
+      "fid": "0x151f3488c081c12f:0x97029e2e02a5a435",
+      "cid": "10881433570130633781",
+      "reviewsCount": null,
+      "imagesCount": 75,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.059Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 2:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 2:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 2:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 2:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 2:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Averroes%20College%20Taalbaya&query_place_id=ChIJL8GBwIg0HxURNaSlAi6eApc",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkGlCf9oKLRofS5VwEV56crUhITc9tKCnIEzAHWInML1LEDBufxNbaJKT37_olR5Fu1g6L-LSkW8aaGJ24G0Zp4AtTxD2Pf22N-rPD9mTYRSVtOmfoYC2M3O0p8zu2sckzAsXnC=w426-h240-k-no",
+      "kgmid": "/g/1tf54yb6",
+      "businessProfileId": "7130345326541625738"
+    },
+    {
+      "title": "مدرسة الثقافة",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Secondary school",
+      "address": "RV8C+9M9, Taalbaiya, Lebanon",
+      "neighborhood": null,
+      "street": "RV8C+9M9",
+      "city": "Taalbaiya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8159229,
+        "lng": 35.8717202
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJZY0w5RE1HxURbffFbd_0DE0",
+      "categories": [
+        "Secondary school"
+      ],
+      "fid": "0x151f3511e5308d65:0x4d0cf4df6dc5f76d",
+      "cid": "5552081681097553773",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.059Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D8%AF%D8%B1%D8%B3%D8%A9%20%D8%A7%D9%84%D8%AB%D9%82%D8%A7%D9%81%D8%A9&query_place_id=ChIJZY0w5RE1HxURbffFbd_0DE0",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=6X919JqcNSua_sEyrPEm3Q&cb_client=search.gws-prod.gps&w=408&h=240&yaw=113.32405&pitch=0&thumbfov=100",
+      "kgmid": "/g/11s7shkgvg",
+      "businessProfileId": null
+    },
+    {
+      "title": "Shebbak Studio",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Art school",
+      "address": "872933, 33.820138, 35, Taalbaiya, Lebanon",
+      "neighborhood": null,
+      "street": "872933, 33.820138, 35",
+      "city": "Taalbaiya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.instagram.com/shebbak_studio/",
+      "phone": "+961 71 901 177",
+      "phoneUnformatted": "+96171901177",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8201219,
+        "lng": 35.8729275
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ1aoxu4g1HxURMrNM2uToyNg",
+      "categories": [
+        "Art school"
+      ],
+      "fid": "0x151f3588bb31aad5:0xd8c8e8e4da4cb332",
+      "cid": "15620991377147212594",
+      "reviewsCount": 9,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 9
+      },
+      "imagesCount": 6,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:40.059Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Children": [
+          {
+            "Good for kids": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Shebbak%20Studio&query_place_id=ChIJ1aoxu4g1HxURMrNM2uToyNg",
+      "searchPageUrl": "https://www.google.com/maps/search/school/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "school",
+      "language": "en",
+      "rank": 12,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnFizop8Df3qFc1zoZMIhrbLkNueukVfiBIGcmDGqEVmHjYab_IjMEXygpV7X-SbHfD4TwTJ3fKmnwpYwDoirS2FSIke_ABKXjEOI6YQ5dyUqrDeMzR9NWWw9i_wq32ymLXNDQGcGRA_ru7=w408-h408-k-no",
+      "kgmid": "/g/11xh3s9nl1",
+      "businessProfileId": "17037084733893965009"
+    },
+    {
+      "title": "Beyond Association",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Educational institution",
+      "address": "RV8R+8M8, Saadnayel, Lebanon",
+      "neighborhood": null,
+      "street": "RV8R+8M8",
+      "city": "Saadnayel",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8157916,
+        "lng": 35.8916925
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJc2Caufo1HxURfq7ajlmRuHc",
+      "categories": [
+        "Educational institution"
+      ],
+      "fid": "0x151f35fab99a6073:0x77b891598edaae7e",
+      "cid": "8626804900062998142",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:43.311Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Beyond%20Association&query_place_id=ChIJc2Caufo1HxURfq7ajlmRuHc",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.81917635541173,35.8853282359345,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=YGng-vhFjq2eNLk_nUW6Fg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=328.03833&pitch=0&thumbfov=100",
+      "kgmid": "/g/11h89gdx3n",
+      "businessProfileId": null
+    },
+    {
+      "title": "SANAD: The Home Hospice Organization of Lebanon Beqaa",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Hospice",
+      "address": "Zahle main road, near St. Charbel Church, Fakhry Building 1st Floor, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "Zahle main road, near St. Charbel Church, Fakhry Building 1st Floor",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 274 865",
+      "phoneUnformatted": "+96171274865",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8429849,
+        "lng": 35.9269521
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJYb2FX-_LGBURPgzg4tiWCws",
+      "categories": [
+        "Hospice"
+      ],
+      "fid": "0x1518cbef5f85bd61:0xb0b96d8e2e00c3e",
+      "cid": "795895617424460862",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:44.294Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=SANAD%3A%20The%20Home%20Hospice%20Organization%20of%20Lebanon%20Beqaa&query_place_id=ChIJYb2FX-_LGBURPgzg4tiWCws",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9539972921965,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 11,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnmnRQlLrUldhIlovzGyM7SQf7aPyVqq5TiI3sFI3AxLpJ8454VlY_0w2b_U94lbZYzFOhgOn73fbRLfewI0NC5vS4f56A0XERzY_2btq0Iao7zC2Hi0vzNqE4AXLOyP_N0MdQ=w408-h272-k-no",
+      "kgmid": "/g/11j4pyqnh_",
+      "businessProfileId": "45224763099167002"
+    },
+    {
+      "title": "Heart for Lebanon - Hope Ministry Center",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Educational institution",
+      "address": "Zahlé - Baalbek Hwy, Lebanon",
+      "neighborhood": null,
+      "street": "Zahlé - Baalbek Hwy",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://heartforlebanon.org/",
+      "phone": "+961 1 688 431",
+      "phoneUnformatted": "+9611688431",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8382594,
+        "lng": 35.9232565
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.2,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJpzTklCbLGBURP7J7DOM0UcA",
+      "categories": [
+        "Educational institution"
+      ],
+      "fid": "0x1518cb2694e434a7:0xc05134e30c7bb23f",
+      "cid": "13857915678167380543",
+      "reviewsCount": 5,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 4
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:44.295Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Heart%20for%20Lebanon%20-%20Hope%20Ministry%20Center&query_place_id=ChIJpzTklCbLGBURP7J7DOM0UcA",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9539972921965,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 15,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkK6yI6opmpxY2BAnT8-rQVuny0lJyE63HN38HxPX_sZxfpeoAbPwA8bPGjt0vnD7NTUH4mYrjN7xDw76wiLMaozaTSceVV3agcjodezV1p2K9jJ64R4teUsJUdT0SqobMCFhwi=w408-h375-k-no",
+      "kgmid": "/g/11h21dzvff",
+      "businessProfileId": null
+    },
+    {
+      "title": "UNHCR Zahle",
+      "subTitle": "Madian",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Corporate office",
+      "address": "Maalaqah, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Maalaqah",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8376212,
+        "lng": 35.9218469
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 3.9,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ9SCol9HKGBURgz8S5mMnw7k",
+      "categories": [
+        "Corporate office"
+      ],
+      "fid": "0x1518cad197a820f5:0xb9c32763e6123f83",
+      "cid": "13385585827490447235",
+      "reviewsCount": 83,
+      "reviewsDistribution": {
+        "oneStar": 12,
+        "twoStar": 8,
+        "threeStar": 3,
+        "fourStar": 15,
+        "fiveStar": 45
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:44.295Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": true
+          },
+          {
+            "Wheelchair accessible parking lot": true
+          }
+        ],
+        "Amenities": [
+          {
+            "Restroom": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=UNHCR%20Zahle&query_place_id=ChIJ9SCol9HKGBURgz8S5mMnw7k",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.847706900000006,35.9539972921965,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmYyUW1st8wNi-8nxH1OcrYg_H_OK-fRtwEpgg351wtqIIEnqAnUKiWUr8boXaVBXVpTaw3qmGWIXikKwvvo2HZjZzWFKft9Of4f_2pDqNm9T7KevDmkvLDhoCHun5KjL37kTxo1I-nUST1=w408-h405-k-no",
+      "kgmid": "/g/11c5gd1n37",
+      "businessProfileId": "5217428746627699352"
+    },
+    {
+      "title": "7ay al amarcen",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Group home",
+      "address": "VV36+VWM bineyet arout Luna, Zahlé, Lebanon",
+      "neighborhood": null,
+      "street": "VV36+VWM bineyet arout Luna",
+      "city": "Zahlé",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.854721,
+        "lng": 35.862285
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJzR2kEAA1HxURa4s3nX6L1Mc",
+      "categories": [
+        "Group home"
+      ],
+      "fid": "0x151f350010a41dcd:0xc7d48b7e9d378b6b",
+      "cid": "14399287284530121579",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:50:58.051Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=7ay%20al%20amarcen&query_place_id=ChIJzR2kEAA1HxURa4s3nX6L1Mc",
+      "searchPageUrl": "https://www.google.com/maps/search/NGO/@33.861972172294145,35.850993707803504,16z?hl=en",
+      "searchString": "NGO",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11xgswc3b0",
+      "businessProfileId": null
+    }
+  ]
+}

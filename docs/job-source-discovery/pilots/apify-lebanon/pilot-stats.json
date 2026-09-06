@@ -1,0 +1,88 @@
+{
+  "total_actual_cost": 2.3116,
+  "raw_record_count": 465,
+  "malformed_count": 0,
+  "canonical_unique_companies": 446,
+  "duplicates_folded_in": 19,
+  "ambiguous_flagged": 4,
+  "by_region": {
+    "Beirut": 59,
+    "Greater Beirut": 39,
+    "Lebanon country-wide": 30,
+    "Jounieh/Keserwan": 57,
+    "Metn": 59,
+    "Baabda": 30,
+    "Nabatieh": 60,
+    "Zahle/Bekaa": 52,
+    "Saida/South Lebanon": 30,
+    "Tripoli/North Lebanon": 38
+  },
+  "by_category": {
+    "Software and IT services": 59,
+    "Accounting/audit/financial services": 30,
+    "Marketing/advertising/graphic design": 30,
+    "Telecom and fintech": 9,
+    "Architecture and interior design": 28,
+    "Hotels/restaurants/hospitality groups": 30,
+    "Manufacturing and factories": 56,
+    "Construction and contracting": 60,
+    "Retail/distribution/e-commerce": 40,
+    "Schools/universities/training institutions": 30,
+    "Logistics and transportation": 27,
+    "Engineering and industrial companies": 30,
+    "Hospitals/clinics/laboratories": 3,
+    "NGOs and professional services": 22
+  },
+  "with_website": 226,
+  "without_website": 220,
+  "run_summaries": [
+    {
+      "run_id": "run-beirut",
+      "status": "SUCCEEDED",
+      "usageTotalUsd": 0.45019999999999993,
+      "item_count": 90
+    },
+    {
+      "run_id": "run-greater-beirut",
+      "status": "SUCCEEDED",
+      "usageTotalUsd": 0.1952,
+      "item_count": 39
+    },
+    {
+      "run_id": "run-jounieh",
+      "status": "SUCCEEDED",
+      "usageTotalUsd": 0.30019999999999997,
+      "item_count": 60
+    },
+    {
+      "run_id": "run-metn",
+      "status": "SUCCEEDED",
+      "usageTotalUsd": 0.45019999999999993,
+      "item_count": 90
+    },
+    {
+      "run_id": "run-nabatieh",
+      "status": "SUCCEEDED",
+      "usageTotalUsd": 0.30019999999999997,
+      "item_count": 60
+    },
+    {
+      "run_id": "run-saida",
+      "status": "SUCCEEDED",
+      "usageTotalUsd": 0.1652,
+      "item_count": 33
+    },
+    {
+      "run_id": "run-tripoli",
+      "status": "SUCCEEDED",
+      "usageTotalUsd": 0.1852,
+      "item_count": 40
+    },
+    {
+      "run_id": "run-zahle",
+      "status": "SUCCEEDED",
+      "usageTotalUsd": 0.2652,
+      "item_count": 53
+    }
+  ]
+}

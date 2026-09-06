@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0212",
+    "canonical_name": "Core Factory",
+    "google_category": "Gym",
+    "address": "Zalka Rd, Lebanon",
+    "city": "",
+    "phone": "+961 71 485 871",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0214",
+    "canonical_name": "Factory Bspoke Interiors",
+    "google_category": "Furniture manufacturer",
+    "address": "VHM3+P93, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0215",
+    "canonical_name": "Alico factory",
+    "google_category": "Manufacturer",
+    "address": "VGXR+QHV, Bourj Hammoud, Lebanon",
+    "city": "Bourj Hammoud",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0221",
+    "canonical_name": "Maalouf Marble Factory",
+    "google_category": "Marble contractor",
+    "address": "Daoura, Lebanon",
+    "city": "Daoura",
+    "phone": "+961 3 606 115",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0225",
+    "canonical_name": "A.Chehab Consulting Engineering Office - HQ",
+    "google_category": "Engineering consultant",
+    "address": "Dora, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0227",
+    "canonical_name": "REC Architecture & Construction",
+    "google_category": "Construction company",
+    "address": "VHWM+3GR, Biaqout, Lebanon",
+    "city": "Biaqout",
+    "phone": "+961 71 852 442",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0228",
+    "canonical_name": "WE DO ENGINEERING sarl",
+    "google_category": "Construction company",
+    "address": "VHR5+42V, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0229",
+    "canonical_name": "Melhem For Engineering & Contracting - MEC",
+    "google_category": "Construction company",
+    "address": "VHQ3+JHX, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "+961 71 117 638",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0230",
+    "canonical_name": "Creative Engineering",
+    "google_category": "Construction company",
+    "address": "VJW2+6RJ, Matn Express Hwy, Bsalim, Lebanon",
+    "city": "Bsalim",
+    "phone": "+961 4 714 432",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0231",
+    "canonical_name": "Moubarak & Associates",
+    "google_category": "Civil engineering company",
+    "address": "Jal El Dib Main Rd, Lebanon",
+    "city": "",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  }
+]

@@ -1,0 +1,29 @@
+[
+  {
+    "internal_row_id": "pilot-0130",
+    "canonical_name": "WakimArchitecture",
+    "google_website": "https://www.instagram.com/wakimarchitecture/",
+    "google_category": "Architecture firm",
+    "address": "Centre Versaille Jounieh Sarba, Lebanon",
+    "city": "",
+    "phone": "+961 76 757 474"
+  },
+  {
+    "internal_row_id": "pilot-0185",
+    "canonical_name": "The Grand Factory",
+    "google_website": "https://www.facebook.com/thegrandfactorybeirut/",
+    "google_category": "Night club",
+    "address": "Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 3 703 371"
+  },
+  {
+    "internal_row_id": "pilot-0362",
+    "canonical_name": "Marie Sharp’s Distribution",
+    "google_website": "https://m.facebook.com/profile.php?id=1581901538697301&ref=content_filter",
+    "google_category": "Distribution service",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 70 177 740"
+  }
+]

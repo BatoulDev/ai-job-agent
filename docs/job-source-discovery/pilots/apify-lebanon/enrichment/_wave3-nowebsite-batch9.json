@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0274",
+    "canonical_name": "Hussein salamy",
+    "google_category": "Construction company",
+    "address": "6CJG+36M, Lebanon",
+    "city": "",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0275",
+    "canonical_name": "Issa Group",
+    "google_category": "Construction company",
+    "address": "5CM8+X84, Tebnine, Lebanon",
+    "city": "Tebnine",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0276",
+    "canonical_name": "Fadi Azar Market",
+    "google_category": "Grocery store",
+    "address": "CPJQ+828, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0277",
+    "canonical_name": "Al ahmadiye Super Market",
+    "google_category": "Grocery store",
+    "address": "main street beside nafora- mimes- hasbaya, Lebanon",
+    "city": "",
+    "phone": "+961 71 329 453",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0278",
+    "canonical_name": "Mini Market Amasha",
+    "google_category": "Grocery store",
+    "address": "CM26+GPG, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 71 858 513",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0279",
+    "canonical_name": "مؤسسة أكرم مداح و اولاده للتجارة العامة",
+    "google_category": "Supermarket",
+    "address": "Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 81 758 713",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0280",
+    "canonical_name": "Jocker Market",
+    "google_category": "Grocery store",
+    "address": "CP97+VQX, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 79 103 118",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0281",
+    "canonical_name": "HSS (Houssam Smart Solutions)",
+    "google_category": "Electronics store",
+    "address": "CM2J+69C, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 76 973 713",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0282",
+    "canonical_name": "محلات السلام",
+    "google_category": "Electronics store",
+    "address": "9MXF+RQR, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 70 604 009",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0283",
+    "canonical_name": "ELECTROHOME",
+    "google_category": "Computer store",
+    "address": "Main Road, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 3 305 828",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  }
+]

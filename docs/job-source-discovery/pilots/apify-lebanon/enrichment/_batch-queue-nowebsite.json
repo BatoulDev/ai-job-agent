@@ -1,0 +1,2072 @@
+[
+  {
+    "internal_row_id": "pilot-0005",
+    "canonical_name": "TechnoWare",
+    "google_category": "Software company",
+    "address": "VFJQ+FX2, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 3 493 249",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0007",
+    "canonical_name": "Anzimaty, Digital Solutions Enabled",
+    "google_category": "Software company",
+    "address": "Saeb Salam Av, Riviera Building, 3rd Floor, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 3 074 628",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0009",
+    "canonical_name": "Edgineers",
+    "google_category": "Software company",
+    "address": "Mar Elias, Al-Hassan Center, Beirut Block B, 7th Floor, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 790 054",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0010",
+    "canonical_name": "HISSABAT/ IT Solutions",
+    "google_category": "Software company",
+    "address": "Cornish Al, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 70 199 446",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0016",
+    "canonical_name": "ROC IN DIGIT",
+    "google_category": "Software company",
+    "address": "VERDUN STREET; NOUR EL HAYAT BLDG.; 6TH FLOOR Unesco street Beirut, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 3 199 381",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0025",
+    "canonical_name": "Cryptic Design",
+    "google_category": "Marketing agency",
+    "address": "Al Sabah Center, Block B, Corniche El Mazraa, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 70 774 354",
+    "regions": "Beirut",
+    "categories": "Marketing/advertising/graphic design"
+  },
+  {
+    "internal_row_id": "pilot-0027",
+    "canonical_name": "Media Pro",
+    "google_category": "Marketing agency",
+    "address": "Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 76 666 755",
+    "regions": "Beirut",
+    "categories": "Marketing/advertising/graphic design"
+  },
+  {
+    "internal_row_id": "pilot-0033",
+    "canonical_name": "Beyond agency",
+    "google_category": "Marketing agency",
+    "address": "VFHW+QXH, Zreik, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 81 148 186",
+    "regions": "Beirut",
+    "categories": "Marketing/advertising/graphic design"
+  },
+  {
+    "internal_row_id": "pilot-0046",
+    "canonical_name": "Intelligile Lebanon",
+    "google_category": "Software company",
+    "address": "waygand street, marfaa building Block M, 4th Floor, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 956 450",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0048",
+    "canonical_name": "FPn (FP netWorth)",
+    "google_category": "Software company",
+    "address": "VGX4+J7H, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 999 050",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0049",
+    "canonical_name": "Xenia Developers",
+    "google_category": "Software company",
+    "address": "33°53'41. 35°31'09.، 4 N 7th St, Lebanon",
+    "city": "Lebanon",
+    "phone": "",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0051",
+    "canonical_name": "SmartCode Internet Solutions",
+    "google_category": "Software company",
+    "address": "VGX2+Q23, Chateaubriand, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+1 581-500-9757",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0058",
+    "canonical_name": "Mass Fluence",
+    "google_category": "Advertising agency",
+    "address": "Downtown, Al Qoura Building, Urugay, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 81 868 145",
+    "regions": "Beirut",
+    "categories": "Marketing/advertising/graphic design"
+  },
+  {
+    "internal_row_id": "pilot-0061",
+    "canonical_name": "Deals In Lebanon",
+    "google_category": "Marketing agency",
+    "address": "7th Floor, Pasteur 40 Bldg, Pasteur Street, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 565 686",
+    "regions": "Beirut",
+    "categories": "Marketing/advertising/graphic design"
+  },
+  {
+    "internal_row_id": "pilot-0079",
+    "canonical_name": "Sqwirl Lab",
+    "google_category": "Software company",
+    "address": "VGQ6+8PF, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "",
+    "regions": "Lebanon country-wide",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0090",
+    "canonical_name": "metrics",
+    "google_category": "Accounting firm",
+    "address": "address centre 3rd floor, Ramlet El Baida, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0091",
+    "canonical_name": "إيبت للمحاسبة و التدقيق - E-bit Accounting & Auditing",
+    "google_category": "Chartered accountant",
+    "address": "سنتر ريفييرا طابق أول, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 700 171",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0093",
+    "canonical_name": "Baghdadi For Accounting and Auditing (BAA)",
+    "google_category": "Accounting firm",
+    "address": "Salim Salam, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 815 081",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0096",
+    "canonical_name": "FIAC - Fathi Ismail Auditing & CNSS",
+    "google_category": "Auditor",
+    "address": "Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 666 778",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0098",
+    "canonical_name": "Metrics for accounting and auditing",
+    "google_category": "Accounting firm",
+    "address": "VF9P+9VF, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 3 745 434",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0105",
+    "canonical_name": "Khries Accounting & Auditing",
+    "google_category": "Accounting firm",
+    "address": "Bechara El Khoury, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 76 076 173",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0112",
+    "canonical_name": "Accounting and Financial Audit consultancy",
+    "google_category": "Accounting firm",
+    "address": "Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 71 990 853",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0117",
+    "canonical_name": "Monasaadeddine",
+    "google_category": "Accounting firm",
+    "address": "VGV2+GP6, beirut - laylake - near rawdat emem sadek school beirut, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0118",
+    "canonical_name": "Gulf Falcon",
+    "google_category": "Accounting firm",
+    "address": "VGV2+GP6 Coca Cola Street, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0119",
+    "canonical_name": "The Back Office Sarl",
+    "google_category": "Accounting firm",
+    "address": "VFWW+GC6, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 368 522",
+    "regions": "Greater Beirut",
+    "categories": "Accounting/audit/financial services"
+  },
+  {
+    "internal_row_id": "pilot-0120",
+    "canonical_name": "UBIQ Innovations",
+    "google_category": "Financial institution",
+    "address": "Arab Bank Bldg., 5th Floor, Banks Street, Downtown, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 999 926",
+    "regions": "Greater Beirut",
+    "categories": "Telecom and fintech"
+  },
+  {
+    "internal_row_id": "pilot-0121",
+    "canonical_name": "Purpl Wallet",
+    "google_category": "Financial institution",
+    "address": "3rd Floor, Aya Tower, Armenia, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 70 208 534",
+    "regions": "Greater Beirut",
+    "categories": "Telecom and fintech"
+  },
+  {
+    "internal_row_id": "pilot-0127",
+    "canonical_name": "PinPay",
+    "google_category": "Corporate office",
+    "address": "VGR4+M66, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 660 781",
+    "regions": "Greater Beirut",
+    "categories": "Telecom and fintech"
+  },
+  {
+    "internal_row_id": "pilot-0128",
+    "canonical_name": "iarchitect",
+    "google_category": "Architecture firm",
+    "address": "Sannin street, Lebanon",
+    "city": "",
+    "phone": "+961 71 604 609",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Architecture and interior design"
+  },
+  {
+    "internal_row_id": "pilot-0133",
+    "canonical_name": "Robert Husseini Architects",
+    "google_category": "Architecture firm",
+    "address": "Right next to Juicy grill, Sea side road, Fouad Chehab, Jounieh, Lebanon",
+    "city": "Jounieh",
+    "phone": "+961 3 244 911",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Architecture and interior design"
+  },
+  {
+    "internal_row_id": "pilot-0140",
+    "canonical_name": "TSArchitects",
+    "google_category": "Architecture firm",
+    "address": "St. George Street, Sarba, Lebanon",
+    "city": "Sarba",
+    "phone": "+961 3 642 776",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Architecture and interior design"
+  },
+  {
+    "internal_row_id": "pilot-0144",
+    "canonical_name": "Mag contracting",
+    "google_category": "Architecture firm",
+    "address": "XJMP+M4F, Jounieh, Lebanon",
+    "city": "Jounieh",
+    "phone": "+961 3 126 111",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Architecture and interior design"
+  },
+  {
+    "internal_row_id": "pilot-0148",
+    "canonical_name": "Holiday Suites Hotel & Beach Resort",
+    "google_category": "Hotel",
+    "address": "New Mina Street, Opposite to Municipality, Next to Middle East Airlines \"MEA\", Jounieh, Lebanon",
+    "city": "Jounieh",
+    "phone": "+961 9 934 120",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Hotels/restaurants/hospitality groups"
+  },
+  {
+    "internal_row_id": "pilot-0161",
+    "canonical_name": "ANGELINI GROUP",
+    "google_category": "Architecture firm",
+    "address": "XJWW+XG6, Maameltein, Lebanon",
+    "city": "Maameltein",
+    "phone": "+961 3 631 137",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Architecture and interior design"
+  },
+  {
+    "internal_row_id": "pilot-0165",
+    "canonical_name": "Hotel Le Noble",
+    "google_category": "Hotel",
+    "address": "WHWW+7XW، المتن dbayeh, Zouq El Kharab, Lebanon",
+    "city": "Zouq El Kharab",
+    "phone": "+961 4 542 750",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Hotels/restaurants/hospitality groups"
+  },
+  {
+    "internal_row_id": "pilot-0170",
+    "canonical_name": "فندق لاغاسي",
+    "google_category": "Hotel",
+    "address": "XJ2C+VHR، Old NDU Road, Zouk Mosbeh, Lebanon",
+    "city": "Zouk Mosbeh",
+    "phone": "",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Hotels/restaurants/hospitality groups"
+  },
+  {
+    "internal_row_id": "pilot-0171",
+    "canonical_name": "Residence De France",
+    "google_category": "Hotel",
+    "address": "WHXV+MG9, Beirut, High Way Road, Nahr El Kalb, Lebanon",
+    "city": "Nahr El Kalb",
+    "phone": "+961 4 540 797",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Hotels/restaurants/hospitality groups"
+  },
+  {
+    "internal_row_id": "pilot-0172",
+    "canonical_name": "Hotel Nahr Al Janna",
+    "google_category": "Hotel",
+    "address": "WJW8+93X, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 4 930 200",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Hotels/restaurants/hospitality groups"
+  },
+  {
+    "internal_row_id": "pilot-0174",
+    "canonical_name": "Has architects",
+    "google_category": "Architecture firm",
+    "address": "Main highway, Lebanon",
+    "city": "",
+    "phone": "+961 3 984 166",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Architecture and interior design"
+  },
+  {
+    "internal_row_id": "pilot-0177",
+    "canonical_name": "sarl BBB•hdQrtr•ceoJozefSaad",
+    "google_category": "Architecture firm",
+    "address": "american embassy aawkar, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 3 452 444",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Architecture and interior design"
+  },
+  {
+    "internal_row_id": "pilot-0182",
+    "canonical_name": "Pinewood Hotel",
+    "google_category": "Bed & breakfast",
+    "address": "WJXM+886, Jeita Grotto Road, Mazraat El Ras, Lebanon",
+    "city": "Mazraat El Ras",
+    "phone": "+961 3 246 317",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Hotels/restaurants/hospitality groups"
+  },
+  {
+    "internal_row_id": "pilot-0186",
+    "canonical_name": "Line Factory",
+    "google_category": "Clothing store",
+    "address": "WH3G+XJX, Jal El Dib, Lebanon",
+    "city": "Jal El Dib",
+    "phone": "+961 70 315 268",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0188",
+    "canonical_name": "Fashion Factory ME",
+    "google_category": "Clothing store",
+    "address": "Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 71 848 122",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0192",
+    "canonical_name": "Solarco Factory",
+    "google_category": "Factory equipment supplier",
+    "address": "VHP3+528, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0199",
+    "canonical_name": "Najm Engineering & Contracting",
+    "google_category": "Civil engineering company",
+    "address": "VHV8+FFJ, Jdeideh, Lebanon",
+    "city": "Jdeideh",
+    "phone": "+961 1 884 554",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0207",
+    "canonical_name": "Webeco factory",
+    "google_category": "Manufacturer",
+    "address": "VHM3+M6F, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0208",
+    "canonical_name": "L'abeille d'Or Factory",
+    "google_category": "Food manufacturer",
+    "address": "VHMH+2XC, Fanar, Lebanon",
+    "city": "Fanar",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0209",
+    "canonical_name": "Louda Clothing Factory",
+    "google_category": "Manufacturer",
+    "address": "Jal El Dib, Lebanon",
+    "city": "Jal El Dib",
+    "phone": "+961 3 249 242",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0210",
+    "canonical_name": "D Factory-Dbayeh",
+    "google_category": "Sweets and dessert buffet",
+    "address": "Dbayeh, Lebanon",
+    "city": "Dbayeh",
+    "phone": "+961 76 492 050",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0211",
+    "canonical_name": "Label Drop Outlet",
+    "google_category": "Outlet store",
+    "address": "Arax St, Bourj Hammoud, Lebanon",
+    "city": "Bourj Hammoud",
+    "phone": "+961 79 378 932",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0212",
+    "canonical_name": "Core Factory",
+    "google_category": "Gym",
+    "address": "Zalka Rd, Lebanon",
+    "city": "",
+    "phone": "+961 71 485 871",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0214",
+    "canonical_name": "Factory Bspoke Interiors",
+    "google_category": "Furniture manufacturer",
+    "address": "VHM3+P93, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0215",
+    "canonical_name": "Alico factory",
+    "google_category": "Manufacturer",
+    "address": "VGXR+QHV, Bourj Hammoud, Lebanon",
+    "city": "Bourj Hammoud",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0221",
+    "canonical_name": "Maalouf Marble Factory",
+    "google_category": "Marble contractor",
+    "address": "Daoura, Lebanon",
+    "city": "Daoura",
+    "phone": "+961 3 606 115",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0225",
+    "canonical_name": "A.Chehab Consulting Engineering Office - HQ",
+    "google_category": "Engineering consultant",
+    "address": "Dora, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0227",
+    "canonical_name": "REC Architecture & Construction",
+    "google_category": "Construction company",
+    "address": "VHWM+3GR, Biaqout, Lebanon",
+    "city": "Biaqout",
+    "phone": "+961 71 852 442",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0228",
+    "canonical_name": "WE DO ENGINEERING sarl",
+    "google_category": "Construction company",
+    "address": "VHR5+42V, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0229",
+    "canonical_name": "Melhem For Engineering & Contracting - MEC",
+    "google_category": "Construction company",
+    "address": "VHQ3+JHX, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "+961 71 117 638",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0230",
+    "canonical_name": "Creative Engineering",
+    "google_category": "Construction company",
+    "address": "VJW2+6RJ, Matn Express Hwy, Bsalim, Lebanon",
+    "city": "Bsalim",
+    "phone": "+961 4 714 432",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0231",
+    "canonical_name": "Moubarak & Associates",
+    "google_category": "Civil engineering company",
+    "address": "Jal El Dib Main Rd, Lebanon",
+    "city": "",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0234",
+    "canonical_name": "Bureau de l'Ingenieur Maroun Romanos",
+    "google_category": "Construction company",
+    "address": "Antelias, Lebanon",
+    "city": "Antelias",
+    "phone": "+961 3 621 820",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0236",
+    "canonical_name": "LFI (Libano-Francaise D'ingenierie)",
+    "google_category": "Civil engineering company",
+    "address": "VHR6+C97, Jdeideh, Lebanon",
+    "city": "Jdeideh",
+    "phone": "+961 1 895 471",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0238",
+    "canonical_name": "Electra Engineering S.A.L",
+    "google_category": "Home builder",
+    "address": "WHCR+XHM, Naqqache, Lebanon",
+    "city": "Naqqache",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0239",
+    "canonical_name": "Engineering & Projects",
+    "google_category": "Construction company",
+    "address": "St Jean paul 2 Mar Takla (Rady Center, Lebanon",
+    "city": "",
+    "phone": "+961 3 947 271",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0242",
+    "canonical_name": "Engineer Elie N. Maalouf Company SAL (EMC)",
+    "google_category": "Corporate office",
+    "address": "Parallel Towers, Block B، Dekwaneh، 4th Floor, Lebanon",
+    "city": "4th Floor",
+    "phone": "+961 1 483 061",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0245",
+    "canonical_name": "Antelias",
+    "google_category": "Construction company",
+    "address": "WH8Q+RFF, Antelias, Lebanon",
+    "city": "Antelias",
+    "phone": "",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0247",
+    "canonical_name": "Almabani General Contractors - Beirut Office",
+    "google_category": "Construction company",
+    "address": "Matin, Lebanon",
+    "city": "Matin",
+    "phone": "+961 4 521 180",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0248",
+    "canonical_name": "sakkar company",
+    "google_category": "Construction company",
+    "address": "VGRR+C34, Bourj Hammoud, Lebanon",
+    "city": "Bourj Hammoud",
+    "phone": "+961 3 002 708",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0252",
+    "canonical_name": "Akiki & Salloum Contractor",
+    "google_category": "Home builder",
+    "address": "Jdeideh mar Takla street St Joseph building, Jdeideh, Lebanon",
+    "city": "Jdeideh",
+    "phone": "+961 3 788 603",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0256",
+    "canonical_name": "Mega Group s.a.l.",
+    "google_category": "Construction company",
+    "address": "Antelias, Lebanon",
+    "city": "Antelias",
+    "phone": "+961 4 408 099",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0259",
+    "canonical_name": "Abdo Baroud For Trading&Contarcting",
+    "google_category": "Construction company",
+    "address": "VPVX+GF8, Mtein, Lebanon",
+    "city": "Mtein",
+    "phone": "+961 71 878 652",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0261",
+    "canonical_name": "MIC Modern Industries for Concrete SAL",
+    "google_category": "Construction company",
+    "address": "WPVH+99X, Abou Mizan, Lebanon",
+    "city": "Abou Mizan",
+    "phone": "",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0262",
+    "canonical_name": "Hmayed Ch",
+    "google_category": "Home builder",
+    "address": "WQ45+F72, Mtein, Lebanon",
+    "city": "Mtein",
+    "phone": "",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0263",
+    "canonical_name": "Asha",
+    "google_category": "Real estate developer",
+    "address": "WP3W+6HG, Mtein, Lebanon",
+    "city": "Mtein",
+    "phone": "+961 3 132 578",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0264",
+    "canonical_name": "NEXT ENGINEERING s.a.r.l",
+    "google_category": "Steel distributor",
+    "address": "Unnamed Road bteghrine facing civil defense, Bteghrine, Lebanon",
+    "city": "Bteghrine",
+    "phone": "+961 70 105 704",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0265",
+    "canonical_name": "Baskinta Commercial Center",
+    "google_category": "Construction equipment supplier",
+    "address": "Baskinta, Lebanon",
+    "city": "Baskinta",
+    "phone": "+961 4 250 117",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0266",
+    "canonical_name": "Cabinet de mtein",
+    "google_category": "Home builder",
+    "address": "VPVV+CG5, Mtein, Lebanon",
+    "city": "Mtein",
+    "phone": "",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0268",
+    "canonical_name": "YOUBNA s.a.r.l.",
+    "google_category": "Construction company",
+    "address": "Chalet Suisse, Tawk Center, 3rd Floor, Fanar, Lebanon",
+    "city": "Fanar",
+    "phone": "+961 1 902 413",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0272",
+    "canonical_name": "Majed construction and design",
+    "google_category": "Construction company",
+    "address": "6CG5+RH8, Bir El Sanasel, Lebanon",
+    "city": "Bir El Sanasel",
+    "phone": "+961 3 822 491",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0273",
+    "canonical_name": "Sakka construction",
+    "google_category": "Construction company",
+    "address": "elissar medical center, Soultanieh main road, Soultanieh, Lebanon",
+    "city": "Soultanieh",
+    "phone": "+961 81 695 520",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0274",
+    "canonical_name": "Hussein salamy",
+    "google_category": "Construction company",
+    "address": "6CJG+36M, Lebanon",
+    "city": "",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0275",
+    "canonical_name": "Issa Group",
+    "google_category": "Construction company",
+    "address": "5CM8+X84, Tebnine, Lebanon",
+    "city": "Tebnine",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0276",
+    "canonical_name": "Fadi Azar Market",
+    "google_category": "Grocery store",
+    "address": "CPJQ+828, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0277",
+    "canonical_name": "Al ahmadiye Super Market",
+    "google_category": "Grocery store",
+    "address": "main street beside nafora- mimes- hasbaya, Lebanon",
+    "city": "",
+    "phone": "+961 71 329 453",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0278",
+    "canonical_name": "Mini Market Amasha",
+    "google_category": "Grocery store",
+    "address": "CM26+GPG, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 71 858 513",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0279",
+    "canonical_name": "مؤسسة أكرم مداح و اولاده للتجارة العامة",
+    "google_category": "Supermarket",
+    "address": "Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 81 758 713",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0280",
+    "canonical_name": "Jocker Market",
+    "google_category": "Grocery store",
+    "address": "CP97+VQX, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 79 103 118",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0281",
+    "canonical_name": "HSS (Houssam Smart Solutions)",
+    "google_category": "Electronics store",
+    "address": "CM2J+69C, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 76 973 713",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0282",
+    "canonical_name": "محلات السلام",
+    "google_category": "Electronics store",
+    "address": "9MXF+RQR, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 70 604 009",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0283",
+    "canonical_name": "ELECTROHOME",
+    "google_category": "Computer store",
+    "address": "Main Road, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 3 305 828",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0284",
+    "canonical_name": "Gharzeldeen market",
+    "google_category": "Grocery store",
+    "address": "CPHR+J87, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0285",
+    "canonical_name": "بدوي للإنارة",
+    "google_category": "Electronics store",
+    "address": "9MWG+WV2, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 71 243 893",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0286",
+    "canonical_name": "Khayrat Jnoubna - خيرات جنوبنا",
+    "google_category": "Spice store",
+    "address": "CM3Q+6F4, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 3 104 303",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0287",
+    "canonical_name": "Best Brand Outlet Hasbaya",
+    "google_category": "Outlet store",
+    "address": "CM27+Q86, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0291",
+    "canonical_name": "معرض حسن رشيد للبلاط والحجر",
+    "google_category": "Construction company",
+    "address": "59QR+8C8, Haris, Lebanon",
+    "city": "Haris",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0292",
+    "canonical_name": "Chawki Abou El Ezz Market",
+    "google_category": "Supermarket",
+    "address": "عام, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "+961 71 112 830",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0293",
+    "canonical_name": "زيت زيتون Olive oil , organic",
+    "google_category": "Store",
+    "address": "CPC6+CJF, Bathaniyeh, Lebanon",
+    "city": "Bathaniyeh",
+    "phone": "+961 71 329 453",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0294",
+    "canonical_name": "تعاونية الأمل",
+    "google_category": "Store",
+    "address": "CPCP+2VJ, Khalwat, Lebanon",
+    "city": "Khalwat",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0295",
+    "canonical_name": "فرن الميمساني",
+    "google_category": "Bakery",
+    "address": "CP95+8Q6, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 76 921 223",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0296",
+    "canonical_name": "Mini market zohair",
+    "google_category": "Market",
+    "address": "CPHV+QGH, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "+961 71 304 217",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0297",
+    "canonical_name": "Alameh super market",
+    "google_category": "Shopping mall",
+    "address": "CPC6+5RP, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 71 808 515",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0298",
+    "canonical_name": "Shawki Abou Omar Mahmoud Al Aysami",
+    "google_category": "Clothing store",
+    "address": "CPPX+34J, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0299",
+    "canonical_name": "سوق الجملة",
+    "google_category": "Grocery store",
+    "address": "CP23+X2V, Ain Qenya, Lebanon",
+    "city": "Ain Qenya",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0300",
+    "canonical_name": "Hasbaya model",
+    "google_category": "Clothing store",
+    "address": "CP24+M4, Ain Qana, Lebanon",
+    "city": "Ain Qana",
+    "phone": "+961 71 254 762",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0301",
+    "canonical_name": "BOUBSTERITTO",
+    "google_category": "Cell phone store",
+    "address": "FP7V+PFP, Lebanon",
+    "city": "",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0302",
+    "canonical_name": "Ain kinia",
+    "google_category": "Store",
+    "address": "CP33+2RG, Ain Qenya, Lebanon",
+    "city": "Ain Qenya",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0303",
+    "canonical_name": "Sam services",
+    "google_category": "Shopping mall",
+    "address": "CP97+Q2F, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 70 919 074",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0304",
+    "canonical_name": "محل عادل ذياب - Adel diab store",
+    "google_category": "Supermarket",
+    "address": "CM3Q+887, Unnamed Road, Zaghla, Lebanon",
+    "city": "Zaghla",
+    "phone": "+961 7 553 035",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0305",
+    "canonical_name": "Youssef kazila (venus)",
+    "google_category": "Clothing store",
+    "address": "CM2C+H86, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0306",
+    "canonical_name": "دكانة عمك حسين",
+    "google_category": "Market",
+    "address": "FPFX+W2, Lebanon",
+    "city": "",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0307",
+    "canonical_name": "LJI maintenance",
+    "google_category": "Electronics store",
+    "address": "CP97+QX7, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 3 642 796",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0308",
+    "canonical_name": "Najm group & star plast",
+    "google_category": "Shopping mall",
+    "address": "CPV4+HRC, Rachaiya - Marjaayoun Rd, Kawkaba, Lebanon",
+    "city": "Kawkaba",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0309",
+    "canonical_name": "Hamze Construction",
+    "google_category": "Construction company",
+    "address": "CCV3+G65, Nabatieh, Lebanon",
+    "city": "Nabatieh",
+    "phone": "+961 71 412 005",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0310",
+    "canonical_name": "Speed Construction and Electric",
+    "google_category": "Construction company",
+    "address": "C9VX+XR, Zefta, Lebanon",
+    "city": "Zefta",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0311",
+    "canonical_name": "ZTC Company",
+    "google_category": "Construction company",
+    "address": "Habbouch, Lebanon",
+    "city": "Habbouch",
+    "phone": "+961 78 863 463",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0312",
+    "canonical_name": "Fares Construction And Trading",
+    "google_category": "Construction company",
+    "address": "محطة الضاوي للمحروقات - Dawi Station, Main road in face of, Zefta, Lebanon",
+    "city": "Zefta",
+    "phone": "+961 3 814 421",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0313",
+    "canonical_name": "PRO aluminium",
+    "google_category": "Construction company",
+    "address": "CF3H+39M, Habbouch, Lebanon",
+    "city": "Habbouch",
+    "phone": "+961 70 997 688",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0314",
+    "canonical_name": "Samar",
+    "google_category": "Construction company",
+    "address": "FGM9+88, Jbaa, Lebanon",
+    "city": "Jbaa",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0316",
+    "canonical_name": "الريف للاستشارات وتجهيزات المطاعم و المصانع الغذائية",
+    "google_category": "Construction company",
+    "address": "Arab Salim, Lebanon",
+    "city": "Arab Salim",
+    "phone": "+961 81 250 391",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0317",
+    "canonical_name": "CEC_LB هندسة و مقاولات",
+    "google_category": "Civil engineering company",
+    "address": "حي الحاووز, Roumine, Lebanon",
+    "city": "Roumine",
+    "phone": "+961 3 016 973",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0318",
+    "canonical_name": "Sama Sanitary Ware",
+    "google_category": "Construction company",
+    "address": "CF4H+XCH, Habbouch, Lebanon",
+    "city": "Habbouch",
+    "phone": "+961 7 530 960",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0319",
+    "canonical_name": "FALA Road Contracting S.A.R.L.",
+    "google_category": "Ready mix concrete supplier",
+    "address": "CF65+73G, Kfour, Lebanon",
+    "city": "Kfour",
+    "phone": "+961 7 532 123",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0320",
+    "canonical_name": "منشرة العلي",
+    "google_category": "Construction company",
+    "address": "Deir Al Zahrani, Lebanon",
+    "city": "",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0321",
+    "canonical_name": "Civil Engineer Mohammad Kassem",
+    "google_category": "Construction company",
+    "address": "CGM8+236, Arab Salim, Lebanon",
+    "city": "Arab Salim",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0323",
+    "canonical_name": "كراج أبو الزوز صربا",
+    "google_category": "Garage builder",
+    "address": "Sarba, Lebanon",
+    "city": "Sarba",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0324",
+    "canonical_name": "Automatic doors",
+    "google_category": "Construction company",
+    "address": "Deir Al Zahrani, Lebanon",
+    "city": "",
+    "phone": "+961 3 453 223",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0325",
+    "canonical_name": "S.B.M",
+    "google_category": "Construction company",
+    "address": "Houmine, Ain Qana, Lebanon",
+    "city": "Ain Qana",
+    "phone": "+961 3 758 307",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0326",
+    "canonical_name": "wissam jamoul",
+    "google_category": "Home builder",
+    "address": "CFG8+844, Nabatieh, Lebanon",
+    "city": "Nabatieh",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0327",
+    "canonical_name": "Al Faraj Trading And Construction EST",
+    "google_category": "Sanitation service",
+    "address": "CCQ7+6P4, Lebanon",
+    "city": "",
+    "phone": "+961 71 399 984",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0328",
+    "canonical_name": "مليس حسون",
+    "google_category": "Home builder",
+    "address": "CG96+7F3, Arab Salim, Lebanon",
+    "city": "Arab Salim",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0329",
+    "canonical_name": "REDWOOD WORK",
+    "google_category": "Carpenter",
+    "address": "CC68+QV, Nmairiyeh, Lebanon",
+    "city": "Nmairiyeh",
+    "phone": "+961 76 844 123",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0332",
+    "canonical_name": "HMC",
+    "google_category": "Hospital",
+    "address": "H939+8XP, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 7 726 008",
+    "regions": "Saida/South Lebanon",
+    "categories": "Hospitals/clinics/laboratories"
+  },
+  {
+    "internal_row_id": "pilot-0333",
+    "canonical_name": "Saida Governmental Emergency Hospital (Turkish)",
+    "google_category": "Hospital",
+    "address": "Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 7 755 560",
+    "regions": "Saida/South Lebanon",
+    "categories": "Hospitals/clinics/laboratories"
+  },
+  {
+    "internal_row_id": "pilot-0336",
+    "canonical_name": "Lebanese Transport Company",
+    "google_category": "Transportation service",
+    "address": "H98G+367, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 7 722 783",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0337",
+    "canonical_name": "Relax Transport",
+    "google_category": "Taxi service",
+    "address": "قرب كوكتيل العقاد Saida - al wastani, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 70 840 333",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0338",
+    "canonical_name": "smartline saida",
+    "google_category": "Logistics service",
+    "address": "H94F+R5G, Aabra, Lebanon",
+    "city": "Aabra",
+    "phone": "+961 76 545 251",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0339",
+    "canonical_name": "VIP HAMDAN TRANSPORT",
+    "google_category": "Airport shuttle service",
+    "address": "صيدا،, Lebanon",
+    "city": "صيدا،",
+    "phone": "+961 76 045 107",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0340",
+    "canonical_name": "Towtruck S3oudi transport.",
+    "google_category": "Truck rental agency",
+    "address": "Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 3 897 256",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0341",
+    "canonical_name": "Abu jamal Towr",
+    "google_category": "Transportation service",
+    "address": "H96F+2WQ غسان حمود، لبنان, Hay Iskandarani, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0346",
+    "canonical_name": "تكسيات الانطلاق",
+    "google_category": "Taxi service",
+    "address": "H96H+644, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 7 720 802",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0348",
+    "canonical_name": "شركة البيلاني لخدمات النقل",
+    "google_category": "Transportation service",
+    "address": "Coastal Area, Behind Shawarma Mahatta Lawyer Building, Ground Floor, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 3 933 313",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0351",
+    "canonical_name": "Transland Trading",
+    "google_category": "Import export company",
+    "address": "hijazi center, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 70 402 010",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0352",
+    "canonical_name": "Nakouzi Group",
+    "google_category": "Transportation service",
+    "address": "Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 81 846 001",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0353",
+    "canonical_name": "BAU bus station",
+    "google_category": "Transportation service",
+    "address": "H98F+7VC, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 81 000 873",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0354",
+    "canonical_name": "ATC Import & Export",
+    "google_category": "Shipping service",
+    "address": "H98J+723, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 70 299 119",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0355",
+    "canonical_name": "Trendway shipping",
+    "google_category": "Transportation service",
+    "address": "H98J+62R, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 70 299 119",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0357",
+    "canonical_name": "Nakib taxi company",
+    "google_category": "Transportation service",
+    "address": "حيً البراد مقابل صيدلية الزيباوي, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 71 261 849",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0359",
+    "canonical_name": "Fastkargo",
+    "google_category": "Shipping service",
+    "address": "H98G+G67, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 76 318 318",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0360",
+    "canonical_name": "هادي فرحه غاز ومي",
+    "google_category": "Gas company",
+    "address": "صيدليه الشفاء, طلعت الخناق ابو سمره بجانب, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 76 700 787",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0361",
+    "canonical_name": "Speed delivery",
+    "google_category": "Distribution service",
+    "address": "CRCV+9HM, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0365",
+    "canonical_name": "بلال خشوف للانترنت",
+    "google_category": "Distribution service",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 053 039",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0367",
+    "canonical_name": "Distribution Center of Lebanon DCL",
+    "google_category": "Butcher shop",
+    "address": "CRQJ+68W, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 204 536",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0368",
+    "canonical_name": "Tartoussi factory",
+    "google_category": "Manufacturer",
+    "address": "CRFM+9HX, Bohssas, Lebanon",
+    "city": "Bohssas",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0369",
+    "canonical_name": "Mr Donuts factory",
+    "google_category": "Restaurant",
+    "address": "CRGH+JJ4, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 6 412 841",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0370",
+    "canonical_name": "Eduvate Learning factory",
+    "google_category": "Education center",
+    "address": "CRGH+FF7, Cheikh Hasan Khaled, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 70 365 253",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0371",
+    "canonical_name": "ultra outlet",
+    "google_category": "Outlet store",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 70 286 938",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0372",
+    "canonical_name": "Socks factory",
+    "google_category": "Store",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 514 982",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0373",
+    "canonical_name": "Ghassa Clothes Factory",
+    "google_category": "Clothes and fabric wholesaler",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 114 798",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0374",
+    "canonical_name": "Sara Outlet store",
+    "google_category": "Outlet store",
+    "address": "CRRM+R28, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 81 132 060",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0375",
+    "canonical_name": "Smoothing concrete and floors",
+    "google_category": "Concrete factory",
+    "address": "Miryata, Lebanon",
+    "city": "Miryata",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0376",
+    "canonical_name": "Happy Sleep Factory",
+    "google_category": "Mattress store",
+    "address": "مرج زهور, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 70 997 997",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0379",
+    "canonical_name": "Pompi juice factory",
+    "google_category": "Warehouse",
+    "address": "FR3R+55J, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0380",
+    "canonical_name": "Z closet outlet",
+    "google_category": "Outlet store",
+    "address": "Al tarbi3a, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 70 583 690",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0381",
+    "canonical_name": "chimaly iron factory",
+    "google_category": "Iron works",
+    "address": "CVR3+2G6 jabal mohsen, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0382",
+    "canonical_name": "The Sign Factory",
+    "google_category": "Model design company",
+    "address": "CRWM+QVV, tripoli municipal stadium street, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 70 111 089",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0383",
+    "canonical_name": "CUBS",
+    "google_category": "Sewing company",
+    "address": "CVV3+7G, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 79 143 205",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0384",
+    "canonical_name": "Ahmed Meit Factory Furniture",
+    "google_category": "Furniture manufacturer",
+    "address": "قرب مستوصف العزم، شارع الغرباء، خلف براد البيسار, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 70 782 254",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0385",
+    "canonical_name": "Salwa Soap Factory",
+    "google_category": "Corporate office",
+    "address": "CRRR+7XW, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0386",
+    "canonical_name": "Bongoût Chocolatier & Confisseris",
+    "google_category": "Chocolate factory",
+    "address": "Houwalla Bldg # 1, Azmie Street, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 6 431 503",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0391",
+    "canonical_name": "Al Masriyeen Caravanserai خان المصريين",
+    "google_category": "Historical landmark",
+    "address": "CRPW+F2R, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0392",
+    "canonical_name": "Double bubble",
+    "google_category": "Dessert shop",
+    "address": "Dam w farez, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 71 160 003",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0393",
+    "canonical_name": "Lamaica Design",
+    "google_category": "Furniture manufacturer",
+    "address": "CRRR+65C, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 580 684",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0394",
+    "canonical_name": "سوق النحاسين",
+    "google_category": "Gift shop",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0396",
+    "canonical_name": "Hazertah Public School",
+    "google_category": "Public educational institution",
+    "address": "VVJ9+F7W, Hazerta, Lebanon",
+    "city": "Hazerta",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0397",
+    "canonical_name": "Ecole officielle de Kaa-el-Rim",
+    "google_category": "Government school",
+    "address": "VVMG+5FX, Lebanon - Bekaa - Zahle, Qaa El Rim, Lebanon",
+    "city": "Qaa El Rim",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0398",
+    "canonical_name": "Azm school",
+    "google_category": "Elementary school",
+    "address": "VV36+VWM, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0399",
+    "canonical_name": "Al Iman School baalbeck",
+    "google_category": "Secondary school",
+    "address": "شارع مدرسة الايمان, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 8 372 005",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0400",
+    "canonical_name": "Forkan High School",
+    "google_category": "High school",
+    "address": "RVX7+QJ5 شارع الفرقان، قرية, Lebanon",
+    "city": "قرية",
+    "phone": "+961 7 723 722",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0401",
+    "canonical_name": "Tarak parves",
+    "google_category": "High school",
+    "address": "VV36+VWM, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0402",
+    "canonical_name": "Minaplaza",
+    "google_category": "High school",
+    "address": "VV36+VWM, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0403",
+    "canonical_name": "English international school",
+    "google_category": "English language school",
+    "address": "Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0404",
+    "canonical_name": "COB",
+    "google_category": "General education school",
+    "address": "VV2V+GPH, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0405",
+    "canonical_name": "Evangelical School - المدرسة الإنجيلية",
+    "google_category": "General education school",
+    "address": "VW23+53H, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 8 800 979",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0408",
+    "canonical_name": "Secondary Official Girls School In Zahleh",
+    "google_category": "Girls' high school",
+    "address": "36 40O St, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 8 821 529",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0409",
+    "canonical_name": "St. Georges School مدرسة مار جرجس",
+    "google_category": "General education school",
+    "address": "278 43N St, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0410",
+    "canonical_name": "Active Minds School - مدرسة العقول النشطة",
+    "google_category": "General education school",
+    "address": "RVHJ+WRM, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "+961 8 508 541",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0411",
+    "canonical_name": "Saydit El Zalzaleh Orthodox School",
+    "google_category": "Religious school",
+    "address": "RWV2+QC7, Saydit El Zalzaleh Zahle, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 70 180 679",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0412",
+    "canonical_name": "Hosh Al Oumara Secondary Public School; CERD 800",
+    "google_category": "High school",
+    "address": "RWP4+JJC, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0413",
+    "canonical_name": "Ananiashouse Middle school",
+    "google_category": "Middle school",
+    "address": "RVWW+9C8, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0414",
+    "canonical_name": "SFM- St. Elie School",
+    "google_category": "Parochial school",
+    "address": "Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 8 818 250",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0419",
+    "canonical_name": "مركز كنيسة الكرمة الحقيقّة للإغاثة",
+    "google_category": "Charity",
+    "address": "Unnamed Road, Lebanon",
+    "city": "",
+    "phone": "+961 81 105 883",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0426",
+    "canonical_name": "himaya Zahle",
+    "google_category": "Non-governmental organization",
+    "address": "RWG2+98G, Haouch El Oumaraa, Lebanon",
+    "city": "Haouch El Oumaraa",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0427",
+    "canonical_name": "Dar Al Saada",
+    "google_category": "Non-governmental organization",
+    "address": "RVMH+7GH, Unnamed Road, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 3 570 932",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0431",
+    "canonical_name": "EFADA",
+    "google_category": "Non-governmental organization",
+    "address": "VW3M+6HH, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 3 432 406",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0433",
+    "canonical_name": "Al Mahaba Bedouin School",
+    "google_category": "High school",
+    "address": "Ain Al Hima, Lebanon",
+    "city": "",
+    "phone": "+961 71 097 372",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0434",
+    "canonical_name": "UNRWA Jefna School",
+    "google_category": "General education school",
+    "address": "RVCF+RJG, Taalbaiya, Lebanon",
+    "city": "Taalbaiya",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0435",
+    "canonical_name": "مدرسة الصداقة",
+    "google_category": "Middle school",
+    "address": "RVCJ+FXF, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0436",
+    "canonical_name": "aljarmak school",
+    "google_category": "Middle school",
+    "address": "RVFH+QJ7, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0437",
+    "canonical_name": "The school",
+    "google_category": "General education school",
+    "address": "RV9J+WHX, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "+961 70 044 966",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0438",
+    "canonical_name": "Saadnayel Secondary Public School",
+    "google_category": "Public educational institution",
+    "address": "RVCJ+P9C, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0439",
+    "canonical_name": "Al Nashe' Al Hadis school",
+    "google_category": "General education school",
+    "address": "RV89+3X6, Taalbaiya, Lebanon",
+    "city": "Taalbaiya",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0440",
+    "canonical_name": "Averroes College Taalbaya",
+    "google_category": "Hauptschule (lower-tier secondary school)",
+    "address": "Taalbaiya, Lebanon",
+    "city": "Taalbaiya",
+    "phone": "+961 3 376 664",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0441",
+    "canonical_name": "مدرسة الثقافة",
+    "google_category": "Secondary school",
+    "address": "RV8C+9M9, Taalbaiya, Lebanon",
+    "city": "Taalbaiya",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0442",
+    "canonical_name": "Beyond Association",
+    "google_category": "Educational institution",
+    "address": "RV8R+8M8, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0443",
+    "canonical_name": "SANAD: The Home Hospice Organization of Lebanon Beqaa",
+    "google_category": "Hospice",
+    "address": "Zahle main road, near St. Charbel Church, Fakhry Building 1st Floor, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 71 274 865",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0445",
+    "canonical_name": "UNHCR Zahle",
+    "google_category": "Corporate office",
+    "address": "Maalaqah, Lebanon",
+    "city": "Maalaqah",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0446",
+    "canonical_name": "7ay al amarcen",
+    "google_category": "Group home",
+    "address": "VV36+VWM bineyet arout Luna, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  }
+]

@@ -1,0 +1,3866 @@
+{
+  "run_id": "run-greater-beirut",
+  "apify_run_id": "N5auh6sdtfy0U2TxK",
+  "dataset_id": "F4YB4z1ZCZbNrHDxt",
+  "status": "SUCCEEDED",
+  "usageTotalUsd": 0.1952,
+  "startedAt": "2026-09-05T10:45:31.656Z",
+  "finishedAt": "2026-09-05T10:46:48.679Z",
+  "input": {
+    "searchStringsArray": [
+      "accounting firm",
+      "fintech company"
+    ],
+    "locationQuery": "Beirut Governorate, Lebanon",
+    "maxCrawledPlacesPerSearch": 30,
+    "language": "en",
+    "skipClosedPlaces": true,
+    "website": "allPlaces",
+    "scrapePlaceDetailPage": false,
+    "scrapeContacts": false,
+    "scrapeSocialMediaProfiles": {
+      "facebooks": false,
+      "instagrams": false,
+      "youtubes": false,
+      "tiktoks": false,
+      "twitters": false
+    },
+    "maximumLeadsEnrichmentRecords": 0,
+    "verifyLeadsEnrichmentEmails": false,
+    "maxReviews": 0,
+    "maxImages": 0,
+    "maxQuestions": 0,
+    "scrapeReviewsPersonalData": false,
+    "scrapeTableReservationProvider": false,
+    "scrapeOrderOnline": false,
+    "scrapeDirectories": false,
+    "includeWebResults": false,
+    "enableCompetitorAnalysis": false
+  },
+  "term_region_map": null,
+  "item_count": 39,
+  "items": [
+    {
+      "title": "metrics",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "address centre 3rd floor, Ramlet El Baida, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "address centre 3rd floor, Ramlet El Baida",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8791121,
+        "lng": 35.4824167
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJCTdvIQkXHxUReE5CIIfTot4",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f1709216f3709:0xdea2d38720424e78",
+      "cid": "16042617399962390136",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.401Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 2 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=metrics&query_place_id=ChIJCTdvIQkXHxUReE5CIIfTot4",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 1,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=CmKrRbtFpIqR5wxznYrETw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=85.57168&pitch=0&thumbfov=100",
+      "kgmid": "/g/11y_pzlb1b",
+      "businessProfileId": "7883296485616120928"
+    },
+    {
+      "title": "إيبت للمحاسبة و التدقيق - E-bit Accounting & Auditing",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Chartered accountant",
+      "address": "سنتر ريفييرا طابق أول, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "سنتر ريفييرا طابق أول",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 1 700 171",
+      "phoneUnformatted": "+9611700171",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.879709,
+        "lng": 35.4947788
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJWaTZYnYXHxURSk5S7q0HnYg",
+      "categories": [
+        "Chartered accountant",
+        "Certified public accountant"
+      ],
+      "fid": "0x151f177662d9a459:0x889d07adee524e4a",
+      "cid": "9844032804110880330",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.403Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%A5%D9%8A%D8%A8%D8%AA%20%D9%84%D9%84%D9%85%D8%AD%D8%A7%D8%B3%D8%A8%D8%A9%20%D9%88%20%D8%A7%D9%84%D8%AA%D8%AF%D9%82%D9%8A%D9%82%20-%20E-bit%20Accounting%20%26%20Auditing&query_place_id=ChIJWaTZYnYXHxURSk5S7q0HnYg",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=NS5jbY-TMEWofm9OmokSmQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=324.35995&pitch=0&thumbfov=100",
+      "kgmid": "/g/11rsh1_8l0",
+      "businessProfileId": "6465322328754723145"
+    },
+    {
+      "title": "IBS for Accounting and Legal Services",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "Yamout Center, 3th Floor, Barbir, Saeb Slem, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Yamout Center, 3th Floor, Barbir, Saeb Slem",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://ibs-me.co/",
+      "phone": "+961 71 126 964",
+      "phoneUnformatted": "+96171126964",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8784243,
+        "lng": 35.5063471
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJW2fhMQAXHxURBp_-7YfH8Ao",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f170031e1675b:0xaf0c787edfe9f06",
+      "cid": "788349321417236230",
+      "reviewsCount": 15,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 15
+      },
+      "imagesCount": 5,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.403Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 1 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=IBS%20for%20Accounting%20and%20Legal%20Services&query_place_id=ChIJW2fhMQAXHxURBp_-7YfH8Ao",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWk2F9On_6RD7nvh2uA1eYB26jw3E7-BCksgdzCwqbxhndqlurlQezkYRK2a0xteKaJ-fm6zQmQWZW4p0YNt2ViIkw5xdJnTovHvL0UqHNWUbI9-phxb3He2XVCoU3gOo2IB8oMmNtVOr9KB=w426-h240-k-no",
+      "kgmid": "/g/11yr_06636",
+      "businessProfileId": "15057855324307474290"
+    },
+    {
+      "title": "Baghdadi For Accounting and Auditing (BAA)",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "Salim Salam, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Salim Salam",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 1 815 081",
+      "phoneUnformatted": "+9611815081",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8855766,
+        "lng": 35.4978482
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJl6iUzoMXHxUReoUKQkPyO38",
+      "categories": [
+        "Accounting firm",
+        "Auditor"
+      ],
+      "fid": "0x151f1783ce94a897:0x7f3bf243420a857a",
+      "cid": "9168187837127492986",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.403Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8:30 AM to 4:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8:30 AM to 4:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8:30 AM to 4:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8:30 AM to 4:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Baghdadi%20For%20Accounting%20and%20Auditing%20(BAA)&query_place_id=ChIJl6iUzoMXHxUReoUKQkPyO38",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=75NalqhbkLR78UsR430sTA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=289.6306&pitch=0&thumbfov=100",
+      "kgmid": "/g/11tngdrdsh",
+      "businessProfileId": "9729695370472563872"
+    },
+    {
+      "title": "Certified Professional Accountants & Advisors [CPAA]",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "Daibiss El Morr Street- Mar Elias Boubess Center 1449-Byblos Bank Building Fifth Floor Beirut, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Daibiss El Morr Street- Mar Elias Boubess Center 1449-Byblos Bank Building Fifth Floor Beirut",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.cpaafirm.com/",
+      "phone": "+961 1 700 148",
+      "phoneUnformatted": "+9611700148",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8847339,
+        "lng": 35.4924086
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJwzLtINMXHxURNxbCm6gcwvM",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f17d320ed32c3:0xf3c21ca89bc21637",
+      "cid": "17564633007191627319",
+      "reviewsCount": null,
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.403Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Certified%20Professional%20Accountants%20%26%20Advisors%20%5BCPAA%5D&query_place_id=ChIJwzLtINMXHxURNxbCm6gcwvM",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnRygSYMA7c_C4yajY1Bkym5YfGwWZlNbZDELpL5emBvo5pwSG96D3kXZsG1DSaKQAE95DITmPKjw3AfP1_0_8K4M10SQEQP69tQoTlwbb8MrY2F_e9TCKR6ATx3JUSJYi36iiU5g=w737-h240-k-no",
+      "kgmid": "/g/11fjx_d8yn",
+      "businessProfileId": "9559068543150732465"
+    },
+    {
+      "title": "Paradox Software Solutions",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Software company",
+      "address": "Cournish El-Mazraa, Behind Audi Bank, Landmark Center, Block B, 1st floor, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Cournish El-Mazraa, Behind Audi Bank, Landmark Center, Block B, 1st floor",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.pssleb.com/",
+      "phone": "+961 3 612 712",
+      "phoneUnformatted": "+9613612712",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8776409,
+        "lng": 35.4983746
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ42x7rpkXHxURtvICn2JZ-Es",
+      "categories": [
+        "Software company"
+      ],
+      "fid": "0x151f1799ae7b6ce3:0x4bf859629f02f2b6",
+      "cid": "5474223627178275510",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.403Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8:30 AM to 2 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Paradox%20Software%20Solutions&query_place_id=ChIJ42x7rpkXHxURtvICn2JZ-Es",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=b8XyJ6w4Y-8YgDGupLel4A&cb_client=search.gws-prod.gps&w=408&h=240&yaw=118.4806&pitch=0&thumbfov=100",
+      "kgmid": "/g/11h4fhv56r",
+      "businessProfileId": "2820833367217720977"
+    },
+    {
+      "title": "Sidani & Co",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Corporate office",
+      "address": "Independence st, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Independence st",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.sidanico.com/",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8899681,
+        "lng": 35.4911072
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ4SSBdyYXHxURWWEjgLPp4WE",
+      "categories": [
+        "Corporate office",
+        "Auditor"
+      ],
+      "fid": "0x151f1726778124e1:0x61e1e9b380236159",
+      "cid": "7053175448597127513",
+      "reviewsCount": 4,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 4
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.403Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Amenities": [
+          {
+            "Restroom": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Sidani%20%26%20Co&query_place_id=ChIJ4SSBdyYXHxURWWEjgLPp4WE",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl_zyPxfX4_CYf8mIMYcJNzNnNiBHeXyl04BNS0gEuznXIp5bdmw1edUqnFzopHCRQ34B_al4mplEaZHgkOm2m7zpVs2dcyApEZddM647hRlHjqI3midkcxFIQ8uEEwa5d0xLXo=w427-h240-k-no",
+      "kgmid": "/g/11dz5bww9t",
+      "businessProfileId": "17704245811813768280"
+    },
+    {
+      "title": "FIAC - Fathi Ismail Auditing & CNSS",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Auditor",
+      "address": "Beirut, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 1 666 778",
+      "phoneUnformatted": "+9611666778",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8789205,
+        "lng": 35.5033661
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJHWTIr54XHxUR5e4M8JUpZDk",
+      "categories": [
+        "Auditor"
+      ],
+      "fid": "0x151f179eafc8641d:0x39642995f00ceee5",
+      "cid": "4135476081787203301",
+      "reviewsCount": 18,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 18
+      },
+      "imagesCount": 4,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.404Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=FIAC%20-%20Fathi%20Ismail%20Auditing%20%26%20CNSS&query_place_id=ChIJHWTIr54XHxUR5e4M8JUpZDk",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWldRcS8eunL_AeDMBznZzivBw9dK1og7BtZceauSDgNU52Ytg0nuSQWRdlsmvJj3FwUBdJZhT1P3N6XqngKZHWYntnIO_TWtOiLFtvWRcLh_7XZHLscgmLX2MFBU_Z9KeiuzxZP2wEI1XRE=w408-h544-k-no",
+      "kgmid": "/g/11h_1h4p4m",
+      "businessProfileId": "4418143647770465481"
+    },
+    {
+      "title": "Bayanat Office",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "Barbeer, Ouzai, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Barbeer, Ouzai",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.bayanat-office.com/",
+      "phone": "+961 3 510 261",
+      "phoneUnformatted": "+9613510261",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8787173,
+        "lng": 35.5048409
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJwQtBXbAXHxURW6JBXrNX1eE",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f17b05d410bc1:0xe1d557b35e41a25b",
+      "cid": "16273009256465277531",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.404Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 7:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 7:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 7:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 7:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 7:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10 AM to 2 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Bayanat%20Office&query_place_id=ChIJwQtBXbAXHxURW6JBXrNX1eE",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=LMrI-ZoV1GB87ZvlQvHgNQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=240.08493&pitch=0&thumbfov=100",
+      "kgmid": "/g/11yr97m28h",
+      "businessProfileId": "3611482461466530810"
+    },
+    {
+      "title": "Metrics for accounting and auditing",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "VF9P+9VF, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VF9P+9VF",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 745 434",
+      "phoneUnformatted": "+9613745434",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8684374,
+        "lng": 35.4871861
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJNxMbfQAXHxURJY2v__Fmg5I",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f17007d1b1337:0x928366f1ffaf8d25",
+      "cid": "10557395141049421093",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.404Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Metrics%20for%20accounting%20and%20auditing&query_place_id=ChIJNxMbfQAXHxURJY2v__Fmg5I",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=PaHChPH3lMRRoHk5Tqj6tA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=262.39804&pitch=0&thumbfov=100",
+      "kgmid": "/g/11yzl2cctd",
+      "businessProfileId": null
+    },
+    {
+      "title": "SFAI - Choujaa Audit Firm",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "Beirut, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://choujaafirm.com/",
+      "phone": "+961 1 611 230",
+      "phoneUnformatted": "+9611611230",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8776265,
+        "lng": 35.5215046
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJl7ADnQcXHxUR9_WTrFKB4so",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f17079d03b097:0xcae28152ac93f5f7",
+      "cid": "14619389532480730615",
+      "reviewsCount": 16,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 16
+      },
+      "imagesCount": 7,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.404Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 4:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=SFAI%20-%20Choujaa%20Audit%20Firm&query_place_id=ChIJl7ADnQcXHxUR9_WTrFKB4so",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 11,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlndiGkGByGjaV3hkb9L3m3Thxm0dKHJ3Edtz5kri29Sue8zBuaHSpPwt6jdcpxhdRTddv2U1kiX7NUcJu9lmf1NaUsrzSUu6-mSWTNUNu3ZX3pP5YWC7LQtS5bw2FYGTHU2ic0=w408-h306-k-no",
+      "kgmid": "/g/11c7sqdwy3",
+      "businessProfileId": "14828044640075233167"
+    },
+    {
+      "title": "Jmk auditing & consultancy",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Financial audit",
+      "address": "VGH2+8FC, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VGH2+8FC",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.jmkaudit.com/",
+      "phone": "+961 1 660 998",
+      "phoneUnformatted": "+9611660998",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8783231,
+        "lng": 35.5011455
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJjWQFSh0XHxURihviaD1zwHs",
+      "categories": [
+        "Financial audit"
+      ],
+      "fid": "0x151f171d4a05648d:0x7bc0733d68e21b8a",
+      "cid": "8917253969783430026",
+      "reviewsCount": null,
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.404Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8:45 AM to 1 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Jmk%20auditing%20%26%20consultancy&query_place_id=ChIJjWQFSh0XHxURihviaD1zwHs",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 12,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWksTyVw_VLg5_f67k4p0nz2mbEwRWKxSAnTVnFSpEZUM6JAUctOSIdJW4hA08tRcEj6YesWkktPNkimz2lG15Fh4NPxU5-iqophY0Gb5O36rgHQnfd8SqqPmc77INUm9BBeqNr-Jg=w408-h544-k-no",
+      "kgmid": "/g/11f9zppcsp",
+      "businessProfileId": null
+    },
+    {
+      "title": "Balance Brightness",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting school",
+      "address": "Modca Bldg, Same Bldg as Byblos Bank, 8th Floor, Main Street, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Modca Bldg, Same Bldg as Byblos Bank, 8th Floor, Main Street",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://balancebrightness.com/",
+      "phone": "+961 3 877 480",
+      "phoneUnformatted": "+9613877480",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8955805,
+        "lng": 35.4838632
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ5fun2w8dHxURHBq9YgcmG9Y",
+      "categories": [
+        "Accounting school",
+        "Business management consultant",
+        "Coaching center",
+        "Educational consultant",
+        "Tax preparation service",
+        "Training center"
+      ],
+      "fid": "0x151f1d0fdba7fbe5:0xd61b260762bd1a1c",
+      "cid": "15427966761650952732",
+      "reviewsCount": 11,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 11
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.404Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 9 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 9 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Onsite services": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Balance%20Brightness&query_place_id=ChIJ5fun2w8dHxURHBq9YgcmG9Y",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 13,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=9QyJ4eXtiud-Pc2ccSoPSw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=94.355484&pitch=0&thumbfov=100",
+      "kgmid": "/g/11pds38fy1",
+      "businessProfileId": "11038048547830803350"
+    },
+    {
+      "title": "Anouti Audit Firm",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accountant",
+      "address": "Salim Salam, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Salim Salam",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.al-anouti.com/",
+      "phone": "+961 1 364 245",
+      "phoneUnformatted": "+9611364245",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8895225,
+        "lng": 35.4998389
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJY3rfK9EXHxUREhCh0QBC0T0",
+      "categories": [
+        "Accountant",
+        "Auditor"
+      ],
+      "fid": "0x151f17d12bdf7a63:0x3dd14200d1a11012",
+      "cid": "4454414077730557970",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.404Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8:30 AM to 1 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Anouti%20Audit%20Firm&query_place_id=ChIJY3rfK9EXHxUREhCh0QBC0T0",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 14,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=hLGjqh9p3ebZ6PwGrV5c3w&cb_client=search.gws-prod.gps&w=408&h=240&yaw=349.61392&pitch=0&thumbfov=100",
+      "kgmid": "/g/11hk40sv_f",
+      "businessProfileId": "8588602844446603779"
+    },
+    {
+      "title": "Nexia Majzoub & Partners, CPAs",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "أوتيل ديو Mathaf Center, 5th floor, Museum Area بيروت, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "أوتيل ديو Mathaf Center, 5th floor, Museum Area بيروت",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.majzoubcpas.com/",
+      "phone": "+961 1 612 226",
+      "phoneUnformatted": "+9611612226",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8795156,
+        "lng": 35.5159577
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJI7ztVoQXHxURtVoEkV5um44",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f178456edbc23:0x8e9b6e5e91045ab5",
+      "cid": "10275928327214881461",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.404Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Nexia%20Majzoub%20%26%20Partners%2C%20CPAs&query_place_id=ChIJI7ztVoQXHxURtVoEkV5um44",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 15,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=wQWnWSCbQ-GDd2PjvWBFwQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=106.0761&pitch=0&thumbfov=100",
+      "kgmid": "/g/11h3ms0_jw",
+      "businessProfileId": null
+    },
+    {
+      "title": "Crowe Horwath Professional Auditors",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Certified public accountant",
+      "address": "VFRM+HMJ, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VFRM+HMJ",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.professionalauditors.com/",
+      "phone": "+961 1 341 541",
+      "phoneUnformatted": "+9611341541",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8914509,
+        "lng": 35.4841312
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.8,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ3cJ4pC4XHxURz07e3KolE6A",
+      "categories": [
+        "Certified public accountant",
+        "Corporate office"
+      ],
+      "fid": "0x151f172ea478c2dd:0xa01325aadcde4ecf",
+      "cid": "11534604486406196943",
+      "reviewsCount": 4,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 3
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.405Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Crowe%20Horwath%20Professional%20Auditors&query_place_id=ChIJ3cJ4pC4XHxURz07e3KolE6A",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=aSk_yTEja4lRSZm5aXo34w&cb_client=search.gws-prod.gps&w=408&h=240&yaw=354.81573&pitch=0&thumbfov=100",
+      "kgmid": "/g/11g6wcypwg",
+      "businessProfileId": null
+    },
+    {
+      "title": "Khries Accounting & Auditing",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "Bechara El Khoury, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Bechara El Khoury",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 76 076 173",
+      "phoneUnformatted": "+96176076173",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8878053,
+        "lng": 35.5065507
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJHWSRE94XHxURwZlDp2FOOc0",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f17de1391641d:0xcd394e61a74399c1",
+      "cid": "14787937032772753857",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.405Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 1 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Khries%20Accounting%20%26%20Auditing&query_place_id=ChIJHWSRE94XHxURwZlDp2FOOc0",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 18,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=BVT3yOc4W7Y2AtCliHTVGw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=178.7775&pitch=0&thumbfov=100",
+      "kgmid": "/g/11zkx8nnyt",
+      "businessProfileId": "1838178575583573081"
+    },
+    {
+      "title": "Al Khabir",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Certified public accountant",
+      "address": "VGP5+5QR, Mansourieh, Lebanon",
+      "neighborhood": null,
+      "street": "VGP5+5QR",
+      "city": "Mansourieh",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 275 125",
+      "phoneUnformatted": "+9613275125",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.885486,
+        "lng": 35.5094
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ9bzu6xwXHxURk9eanEIUZ-c",
+      "categories": [
+        "Certified public accountant"
+      ],
+      "fid": "0x151f171cebeebcf5:0xe76714429c9ad793",
+      "cid": "16674318421690341267",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 0
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.405Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Al%20Khabir&query_place_id=ChIJ9bzu6xwXHxURk9eanEIUZ-c",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=m3DfZ4vRnWAYcJfmLhjB9Q&cb_client=search.gws-prod.gps&w=408&h=240&yaw=65.094986&pitch=0&thumbfov=100",
+      "kgmid": "/g/12q4wvyh0",
+      "businessProfileId": null
+    },
+    {
+      "title": "Tony Heneine CPA & Audit Firm",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Chartered accountant",
+      "address": "El arez street, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "El arez street",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.tonyheneine.com/",
+      "phone": "+961 3 242 225",
+      "phoneUnformatted": "+9613242225",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.896458,
+        "lng": 35.5111783
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJk__Yl24XHxURIyPaQlD9GXw",
+      "categories": [
+        "Chartered accountant"
+      ],
+      "fid": "0x151f176e97d8ff93:0x7c19fd5042da2323",
+      "cid": "8942457056281633571",
+      "reviewsCount": null,
+      "imagesCount": 4,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.405Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Tony%20Heneine%20CPA%20%26%20Audit%20Firm&query_place_id=ChIJk__Yl24XHxURIyPaQlD9GXw",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 20,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=Wa-Fj6nLW_GSIxmjETZ6WQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=94.04934&pitch=0&thumbfov=100",
+      "kgmid": "/g/11zbc_vyw_",
+      "businessProfileId": "712773282754110142"
+    },
+    {
+      "title": "Bluering",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Software company",
+      "address": "VGR4+M9M, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VGR4+M9M",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.bluering.com/",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8917036,
+        "lng": 35.5059331
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.6,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJk_Txv9gWHxURFmqiIWWZq54",
+      "categories": [
+        "Software company"
+      ],
+      "fid": "0x151f16d8bff1f493:0x9eab996521a26a16",
+      "cid": "11433400738645174806",
+      "reviewsCount": 5,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 2,
+        "fiveStar": 3
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.483Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Bluering&query_place_id=ChIJk_Txv9gWHxURFmqiIWWZq54",
+      "searchPageUrl": "https://www.google.com/maps/search/fintech%20company/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "fintech company",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=MOVmF9kbBrsoHC5b4E1Osw&cb_client=search.gws-prod.gps&w=408&h=240&yaw=310.93256&pitch=0&thumbfov=100",
+      "kgmid": "/g/11g7ctl6nk",
+      "businessProfileId": null
+    },
+    {
+      "title": "Infotec Systems",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Software company",
+      "address": "Broadway Center, Hamra Street, 4th Floor, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Broadway Center, Hamra Street, 4th Floor",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.infotecsystems.net/",
+      "phone": "+961 1 756 868",
+      "phoneUnformatted": "+9611756868",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8954088,
+        "lng": 35.4847355
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJnZfD0yIXHxUR9g7meBn0G78",
+      "categories": [
+        "Software company"
+      ],
+      "fid": "0x151f1722d3c3979d:0xbf1bf41978e60ef6",
+      "cid": "13770868675855126262",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 7,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.483Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Infotec%20Systems&query_place_id=ChIJnZfD0yIXHxUR9g7meBn0G78",
+      "searchPageUrl": "https://www.google.com/maps/search/fintech%20company/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "fintech company",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkT6N0sUXW-SNY4d0HZmcjEphqIbY67Ejgiw5kku6Cc1v1Mtze62aS6xd_iRxGmlduz0L2sPT8ZQJBNq9JvJ6uCpPg5hH0ok-2qahUs_nmA3EXg7tABRV_BWXoutLNmnBsdduwgXg=w408-h688-k-no",
+      "kgmid": "/g/11fj99r_dl",
+      "businessProfileId": "3687762381778252766"
+    },
+    {
+      "title": "Fundbot",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Software company",
+      "address": "Bechara El Khoury Street, Beirut Digital District 1079, 4th Floor, Fundbot Office, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Bechara El Khoury Street, Beirut Digital District 1079, 4th Floor, Fundbot Office",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://fundbot.co/",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8914256,
+        "lng": 35.5055295
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJTREUyrQXHxUR-8rjI06Njfc",
+      "categories": [
+        "Software company"
+      ],
+      "fid": "0x151f17b4ca14114d:0xf78d8d4e23e3cafb",
+      "cid": "17838069065833499387",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:38.483Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Fundbot&query_place_id=ChIJTREUyrQXHxUR-8rjI06Njfc",
+      "searchPageUrl": "https://www.google.com/maps/search/fintech%20company/@33.87882273426859,35.487474259199914,17z?hl=en",
+      "searchString": "fintech company",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmpjA6bXZvoe5vimF2ki4tmyFlW2orEiWUugcxPvSbFUJt4BKI-qeC67DlzD3oNiDJWebapi-zuorYL0ll5ZYJjZVTL8RUSTQLQT4xVHygdgQbH9zoLFYTZNc8V5fkaFkvoTYg=w426-h240-k-no",
+      "kgmid": "/g/11vybdynpb",
+      "businessProfileId": "8245437616413371758"
+    },
+    {
+      "title": "Khoury Auditors & Consultants",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Auditor",
+      "address": "Nahr Ibrahim Street , Tekeyan Center, Saifi , Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Nahr Ibrahim Street , Tekeyan Center",
+      "city": "Saifi , Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.kauditors.com/",
+      "phone": "+961 71 144 116",
+      "phoneUnformatted": "+96171144116",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8957603,
+        "lng": 35.512586
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJqZPT5_oWHxUR7YF32TtPwsE",
+      "categories": [
+        "Auditor",
+        "Corporate office"
+      ],
+      "fid": "0x151f16fae7d393a9:0xc1c24f3bd97781ed",
+      "cid": "13961808913272111597",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 11,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:42.450Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9:30 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9:30 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9:30 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9:30 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9:30 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Khoury%20Auditors%20%26%20Consultants&query_place_id=ChIJqZPT5_oWHxUR7YF32TtPwsE",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkJZS2JboPAnWcEjmU4_OL6uePsoPnG3tn-gwoIRN44j9oy1Z5inOrMvJVec0Eqay2JrhsEU8jRqk_U4vY5yO8Cwxr6qZEkK3fCRw6tGf4WSbx36TMnjUL_OW2De1aAChT4MIlqyQ=w648-h240-k-no",
+      "kgmid": "/g/11fy92l667",
+      "businessProfileId": "8498880180258891647"
+    },
+    {
+      "title": "Accounting and Financial Audit consultancy",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "Beirut, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 990 853",
+      "phoneUnformatted": "+96171990853",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8954098,
+        "lng": 35.5039408
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJYV4refEXHxURXCktrH4x3gc",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f17f1792b5e61:0x7de317eac2d295c",
+      "cid": "566945023219542364",
+      "reviewsCount": null,
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:42.450Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Accounting%20and%20Financial%20Audit%20consultancy&query_place_id=ChIJYV4refEXHxURXCktrH4x3gc",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnsEjbvthr93CEXWw4-mh_thlasslQLPWxVjsDDSdhChKvypQu-DuimXdhjCJeu7HO1kG32zOF4ttLmEHeIhBsQED54pcobIeibEhMCh6ytSZpkN6xEkDd3xQypB1TJSgm8iiU3=w408-h265-k-no",
+      "kgmid": "/g/11h_yp_v_4",
+      "businessProfileId": "14614762876581066322"
+    },
+    {
+      "title": "Abousleiman & Co.",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "Gemmayze, Mar Nicolas Sector, Boutrous Dagher Str., Impasse 24, ElShaftary Bldg, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Gemmayze, Mar Nicolas Sector, Boutrous Dagher Str., Impasse 24, ElShaftary Bldg",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.abousleimangroup.com/",
+      "phone": "+961 1 571 093",
+      "phoneUnformatted": "+9611571093",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8946318,
+        "lng": 35.5132829
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJY4PFxeQWHxUR_Vo2t8I9NtE",
+      "categories": [
+        "Accounting firm",
+        "Auditor",
+        "Business development service",
+        "Tax consultant",
+        "Training center"
+      ],
+      "fid": "0x151f16e4c5c58363:0xd1363dc2b7365afd",
+      "cid": "15075304709176056573",
+      "reviewsCount": 4,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 5,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:42.450Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 1 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Accessibility": [
+          {
+            "Wheelchair accessible entrance": false
+          },
+          {
+            "Wheelchair accessible restroom": false
+          },
+          {
+            "Wheelchair accessible seating": false
+          }
+        ],
+        "Amenities": [
+          {
+            "Gender-neutral restroom": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Abousleiman%20%26%20Co.&query_place_id=ChIJY4PFxeQWHxUR_Vo2t8I9NtE",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=MgfYt0nB-48p3bozIEGyNQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=70.59475&pitch=0&thumbfov=100",
+      "kgmid": "/g/11c2qsf651",
+      "businessProfileId": "15992350862447099952"
+    },
+    {
+      "title": "Serhal Nassar & Co",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "Beirut, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.serhalco.com/",
+      "phone": "+961 1 338 448",
+      "phoneUnformatted": "+9611338448",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8924866,
+        "lng": 35.5164211
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJuz353_sWHxURJf7cgbY5Inc",
+      "categories": [
+        "Accounting firm",
+        "Financial audit"
+      ],
+      "fid": "0x151f16fbdff93dbb:0x772239b681dcfe25",
+      "cid": "8584487295747161637",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 0,
+        "fiveStar": 2
+      },
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:42.450Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Serhal%20Nassar%20%26%20Co&query_place_id=ChIJuz353_sWHxURJf7cgbY5Inc",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=SQFSaof5_6iDtCqLeWWd-A&cb_client=search.gws-prod.gps&w=408&h=240&yaw=274.73712&pitch=0&thumbfov=100",
+      "kgmid": "/g/11c2k2nyrq",
+      "businessProfileId": "2736715349710535398"
+    },
+    {
+      "title": "PFC International",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Business management consultant",
+      "address": "VGW3+MMF Downtown, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VGW3+MMF Downtown",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://pfc-international.com/",
+      "phone": "+961 1 998 552",
+      "phoneUnformatted": "+9611998552",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8966995,
+        "lng": 35.5041845
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJYVJUrD0WHxUReZ6K16ZELj4",
+      "categories": [
+        "Business management consultant"
+      ],
+      "fid": "0x151f163dac545261:0x3e2e44a6d78a9e79",
+      "cid": "4480594162651668089",
+      "reviewsCount": 12,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 3,
+        "fourStar": 0,
+        "fiveStar": 9
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:42.451Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=PFC%20International&query_place_id=ChIJYVJUrD0WHxUReZ6K16ZELj4",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11f29_d0r7",
+      "businessProfileId": null
+    },
+    {
+      "title": "Bridge Capital Holding S.A.L",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Investment company",
+      "address": "5th floor, Block A, Beirut Gardens Martyr's Square, Downtown, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "5th floor, Block A, Beirut Gardens Martyr's Square, Downtown",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.bch.co/",
+      "phone": "+961 1 992 992",
+      "phoneUnformatted": "+9611992992",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8966183,
+        "lng": 35.5066681
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ-1sqmUgXHxURHnYubLuCxG0",
+      "categories": [
+        "Investment company"
+      ],
+      "fid": "0x151f1748992a5bfb:0x6dc482bb6c2e761e",
+      "cid": "7909590587054913054",
+      "reviewsCount": 4,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 4
+      },
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:42.451Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Onsite services": true
+          },
+          {
+            "Online appointments": false
+          }
+        ],
+        "Planning": [
+          {
+            "Appointment required": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Bridge%20Capital%20Holding%20S.A.L&query_place_id=ChIJ-1sqmUgXHxURHnYubLuCxG0",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlRqDm1mqU-UMSe2RCLO7zHko5J40dbOD6FFXXXVO-4tHgVuFl2awtvwgKq9wZWoZyqNxKVlxEXviMNieWwoUKtYhPmklXbS8tYce7NyDGh8_IGSA0rpYhm079AVWeLlqPoMJhjWg=w1413-h240-k-no",
+      "kgmid": "/g/11h5nrgslv",
+      "businessProfileId": "13551116420467548345"
+    },
+    {
+      "title": "Monasaadeddine",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "VGV2+GP6, beirut - laylake - near rawdat emem sadek school beirut, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VGV2+GP6, beirut - laylake - near rawdat emem sadek school beirut",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8937913,
+        "lng": 35.5017767
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ6WjMqx4XHxURc4_b14DphNQ",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f171eabcc68e9:0xd484e980d7db8f73",
+      "cid": "15313621372553105267",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:42.451Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Monasaadeddine&query_place_id=ChIJ6WjMqx4XHxURc4_b14DphNQ",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11hs_0r9bl",
+      "businessProfileId": null
+    },
+    {
+      "title": "Gulf Falcon",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "VGV2+GP6 Coca Cola Street, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VGV2+GP6 Coca Cola Street",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8937913,
+        "lng": 35.5017767
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJuRflgZEXHxURcFNOJptaFDA",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f179181e517b9:0x30145a9b264e5370",
+      "cid": "3464493635763852144",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:42.451Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Gulf%20Falcon&query_place_id=ChIJuRflgZEXHxURcFNOJptaFDA",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11pv9bz7k9",
+      "businessProfileId": null
+    },
+    {
+      "title": "The Back Office Sarl",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accounting firm",
+      "address": "VFWW+GC6, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VFWW+GC6",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 1 368 522",
+      "phoneUnformatted": "+9611368522",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8962612,
+        "lng": 35.4960534
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJd3y1v2IXHxUR7eLaffMFgnw",
+      "categories": [
+        "Accounting firm"
+      ],
+      "fid": "0x151f1762bfb57c77:0x7c8205f37ddae2ed",
+      "cid": "8971739951022138093",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:42.451Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=The%20Back%20Office%20Sarl&query_place_id=ChIJd3y1v2IXHxUR7eLaffMFgnw",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11sfj5zcv5",
+      "businessProfileId": null
+    },
+    {
+      "title": "UBIQ Innovations",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Financial institution",
+      "address": "Arab Bank Bldg., 5th Floor, Banks Street, Downtown, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Arab Bank Bldg., 5th Floor, Banks Street, Downtown",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 1 999 926",
+      "phoneUnformatted": "+9611999926",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.895833,
+        "lng": 35.503053
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJhyYwK-EWHxURKDvvDMTXGQw",
+      "categories": [
+        "Financial institution",
+        "Business management consultant",
+        "Financial consultant"
+      ],
+      "fid": "0x151f16e12b302687:0xc19d7c40cef3b28",
+      "cid": "871965239903468328",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:45.475Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=UBIQ%20Innovations&query_place_id=ChIJhyYwK-EWHxURKDvvDMTXGQw",
+      "searchPageUrl": "https://www.google.com/maps/search/fintech%20company/@33.90021476573143,35.51323622040005,17z?hl=en",
+      "searchString": "fintech company",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11b7gs1f1r",
+      "businessProfileId": null
+    },
+    {
+      "title": "Purpl Wallet",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Financial institution",
+      "address": "3rd Floor, Aya Tower, Armenia, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "3rd Floor, Aya Tower, Armenia",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 208 534",
+      "phoneUnformatted": "+96170208534",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8972268,
+        "lng": 35.5271127
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJEYCI0lIXHxURI2WQFZW9gWg",
+      "categories": [
+        "Financial institution",
+        "Money transfer service"
+      ],
+      "fid": "0x151f1752d2888011:0x6881bd9515906523",
+      "cid": "7530508499949741347",
+      "reviewsCount": 10,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 1,
+        "fourStar": 0,
+        "fiveStar": 8
+      },
+      "imagesCount": 11,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:50.149Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10 AM to 2 AM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Purpl%20Wallet&query_place_id=ChIJEYCI0lIXHxURI2WQFZW9gWg",
+      "searchPageUrl": "https://www.google.com/maps/search/fintech%20company/@33.89308408857715,35.5218235408001,17z?hl=en",
+      "searchString": "fintech company",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWltg09M12ymR4nE91a1uyK9GUlQtBd5F5EtPajRgPdo73OkAvdAbVvqQ3ZckxTznJ5jAgQpuFMl1M50ZO440mHRtJO8mY9m5ncIVIVPVmutGTm_L1078g-Ii5pO_-HkveZShCeEIqDD4DqJ=w408-h509-k-no",
+      "kgmid": "/g/11rqgd9qhk",
+      "businessProfileId": "4301722261990407571"
+    },
+    {
+      "title": "BML Istisharat - Ashrafieh",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Corporate office",
+      "address": "Daoud Ammoun, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Daoud Ammoun",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.istisharat.com/",
+      "phone": "+961 1 490 623",
+      "phoneUnformatted": "+9611490623",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8919603,
+        "lng": 35.5263917
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJw17BQFcWHxUR-_rTixiIvzw",
+      "categories": [
+        "Corporate office"
+      ],
+      "fid": "0x151f165740c15ec3:0x3cbf88188bd3fafb",
+      "cid": "4377367001833929467",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:50.149Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Amenities": [
+          {
+            "Restroom": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=BML%20Istisharat%20-%20Ashrafieh&query_place_id=ChIJw17BQFcWHxUR-_rTixiIvzw",
+      "searchPageUrl": "https://www.google.com/maps/search/fintech%20company/@33.89308408857715,35.5218235408001,17z?hl=en",
+      "searchString": "fintech company",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=vVtiWe06Pw3YbhX1czVLgA&cb_client=search.gws-prod.gps&w=408&h=240&yaw=113.54012&pitch=0&thumbfov=100",
+      "kgmid": "/g/11c34x0khd",
+      "businessProfileId": "15864632930714617284"
+    },
+    {
+      "title": "DOUMANI & Co. CPAs",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Accountant",
+      "address": "Beirut, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://doumanico.com/",
+      "phone": "+961 1 200 838",
+      "phoneUnformatted": "+9611200838",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.887039,
+        "lng": 35.531167
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJt2OInYsXHxURqMCLQ1prC4E",
+      "categories": [
+        "Accountant",
+        "Auditor",
+        "Tax preparation service"
+      ],
+      "fid": "0x151f178b9d8863b7:0x810b6b5a438bc0a8",
+      "cid": "9298643891060981928",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:50.478Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8:30 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Planning": [
+          {
+            "Appointments recommended": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=DOUMANI%20%26%20Co.%20CPAs&query_place_id=ChIJt2OInYsXHxURqMCLQ1prC4E",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.89308408857715,35.5218235408001,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=41JjOjNRwFTlCNGYpf6Ewg&cb_client=search.gws-prod.gps&w=408&h=240&yaw=260.52466&pitch=0&thumbfov=100",
+      "kgmid": "/g/11gjhc_hb0",
+      "businessProfileId": "2765542658494023139"
+    },
+    {
+      "title": "El Khoury Law Firm",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Law firm",
+      "address": "VGQ8+8JM, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VGQ8+8JM",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.advocas.net/",
+      "phone": "+961 3 245 401",
+      "phoneUnformatted": "+9613245401",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8883474,
+        "lng": 35.5165436
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJdzTD8G8XHxURpUamn7yOuPI",
+      "categories": [
+        "Law firm"
+      ],
+      "fid": "0x151f176ff0c33477:0xf2b88ebc9fa646a5",
+      "cid": "17489886093676791461",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:50.479Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=El%20Khoury%20Law%20Firm&query_place_id=ChIJdzTD8G8XHxURpUamn7yOuPI",
+      "searchPageUrl": "https://www.google.com/maps/search/accounting%20firm/@33.89308408857715,35.5218235408001,17z?hl=en",
+      "searchString": "accounting firm",
+      "language": "en",
+      "rank": 16,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=8bspRXjh2xYu1MmYacKuyQ&cb_client=search.gws-prod.gps&w=408&h=240&yaw=339.1147&pitch=0&thumbfov=100",
+      "kgmid": "/g/11f66b43y4",
+      "businessProfileId": null
+    },
+    {
+      "title": "Multiframes",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Software company",
+      "address": "Estral Center, 3rd floor, 1107 Hamra Main St., Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "Estral Center, 3rd floor, 1107 Hamra Main St.",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.multiframes.com/",
+      "phone": "+961 1 743 035",
+      "phoneUnformatted": "+9611743035",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8952676,
+        "lng": 35.4863418
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ4dKgyikXHxUR5JqaTzdO0Rg",
+      "categories": [
+        "Software company",
+        "E-commerce service",
+        "Internet marketing service",
+        "Website designer",
+        "Web hosting company"
+      ],
+      "fid": "0x151f1729caa0d2e1:0x18d14e374f9a9ae4",
+      "cid": "1788296526508497636",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 8,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:45:58.784Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Multiframes&query_place_id=ChIJ4dKgyikXHxUR5JqaTzdO0Rg",
+      "searchPageUrl": "https://www.google.com/maps/search/fintech%20company/@33.89308408857715,35.47888693879987,17z?hl=en",
+      "searchString": "fintech company",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://streetviewpixels-pa.googleapis.com/v1/thumbnail?panoid=t6tW6BER7aM0Ej2gmpMEog&cb_client=search.gws-prod.gps&w=408&h=240&yaw=354.25845&pitch=0&thumbfov=100",
+      "kgmid": "/g/11b7gwxhvm",
+      "businessProfileId": "4809774722935543151"
+    },
+    {
+      "title": "Startecheus",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Financial institution",
+      "address": "VGR4+GF9، BDD1243, Beirut Digital District Nassif el Yazigi Street Bashoura district Beirut, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VGR4+GF9، BDD1243, Beirut Digital District Nassif el Yazigi Street Bashoura district Beirut",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.startecheus.com/",
+      "phone": "+961 1 631 733",
+      "phoneUnformatted": "+9611631733",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.8912172,
+        "lng": 35.5061315
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJCVk4l2YXHxUR12NsBhRHC2k",
+      "categories": [
+        "Financial institution"
+      ],
+      "fid": "0x151f176697385909:0x690b4714066c63d7",
+      "cid": "7569221750058935255",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 19,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:46:04.001Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Startecheus&query_place_id=ChIJCVk4l2YXHxUR12NsBhRHC2k",
+      "searchPageUrl": "https://www.google.com/maps/search/fintech%20company/@33.90021476573143,35.5218235408001,17z?hl=en",
+      "searchString": "fintech company",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnSozkoeP7rHTih30h1yeFF4WToXoPRxpmk0FugUR5kvxTNKyQ4fv1o3J3qW3wuftwqv-wEUVQFmBs_1vW1V7zdWlskwvxzwPYn6htppOaNVKHPzyGWzX47dwTLALkz4l_anj6S=w408-h544-k-no",
+      "kgmid": "/g/11flrmxm7v",
+      "businessProfileId": "14828718191448454504"
+    },
+    {
+      "title": "PinPay",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Corporate office",
+      "address": "VGR4+M66, Beirut, Lebanon",
+      "neighborhood": null,
+      "street": "VGR4+M66",
+      "city": "Beirut",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 1 660 781",
+      "phoneUnformatted": "+9611660781",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.8916636,
+        "lng": 35.5055211
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJe9JZiuEWHxUR4c2smVlL0ZI",
+      "categories": [
+        "Corporate office"
+      ],
+      "fid": "0x151f16e18a59d27b:0x92d14b5999accde1",
+      "cid": "10579319847872417249",
+      "reviewsCount": 8,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 1,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 5
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:46:04.001Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Amenities": [
+          {
+            "Restroom": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=PinPay&query_place_id=ChIJe9JZiuEWHxUR4c2smVlL0ZI",
+      "searchPageUrl": "https://www.google.com/maps/search/fintech%20company/@33.90021476573143,35.5218235408001,17z?hl=en",
+      "searchString": "fintech company",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl-R9YwEvCjinyhZwkJuFjsI5kwLT4kTA1-aF5rcpKQBNqsX2iixkS1RPIYzNwx_urHt7csEZjRBoSnibpY4KFvKZCpiYH8cSoWVfmnNnjxsmHR4YYSbT24SUtNekyeEPzKqh30=w408-h306-k-no",
+      "kgmid": "/g/11dy_hy_t0",
+      "businessProfileId": null
+    }
+  ]
+}

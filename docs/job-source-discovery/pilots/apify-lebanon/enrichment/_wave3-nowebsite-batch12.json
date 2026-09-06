@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0307",
+    "canonical_name": "LJI maintenance",
+    "google_category": "Electronics store",
+    "address": "CP97+QX7, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 3 642 796",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0308",
+    "canonical_name": "Najm group & star plast",
+    "google_category": "Shopping mall",
+    "address": "CPV4+HRC, Rachaiya - Marjaayoun Rd, Kawkaba, Lebanon",
+    "city": "Kawkaba",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0309",
+    "canonical_name": "Hamze Construction",
+    "google_category": "Construction company",
+    "address": "CCV3+G65, Nabatieh, Lebanon",
+    "city": "Nabatieh",
+    "phone": "+961 71 412 005",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0310",
+    "canonical_name": "Speed Construction and Electric",
+    "google_category": "Construction company",
+    "address": "C9VX+XR, Zefta, Lebanon",
+    "city": "Zefta",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0311",
+    "canonical_name": "ZTC Company",
+    "google_category": "Construction company",
+    "address": "Habbouch, Lebanon",
+    "city": "Habbouch",
+    "phone": "+961 78 863 463",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0312",
+    "canonical_name": "Fares Construction And Trading",
+    "google_category": "Construction company",
+    "address": "محطة الضاوي للمحروقات - Dawi Station, Main road in face of, Zefta, Lebanon",
+    "city": "Zefta",
+    "phone": "+961 3 814 421",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0313",
+    "canonical_name": "PRO aluminium",
+    "google_category": "Construction company",
+    "address": "CF3H+39M, Habbouch, Lebanon",
+    "city": "Habbouch",
+    "phone": "+961 70 997 688",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0314",
+    "canonical_name": "Samar",
+    "google_category": "Construction company",
+    "address": "FGM9+88, Jbaa, Lebanon",
+    "city": "Jbaa",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0316",
+    "canonical_name": "الريف للاستشارات وتجهيزات المطاعم و المصانع الغذائية",
+    "google_category": "Construction company",
+    "address": "Arab Salim, Lebanon",
+    "city": "Arab Salim",
+    "phone": "+961 81 250 391",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0317",
+    "canonical_name": "CEC_LB هندسة و مقاولات",
+    "google_category": "Civil engineering company",
+    "address": "حي الحاووز, Roumine, Lebanon",
+    "city": "Roumine",
+    "phone": "+961 3 016 973",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  }
+]
