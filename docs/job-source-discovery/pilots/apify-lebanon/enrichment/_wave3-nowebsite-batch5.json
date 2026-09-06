@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0182",
+    "canonical_name": "Pinewood Hotel",
+    "google_category": "Bed & breakfast",
+    "address": "WJXM+886, Jeita Grotto Road, Mazraat El Ras, Lebanon",
+    "city": "Mazraat El Ras",
+    "phone": "+961 3 246 317",
+    "regions": "Jounieh/Keserwan",
+    "categories": "Hotels/restaurants/hospitality groups"
+  },
+  {
+    "internal_row_id": "pilot-0186",
+    "canonical_name": "Line Factory",
+    "google_category": "Clothing store",
+    "address": "WH3G+XJX, Jal El Dib, Lebanon",
+    "city": "Jal El Dib",
+    "phone": "+961 70 315 268",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0188",
+    "canonical_name": "Fashion Factory ME",
+    "google_category": "Clothing store",
+    "address": "Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 71 848 122",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0192",
+    "canonical_name": "Solarco Factory",
+    "google_category": "Factory equipment supplier",
+    "address": "VHP3+528, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0199",
+    "canonical_name": "Najm Engineering & Contracting",
+    "google_category": "Civil engineering company",
+    "address": "VHV8+FFJ, Jdeideh, Lebanon",
+    "city": "Jdeideh",
+    "phone": "+961 1 884 554",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0207",
+    "canonical_name": "Webeco factory",
+    "google_category": "Manufacturer",
+    "address": "VHM3+M6F, Baouchriyeh, Lebanon",
+    "city": "Baouchriyeh",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0208",
+    "canonical_name": "L'abeille d'Or Factory",
+    "google_category": "Food manufacturer",
+    "address": "VHMH+2XC, Fanar, Lebanon",
+    "city": "Fanar",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0209",
+    "canonical_name": "Louda Clothing Factory",
+    "google_category": "Manufacturer",
+    "address": "Jal El Dib, Lebanon",
+    "city": "Jal El Dib",
+    "phone": "+961 3 249 242",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0210",
+    "canonical_name": "D Factory-Dbayeh",
+    "google_category": "Sweets and dessert buffet",
+    "address": "Dbayeh, Lebanon",
+    "city": "Dbayeh",
+    "phone": "+961 76 492 050",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0211",
+    "canonical_name": "Label Drop Outlet",
+    "google_category": "Outlet store",
+    "address": "Arax St, Bourj Hammoud, Lebanon",
+    "city": "Bourj Hammoud",
+    "phone": "+961 79 378 932",
+    "regions": "Metn",
+    "categories": "Manufacturing and factories"
+  }
+]

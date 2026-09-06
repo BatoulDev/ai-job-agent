@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0005",
+    "canonical_name": "TechnoWare",
+    "google_category": "Software company",
+    "address": "VFJQ+FX2, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 3 493 249",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0007",
+    "canonical_name": "Anzimaty, Digital Solutions Enabled",
+    "google_category": "Software company",
+    "address": "Saeb Salam Av, Riviera Building, 3rd Floor, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 3 074 628",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0009",
+    "canonical_name": "Edgineers",
+    "google_category": "Software company",
+    "address": "Mar Elias, Al-Hassan Center, Beirut Block B, 7th Floor, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 790 054",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0010",
+    "canonical_name": "HISSABAT/ IT Solutions",
+    "google_category": "Software company",
+    "address": "Cornish Al, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 70 199 446",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0016",
+    "canonical_name": "ROC IN DIGIT",
+    "google_category": "Software company",
+    "address": "VERDUN STREET; NOUR EL HAYAT BLDG.; 6TH FLOOR Unesco street Beirut, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 3 199 381",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0025",
+    "canonical_name": "Cryptic Design",
+    "google_category": "Marketing agency",
+    "address": "Al Sabah Center, Block B, Corniche El Mazraa, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 70 774 354",
+    "regions": "Beirut",
+    "categories": "Marketing/advertising/graphic design"
+  },
+  {
+    "internal_row_id": "pilot-0027",
+    "canonical_name": "Media Pro",
+    "google_category": "Marketing agency",
+    "address": "Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 76 666 755",
+    "regions": "Beirut",
+    "categories": "Marketing/advertising/graphic design"
+  },
+  {
+    "internal_row_id": "pilot-0033",
+    "canonical_name": "Beyond agency",
+    "google_category": "Marketing agency",
+    "address": "VFHW+QXH, Zreik, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 81 148 186",
+    "regions": "Beirut",
+    "categories": "Marketing/advertising/graphic design"
+  },
+  {
+    "internal_row_id": "pilot-0046",
+    "canonical_name": "Intelligile Lebanon",
+    "google_category": "Software company",
+    "address": "waygand street, marfaa building Block M, 4th Floor, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 956 450",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  },
+  {
+    "internal_row_id": "pilot-0048",
+    "canonical_name": "FPn (FP netWorth)",
+    "google_category": "Software company",
+    "address": "VGX4+J7H, Beirut, Lebanon",
+    "city": "Beirut",
+    "phone": "+961 1 999 050",
+    "regions": "Beirut",
+    "categories": "Software and IT services"
+  }
+]

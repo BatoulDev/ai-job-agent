@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0329",
+    "canonical_name": "REDWOOD WORK",
+    "google_category": "Carpenter",
+    "address": "CC68+QV, Nmairiyeh, Lebanon",
+    "city": "Nmairiyeh",
+    "phone": "+961 76 844 123",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0332",
+    "canonical_name": "HMC",
+    "google_category": "Hospital",
+    "address": "H939+8XP, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 7 726 008",
+    "regions": "Saida/South Lebanon",
+    "categories": "Hospitals/clinics/laboratories"
+  },
+  {
+    "internal_row_id": "pilot-0333",
+    "canonical_name": "Saida Governmental Emergency Hospital (Turkish)",
+    "google_category": "Hospital",
+    "address": "Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 7 755 560",
+    "regions": "Saida/South Lebanon",
+    "categories": "Hospitals/clinics/laboratories"
+  },
+  {
+    "internal_row_id": "pilot-0336",
+    "canonical_name": "Lebanese Transport Company",
+    "google_category": "Transportation service",
+    "address": "H98G+367, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 7 722 783",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0337",
+    "canonical_name": "Relax Transport",
+    "google_category": "Taxi service",
+    "address": "قرب كوكتيل العقاد Saida - al wastani, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 70 840 333",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0338",
+    "canonical_name": "smartline saida",
+    "google_category": "Logistics service",
+    "address": "H94F+R5G, Aabra, Lebanon",
+    "city": "Aabra",
+    "phone": "+961 76 545 251",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0339",
+    "canonical_name": "VIP HAMDAN TRANSPORT",
+    "google_category": "Airport shuttle service",
+    "address": "صيدا،, Lebanon",
+    "city": "صيدا،",
+    "phone": "+961 76 045 107",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0340",
+    "canonical_name": "Towtruck S3oudi transport.",
+    "google_category": "Truck rental agency",
+    "address": "Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 3 897 256",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0341",
+    "canonical_name": "Abu jamal Towr",
+    "google_category": "Transportation service",
+    "address": "H96F+2WQ غسان حمود، لبنان, Hay Iskandarani, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0346",
+    "canonical_name": "تكسيات الانطلاق",
+    "google_category": "Taxi service",
+    "address": "H96H+644, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 7 720 802",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  }
+]

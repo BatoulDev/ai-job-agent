@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0297",
+    "canonical_name": "Alameh super market",
+    "google_category": "Shopping mall",
+    "address": "CPC6+5RP, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 71 808 515",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0298",
+    "canonical_name": "Shawki Abou Omar Mahmoud Al Aysami",
+    "google_category": "Clothing store",
+    "address": "CPPX+34J, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0299",
+    "canonical_name": "سوق الجملة",
+    "google_category": "Grocery store",
+    "address": "CP23+X2V, Ain Qenya, Lebanon",
+    "city": "Ain Qenya",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0300",
+    "canonical_name": "Hasbaya model",
+    "google_category": "Clothing store",
+    "address": "CP24+M4, Ain Qana, Lebanon",
+    "city": "Ain Qana",
+    "phone": "+961 71 254 762",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0301",
+    "canonical_name": "BOUBSTERITTO",
+    "google_category": "Cell phone store",
+    "address": "FP7V+PFP, Lebanon",
+    "city": "",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0302",
+    "canonical_name": "Ain kinia",
+    "google_category": "Store",
+    "address": "CP33+2RG, Ain Qenya, Lebanon",
+    "city": "Ain Qenya",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0303",
+    "canonical_name": "Sam services",
+    "google_category": "Shopping mall",
+    "address": "CP97+Q2F, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 70 919 074",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0304",
+    "canonical_name": "محل عادل ذياب - Adel diab store",
+    "google_category": "Supermarket",
+    "address": "CM3Q+887, Unnamed Road, Zaghla, Lebanon",
+    "city": "Zaghla",
+    "phone": "+961 7 553 035",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0305",
+    "canonical_name": "Youssef kazila (venus)",
+    "google_category": "Clothing store",
+    "address": "CM2C+H86, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0306",
+    "canonical_name": "دكانة عمك حسين",
+    "google_category": "Market",
+    "address": "FPFX+W2, Lebanon",
+    "city": "",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  }
+]

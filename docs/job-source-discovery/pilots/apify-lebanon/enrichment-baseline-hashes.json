@@ -1,0 +1,42 @@
+{
+  "docs/job-source-discovery/lebanon.csv": {
+    "sha256": "8680f309cf490626388cf202fdaf0095d6d6b5e55d4c2f688543ae60deab2632",
+    "lineCount": 66,
+    "bytes": 59569
+  },
+  "docs/job-source-discovery/qatar.csv": {
+    "sha256": "7b7ef869b0044014a1280fd83bb19034d239e401c821fdf22c34656c27b80776",
+    "lineCount": 41,
+    "bytes": 38199
+  },
+  "docs/job-source-discovery/kuwait.csv": {
+    "sha256": "a080211a1db1c2fb3552525e2f38ddb2ebd0c408a964d4c0de702f0241e9eee5",
+    "lineCount": 37,
+    "bytes": 48063
+  },
+  "docs/job-source-discovery/uae.csv": {
+    "sha256": "45dd21de3061058ca0c4d610939756a2750b7a5f429cd718aec906d7d6eb66c5",
+    "lineCount": 40,
+    "bytes": 46019
+  },
+  "docs/job-source-discovery/saudi-arabia.csv": {
+    "sha256": "8d6c58b811c7a38ed4c660ca825f03525a5eb59f61d21d733fb0c23ab22b7584",
+    "lineCount": 44,
+    "bytes": 39499
+  },
+  "docs/job-source-discovery/international-remote.csv": {
+    "sha256": "6cb3876b60a1e409a6d131c9165ae32d8828539956a1da728c90803158572a52",
+    "lineCount": 32,
+    "bytes": 46865
+  },
+  "docs/job-source-discovery/master-company-registry.csv": {
+    "sha256": "30645f9d93addd9d83e1397547f474a618ef6d73285b202ac9456b55c5db9ee0",
+    "lineCount": 255,
+    "bytes": 274744
+  },
+  "docs/job-source-discovery/candidate-reconciliation.csv": {
+    "sha256": "93bca0edb5a1294e7dbc7e2f384eb2f19db8fb375ab8b2d67a9953c0dbbf48e6",
+    "lineCount": 61,
+    "bytes": 37617
+  }
+}

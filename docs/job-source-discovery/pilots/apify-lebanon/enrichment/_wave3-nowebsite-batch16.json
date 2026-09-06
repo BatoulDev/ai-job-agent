@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0365",
+    "canonical_name": "بلال خشوف للانترنت",
+    "google_category": "Distribution service",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 053 039",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0367",
+    "canonical_name": "Distribution Center of Lebanon DCL",
+    "google_category": "Butcher shop",
+    "address": "CRQJ+68W, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 204 536",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0368",
+    "canonical_name": "Tartoussi factory",
+    "google_category": "Manufacturer",
+    "address": "CRFM+9HX, Bohssas, Lebanon",
+    "city": "Bohssas",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0369",
+    "canonical_name": "Mr Donuts factory",
+    "google_category": "Restaurant",
+    "address": "CRGH+JJ4, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 6 412 841",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0370",
+    "canonical_name": "Eduvate Learning factory",
+    "google_category": "Education center",
+    "address": "CRGH+FF7, Cheikh Hasan Khaled, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 70 365 253",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0371",
+    "canonical_name": "ultra outlet",
+    "google_category": "Outlet store",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 70 286 938",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0372",
+    "canonical_name": "Socks factory",
+    "google_category": "Store",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 514 982",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0373",
+    "canonical_name": "Ghassa Clothes Factory",
+    "google_category": "Clothes and fabric wholesaler",
+    "address": "Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 3 114 798",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0374",
+    "canonical_name": "Sara Outlet store",
+    "google_category": "Outlet store",
+    "address": "CRRM+R28, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 81 132 060",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  },
+  {
+    "internal_row_id": "pilot-0375",
+    "canonical_name": "Smoothing concrete and floors",
+    "google_category": "Concrete factory",
+    "address": "Miryata, Lebanon",
+    "city": "Miryata",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Manufacturing and factories"
+  }
+]

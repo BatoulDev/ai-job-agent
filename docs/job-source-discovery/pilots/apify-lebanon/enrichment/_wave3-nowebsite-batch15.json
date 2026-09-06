@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0348",
+    "canonical_name": "شركة البيلاني لخدمات النقل",
+    "google_category": "Transportation service",
+    "address": "Coastal Area, Behind Shawarma Mahatta Lawyer Building, Ground Floor, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 3 933 313",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0351",
+    "canonical_name": "Transland Trading",
+    "google_category": "Import export company",
+    "address": "hijazi center, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 70 402 010",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0352",
+    "canonical_name": "Nakouzi Group",
+    "google_category": "Transportation service",
+    "address": "Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 81 846 001",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0353",
+    "canonical_name": "BAU bus station",
+    "google_category": "Transportation service",
+    "address": "H98F+7VC, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 81 000 873",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0354",
+    "canonical_name": "ATC Import & Export",
+    "google_category": "Shipping service",
+    "address": "H98J+723, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 70 299 119",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0355",
+    "canonical_name": "Trendway shipping",
+    "google_category": "Transportation service",
+    "address": "H98J+62R, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 70 299 119",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0357",
+    "canonical_name": "Nakib taxi company",
+    "google_category": "Transportation service",
+    "address": "حيً البراد مقابل صيدلية الزيباوي, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 71 261 849",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0359",
+    "canonical_name": "Fastkargo",
+    "google_category": "Shipping service",
+    "address": "H98G+G67, Sidon, Lebanon",
+    "city": "Sidon",
+    "phone": "+961 76 318 318",
+    "regions": "Saida/South Lebanon",
+    "categories": "Logistics and transportation"
+  },
+  {
+    "internal_row_id": "pilot-0360",
+    "canonical_name": "هادي فرحه غاز ومي",
+    "google_category": "Gas company",
+    "address": "صيدليه الشفاء, طلعت الخناق ابو سمره بجانب, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "+961 76 700 787",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0361",
+    "canonical_name": "Speed delivery",
+    "google_category": "Distribution service",
+    "address": "CRCV+9HM, Tripoli, Lebanon",
+    "city": "Tripoli",
+    "phone": "",
+    "regions": "Tripoli/North Lebanon",
+    "categories": "Retail/distribution/e-commerce"
+  }
+]

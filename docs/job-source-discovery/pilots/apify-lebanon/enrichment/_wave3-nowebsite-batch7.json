@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0234",
+    "canonical_name": "Bureau de l'Ingenieur Maroun Romanos",
+    "google_category": "Construction company",
+    "address": "Antelias, Lebanon",
+    "city": "Antelias",
+    "phone": "+961 3 621 820",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0236",
+    "canonical_name": "LFI (Libano-Francaise D'ingenierie)",
+    "google_category": "Civil engineering company",
+    "address": "VHR6+C97, Jdeideh, Lebanon",
+    "city": "Jdeideh",
+    "phone": "+961 1 895 471",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0238",
+    "canonical_name": "Electra Engineering S.A.L",
+    "google_category": "Home builder",
+    "address": "WHCR+XHM, Naqqache, Lebanon",
+    "city": "Naqqache",
+    "phone": "",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0239",
+    "canonical_name": "Engineering & Projects",
+    "google_category": "Construction company",
+    "address": "St Jean paul 2 Mar Takla (Rady Center, Lebanon",
+    "city": "",
+    "phone": "+961 3 947 271",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0242",
+    "canonical_name": "Engineer Elie N. Maalouf Company SAL (EMC)",
+    "google_category": "Corporate office",
+    "address": "Parallel Towers, Block B، Dekwaneh، 4th Floor, Lebanon",
+    "city": "4th Floor",
+    "phone": "+961 1 483 061",
+    "regions": "Metn",
+    "categories": "Engineering and industrial companies"
+  },
+  {
+    "internal_row_id": "pilot-0245",
+    "canonical_name": "Antelias",
+    "google_category": "Construction company",
+    "address": "WH8Q+RFF, Antelias, Lebanon",
+    "city": "Antelias",
+    "phone": "",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0247",
+    "canonical_name": "Almabani General Contractors - Beirut Office",
+    "google_category": "Construction company",
+    "address": "Matin, Lebanon",
+    "city": "Matin",
+    "phone": "+961 4 521 180",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0248",
+    "canonical_name": "sakkar company",
+    "google_category": "Construction company",
+    "address": "VGRR+C34, Bourj Hammoud, Lebanon",
+    "city": "Bourj Hammoud",
+    "phone": "+961 3 002 708",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0252",
+    "canonical_name": "Akiki & Salloum Contractor",
+    "google_category": "Home builder",
+    "address": "Jdeideh mar Takla street St Joseph building, Jdeideh, Lebanon",
+    "city": "Jdeideh",
+    "phone": "+961 3 788 603",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0256",
+    "canonical_name": "Mega Group s.a.l.",
+    "google_category": "Construction company",
+    "address": "Antelias, Lebanon",
+    "city": "Antelias",
+    "phone": "+961 4 408 099",
+    "regions": "Baabda",
+    "categories": "Construction and contracting"
+  }
+]

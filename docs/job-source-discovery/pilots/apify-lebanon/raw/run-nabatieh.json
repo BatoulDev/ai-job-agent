@@ -1,0 +1,5210 @@
+{
+  "run_id": "run-nabatieh",
+  "apify_run_id": "ae7snYYdMDLCqs0RD",
+  "dataset_id": "72brLZ0w9ZzcwwLAb",
+  "status": "SUCCEEDED",
+  "usageTotalUsd": 0.30019999999999997,
+  "startedAt": "2026-09-05T10:53:52.093Z",
+  "finishedAt": "2026-09-05T10:54:12.524Z",
+  "input": {
+    "searchStringsArray": [
+      "construction company",
+      "retail store"
+    ],
+    "locationQuery": "Nabatieh, Lebanon",
+    "maxCrawledPlacesPerSearch": 30,
+    "language": "en",
+    "skipClosedPlaces": true,
+    "website": "allPlaces",
+    "scrapePlaceDetailPage": false,
+    "scrapeContacts": false,
+    "scrapeSocialMediaProfiles": {
+      "facebooks": false,
+      "instagrams": false,
+      "youtubes": false,
+      "tiktoks": false,
+      "twitters": false
+    },
+    "maximumLeadsEnrichmentRecords": 0,
+    "verifyLeadsEnrichmentEmails": false,
+    "maxReviews": 0,
+    "maxImages": 0,
+    "maxQuestions": 0,
+    "scrapeReviewsPersonalData": false,
+    "scrapeTableReservationProvider": false,
+    "scrapeOrderOnline": false,
+    "scrapeDirectories": false,
+    "includeWebResults": false,
+    "enableCompetitorAnalysis": false
+  },
+  "term_region_map": null,
+  "item_count": 60,
+  "items": [
+    {
+      "title": "Majed construction and design",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "6CG5+RH8, Bir El Sanasel, Lebanon",
+      "neighborhood": null,
+      "street": "6CG5+RH8",
+      "city": "Bir El Sanasel",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 822 491",
+      "phoneUnformatted": "+9613822491",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.2270437,
+        "lng": 35.4089597
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJWzv-fSWbHhURP8kODGdDsQk",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151e9b257dfe3b5b:0x9b143670c0ec93f",
+      "cid": "698413527082125631",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.510Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 2:30 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 2:30 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 2:30 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 2:30 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 2:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 2:30 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Majed%20construction%20and%20design&query_place_id=ChIJWzv-fSWbHhURP8kODGdDsQk",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.226284948774904,35.361169400728265,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11h3mpds2p",
+      "businessProfileId": null
+    },
+    {
+      "title": "Sakka construction",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "elissar medical center, Soultanieh main road, Soultanieh, Lebanon",
+      "neighborhood": null,
+      "street": "elissar medical center, Soultanieh main road",
+      "city": "Soultanieh",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 81 695 520",
+      "phoneUnformatted": "+96181695520",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.2136946,
+        "lng": 35.405721
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJGW0_zGebHhUR4RoMaymn42A",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151e9b67cc3f6d19:0x60e3a7296b0c1ae1",
+      "cid": "6981607643685853921",
+      "reviewsCount": null,
+      "imagesCount": 10,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.512Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Sakka%20construction&query_place_id=ChIJGW0_zGebHhUR4RoMaymn42A",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.226284948774904,35.361169400728265,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmofPpFCvt10qMQMl09OxzOu1ZUbc--Ye5XRJlskK6N6pBtNg_EIn82r4CV9Jb72JkBi2UEUbYIrBGb1pyen_roJcpjxIvP9fFlyaL66gacztAwlAClVZG1izaXvu4WwhT41ac=w408-h306-k-no",
+      "kgmid": "/g/11vcn80cm_",
+      "businessProfileId": "11288973404387068425"
+    },
+    {
+      "title": "Hussein salamy",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "6CJG+36M, Lebanon",
+      "neighborhood": null,
+      "street": "6CJG+36M",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.2302094,
+        "lng": 35.4255415
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJlQyFZQGbHhURehMb7GNQI1c",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151e9b0165850c95:0x57235063ec1b137a",
+      "cid": "6278950695577785210",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.514Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Hussein%20salamy&query_place_id=ChIJlQyFZQGbHhURehMb7GNQI1c",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.226284948774904,35.361169400728265,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 14,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11sx6wcplt",
+      "businessProfileId": null
+    },
+    {
+      "title": "Issa Group",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "5CM8+X84, Tebnine, Lebanon",
+      "neighborhood": null,
+      "street": "5CM8+X84",
+      "city": "Tebnine",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.1848859,
+        "lng": 35.415816
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJOT6fGACbHhURSqiHu6vmU0g",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151e9b00189f3e39:0x4853e6abbb87a84a",
+      "cid": "5211762819057821770",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.514Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Issa%20Group&query_place_id=ChIJOT6fGACbHhURSqiHu6vmU0g",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.226284948774904,35.361169400728265,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11lzm4jwl3",
+      "businessProfileId": null
+    },
+    {
+      "title": "Fadi Azar Market",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Grocery store",
+      "address": "CPJQ+828, Kfeir, Lebanon",
+      "neighborhood": null,
+      "street": "CPJQ+828",
+      "city": "Kfeir",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4307846,
+        "lng": 35.7375923
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.6,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJYUJT-3zFHhURWYDoTtOCdpg",
+      "categories": [
+        "Grocery store"
+      ],
+      "fid": "0x151ec57cfb534261:0x987682d34ee88059",
+      "cid": "10986112185090474073",
+      "reviewsCount": 39,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 2,
+        "threeStar": 2,
+        "fourStar": 2,
+        "fiveStar": 32
+      },
+      "imagesCount": 10,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.644Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "6 AM to 11 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "6 AM to 11 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "6 AM to 11 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "6 AM to 11 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "6 AM to 11 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "6 AM to 11 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "6 AM to 11 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ],
+        "Payments": [
+          {
+            "Cash-only": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Fadi%20Azar%20Market&query_place_id=ChIJYUJT-3zFHhURWYDoTtOCdpg",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 2,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmvqw4ijinBkVsoZYOyoh_JXfEK4to8AFyOQMNPHMP8TXp0iENE8Js_gPkv2QY-6_veFV5zIz6EP1ScZtpW454ZswIxBOcVP8nbyXjHehzKtBzGyxla_iRJ2XU_fh1Vnt-gWiZR=w408-h306-k-no",
+      "kgmid": "/g/11c6tyj0y6",
+      "businessProfileId": null
+    },
+    {
+      "title": "Al ahmadiye Super Market",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Grocery store",
+      "address": "main street beside nafora- mimes- hasbaya, Lebanon",
+      "neighborhood": null,
+      "street": "main street beside nafora- mimes- hasbaya",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 329 453",
+      "phoneUnformatted": "+96171329453",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4211856,
+        "lng": 35.7115135
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.6,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJuRvf2M3FHhURyhVpJS8iHhw",
+      "categories": [
+        "Grocery store"
+      ],
+      "fid": "0x151ec5cdd8df1bb9:0x1c1e222f256915ca",
+      "cid": "2026094468249753034",
+      "reviewsCount": 10,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 9
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.645Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "8 AM to 10 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ],
+        "Payments": [
+          {
+            "Cash-only": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Al%20ahmadiye%20Super%20Market&query_place_id=ChIJuRvf2M3FHhURyhVpJS8iHhw",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11fk57mkth",
+      "businessProfileId": "15624314410206782432"
+    },
+    {
+      "title": "Mini Market Amasha",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Grocery store",
+      "address": "CM26+GPG, Hasbaiyya, Lebanon",
+      "neighborhood": null,
+      "street": "CM26+GPG",
+      "city": "Hasbaiyya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 858 513",
+      "phoneUnformatted": "+96171858513",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4013228,
+        "lng": 35.6618244
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.3,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJw3VORCTHHhURNeK4W8Dv__g",
+      "categories": [
+        "Grocery store"
+      ],
+      "fid": "0x151ec724444e75c3:0xf8ffefc05bb8e235",
+      "cid": "17942323049918947893",
+      "reviewsCount": 20,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 1,
+        "threeStar": 3,
+        "fourStar": 1,
+        "fiveStar": 14
+      },
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.645Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7 AM to 10 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7 AM to 10 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7 AM to 10 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7 AM to 10 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7 AM to 10 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "7 AM to 10 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "7 AM to 10 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ],
+        "Payments": [
+          {
+            "Cash-only": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Mini%20Market%20Amasha&query_place_id=ChIJw3VORCTHHhURNeK4W8Dv__g",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkSIHHX_ysD6Eoq-7zjhpSZSOcbYI_vGHrGGD9V1qugkWO5GEengkE0ptvxG3PxKxC2L_heraUAiJd2tgf5ezKXAT5ueI-j6gHXqan2m5QMXLfuYtGomcM-V4sADmFsF-6d7WYZiA=w408-h306-k-no",
+      "kgmid": "/g/11ffpm524b",
+      "businessProfileId": null
+    },
+    {
+      "title": "مؤسسة أكرم مداح و اولاده للتجارة العامة",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Supermarket",
+      "address": "Mimess, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Mimess",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 81 758 713",
+      "phoneUnformatted": "+96181758713",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4251701,
+        "lng": 35.7214587
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ7Y5E61HHHhURpa3K9HKKEtM",
+      "categories": [
+        "Supermarket"
+      ],
+      "fid": "0x151ec751eb448eed:0xd3128a72f4caada5",
+      "cid": "15209371117921414565",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.646Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 7 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 7 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 7 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 7 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 7 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 7 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ],
+        "Payments": [
+          {
+            "Credit cards": true
+          }
+        ],
+        "Parking": [
+          {
+            "Free parking lot": true
+          },
+          {
+            "Free street parking": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D8%A4%D8%B3%D8%B3%D8%A9%20%D8%A3%D9%83%D8%B1%D9%85%20%D9%85%D8%AF%D8%A7%D8%AD%20%D9%88%20%D8%A7%D9%88%D9%84%D8%A7%D8%AF%D9%87%20%D9%84%D9%84%D8%AA%D8%AC%D8%A7%D8%B1%D8%A9%20%D8%A7%D9%84%D8%B9%D8%A7%D9%85%D8%A9&query_place_id=ChIJ7Y5E61HHHhURpa3K9HKKEtM",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 8,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnxjHGKcCzxuuJMCg-UZrczGU0Cduy7EZv5oag6Uz2swoCB5pfV_eTqvA6WJmUoqxC8PsyagP1D_7M87dMlhK0JtOtTty5KdsMJ7GLtTlMFMj_VjtV3An3D2dvWW6JZVuPoOA6ag6kLGnrE=w408-h306-k-no",
+      "kgmid": "/g/11y3qbrzyg",
+      "businessProfileId": "7504602012681372455"
+    },
+    {
+      "title": "Jocker Market",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Grocery store",
+      "address": "CP97+VQX, Mimess, Lebanon",
+      "neighborhood": null,
+      "street": "CP97+VQX",
+      "city": "Mimess",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 79 103 118",
+      "phoneUnformatted": "+96179103118",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.419743,
+        "lng": 35.7144838
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJmdE1ZgDFHhURTHBOj-604ZE",
+      "categories": [
+        "Grocery store"
+      ],
+      "fid": "0x151ec5006635d199:0x91e1b4ee8f4e704c",
+      "cid": "10511881941958946892",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.646Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 10 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "8 AM to 10 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Jocker%20Market&query_place_id=ChIJmdE1ZgDFHhURTHBOj-604ZE",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11ldvxq8z_",
+      "businessProfileId": null
+    },
+    {
+      "title": "HSS (Houssam Smart Solutions)",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Electronics store",
+      "address": "CM2J+69C, Hasbaiyya, Lebanon",
+      "neighborhood": null,
+      "street": "CM2J+69C",
+      "city": "Hasbaiyya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 76 973 713",
+      "phoneUnformatted": "+96176973713",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4005501,
+        "lng": 35.6808798
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJC3iKf47HHhURSNokZeOhF3U",
+      "categories": [
+        "Electronics store"
+      ],
+      "fid": "0x151ec78e7f8a780b:0x7517a1e36524da48",
+      "cid": "8437390424928475720",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 0
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.646Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=HSS%20(Houssam%20Smart%20Solutions)&query_place_id=ChIJC3iKf47HHhURSNokZeOhF3U",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11j1q5pwvr",
+      "businessProfileId": null
+    },
+    {
+      "title": "محلات السلام",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Electronics store",
+      "address": "9MXF+RQR, Hasbaiyya, Lebanon",
+      "neighborhood": null,
+      "street": "9MXF+RQR",
+      "city": "Hasbaiyya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 604 009",
+      "phoneUnformatted": "+96170604009",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.3996172,
+        "lng": 35.6743794
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJXb1inlPHHhURoi64mjxmcvo",
+      "categories": [
+        "Electronics store"
+      ],
+      "fid": "0x151ec7539e62bd5d:0xfa72663c9ab82ea2",
+      "cid": "18046599067306831522",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 19,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.646Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "7 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "7 AM to 3 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ],
+        "Payments": [
+          {
+            "Cash-only": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D8%AD%D9%84%D8%A7%D8%AA%20%D8%A7%D9%84%D8%B3%D9%84%D8%A7%D9%85&query_place_id=ChIJXb1inlPHHhURoi64mjxmcvo",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 11,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWluepF--dMikX42tI-N_fC_LMUcu7bOdVabqPZZoZgR4VRKmLJ6_rAg7lF9iDgYTXkvbwmisPmipp7eiSVbXaGMERaK7KYFFpe2Ix6f6S61VA5gFp85VeT8-GWqcUhvFjKdWERL=w426-h240-k-no",
+      "kgmid": "/g/11h3mv_894",
+      "businessProfileId": null
+    },
+    {
+      "title": "ELECTROHOME",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Computer store",
+      "address": "Main Road, Hasbaiyya, Lebanon",
+      "neighborhood": null,
+      "street": "Main Road",
+      "city": "Hasbaiyya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 305 828",
+      "phoneUnformatted": "+9613305828",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4027827,
+        "lng": 35.6635361
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJy6e8nUrHHhUR3kgmDhdjshk",
+      "categories": [
+        "Computer store"
+      ],
+      "fid": "0x151ec74a9dbca7cb:0x19b263170e2648de",
+      "cid": "1851651347475482846",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 51,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.646Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Delivery": true
+          },
+          {
+            "In-store shopping": true
+          },
+          {
+            "Onsite services": true
+          },
+          {
+            "Online appointments": false
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ],
+        "Payments": [
+          {
+            "Cash-only": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=ELECTROHOME&query_place_id=ChIJy6e8nUrHHhUR3kgmDhdjshk",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 12,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm1uYW1OjCqFiLn8EQRE8c9wGqs4SFWKK6ldOCR6uGdj_ppH0EFb8YShpLRsmmAm3tB8VfvTICYRSAymOyMkj78u3uWgxJdDvTp2bsZUSUbXwDiCxUcaWZaVpEU0H19KrvU140PQO7Ma1M=w408-h544-k-no",
+      "kgmid": "/g/11j8m29zxq",
+      "businessProfileId": "5782423772177563192"
+    },
+    {
+      "title": "Gharzeldeen market",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Grocery store",
+      "address": "CPHR+J87, Kfeir, Lebanon",
+      "neighborhood": null,
+      "street": "CPHR+J87",
+      "city": "Kfeir",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4295023,
+        "lng": 35.7415459
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJwQnk6DDPHhUR0OoZ3Bbi0GY",
+      "categories": [
+        "Grocery store"
+      ],
+      "fid": "0x151ecf30e8e409c1:0x66d0e216dc19ead0",
+      "cid": "7408669974834309840",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.647Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Gharzeldeen%20market&query_place_id=ChIJwQnk6DDPHhUR0OoZ3Bbi0GY",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 13,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11v0jlqk1f",
+      "businessProfileId": null
+    },
+    {
+      "title": "بدوي للإنارة",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Electronics store",
+      "address": "9MWG+WV2, Hasbaiyya, Lebanon",
+      "neighborhood": null,
+      "street": "9MWG+WV2",
+      "city": "Hasbaiyya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 243 893",
+      "phoneUnformatted": "+96171243893",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.3972684,
+        "lng": 35.6771524
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJy7VKQu7HHhURqCYG4tzFXUc",
+      "categories": [
+        "Electronics store"
+      ],
+      "fid": "0x151ec7ee424ab5cb:0x475dc5dce20626a8",
+      "cid": "5142483902002505384",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.647Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 2 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Delivery": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%A8%D8%AF%D9%88%D9%8A%20%D9%84%D9%84%D8%A5%D9%86%D8%A7%D8%B1%D8%A9&query_place_id=ChIJy7VKQu7HHhURqCYG4tzFXUc",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 16,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11h1h5tyzr",
+      "businessProfileId": null
+    },
+    {
+      "title": "Khayrat Jnoubna - خيرات جنوبنا",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Spice store",
+      "address": "CM3Q+6F4, Hasbaiyya, Lebanon",
+      "neighborhood": null,
+      "street": "CM3Q+6F4",
+      "city": "Hasbaiyya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 104 303",
+      "phoneUnformatted": "+9613104303",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4030195,
+        "lng": 35.6887045
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJOdGMl7HFHhURzuzvfDrt7Po",
+      "categories": [
+        "Spice store"
+      ],
+      "fid": "0x151ec5b1978cd139:0xfaeced3a7cefecce",
+      "cid": "18081087439445683406",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.647Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 8 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Khayrat%20Jnoubna%20-%20%D8%AE%D9%8A%D8%B1%D8%A7%D8%AA%20%D8%AC%D9%86%D9%88%D8%A8%D9%86%D8%A7&query_place_id=ChIJOdGMl7HFHhURzuzvfDrt7Po",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWl2AuT4-fRbRm1km8VVUjB1V-Wu3IV9wuPNiif1R7kUaLfELXC2VLvjde7uXyi3c_jrtjMNxJdDv8TrvOWBGqLV43vIPOxdK1BgcSKSgyjAy533pAh_aidT__hOHN2dlPwFFrL-6w=w426-h240-k-no",
+      "kgmid": "/g/11pttkbc6c",
+      "businessProfileId": null
+    },
+    {
+      "title": "Best Brand Outlet Hasbaya",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Outlet store",
+      "address": "CM27+Q86, Hasbaiyya, Lebanon",
+      "neighborhood": null,
+      "street": "CM27+Q86",
+      "city": "Hasbaiyya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4019311,
+        "lng": 35.6625819
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ6XDdB-THHhURP2CrPHUimX4",
+      "categories": [
+        "Outlet store",
+        "Shoe store"
+      ],
+      "fid": "0x151ec7e407dd70e9:0x7e9922753cab603f",
+      "cid": "9122360407140032575",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:53:59.649Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Best%20Brand%20Outlet%20Hasbaya&query_place_id=ChIJ6XDdB-THHhURP2CrPHUimX4",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11s4rvbf5f",
+      "businessProfileId": null
+    },
+    {
+      "title": "خلة الحمة",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Housing society",
+      "address": "Tebnine, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Tebnine",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.1881853,
+        "lng": 35.4197362
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ_d1m8QCbHhURdP0m1PGKvw0",
+      "categories": [
+        "Housing society"
+      ],
+      "fid": "0x151e9b00f166ddfd:0xdbf8af1d426fd74",
+      "cid": "990663214295874932",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:00.369Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%AE%D9%84%D8%A9%20%D8%A7%D9%84%D8%AD%D9%85%D8%A9&query_place_id=ChIJ_d1m8QCbHhURdP0m1PGKvw0",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.226284948774904,35.361169400728265,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 30,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11smvmp63_",
+      "businessProfileId": "14916568014126685169"
+    },
+    {
+      "title": "Tamerieh",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Housing society",
+      "address": "6FQ2+6P, Touline, Lebanon",
+      "neighborhood": null,
+      "street": "6FQ2+6P",
+      "city": "Touline",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.2380865,
+        "lng": 35.451763
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJOcdcGgCbHhUR5wQV9SijYC8",
+      "categories": [
+        "Housing society"
+      ],
+      "fid": "0x151e9b001a5cc739:0x2f60a328f51504e7",
+      "cid": "3413907913852650727",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:00.369Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Tamerieh&query_place_id=ChIJOcdcGgCbHhUR5wQV9SijYC8",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.226284948774904,35.361169400728265,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 33,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11z7sxqvl2",
+      "businessProfileId": "4776107341392205199"
+    },
+    {
+      "title": "Al Amine house",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Housing society",
+      "address": "5FQ9+4J, Chaqra, Lebanon",
+      "neighborhood": null,
+      "street": "5FQ9+4J",
+      "city": "Chaqra",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.1878125,
+        "lng": 35.4690625
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJWRuLi1ybHhUR0aO6jCqMjMM",
+      "categories": [
+        "Housing society"
+      ],
+      "fid": "0x151e9b5c8b8b1b59:0xc38c8c2a8cbaa3d1",
+      "cid": "14090791448512996305",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 3,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:00.370Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Al%20Amine%20house&query_place_id=ChIJWRuLi1ybHhUR0aO6jCqMjMM",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.226284948774904,35.361169400728265,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 36,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmdWR4jxIp20PqD2pFzhdh1432ySDhywYa_-d8hKYT-nxWZZbWiaTYg65Z2cn2axaac27_mgs3bgRLRwXyY-pY_D5Kp99bKRCcqeLmgxk1GNeVeN1G4VPdR3Rb-0Og_65PQp-iV=w408-h288-k-no",
+      "kgmid": "/g/11k4lh00cf",
+      "businessProfileId": null
+    },
+    {
+      "title": "معرض حسن رشيد للبلاط والحجر",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "59QR+8C8, Haris, Lebanon",
+      "neighborhood": null,
+      "street": "59QR+8C8",
+      "city": "Haris",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.1883103,
+        "lng": 35.3910759
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJOZUWefCbHhURWHDQsvWNgBw",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151e9bf079169539:0x1c808df5b2d07058",
+      "cid": "2053797516487454808",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:00.370Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D8%B9%D8%B1%D8%B6%20%D8%AD%D8%B3%D9%86%20%D8%B1%D8%B4%D9%8A%D8%AF%20%D9%84%D9%84%D8%A8%D9%84%D8%A7%D8%B7%20%D9%88%D8%A7%D9%84%D8%AD%D8%AC%D8%B1&query_place_id=ChIJOZUWefCbHhURWHDQsvWNgBw",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.226284948774904,35.361169400728265,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 39,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11krgqyf2_",
+      "businessProfileId": null
+    },
+    {
+      "title": "Chawki Abou El Ezz Market",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Supermarket",
+      "address": "عام, Kfeir, Lebanon",
+      "neighborhood": null,
+      "street": "عام",
+      "city": "Kfeir",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 112 830",
+      "phoneUnformatted": "+96171112830",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4294674,
+        "lng": 35.7436934
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJQWzZEJnFHhUR9Hka6r_jDIo",
+      "categories": [
+        "Supermarket"
+      ],
+      "fid": "0x151ec59910d96c41:0x8a0ce3bfea1a79f4",
+      "cid": "9947576090360445428",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:00.488Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 9 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "8 AM to 9 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Chawki%20Abou%20El%20Ezz%20Market&query_place_id=ChIJQWzZEJnFHhUR9Hka6r_jDIo",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 25,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11xmg1vfrl",
+      "businessProfileId": "2977792828535801833"
+    },
+    {
+      "title": "زيت زيتون Olive oil , organic",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Store",
+      "address": "CPC6+CJF, Bathaniyeh, Lebanon",
+      "neighborhood": null,
+      "street": "CPC6+CJF",
+      "city": "Bathaniyeh",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 329 453",
+      "phoneUnformatted": "+96171329453",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.421059,
+        "lng": 35.7115607
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJdQKLUtLFHhURAZrIKWm8sOI",
+      "categories": [
+        "Store"
+      ],
+      "fid": "0x151ec5d2528b0275:0xe2b0bc6929c89a01",
+      "cid": "16334763008331389441",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:00.490Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Thursday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Friday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Open 24 hours"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Open 24 hours"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%B2%D9%8A%D8%AA%20%D8%B2%D9%8A%D8%AA%D9%88%D9%86%20Olive%20oil%20%2C%20organic&query_place_id=ChIJdQKLUtLFHhURAZrIKWm8sOI",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 29,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlSq4asnvrCOTDWJFIyWRrf74XMmQFgL0j3RnUt8T_09fd0QjxfzheeH2eArr-x_nxAwYhGOBtfsH3iBIOQBW92CeNTNTf_pOzOo-IHBl6XBdK5WgrG-zvhStxqQK_73MuUozkT=w408-h515-k-no",
+      "kgmid": "/g/11s48yml04",
+      "businessProfileId": null
+    },
+    {
+      "title": "تعاونية الأمل",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Store",
+      "address": "CPCP+2VJ, Khalwat, Lebanon",
+      "neighborhood": null,
+      "street": "CPCP+2VJ",
+      "city": "Khalwat",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4200909,
+        "lng": 35.7371343
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJM9HO86PFHhUROAy__ZK-88w",
+      "categories": [
+        "Store"
+      ],
+      "fid": "0x151ec5a3f3ced133:0xccf3be92fdbf0c38",
+      "cid": "14768357141609647160",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:00.490Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%AA%D8%B9%D8%A7%D9%88%D9%86%D9%8A%D8%A9%20%D8%A7%D9%84%D8%A3%D9%85%D9%84&query_place_id=ChIJM9HO86PFHhUROAy__ZK-88w",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 30,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11k59b9wl1",
+      "businessProfileId": null
+    },
+    {
+      "title": "فرن الميمساني",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Bakery",
+      "address": "CP95+8Q6, Mimess, Lebanon",
+      "neighborhood": null,
+      "street": "CP95+8Q6",
+      "city": "Mimess",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 76 921 223",
+      "phoneUnformatted": "+96176921223",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4182838,
+        "lng": 35.7093949
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJjSDJz3HFHhURkD1GU8zR3ew",
+      "categories": [
+        "Bakery"
+      ],
+      "fid": "0x151ec571cfc9208d:0xecddd1cc53463d90",
+      "cid": "17068028838304693648",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:00.490Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7:30 AM to 2 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7:30 AM to 2 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7:30 AM to 2 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7:30 AM to 2 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "7:30 AM to 2 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "7:30 AM to 2 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Service options": [
+          {
+            "Takeout": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%81%D8%B1%D9%86%20%D8%A7%D9%84%D9%85%D9%8A%D9%85%D8%B3%D8%A7%D9%86%D9%8A&query_place_id=ChIJjSDJz3HFHhURkD1GU8zR3ew",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 35,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11hdslpc40",
+      "businessProfileId": null
+    },
+    {
+      "title": "Mini market zohair",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Market",
+      "address": "CPHV+QGH, Kfeir, Lebanon",
+      "neighborhood": null,
+      "street": "CPHV+QGH",
+      "city": "Kfeir",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 304 217",
+      "phoneUnformatted": "+96171304217",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4294421,
+        "lng": 35.7438707
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJNYg9fgDPHhURBhLHWFm4d_M",
+      "categories": [
+        "Market"
+      ],
+      "fid": "0x151ecf007e3d8835:0xf377b85958c71206",
+      "cid": "17543693567326097926",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 7,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:01.269Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 2 PM, 3 to 8 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 2 PM, 3 to 8 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 2 PM, 3 to 8 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 2 PM, 3 to 8 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 2 PM, 3 to 8 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 2 PM, 3 to 8 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "8 AM to 2 PM, 3 to 8 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Mini%20market%20zohair&query_place_id=ChIJNYg9fgDPHhURBhLHWFm4d_M",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 42,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkHpekRaIXY0J2tNS7_vfUY9zVhPVqzXoniL3LduckpyHtg21oQzoK6wSe2MIgmidju-Giol2p9hRSOrS3WiTp9GU8H3ROBbd36jSENK6mZmQQPFBBWUBRbh7FS7d1KXMTEOt1G=w408-h306-k-no",
+      "kgmid": "/g/11wfr4tltc",
+      "businessProfileId": null
+    },
+    {
+      "title": "Alameh super market",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Shopping mall",
+      "address": "CPC6+5RP, Mimess, Lebanon",
+      "neighborhood": null,
+      "street": "CPC6+5RP",
+      "city": "Mimess",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 808 515",
+      "phoneUnformatted": "+96171808515",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4204727,
+        "lng": 35.7120887
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.6,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJW61pbYTFHhURFPDSejf2gmQ",
+      "categories": [
+        "Shopping mall"
+      ],
+      "fid": "0x151ec5846d69ad5b:0x6482f6377ad2f014",
+      "cid": "7242621868909457428",
+      "reviewsCount": 5,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 2,
+        "fiveStar": 3
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:01.269Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Alameh%20super%20market&query_place_id=ChIJW61pbYTFHhURFPDSejf2gmQ",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 43,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11gzpdwgm3",
+      "businessProfileId": null
+    },
+    {
+      "title": "Shawki Abou Omar Mahmoud Al Aysami",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Clothing store",
+      "address": "CPPX+34J, Kfeir, Lebanon",
+      "neighborhood": null,
+      "street": "CPPX+34J",
+      "city": "Kfeir",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4346335,
+        "lng": 35.7470893
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJrflIXADPHhURO0Y8C3-DV3o",
+      "categories": [
+        "Clothing store"
+      ],
+      "fid": "0x151ecf005c48f9ad:0x7a57837f0b3c463b",
+      "cid": "8815659377273620027",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:01.269Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Shawki%20Abou%20Omar%20Mahmoud%20Al%20Aysami&query_place_id=ChIJrflIXADPHhURO0Y8C3-DV3o",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 44,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11yn905ss1",
+      "businessProfileId": null
+    },
+    {
+      "title": "سوق الجملة",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Grocery store",
+      "address": "CP23+X2V, Ain Qenya, Lebanon",
+      "neighborhood": null,
+      "street": "CP23+X2V",
+      "city": "Ain Qenya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4026881,
+        "lng": 35.7014291
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJf5vVYD_FHhURQ3q4P7XLgC0",
+      "categories": [
+        "Grocery store"
+      ],
+      "fid": "0x151ec53f60d59b7f:0x2d80cbb53fb87a43",
+      "cid": "3278844508044294723",
+      "reviewsCount": null,
+      "imagesCount": 9,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:01.269Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%B3%D9%88%D9%82%20%D8%A7%D9%84%D8%AC%D9%85%D9%84%D8%A9&query_place_id=ChIJf5vVYD_FHhURQ3q4P7XLgC0",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 47,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkHZWFbDYsbx5LPGYkqfk2QrnAJMcG8fae3hi6LsS4258acBe1Bu1PJDJkraJT8g6z3ml7UL1KXL8DCrB2szjbked01mHoln9M5kMdkYHhPIt0tAo4sbsdBJoY_AyujUbbm74-D=w408-h306-k-no",
+      "kgmid": "/g/11kpdfkdb9",
+      "businessProfileId": null
+    },
+    {
+      "title": "Hasbaya model",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Clothing store",
+      "address": "CP24+M4, Ain Qana, Lebanon",
+      "neighborhood": null,
+      "street": "CP24+M4",
+      "city": "Ain Qana",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 254 762",
+      "phoneUnformatted": "+96171254762",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4016891,
+        "lng": 35.7054685
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJteAXrHnFHhURnMKX7xnciB8",
+      "categories": [
+        "Clothing store"
+      ],
+      "fid": "0x151ec579ac17e0b5:0x1f88dc19ef97c29c",
+      "cid": "2272308015960408732",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:01.269Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Hasbaya%20model&query_place_id=ChIJteAXrHnFHhURnMKX7xnciB8",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 51,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11rylnqypw",
+      "businessProfileId": null
+    },
+    {
+      "title": "BOUBSTERITTO",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Cell phone store",
+      "address": "FP7V+PFP, Lebanon",
+      "neighborhood": null,
+      "street": "FP7V+PFP",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4643339,
+        "lng": 35.7436943
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJzZt7YcbRHhURrsq28AQy-bY",
+      "categories": [
+        "Cell phone store"
+      ],
+      "fid": "0x151ed1c6617b9bcd:0xb6f93204f0b6caae",
+      "cid": "13184624380903606958",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:01.271Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=BOUBSTERITTO&query_place_id=ChIJzZt7YcbRHhURrsq28AQy-bY",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 52,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11t5b8jr58",
+      "businessProfileId": null
+    },
+    {
+      "title": "Ain kinia",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Store",
+      "address": "CP33+2RG, Ain Qenya, Lebanon",
+      "neighborhood": null,
+      "street": "CP33+2RG",
+      "city": "Ain Qenya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4025565,
+        "lng": 35.7045828
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJk2gRbADFHhURRFtmvtuDN_M",
+      "categories": [
+        "Store"
+      ],
+      "fid": "0x151ec5006c116893:0xf33783dbbe665b44",
+      "cid": "17525621454751030084",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:01.271Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Ain%20kinia&query_place_id=ChIJk2gRbADFHhURRFtmvtuDN_M",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 57,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11vsv3q3_1",
+      "businessProfileId": null
+    },
+    {
+      "title": "Sam services",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Shopping mall",
+      "address": "CP97+Q2F, Mimess, Lebanon",
+      "neighborhood": null,
+      "street": "CP97+Q2F",
+      "city": "Mimess",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 919 074",
+      "phoneUnformatted": "+96170919074",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4194282,
+        "lng": 35.7125614
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.2,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ6c62DJPFHhURowbnS7UsoNg",
+      "categories": [
+        "Shopping mall"
+      ],
+      "fid": "0x151ec5930cb6cee9:0xd8a02cb54be706a3",
+      "cid": "15609525465640273571",
+      "reviewsCount": 5,
+      "reviewsDistribution": {
+        "oneStar": 1,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 4
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:01.275Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Sam%20services&query_place_id=ChIJ6c62DJPFHhURowbnS7UsoNg",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 59,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11fl7qfq3p",
+      "businessProfileId": null
+    },
+    {
+      "title": "محل عادل ذياب - Adel diab store",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Supermarket",
+      "address": "CM3Q+887, Unnamed Road, Zaghla, Lebanon",
+      "neighborhood": null,
+      "street": "CM3Q+887, Unnamed Road",
+      "city": "Zaghla",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 7 553 035",
+      "phoneUnformatted": "+9617553035",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4032807,
+        "lng": 35.688294
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJS3GszLnFHhURJeLjNaIDEVU",
+      "categories": [
+        "Supermarket"
+      ],
+      "fid": "0x151ec5b9ccac714b:0x551103a235e3e225",
+      "cid": "6129684563051668005",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:01.275Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 7 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 7 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 7 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 7 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 7 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 7 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Highlights": [
+          {
+            "Great produce": true
+          }
+        ],
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D8%AD%D9%84%20%D8%B9%D8%A7%D8%AF%D9%84%20%D8%B0%D9%8A%D8%A7%D8%A8%20-%20Adel%20diab%20store&query_place_id=ChIJS3GszLnFHhURJeLjNaIDEVU",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 60,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11fk5jcyqb",
+      "businessProfileId": null
+    },
+    {
+      "title": "Youssef kazila (venus)",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Clothing store",
+      "address": "CM2C+H86, Hasbaiyya, Lebanon",
+      "neighborhood": null,
+      "street": "CM2C+H86",
+      "city": "Hasbaiyya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4014018,
+        "lng": 35.6707668
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJKVUbdADHHhURL-7KwqmQ0Zo",
+      "categories": [
+        "Clothing store"
+      ],
+      "fid": "0x151ec700741b5529:0x9ad190a9c2caee2f",
+      "cid": "11155856810765381167",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:02.093Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "additionalInfo": {
+        "Planning": [
+          {
+            "Quick visit": true
+          }
+        ]
+      },
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Youssef%20kazila%20(venus)&query_place_id=ChIJKVUbdADHHhURL-7KwqmQ0Zo",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 61,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11zk8fdydz",
+      "businessProfileId": null
+    },
+    {
+      "title": "Petals Florist",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Florist",
+      "address": "Main Street, Hasbaiyya, Lebanon",
+      "neighborhood": null,
+      "street": "Main Street",
+      "city": "Hasbaiyya",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "https://www.instagram.com/petalsflorist.lb?igsh=YjlsczY4eWcwYTY2&igsi=YjlsczY4eWcwYTY2",
+      "phone": "+961 3 905 228",
+      "phoneUnformatted": "+9613905228",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4019701,
+        "lng": 35.668827
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJkw0nxdfHHhURI1hfvu09il8",
+      "categories": [
+        "Florist"
+      ],
+      "fid": "0x151ec7d7c5270d93:0x5f8a3dedbe5f5823",
+      "cid": "6884383071699687459",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:02.093Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "10 AM to 8 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "10 AM to 8 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "10 AM to 8 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "10 AM to 8 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "10 AM to 8 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "10 AM to 8 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "10 AM to 8 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Petals%20Florist&query_place_id=ChIJkw0nxdfHHhURI1hfvu09il8",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 62,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWld4lWUDBlnnMWYsXxrTDcVKxDs5cwC5QJ7sDxNZY5SNpKUeWoP8LZf7u-4X9jBuzUXbojgJQTV1E1W7HQouCGEAvNNJdPvO2yxHaaDJMjJe06VvY1LV5gbSuzmvVGgtH2lFd5rghIkcPDg=w408-h544-k-no",
+      "kgmid": "/g/11zdzbwb53",
+      "businessProfileId": "8740594796374271008"
+    },
+    {
+      "title": "دكانة عمك حسين",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Market",
+      "address": "FPFX+W2, Lebanon",
+      "neighborhood": null,
+      "street": "FPFX+W2",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.474819,
+        "lng": 35.747521
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJHe-lUq_RHhURqZxURP9_mSU",
+      "categories": [
+        "Market"
+      ],
+      "fid": "0x151ed1af52a5ef1d:0x25997fff44549ca9",
+      "cid": "2709337385179847849",
+      "reviewsCount": 6,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 6
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:02.095Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%AF%D9%83%D8%A7%D9%86%D8%A9%20%D8%B9%D9%85%D9%83%20%D8%AD%D8%B3%D9%8A%D9%86&query_place_id=ChIJHe-lUq_RHhURqZxURP9_mSU",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 70,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11vklh4dc8",
+      "businessProfileId": null
+    },
+    {
+      "title": "LJI maintenance",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Electronics store",
+      "address": "CP97+QX7, Mimess, Lebanon",
+      "neighborhood": null,
+      "street": "CP97+QX7",
+      "city": "Mimess",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 642 796",
+      "phoneUnformatted": "+9613642796",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.419424,
+        "lng": 35.7149339
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJtXfbRx7FHhURzrTkvm4El_k",
+      "categories": [
+        "Electronics store"
+      ],
+      "fid": "0x151ec51e47db77b5:0xf997046ebee4b4ce",
+      "cid": "17984848510622938318",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:02.095Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=LJI%20maintenance&query_place_id=ChIJtXfbRx7FHhURzrTkvm4El_k",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 73,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11h55mxqrd",
+      "businessProfileId": null
+    },
+    {
+      "title": "Najm group & star plast",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Shopping mall",
+      "address": "CPV4+HRC, Rachaiya - Marjaayoun Rd, Kawkaba, Lebanon",
+      "neighborhood": null,
+      "street": "CPV4+HRC, Rachaiya - Marjaayoun Rd",
+      "city": "Kawkaba",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4439406,
+        "lng": 35.7070217
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJoakFQV_FHhURYS7yTk5W1kk",
+      "categories": [
+        "Shopping mall"
+      ],
+      "fid": "0x151ec55f4105a9a1:0x49d6564e4ef22e61",
+      "cid": "5320534904116751969",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:02.095Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Najm%20group%20%26%20star%20plast&query_place_id=ChIJoakFQV_FHhURYS7yTk5W1kk",
+      "searchPageUrl": "https://www.google.com/maps/search/retail%20store/@33.4555425536753,35.771463499271746,13z?hl=en",
+      "searchString": "retail store",
+      "language": "en",
+      "rank": 74,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11mvkw59f3",
+      "businessProfileId": null
+    },
+    {
+      "title": "Hamze Construction",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "CCV3+G65, Nabatieh, Lebanon",
+      "neighborhood": null,
+      "street": "CCV3+G65",
+      "city": "Nabatieh",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 412 005",
+      "phoneUnformatted": "+96171412005",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4437557,
+        "lng": 35.4031121
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJo0AcwW_tHhURiJ0KT0b69cE",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eed6fc11c40a3:0xc1f5fa464f0a9d88",
+      "cid": "13976352198494952840",
+      "reviewsCount": 4,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 4
+      },
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.039Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9:30 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9:30 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9:30 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9:30 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9:30 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9:30 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Hamze%20Construction&query_place_id=ChIJo0AcwW_tHhURiJ0KT0b69cE",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 1,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmggKeEuRzMl1WGPFVsfxJn44HOrTMCzsOjpJRFFEkWoDtUJGNJcqRGAioVZWxtgJJcbGSEr09w1ba14mlEf3jERH_FF_MosyE6C3Jvl_EGmyT16msnnA3Pqqzmqwas5YTUCkOR6w=w474-h240-k-no",
+      "kgmid": "/g/11cs5ty170",
+      "businessProfileId": null
+    },
+    {
+      "title": "Speed Construction and Electric",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "C9VX+XR, Zefta, Lebanon",
+      "neighborhood": null,
+      "street": "C9VX+XR",
+      "city": "Zefta",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.444958,
+        "lng": 35.4001652
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJObvMYsXtHhURNS0DDdljLUY",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eedc562ccbb39:0x462d63d90d032d35",
+      "cid": "5056807740484300085",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 7,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.040Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Speed%20Construction%20and%20Electric&query_place_id=ChIJObvMYsXtHhURNS0DDdljLUY",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 3,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWnUDYSBdy6JST_wmkWuEG3gFCONvQfIrNkPcGc9NLdS8u4MX82nPPDHbLeLK880K2RQuSKQhPLqwnNlvfXisZhfIt3SqQSvzdFTrsxvCw4BK5tILdgUHQb4epx75w4lXGq7Mc6W=w426-h240-k-no",
+      "kgmid": "/g/11y1x01zcq",
+      "businessProfileId": null
+    },
+    {
+      "title": "ZTC Company",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "Habbouch, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Habbouch",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 78 863 463",
+      "phoneUnformatted": "+96178863463",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4023935,
+        "lng": 35.478458
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.7,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJn4wseFjrHhURhtjiW_HYPUI",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eeb58782c8c9f:0x423dd8f15be2d886",
+      "cid": "4773209711222904966",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 2
+      },
+      "imagesCount": 2,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.040Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "Closed"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=ZTC%20Company&query_place_id=ChIJn4wseFjrHhURhtjiW_HYPUI",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 4,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkhu8WO9APe0EF4zedYz1-gwom7j7NEFP4t9qVIAG_o0KwMylPrIyncTaRZ_-vyX_USCR9u0MkJ9uVEN_3bktOi-1vPxo-VG7ihWTHJSiwRLkKeMv_b9fOiesPvNeQzEhzrsKO63YPSUmq7=w408-h387-k-no",
+      "kgmid": "/g/11f5hlkytn",
+      "businessProfileId": "545218660973473359"
+    },
+    {
+      "title": "Fares Construction And Trading",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "محطة الضاوي للمحروقات - Dawi Station, Main road in face of, Zefta, Lebanon",
+      "neighborhood": null,
+      "street": "محطة الضاوي للمحروقات - Dawi Station, Main road in face of",
+      "city": "Zefta",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 814 421",
+      "phoneUnformatted": "+9613814421",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4495024,
+        "lng": 35.3974452
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ78rFwyjtHhUReJxb9tnVtlk",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eed28c3c5caef:0x59b6d5d9f65b9c78",
+      "cid": "6464589447254744184",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.040Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Fares%20Construction%20And%20Trading&query_place_id=ChIJ78rFwyjtHhUReJxb9tnVtlk",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 5,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11pd2vcfxd",
+      "businessProfileId": "14724355218609199347"
+    },
+    {
+      "title": "PRO aluminium",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "CF3H+39M, Habbouch, Lebanon",
+      "neighborhood": null,
+      "street": "CF3H+39M",
+      "city": "Habbouch",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 70 997 688",
+      "phoneUnformatted": "+96170997688",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4027478,
+        "lng": 35.4784349
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJd5imWgDrHhURHJHpNGDsLR0",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eeb005aa69877:0x1d2dec6034e9911c",
+      "cid": "2102596499000627484",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.040Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=PRO%20aluminium&query_place_id=ChIJd5imWgDrHhURHJHpNGDsLR0",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 6,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11vj_4d03r",
+      "businessProfileId": null
+    },
+    {
+      "title": "Samar",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "FGM9+88, Jbaa, Lebanon",
+      "neighborhood": null,
+      "street": "FGM9+88",
+      "city": "Jbaa",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4833266,
+        "lng": 35.5183722
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ09WPewjpHhURF6foS2XfJuo",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151ee9087b8fd5d3:0xea26df654be8a717",
+      "cid": "16872418680148371223",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.040Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Samar&query_place_id=ChIJ09WPewjpHhURF6foS2XfJuo",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 7,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11v150nwyr",
+      "businessProfileId": null
+    },
+    {
+      "title": "Elmawad for construction and repair",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Waterproofing service",
+      "address": "CF6G+P27, Habbouch, Lebanon",
+      "neighborhood": null,
+      "street": "CF6G+P27",
+      "city": "Habbouch",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.elmawad.com/",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4117769,
+        "lng": 35.475052
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJacAiTYftHhURWeo65GBUKN8",
+      "categories": [
+        "Waterproofing service"
+      ],
+      "fid": "0x151eed874d22c069:0xdf285460e43aea59",
+      "cid": "16080195244649015897",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 1
+      },
+      "imagesCount": 7,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 1:30 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": false,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Elmawad%20for%20construction%20and%20repair&query_place_id=ChIJacAiTYftHhURWeo65GBUKN8",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 9,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWm0Szx-kGs661M2qmHYg3TVQDyIDDbLRYt8Gg2E1Dg_3YSdeg8_mupmNo3CX9B-j3g69U4002GZNGJI7NQas23XETlVQHKAztBWClHZnhidWp4EJAzoVv4jq1Ks8Hd9cQeZD-Ul=w408-h306-k-no",
+      "kgmid": "/g/11mqwjfpsx",
+      "businessProfileId": null
+    },
+    {
+      "title": "الريف للاستشارات وتجهيزات المطاعم و المصانع الغذائية",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "Arab Salim, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Arab Salim",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 81 250 391",
+      "phoneUnformatted": "+96181250391",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4219987,
+        "lng": 35.507961
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJ8ax61s7rHhURqx9rD6Z6rnw",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eebced67aacf1:0x7cae7aa60f6b1fab",
+      "cid": "8984253160292556715",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "7 AM to 4 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D8%A7%D9%84%D8%B1%D9%8A%D9%81%20%D9%84%D9%84%D8%A7%D8%B3%D8%AA%D8%B4%D8%A7%D8%B1%D8%A7%D8%AA%20%D9%88%D8%AA%D8%AC%D9%87%D9%8A%D8%B2%D8%A7%D8%AA%20%D8%A7%D9%84%D9%85%D8%B7%D8%A7%D8%B9%D9%85%20%D9%88%20%D8%A7%D9%84%D9%85%D8%B5%D8%A7%D9%86%D8%B9%20%D8%A7%D9%84%D8%BA%D8%B0%D8%A7%D8%A6%D9%8A%D8%A9&query_place_id=ChIJ8ax61s7rHhURqx9rD6Z6rnw",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 10,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11fmbdd30t",
+      "businessProfileId": "5419391339664457258"
+    },
+    {
+      "title": "CEC_LB هندسة و مقاولات",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Civil engineering company",
+      "address": "حي الحاووز, Roumine, Lebanon",
+      "neighborhood": null,
+      "street": "حي الحاووز",
+      "city": "Roumine",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 016 973",
+      "phoneUnformatted": "+9613016973",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4672088,
+        "lng": 35.4459838
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJaym32xDtHhUR_LCUIKabb34",
+      "categories": [
+        "Civil engineering company"
+      ],
+      "fid": "0x151eed10dbb7296b:0x7e6f9ba62094b0fc",
+      "cid": "9110671709007294716",
+      "reviewsCount": null,
+      "imagesCount": 1,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 4 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=CEC_LB%20%D9%87%D9%86%D8%AF%D8%B3%D8%A9%20%D9%88%20%D9%85%D9%82%D8%A7%D9%88%D9%84%D8%A7%D8%AA&query_place_id=ChIJaym32xDtHhUR_LCUIKabb34",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 12,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWkPChiASkAfzvi3xWGfZJD0-uCF-r4PEPKGWY5FNUzm4b9ICop3FQcGTJwDuEFd3uHzXGNuKQIcgA8-dvwVhEUbgzbihxqAAXwZE_8eBhQfsnJqjs2V-g6ksrpbXofTfmqlKWKKPw=w408-h408-k-no",
+      "kgmid": "/g/11v584js9f",
+      "businessProfileId": "13355120031429733637"
+    },
+    {
+      "title": "Sama Sanitary Ware",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "CF4H+XCH, Habbouch, Lebanon",
+      "neighborhood": null,
+      "street": "CF4H+XCH",
+      "city": "Habbouch",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 7 530 960",
+      "phoneUnformatted": "+9617530960",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.407434,
+        "lng": 35.4786084
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJHdysHgDrHhURP26jN_DucQ8",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eeb001eacdc1d:0xf71eef037a36e3f",
+      "cid": "1112933298430242367",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 12:30 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 3 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Sama%20Sanitary%20Ware&query_place_id=ChIJHdysHgDrHhURP26jN_DucQ8",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 13,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11w4n1r4_8",
+      "businessProfileId": null
+    },
+    {
+      "title": "FALA Road Contracting S.A.R.L.",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Ready mix concrete supplier",
+      "address": "CF65+73G, Kfour, Lebanon",
+      "neighborhood": null,
+      "street": "CF65+73G",
+      "city": "Kfour",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 7 532 123",
+      "phoneUnformatted": "+9617532123",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4106992,
+        "lng": 35.4577132
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJCw5-C4ftHhURDJsS-UPczak",
+      "categories": [
+        "Ready mix concrete supplier"
+      ],
+      "fid": "0x151eed870b7e0e0b:0xa9cddc43f9129b0c",
+      "cid": "12235677947135171340",
+      "reviewsCount": 2,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 2
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=FALA%20Road%20Contracting%20S.A.R.L.&query_place_id=ChIJCw5-C4ftHhURDJsS-UPczak",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 14,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11g18zf8pl",
+      "businessProfileId": null
+    },
+    {
+      "title": "منشرة العلي",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "Deir Al Zahrani, Lebanon",
+      "neighborhood": null,
+      "street": "Deir Al Zahrani",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4237034,
+        "lng": 35.4671308
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJT52Cg3DtHhURTssztuk3yq8",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eed7083829d4f:0xafca37e9b633cb4e",
+      "cid": "12666998378856696654",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D9%86%D8%B4%D8%B1%D8%A9%20%D8%A7%D9%84%D8%B9%D9%84%D9%8A&query_place_id=ChIJT52Cg3DtHhURTssztuk3yq8",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 15,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11p0bvbgk6",
+      "businessProfileId": null
+    },
+    {
+      "title": "Civil Engineer Mohammad Kassem",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "CGM8+236, Arab Salim, Lebanon",
+      "neighborhood": null,
+      "street": "CGM8+236",
+      "city": "Arab Salim",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.432539,
+        "lng": 35.5151449
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJG8cn2Y3rHhURRRdoxlQU1CQ",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eeb8dd927c71b:0x24d41454c6681745",
+      "cid": "2653768434766583621",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Civil%20Engineer%20Mohammad%20Kassem&query_place_id=ChIJG8cn2Y3rHhURRRdoxlQU1CQ",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 16,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11sc9zx0yk",
+      "businessProfileId": null
+    },
+    {
+      "title": "Yamen Sarl for Trading and Industry",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Ready mix concrete supplier",
+      "address": "Kfour, Nabatieh, Lebanon",
+      "neighborhood": null,
+      "street": "Kfour",
+      "city": "Nabatieh",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.yamenest.com/",
+      "phone": "+961 7 531 000",
+      "phoneUnformatted": "+9617531000",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4106752,
+        "lng": 35.4628002
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 5,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJZZHqC7zsHhURzJCmrjkUQKc",
+      "categories": [
+        "Ready mix concrete supplier",
+        "Asphalt contractor",
+        "Building materials supplier",
+        "Contractor",
+        "Masonry supply store"
+      ],
+      "fid": "0x151eecbc0bea9165:0xa7401439aea690cc",
+      "cid": "12051654840819290316",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 3
+      },
+      "imagesCount": 9,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "7 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "7 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "7 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "7 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "7 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "7 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Yamen%20Sarl%20for%20Trading%20and%20Industry&query_place_id=ChIJZZHqC7zsHhURzJCmrjkUQKc",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 17,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlqBK7wIdA-mSS21ckCXUV6hlz0A06gaxrKuZzZx7Ez7vpe5lLBMl33BwsAY5NR-Ax5KH25Ys_iFIYCCNu_WKLKMlumXASubMGMPEmQ3y7-5kwDE27xJtq5cUIHxryNsFaOAN-w5Q=w427-h240-k-no",
+      "kgmid": "/g/11b6_7_qb7",
+      "businessProfileId": "11927352808942323086"
+    },
+    {
+      "title": "كراج أبو الزوز صربا",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Garage builder",
+      "address": "Sarba, Lebanon",
+      "neighborhood": null,
+      "street": null,
+      "city": "Sarba",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4748968,
+        "lng": 35.4714189
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.7,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJOxITvvzvHhURbTBILyKNtIo",
+      "categories": [
+        "Garage builder"
+      ],
+      "fid": "0x151eeffcbe13123b:0x8ab48d222f48306d",
+      "cid": "9994768651003637869",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 2
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%83%D8%B1%D8%A7%D8%AC%20%D8%A3%D8%A8%D9%88%20%D8%A7%D9%84%D8%B2%D9%88%D8%B2%20%D8%B5%D8%B1%D8%A8%D8%A7&query_place_id=ChIJOxITvvzvHhURbTBILyKNtIo",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 19,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11mv5lgtrx",
+      "businessProfileId": null
+    },
+    {
+      "title": "Automatic doors",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "Deir Al Zahrani, Lebanon",
+      "neighborhood": null,
+      "street": "Deir Al Zahrani",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 453 223",
+      "phoneUnformatted": "+9613453223",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4282736,
+        "lng": 35.4621332
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJda3ISDvtHhURIE2RT9tBtGo",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eed3b48c8ad75:0x6ab441db4f914d20",
+      "cid": "7688842874016845088",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:06.041Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Automatic%20doors&query_place_id=ChIJda3ISDvtHhURIE2RT9tBtGo",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 20,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11t7_83dxf",
+      "businessProfileId": null
+    },
+    {
+      "title": "S.B.M",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Construction company",
+      "address": "Houmine, Ain Qana, Lebanon",
+      "neighborhood": null,
+      "street": "Houmine",
+      "city": "Ain Qana",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 3 758 307",
+      "phoneUnformatted": "+9613758307",
+      "claimThisBusiness": false,
+      "location": {
+        "lat": 33.4554049,
+        "lng": 35.4890859
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJbzVyGbPrHhURP4ontRjZaU4",
+      "categories": [
+        "Construction company"
+      ],
+      "fid": "0x151eebb31972356f:0x4e69d918b5278a3f",
+      "cid": "5650285907654707775",
+      "reviewsCount": null,
+      "imagesCount": 14,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:07.148Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=S.B.M&query_place_id=ChIJbzVyGbPrHhURP4ontRjZaU4",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 22,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWlLaqkGe4ylkXndQMeWrM347iXcb5xz43-nuDa4gfT5iI5Pxqj4n0Y-W1MFPEufdpWFVt7PdOktlCFsG6b2GyB6-Zz3KGarR8r52PQb94RgFzjaIuAeK7ScjP4voF9WO6M_LZpi=w408-h576-k-no",
+      "kgmid": "/g/11n2jmzys6",
+      "businessProfileId": "8276500197493878960"
+    },
+    {
+      "title": "wissam jamoul",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Home builder",
+      "address": "CFG8+844, Nabatieh, Lebanon",
+      "neighborhood": null,
+      "street": "CFG8+844",
+      "city": "Nabatieh",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4261074,
+        "lng": 35.4656167
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJsYZrLADtHhURZqPG7nyv95c",
+      "categories": [
+        "Home builder"
+      ],
+      "fid": "0x151eed002c6b86b1:0x97f7af7ceec6a366",
+      "cid": "10950413970091451238",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:07.148Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=wissam%20jamoul&query_place_id=ChIJsYZrLADtHhURZqPG7nyv95c",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 24,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11w7_p6fyt",
+      "businessProfileId": null
+    },
+    {
+      "title": "Al Faraj Trading And Construction EST",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Sanitation service",
+      "address": "CCQ7+6P4, Lebanon",
+      "neighborhood": null,
+      "street": "CCQ7+6P4",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 71 399 984",
+      "phoneUnformatted": "+96171399984",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4380058,
+        "lng": 35.4143278
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 2,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJV791EBPtHhURQRcv9eG3DXM",
+      "categories": [
+        "Sanitation service"
+      ],
+      "fid": "0x151eed131075bf57:0x730db7e1f52f1741",
+      "cid": "8290484670167979841",
+      "reviewsCount": 1,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 1,
+        "threeStar": 0,
+        "fourStar": 0,
+        "fiveStar": 0
+      },
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:07.148Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "8 AM to 6 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "Closed"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Al%20Faraj%20Trading%20And%20Construction%20EST&query_place_id=ChIJV791EBPtHhURQRcv9eG3DXM",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 25,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11f4pk7wvl",
+      "businessProfileId": null
+    },
+    {
+      "title": "مليس حسون",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Home builder",
+      "address": "CG96+7F3, Arab Salim, Lebanon",
+      "neighborhood": null,
+      "street": "CG96+7F3",
+      "city": "Arab Salim",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "",
+      "phoneUnformatted": "",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4169001,
+        "lng": 35.5121697
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJMQ5MWQDrHhUROWn6Um2kpTo",
+      "categories": [
+        "Home builder"
+      ],
+      "fid": "0x151eeb00594c0e31:0x3aa5a46d52fa6939",
+      "cid": "4225964614807611705",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:07.148Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=%D9%85%D9%84%D9%8A%D8%B3%20%D8%AD%D8%B3%D9%88%D9%86&query_place_id=ChIJMQ5MWQDrHhUROWn6Um2kpTo",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 27,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11zf3g2940",
+      "businessProfileId": null
+    },
+    {
+      "title": "REDWOOD WORK",
+      "subTitle": null,
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Carpenter",
+      "address": "CC68+QV, Nmairiyeh, Lebanon",
+      "neighborhood": null,
+      "street": "CC68+QV",
+      "city": "Nmairiyeh",
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "phone": "+961 76 844 123",
+      "phoneUnformatted": "+96176844123",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4124616,
+        "lng": 35.417348
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": null,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJg6bdIxjtHhURJNuLSLHXGio",
+      "categories": [
+        "Carpenter"
+      ],
+      "fid": "0x151eed1823dda683:0x2a1ad7b1488bdb24",
+      "cid": "3033974455413758756",
+      "reviewsCount": null,
+      "imagesCount": 0,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:07.148Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [
+        {
+          "day": "Monday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Tuesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Wednesday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Thursday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Friday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Saturday",
+          "hours": "9 AM to 5 PM"
+        },
+        {
+          "day": "Sunday",
+          "hours": "9 AM to 5 PM"
+        }
+      ],
+      "wasOpenAtScrapeTime": true,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=REDWOOD%20WORK&query_place_id=ChIJg6bdIxjtHhURJNuLSLHXGio",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 29,
+      "isAdvertisement": false,
+      "imageUrl": null,
+      "kgmid": "/g/11l5dqgcw_",
+      "businessProfileId": null
+    },
+    {
+      "title": "Modern Homes Villas",
+      "subTitle": "فلل مودرن هومز",
+      "description": null,
+      "ownerDescription": null,
+      "price": null,
+      "categoryName": "Real estate developer",
+      "address": "CGH3+7RF, Lebanon",
+      "neighborhood": null,
+      "street": "CGH3+7RF",
+      "city": null,
+      "postalCode": null,
+      "state": null,
+      "countryCode": "LB",
+      "website": "http://www.iqariagroup.com/",
+      "phone": "+961 3 248 217",
+      "phoneUnformatted": "+9613248217",
+      "claimThisBusiness": true,
+      "location": {
+        "lat": 33.4281768,
+        "lng": 35.5045368
+      },
+      "locatedIn": null,
+      "floor": null,
+      "plusCode": null,
+      "menu": null,
+      "servicesLink": null,
+      "totalScore": 4.7,
+      "permanentlyClosed": false,
+      "temporarilyClosed": false,
+      "placeId": "ChIJm5F7maPrHhUR33kjWnnvNZw",
+      "categories": [
+        "Real estate developer"
+      ],
+      "fid": "0x151eeba3997b919b:0x9c35ef795a2379df",
+      "cid": "11256166148164778463",
+      "reviewsCount": 3,
+      "reviewsDistribution": {
+        "oneStar": 0,
+        "twoStar": 0,
+        "threeStar": 0,
+        "fourStar": 1,
+        "fiveStar": 2
+      },
+      "imagesCount": 6,
+      "imageCategories": [],
+      "scrapedAt": "2026-09-05T10:54:07.148Z",
+      "reserveTableUrl": null,
+      "googleFoodUrl": null,
+      "hotelStars": null,
+      "hotelDescription": null,
+      "checkInDate": null,
+      "checkOutDate": null,
+      "hotelAds": [],
+      "popularTimesLiveText": null,
+      "popularTimesLivePercent": null,
+      "popularTimesHistogram": {},
+      "openingHours": [],
+      "wasOpenAtScrapeTime": null,
+      "peopleAlsoSearch": [],
+      "placesTags": [],
+      "reviewsTags": [],
+      "gasPrices": [],
+      "url": "https://www.google.com/maps/search/?api=1&query=Modern%20Homes%20Villas&query_place_id=ChIJm5F7maPrHhUR33kjWnnvNZw",
+      "searchPageUrl": "https://www.google.com/maps/search/construction%20company/@33.4555425536753,35.49793410024276,13z?hl=en",
+      "searchString": "construction company",
+      "language": "en",
+      "rank": 30,
+      "isAdvertisement": false,
+      "imageUrl": "https://lh3.googleusercontent.com/gps-cs-s/AHRPTWmeegM1HVcAWBea_ArKrfzsuEOfCvmOw2MT2PNRQyu4ladaEET1SMhTxCyt7PsFb98ABR9sxF1cdhp3Ox9__i-vBVZXJwZeYjB4Uk7MPEtwTHH-ZQ3rSmF3Gl7AB7A8WsgXkLRV=w426-h240-k-no",
+      "kgmid": "/g/11dxd9hhjf",
+      "businessProfileId": null
+    }
+  ]
+}

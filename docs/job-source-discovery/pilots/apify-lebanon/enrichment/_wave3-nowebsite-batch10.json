@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0284",
+    "canonical_name": "Gharzeldeen market",
+    "google_category": "Grocery store",
+    "address": "CPHR+J87, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0285",
+    "canonical_name": "بدوي للإنارة",
+    "google_category": "Electronics store",
+    "address": "9MWG+WV2, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 71 243 893",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0286",
+    "canonical_name": "Khayrat Jnoubna - خيرات جنوبنا",
+    "google_category": "Spice store",
+    "address": "CM3Q+6F4, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "+961 3 104 303",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0287",
+    "canonical_name": "Best Brand Outlet Hasbaya",
+    "google_category": "Outlet store",
+    "address": "CM27+Q86, Hasbaiyya, Lebanon",
+    "city": "Hasbaiyya",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0291",
+    "canonical_name": "معرض حسن رشيد للبلاط والحجر",
+    "google_category": "Construction company",
+    "address": "59QR+8C8, Haris, Lebanon",
+    "city": "Haris",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Construction and contracting"
+  },
+  {
+    "internal_row_id": "pilot-0292",
+    "canonical_name": "Chawki Abou El Ezz Market",
+    "google_category": "Supermarket",
+    "address": "عام, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "+961 71 112 830",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0293",
+    "canonical_name": "زيت زيتون Olive oil , organic",
+    "google_category": "Store",
+    "address": "CPC6+CJF, Bathaniyeh, Lebanon",
+    "city": "Bathaniyeh",
+    "phone": "+961 71 329 453",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0294",
+    "canonical_name": "تعاونية الأمل",
+    "google_category": "Store",
+    "address": "CPCP+2VJ, Khalwat, Lebanon",
+    "city": "Khalwat",
+    "phone": "",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0295",
+    "canonical_name": "فرن الميمساني",
+    "google_category": "Bakery",
+    "address": "CP95+8Q6, Mimess, Lebanon",
+    "city": "Mimess",
+    "phone": "+961 76 921 223",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  },
+  {
+    "internal_row_id": "pilot-0296",
+    "canonical_name": "Mini market zohair",
+    "google_category": "Market",
+    "address": "CPHV+QGH, Kfeir, Lebanon",
+    "city": "Kfeir",
+    "phone": "+961 71 304 217",
+    "regions": "Nabatieh",
+    "categories": "Retail/distribution/e-commerce"
+  }
+]

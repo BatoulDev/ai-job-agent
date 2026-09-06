@@ -1,0 +1,102 @@
+[
+  {
+    "internal_row_id": "pilot-0419",
+    "canonical_name": "مركز كنيسة الكرمة الحقيقّة للإغاثة",
+    "google_category": "Charity",
+    "address": "Unnamed Road, Lebanon",
+    "city": "",
+    "phone": "+961 81 105 883",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0426",
+    "canonical_name": "himaya Zahle",
+    "google_category": "Non-governmental organization",
+    "address": "RWG2+98G, Haouch El Oumaraa, Lebanon",
+    "city": "Haouch El Oumaraa",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0427",
+    "canonical_name": "Dar Al Saada",
+    "google_category": "Non-governmental organization",
+    "address": "RVMH+7GH, Unnamed Road, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 3 570 932",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0431",
+    "canonical_name": "EFADA",
+    "google_category": "Non-governmental organization",
+    "address": "VW3M+6HH, Zahlé, Lebanon",
+    "city": "Zahlé",
+    "phone": "+961 3 432 406",
+    "regions": "Zahle/Bekaa",
+    "categories": "NGOs and professional services"
+  },
+  {
+    "internal_row_id": "pilot-0433",
+    "canonical_name": "Al Mahaba Bedouin School",
+    "google_category": "High school",
+    "address": "Ain Al Hima, Lebanon",
+    "city": "",
+    "phone": "+961 71 097 372",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0434",
+    "canonical_name": "UNRWA Jefna School",
+    "google_category": "General education school",
+    "address": "RVCF+RJG, Taalbaiya, Lebanon",
+    "city": "Taalbaiya",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0435",
+    "canonical_name": "مدرسة الصداقة",
+    "google_category": "Middle school",
+    "address": "RVCJ+FXF, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0436",
+    "canonical_name": "aljarmak school",
+    "google_category": "Middle school",
+    "address": "RVFH+QJ7, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0437",
+    "canonical_name": "The school",
+    "google_category": "General education school",
+    "address": "RV9J+WHX, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "+961 70 044 966",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  },
+  {
+    "internal_row_id": "pilot-0438",
+    "canonical_name": "Saadnayel Secondary Public School",
+    "google_category": "Public educational institution",
+    "address": "RVCJ+P9C, Saadnayel, Lebanon",
+    "city": "Saadnayel",
+    "phone": "",
+    "regions": "Zahle/Bekaa",
+    "categories": "Schools/universities/training institutions"
+  }
+]
