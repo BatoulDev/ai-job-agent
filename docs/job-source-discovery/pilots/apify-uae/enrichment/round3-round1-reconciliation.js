@@ -1,0 +1,25 @@
+// Round 3, reconciliation of the 21 round-1 "eligible_employer_enriched_but_unresolved" candidates.
+// Each was re-examined; classification is either 'needs_more_evidence' (confirmed, unchanged) or 'new_verified' (new evidence found).
+module.exports = [
+  ['uae-pilot-0301','needs_more_evidence','Re-confirmed: real architecture firm, only a general contact form found, no careers page. No new evidence found this pass.'],
+  ['uae-pilot-0009','needs_more_evidence','Re-confirmed: real logistics group with subsidiaries, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0278','needs_more_evidence','Re-confirmed: real accounting/tax firm, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0023','needs_more_evidence','Re-confirmed: real accounting/consulting firm, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0199','needs_more_evidence','Re-confirmed: real multi-emirate HSE consultancy, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0123','needs_more_evidence','Re-attempted (alternate URL path): brandsforless.com still returns HTTP 403 - persistent bot-protection block across multiple passes. Brands For Less remains a high-value target for a future pass via a different access method (e.g. manual browser check).'],
+  ['uae-pilot-0062','needs_more_evidence','Re-confirmed: real freight/cargo company, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0206','needs_more_evidence','Re-confirmed: real tax/accounting consultancy, no careers page found despite "Career" brand name. No new evidence found this pass.'],
+  ['uae-pilot-0191','needs_more_evidence','Re-attempted (careers subpage directly): still returns empty content - persistent technical block (likely JS-rendered), now 3 independent attempts across 2 passes.'],
+  ['uae-pilot-0203','needs_more_evidence','Re-confirmed: real interior decoration company, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0368','needs_more_evidence','Re-confirmed: real interior design/fit-out studio, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0389','needs_more_evidence','Re-attempted: TLS certificate still expired - persistent technical block, now 2 independent attempts. Distinct domain from the government SEHA network.'],
+  ['uae-pilot-0388','needs_more_evidence','Re-attempted (careers subpage): seha.ae family still returns HTTP 403 - now confirmed blocked across 5+ independent attempts spanning 2 passes and 4 different SEHA-family facilities (Corniche, Zayed Military, SKMC, Central Hospital). This is a systemic access block on the entire seha.ae domain, not an isolated fetch failure. High-value target for a future pass via a different access method (e.g. manual browser check).'],
+  ['uae-pilot-0455','needs_more_evidence','Same seha.ae-family systemic block as Corniche Hospital above - see uae-pilot-0388 note. Not independently re-tried this pass (same root cause already confirmed).'],
+  ['uae-pilot-0394','needs_more_evidence','Same seha.ae-family systemic block as Corniche Hospital above - see uae-pilot-0388 note. Not independently re-tried this pass (same root cause already confirmed).'],
+  ['uae-pilot-0289','needs_more_evidence','Re-confirmed: real medical clinic, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0358','new_verified','Re-attempted (2 further fetches this pass): the page title "Careers at Pristine Medical Center | Join a Leading Team" was consistently retrieved across both attempts, confirming a real, dedicated careers page exists at pristinemedical.ae/careers/ - upgraded from needs_more_evidence. Full job-listing content remained truncated in the fetch tool\'s output both times, but the page\'s existence and title are sufficient evidence per this project\'s established "careers page/nav-link observed" standard (the same bar applied to Killa Design, Datum, Chawla, and others in this pilot).'],
+  ['uae-pilot-0275','needs_more_evidence','Re-confirmed: real medical center, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0054','needs_more_evidence','Re-confirmed: real multi-specialty clinic, no careers page found. No new evidence found this pass.'],
+  ['uae-pilot-0119','needs_more_evidence','Re-attempted: TLS hostname mismatch (shared hosting cert) persists - now 2 independent attempts.'],
+  ['uae-pilot-0331','needs_more_evidence','Re-confirmed: real medical center with 3 Dubai branches, no careers page found. No new evidence found this pass.'],
+];

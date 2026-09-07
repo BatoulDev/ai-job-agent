@@ -1,0 +1,345 @@
+{
+  "_meta": {
+    "actor": "compass/crawler-google-places",
+    "actor_display_name": "Google Maps Scraper",
+    "purpose": "Bounded Dubai + Abu Dhabi company-discovery pilot - NOT job ingestion. Business-level identity data only.",
+    "status": "PROPOSED - NOT YET EXECUTED. Requires explicit user approval of cost ceiling before any run.",
+    "total_runs_proposed": 10,
+    "total_search_terms_across_runs": 30,
+    "max_results_per_search_term": 30,
+    "absolute_max_total_records": 900,
+    "note": "Each object in 'proposed_runs' below is a complete, standalone Apify actor input. One object = one actor run. All enrichment/personal-data toggles are explicitly disabled per the task's data-minimization requirement. Runs are grouped in 5 sector-clusters per city (10 runs total) for bounded-batch checkpointing, mirroring the Lebanon pilot design."
+  },
+  "shared_settings_applied_to_every_run": {
+    "maxCrawledPlacesPerSearch": 30,
+    "language": "en",
+    "skipClosedPlaces": true,
+    "website": "all",
+    "scrapePlaceDetailPage": false,
+    "scrapeContacts": false,
+    "scrapeSocialMediaProfiles": false,
+    "maximumLeadsEnrichmentRecords": 0,
+    "verifyLeadsEnrichmentEmails": false,
+    "maxReviews": 0,
+    "maxImages": 0,
+    "maxQuestions": 0,
+    "scrapeReviewsPersonalData": false,
+    "scrapeTableReservationProvider": false,
+    "scrapeOrderOnline": false,
+    "scrapeDirectories": false,
+    "includeWebResults": false,
+    "enableCompetitorAnalysis": false
+  },
+  "proposed_runs": [
+    {
+      "run_id": "run-dubai-g1",
+      "region_label": "Dubai — Engineering & Design",
+      "input": {
+        "searchStringsArray": [
+          "engineering consultancy",
+          "architecture firm",
+          "interior design company"
+        ],
+        "locationQuery": "Dubai, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    },
+    {
+      "run_id": "run-dubai-g2",
+      "region_label": "Dubai — Creative & Professional Services",
+      "input": {
+        "searchStringsArray": [
+          "graphic design agency",
+          "marketing agency",
+          "HR recruitment agency"
+        ],
+        "locationQuery": "Dubai, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    },
+    {
+      "run_id": "run-dubai-g3",
+      "region_label": "Dubai — Finance & Built Environment",
+      "input": {
+        "searchStringsArray": [
+          "accounting firm",
+          "construction company",
+          "logistics company"
+        ],
+        "locationQuery": "Dubai, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    },
+    {
+      "run_id": "run-dubai-g4",
+      "region_label": "Dubai — Retail, Hospitality & Healthcare",
+      "input": {
+        "searchStringsArray": [
+          "retail company",
+          "hotel group",
+          "hospital"
+        ],
+        "locationQuery": "Dubai, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    },
+    {
+      "run_id": "run-dubai-g5",
+      "region_label": "Dubai — Manufacturing, Tech & Social Sector",
+      "input": {
+        "searchStringsArray": [
+          "manufacturing company",
+          "software company",
+          "NGO nonprofit organization"
+        ],
+        "locationQuery": "Dubai, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    },
+    {
+      "run_id": "run-abudhabi-g1",
+      "region_label": "Abu Dhabi — Engineering & Design",
+      "input": {
+        "searchStringsArray": [
+          "engineering consultancy",
+          "architecture firm",
+          "interior design company"
+        ],
+        "locationQuery": "Abu Dhabi, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    },
+    {
+      "run_id": "run-abudhabi-g2",
+      "region_label": "Abu Dhabi — Creative & Professional Services",
+      "input": {
+        "searchStringsArray": [
+          "graphic design agency",
+          "marketing agency",
+          "HR recruitment agency"
+        ],
+        "locationQuery": "Abu Dhabi, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    },
+    {
+      "run_id": "run-abudhabi-g3",
+      "region_label": "Abu Dhabi — Finance & Built Environment",
+      "input": {
+        "searchStringsArray": [
+          "accounting firm",
+          "construction company",
+          "logistics company"
+        ],
+        "locationQuery": "Abu Dhabi, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    },
+    {
+      "run_id": "run-abudhabi-g4",
+      "region_label": "Abu Dhabi — Retail, Hospitality & Healthcare",
+      "input": {
+        "searchStringsArray": [
+          "retail company",
+          "hotel group",
+          "hospital"
+        ],
+        "locationQuery": "Abu Dhabi, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    },
+    {
+      "run_id": "run-abudhabi-g5",
+      "region_label": "Abu Dhabi — Manufacturing, Tech & Social Sector",
+      "input": {
+        "searchStringsArray": [
+          "manufacturing company",
+          "software company",
+          "NGO nonprofit organization"
+        ],
+        "locationQuery": "Abu Dhabi, United Arab Emirates",
+        "maxCrawledPlacesPerSearch": 30,
+        "language": "en",
+        "skipClosedPlaces": true,
+        "website": "all",
+        "scrapePlaceDetailPage": false,
+        "scrapeContacts": false,
+        "scrapeSocialMediaProfiles": false,
+        "maximumLeadsEnrichmentRecords": 0,
+        "verifyLeadsEnrichmentEmails": false,
+        "maxReviews": 0,
+        "maxImages": 0,
+        "maxQuestions": 0,
+        "scrapeReviewsPersonalData": false,
+        "scrapeTableReservationProvider": false,
+        "scrapeOrderOnline": false,
+        "scrapeDirectories": false,
+        "includeWebResults": false,
+        "enableCompetitorAnalysis": false
+      },
+      "max_records_this_run": 90
+    }
+  ]
+}
