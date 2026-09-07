@@ -78,7 +78,7 @@ function scaleScore(reviewsCount, rating) {
 function domainScore(website) {
   if (!website) return { score: 0, tier: 'no_website' };
   let host = '';
-  try { let u = website.trim(); if (!/^https?:\/\//i.test(u)) u = 'https://'+u; host = new URL(u).hostname.toLowerCase().replace(/^www\./,''); } catch(e) { return { score: 3, tier: 'unparseable_url' }; }
+  try { let u = website.trim(); if (!/^https?:\/\//i.test(u)) u = 'https://'+u; host = new URL(u).hostname.toLowerCase().replace(/^www\./,''); } catch { return { score: 3, tier: 'unparseable_url' }; }
   if (WEAK_PLATFORM_DOMAINS.some(d => host.includes(d))) return { score: 5, tier: 'weak_social_platform' };
   if (host.endsWith('.ae')) return { score: 25, tier: 'ae_domain' };
   return { score: 15, tier: 'generic_domain' };

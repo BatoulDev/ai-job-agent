@@ -49,12 +49,11 @@ console.log('manifest total now:', existingManifest.length + manifestNew.length,
 // === Rebuild full promotion dry-run (467 rows) ===
 const enrDir = path.join(__dirname, '..', 'enrichment');
 const allClassified = loadCsv(path.join(enrDir, 'all-classified-candidates.csv'));
-const stagingAll = loadCsv(path.join(__dirname, 'uae-promotion-staging.csv'));
 const rejectedAll = loadCsv(path.join(enrDir, 'rejected-candidates.csv'));
 const mrqAll = loadCsv(path.join(enrDir, 'manual-review-queue.csv'));
 const dupAll = loadCsv(path.join(enrDir, 'duplicate-and-alias-review.csv'));
 
-const promoteIds = new Set(newRows.map((r,i) => Object.keys(PROFILES).find(k => 'cc-'+PROFILES[k].slug === r.canonical_company_id)));
+const promoteIds = new Set(newRows.map((r) => Object.keys(PROFILES).find(k => 'cc-'+PROFILES[k].slug === r.canonical_company_id)));
 // Also include round1+round2's originally staged 22 - reconstruct their ids from earlier manifest
 const priorStagedIds = new Set(existingManifest.map(r => r.internal_row_id).filter(Boolean));
 for (const id of priorStagedIds) promoteIds.add(id);
@@ -64,7 +63,6 @@ const mrqIds = new Set(mrqAll.map(r => r.internal_row_id));
 const dupIds = new Set(dupAll.flatMap(r => (r.internal_row_ids||'').split(';')));
 
 const canonicalIdByRowId = {};
-for (const r of stagingAll) { /* filled below via manifest */ }
 const manifestFull = existingManifest.concat(manifestNew);
 for (const m of manifestFull) canonicalIdByRowId[m.internal_row_id] = m.proposed_canonical_company_id;
 

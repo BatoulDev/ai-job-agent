@@ -22,7 +22,7 @@ function loadCsv(p) {
   const header = rows[0];
   return rows.slice(1).map(r => { const o={}; header.forEach((h,i)=>o[h]=r[i]); return o; });
 }
-function normalizeDomain(url){ if(!url) return ''; try{ let u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u; return new URL(u).hostname.toLowerCase().replace(/^www\./,''); }catch(e){return '';} }
+function normalizeDomain(url){ if(!url) return ''; try{ let u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u; return new URL(u).hostname.toLowerCase().replace(/^www\./,''); }catch{return '';} }
 
 const enrDir = path.join(__dirname, '..', 'enrichment');
 const { findingsById, newVerifiedIds, accById } = require(path.join(enrDir, 'round3-master-apply.js'));

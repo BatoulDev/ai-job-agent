@@ -117,7 +117,7 @@ for (const r of eligible) {
   cells.get(key).push(r);
 }
 const selected = [];
-for (const [key, arr] of cells) {
+for (const [, arr] of cells) {
   arr.sort((a, b) => b._score - a._score);
   selected.push(...arr.slice(0, CAP_PER_CELL));
 }

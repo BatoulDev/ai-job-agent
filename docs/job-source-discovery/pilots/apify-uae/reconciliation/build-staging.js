@@ -139,7 +139,7 @@ const CANONICAL_ID_TO_ROW_ID = {
   'medeor-hospital': 'uae-pilot-0299', 'healthpoint': 'uae-pilot-0236', 'harley-street-medical-centre': 'uae-pilot-0232',
   'global-care-hospital': 'uae-pilot-0221',
 };
-const manifestRows = promote.map((p, i) => {
+const manifestRows = promote.map((p) => {
   return {
     internal_row_id: CANONICAL_ID_TO_ROW_ID[p.id] || '',
     canonical_name: p.name,

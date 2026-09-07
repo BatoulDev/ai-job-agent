@@ -39,7 +39,7 @@ function normalizeDomain(url) {
     const parsed = new URL(u);
     let host = parsed.hostname.toLowerCase().replace(/^www\./, '');
     return host;
-  } catch (e) {
+  } catch {
     return '';
   }
 }
@@ -70,7 +70,7 @@ const allItems = [];
 for (const f of rawFiles) {
   const d = JSON.parse(fs.readFileSync(path.join(rawDir, f), 'utf8'));
   const runId = d.run_id;
-  const searchTerm = null; // per-item searchString already present
+  // per-item searchString already present, no separate search-term tracking needed
   for (const item of d.items) {
     allItems.push({
       run_id: runId,
@@ -166,7 +166,7 @@ for (const r of uaeRows.concat(masterRows)) {
 // --- Build normalized-companies.csv ---
 const normalizedRows = [];
 let flaggedCount = 0;
-for (const [key, g] of groups) {
+for (const [, g] of groups) {
   const domainExisting = g.normalized_domain && existingDomains.has(g.normalized_domain);
   const nameExisting = existingNames.has(normalizeName(g.canonical_name));
   const flagged = domainExisting || nameExisting;

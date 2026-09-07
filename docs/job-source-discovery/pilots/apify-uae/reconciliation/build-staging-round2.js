@@ -140,7 +140,7 @@ writeCsv(path.join(__dirname, 'uae-promotion-staging-manifest.csv'), manifestHea
 console.log('manifest total now:', existingManifest.length + manifestRound2Mapped.length);
 
 // --- Validation ---
-function normalizeDomain(url){ if(!url) return ''; try{ let u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u; return new URL(u).hostname.toLowerCase().replace(/^www\./,''); }catch(e){return '';} }
+function normalizeDomain(url){ if(!url) return ''; try{ let u=url.trim(); if(!/^https?:\/\//i.test(u)) u='https://'+u; return new URL(u).hostname.toLowerCase().replace(/^www\./,''); }catch{return '';} }
 const ids = allStaging.map(r=>r.canonical_company_id);
 console.log('canonical IDs unique:', new Set(ids).size === ids.length);
 const srcIds = allStaging.map(r=>r.source_record_id);

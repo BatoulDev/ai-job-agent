@@ -30,7 +30,8 @@ const b4 = require('./round3-batch4-findings.js');
 const b5 = require('./round3-batch5-findings.js');
 const all213 = [...b1,...b2,...b3,...b4,...b5];
 const round1recon = require('./round3-round1-reconciliation.js');
-const revisit37 = require('./round3-37-revisit.js');
+// Note: the 37-revisit findings (round3-37-revisit.js) are handled by a separate
+// reconciliation pass, not this script - intentionally not required here.
 const noweb108 = require('./round3-108-nowebsite-triage.js');
 const acc = loadCsv(path.join(__dirname, 'all-classified-candidates.csv'));
 const accById = {}; for (const r of acc) accById[r.internal_row_id] = r;
@@ -44,7 +45,7 @@ const newRejectedRows = [];
 const newDupRows = [];
 
 // 1. The 213
-for (const [id, cls, ev, ats, li, notes] of all213) {
+for (const [id, cls, , , , notes] of all213) {
   resolvedIds.add(id);
   if (cls === 'rejected') {
     const a = accById[id] || {};
@@ -56,7 +57,7 @@ for (const [id, cls, ev, ats, li, notes] of all213) {
 // 2. The 37 revisit - all stay needs_more_evidence except uae-pilot-0351 which got a resolved-negative finding (still needs_more_evidence but not "unresolved technical", a confirmed real+no-careers finding) - no change to classification, just reason update. None removed from mrq via this loop (handled by newMrqFromRevisit below).
 
 // 3. Round1 21 - resolved (either flip to verified/staged, or stay - all leave "eligible_employer_enriched_but_unresolved" state)
-for (const [id, cls, note] of round1recon) {
+for (const [id] of round1recon) {
   resolvedIds.add(id);
 }
 
@@ -64,7 +65,6 @@ for (const [id, cls, note] of round1recon) {
 for (const [id, cls, notes] of noweb108.researched) {
   resolvedIds.add(id);
   if (cls === 'duplicate_or_branch') {
-    const a = accById[id] || {};
     newDupRows.push({ review_type: 'duplicate_branch_absorbed_or_same_facility', candidate_a: id, candidate_b: '(see evidence)', evidence: notes, resolution: 'held_as_duplicate_not_promoted', internal_row_ids: id });
   }
 }
@@ -90,9 +90,9 @@ for (const [id, cls] of round1recon) if (cls === 'new_verified') newVerifiedIds.
 const remaining = mrq.filter(r => !resolvedIds.has(r.internal_row_id));
 console.log('mrq remaining (untouched this round):', remaining.length);
 
-const findingsById213 = {}; for (const [id, cls, ev, ats, li, notes] of all213) findingsById213[id] = { cls, notes };
+const findingsById213 = {}; for (const [id, cls, , , , notes] of all213) findingsById213[id] = { cls, notes };
 const newMrqFrom213 = [];
-for (const [id, cls, ev, ats, li, notes] of all213) {
+for (const [id, cls, , , , notes] of all213) {
   if (cls === 'needs_more_evidence' || cls === 'low_priority') {
     const a = accById[id] || {};
     newMrqFrom213.push({ internal_row_id: id, canonical_name: a.canonical_name || id, relevance_status: 'deep_reviewed_round3_' + cls,
@@ -100,14 +100,14 @@ for (const [id, cls, ev, ats, li, notes] of all213) {
   }
 }
 
-const round1reconById = {}; for (const [id, cls, note] of round1recon) round1reconById[id] = note;
-const newMrqFromRound1 = round1recon.filter(([id,cls]) => cls !== 'new_verified').map(([id, cls, note]) => {
+const round1reconById = {}; for (const [id, , note] of round1recon) round1reconById[id] = note;
+const newMrqFromRound1 = round1recon.filter(([, cls]) => cls !== 'new_verified').map(([id, , note]) => {
   const a = accById[id] || {};
   return { internal_row_id: id, canonical_name: a.canonical_name || id, relevance_status: 'round1_reconciled_needs_more_evidence',
     reason_for_review: note, google_category: a.categories||'', address: a.address||'', city: a.regions||'', website: a.website||'', google_maps_url: a.google_maps_url||'', batch_status: 'round3_reconciled_2026-09-07' };
 });
 
-const newMrqFromNoweb = noweb108.researched.filter(([id,cls])=>cls==='needs_more_evidence').map(([id,cls,notes]) => {
+const newMrqFromNoweb = noweb108.researched.filter(([, cls])=>cls==='needs_more_evidence').map(([id,,notes]) => {
   const a = accById[id] || {};
   return { internal_row_id: id, canonical_name: a.canonical_name || id, relevance_status: 'nowebsite_researched_needs_more_evidence',
     reason_for_review: notes, google_category: a.categories||'', address: a.address||'', city: a.regions||'', website: a.website||'', google_maps_url: a.google_maps_url||'', batch_status: 'round3_researched_2026-09-07' };
