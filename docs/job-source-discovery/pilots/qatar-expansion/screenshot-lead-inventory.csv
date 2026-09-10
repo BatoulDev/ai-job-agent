@@ -1,0 +1,78 @@
+lead_name,screenshot_outcome,notes
+Qatar Airways,already_present_qatar_registry,cc-qatar-airways already verified in qatar.csv
+Al Sharq Technology,new_employer_candidate,See manual-review-queue.csv - real, own official domain unconfirmed
+Snoonu,already_present_qatar_registry,cc-snoonu already in qatar.csv (needs_manual_review status, unchanged)
+Commercial Bank of Qatar,already_present_qatar_registry,cc-commercial-bank-of-qatar already verified in qatar.csv
+The Flex,insufficient_evidence,No matching Qatar coworking/flex-space entity confirmed
+malomatia,new_employer_candidate,Staged in proposed-qatar-staging.csv
+ProgressSoft Corporation,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Information & Communication Technology (ICT),insufficient_evidence,Reads as an industry/category label, not an employer
+The Utopia Studio,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Forvis Mazars in Qatar,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Advanced Business Computing,new_employer_candidate,See manual-review-queue.csv - real company, careers page unconfirmed
+North Oil Company,new_employer_candidate,Staged in proposed-qatar-staging.csv
+International Schools Partnership,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Nozomi Networks,insufficient_evidence,See manual-review-queue.csv - real company, no Qatar presence confirmed
+EPAM Systems,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Ali Bin Ali,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Thaura,insufficient_evidence,No entity match found
+Regency Technology Qatar,new_employer_candidate,Staged in proposed-qatar-staging.csv
+QNB Group,already_present_qatar_registry,Matches cc-qnb (Qatar National Bank) already verified in qatar.csv
+NODA AI,insufficient_evidence,See manual-review-queue.csv - forward-deployed defense role, no confirmed Qatar entity/office
+KBR,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Galfar Al Misnad Engineering and Contracting,new_employer_candidate,See manual-review-queue.csv - real company, exact careers URL unconfirmed
+Milaha,already_present_qatar_registry,cc-milaha already verified in qatar.csv
+Mowasalat Qatar,new_employer_candidate,Staged in proposed-qatar-staging.csv
+ATNS InfoTech,insufficient_evidence,See manual-review-queue.csv - name conflates two unrelated real entities
+QatarEnergy,already_present_qatar_registry,cc-qatarenergy already verified in qatar.csv
+Manforce Group,recruitment_or_staffing_source,See source-candidate-inventory.csv
+University of Doha for Science and Technology,new_employer_candidate,Staged in proposed-qatar-staging.csv
+MACH Consultants,recruitment_or_staffing_source,See source-candidate-inventory.csv
+Lucidya,insufficient_evidence,Real company (Riyadh HQ) but no Qatar evidence found
+Starlink Qatar,new_employer_candidate,See manual-review-queue.csv - real company, exact careers URL unconfirmed
+Tech Ladies,insufficient_evidence,No specific community/employer entity confirmed in Qatar
+Society Qatar,insufficient_evidence,See manual-review-queue.csv - real venue, no careers evidence found
+Vodafone Qatar,already_present_qatar_registry,cc-vodafone already verified in qatar.csv
+QatarEnergy LNG,duplicate_or_alias,Alias of cc-qatarenergy - see duplicate-and-alias-review.csv
+Qatar Insurance Group,already_present_qatar_registry,cc-qic already verified in qatar.csv
+TGP International,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Cisco,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Edison Smart,recruitment_or_staffing_source,See source-candidate-inventory.csv
+BAE Systems,new_employer_candidate,Staged in proposed-qatar-staging.csv
+beIN Media Group,new_employer_candidate,See manual-review-queue.csv - real company, exact careers URL unconfirmed
+Qatar Stock Exchange,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Millennium Hotel Doha,new_employer_candidate,Staged in proposed-qatar-staging.csv
+TAQAT,insufficient_evidence,See manual-review-queue.csv - ambiguous between multiple distinct Taqat-named entities
+Accenture Middle East,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Everllence,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Fusion Outsourcing & Services,recruitment_or_staffing_source,See source-candidate-inventory.csv
+Vistas Global,recruitment_or_staffing_source,See source-candidate-inventory.csv
+Tata Consultancy Services,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Power International Holding,new_employer_candidate,Staged in proposed-qatar-staging.csv
+PayTech Group,insufficient_evidence,See manual-review-queue.csv - real company, no Qatar-specific evidence found
+Anantara Hotels & Resorts,new_employer_candidate,Staged in proposed-qatar-staging.csv (Banana Island Resort Doha)
+SOAIS,insufficient_evidence,See rejected-and-insufficient-evidence.csv - conflated with unrelated real company SOSi
+Systems Limited,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Wood,new_employer_candidate,See manual-review-queue.csv - real Qatar operations confirmed, official careers URL unconfirmed
+JoVE,insufficient_evidence,Real company, no Qatar presence found
+GE Vernova,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Supermicro,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Shell Qatar,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Pullman Hotels & Resorts,new_employer_candidate,Staged in proposed-qatar-staging.csv (Pullman Doha West Bay)
+Scale AI,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Doha Bank,already_present_qatar_registry,cc-doha-bank already in qatar.csv (needs_manual_review status, unchanged)
+ROGII,insufficient_evidence,Real company, no Qatar presence found
+Minor Hotels,duplicate_or_alias,Parent group of Anantara/Tivoli entries staged separately - see duplicate-and-alias-review.csv
+American Academy School Qatar,new_employer_candidate,See manual-review-queue.csv note - real school, confirmed careers page at americanacademy.sch.qa/career/; strong evidence but conservatively cross-checked
+Hilton / Hilton Salwa,new_employer_candidate,Staged in proposed-qatar-staging.csv (Hilton Salwa Beach Resort & Villas)
+Kingston Stanley,recruitment_or_staffing_source,See source-candidate-inventory.csv
+Al Abdulghani Motors,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Rosewood Doha,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Lesha Bank,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Ecolab,new_employer_candidate,Staged in proposed-qatar-staging.csv
+SLB,new_employer_candidate,Staged in proposed-qatar-staging.csv
+IBIS,new_employer_candidate,Staged in proposed-qatar-staging.csv (ibis and Adagio Doha)
+Doha Golf Club,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Tivoli Hotels & Resorts,new_employer_candidate,Staged in proposed-qatar-staging.csv
+Leading Holding Group in Qatar,insufficient_evidence,See manual-review-queue.csv - confirmed generic confidential-listing label used by multiple real holding groups
+Confidential Jobs / Confidential employer listings,reject,Not a company - generic anonymized-listing label; rejected per task rule against inventing an employer from a confidential posting
