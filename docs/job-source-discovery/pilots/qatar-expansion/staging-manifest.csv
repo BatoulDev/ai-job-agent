@@ -1,0 +1,40 @@
+internal_audit_id,original_canonical_id,final_canonical_id,final_location,status,correction_applied,notes
+C01,cc-malomatia,cc-malomatia,proposed-qatar-staging.csv,promoted,yes,company_type public_joint_stock -> government_owned
+C02,cc-progressoft,cc-progressoft,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C03,cc-the-utopia-studio,cc-the-utopia-studio,proposed-qatar-staging.csv,promoted,yes,evidence_urls: replaced LinkedIn job-view link with specific Ashby job-ID URL
+C04,cc-forvis-mazars-qatar,cc-forvis-mazars-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C05,cc-north-oil-company,cc-north-oil-company,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C06,cc-international-schools-partnership,cc-international-schools-partnership,proposed-qatar-staging.csv,promoted,yes,company_type ngo_nonprofit -> private
+C07,cc-epam-systems,cc-epam-systems,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C08,cc-ali-bin-ali,cc-ali-bin-ali,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C09,cc-regency-technology-qatar,cc-regency-technology-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C10,cc-kbr,cc-kbr,proposed-qatar-staging.csv,promoted,yes,evidence_urls: replaced secondary-board citation with a directly re-fetched live official Workday requisition (Senior Quality Engineer R2058968)
+C11,cc-mowasalat,cc-mowasalat,proposed-qatar-staging.csv,promoted,yes,company_type public_joint_stock -> government_owned
+C12,cc-udst,cc-udst,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C13,cc-tgp-international-qatar,cc-tgp-international-qatar,proposed-qatar-staging.csv,promoted,yes,evidence_urls: added bayt.com Night Club Manager posting citation (plus fixed a pre-existing unquoted-comma CSV formatting defect in legal_or_official_name)
+C14,cc-cisco-qatar,cc-cisco-qatar,proposed-qatar-staging.csv,promoted,yes,RESOLVED FROM HOLD: re-verified via direct search of jobs.cisco.com; 4 live Doha/Qatar-tagged official postings found and cited; official_careers_url and evidence_urls replaced with directly-confirmed URLs
+C15,cc-bae-systems-qatar,cc-bae-systems-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C16,cc-qatar-stock-exchange,cc-qatar-stock-exchange,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C17,cc-millennium-hotel-doha,cc-millennium-hotel-doha,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C18,cc-accenture-qatar,cc-accenture-qatar,proposed-qatar-staging.csv,promoted,yes,official_careers_url and evidence_urls: replaced US-region-locked /us-en/careers with /qa-en/careers (plus fixed a pre-existing unquoted-comma CSV formatting defect in the glassdoor evidence URL)
+C19,cc-everllence-qatar,cc-everllence-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C20,cc-tata-consultancy-services-qatar,cc-tata-consultancy-services-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C21,cc-power-international-holding,cc-power-international-holding,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C22,cc-anantara-qatar,cc-anantara-qatar,proposed-qatar-staging.csv,promoted,no,"approve_unchanged; cross-cutting Minor Hotels granularity note recorded in duplicate-and-alias-review.csv, no change made (no existing conflicting precedent)"
+C23,cc-systems-limited-qatar,cc-systems-limited-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C24,cc-ge-vernova-qatar,cc-ge-vernova-qatar,proposed-qatar-staging.csv,promoted,yes,"evidence_urls: cited the Doha-filtered results URL instead of the unfiltered jobs root (reconstructed filter parameter, not independently re-fetched - flagged for a spot-check)"
+C25,cc-supermicro-qatar,cc-supermicro-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C26,cc-shell-qatar,cc-shell-qatar,proposed-qatar-staging.csv,promoted,yes,evidence_urls: added the Shell Graduate Programme 2025 Qatar job-posting URL
+C27,cc-pullman-doha-west-bay (RETIRED),cc-accor,proposed-qatar-staging.csv,promoted (consolidated),yes,"CONSOLIDATED per product-owner decision into the brand-level cc-accor row (reused existing shared canonical ID from uae.csv). Pullman Doha West Bay preserved as a named covered property in cc-accor's researcher_notes; own live-posting evidence NOT re-confirmed this pass, flagged for future spot-check."
+C28,cc-scale-ai-qatar,cc-scale-ai-qatar,proposed-qatar-staging.csv,promoted,yes,industry ai_data_training -> consulting_professional_services
+C29,cc-hilton-salwa (RESOLVED),cc-hilton,docs/job-source-discovery/qatar.csv (promoted),promoted,yes,"RESOLVED AND PROMOTED (final-verification pass, 2026-09-10): product-owner selected the market-neutral cc-hilton as the preferred canonical ID. Impact check confirmed the normalization is safe (documentation/CSV-only, zero code/database references, no existing cc-hilton collision). Production uae.csv and master-company-registry.csv cc-hilton-uae row renamed to cc-hilton (ID field only, all other fields unchanged). Hilton Salwa Beach Resort & Villas re-staged under cc-hilton and promoted into qatar.csv."
+C30,cc-al-abdulghani-motors,cc-al-abdulghani-motors,proposed-qatar-staging.csv,promoted,no,"approve_unchanged (a pre-existing unquoted-comma CSV formatting defect in evidence_urls was fixed as a mechanical data-integrity fix, not a content correction)"
+C31,cc-rosewood-doha,cc-rosewood-doha,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C32,cc-lesha-bank,cc-lesha-bank,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C33,cc-ecolab-qatar,cc-ecolab-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C34,cc-slb-qatar,cc-slb-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C35,cc-ibis-doha (RETIRED),cc-accor,proposed-qatar-staging.csv,promoted (consolidated),yes,"CONSOLIDATED per product-owner decision into the same cc-accor row as C27. ibis Doha's own directly-confirmed live postings (Driver, Room Attendant, others) preserved in evidence_urls - the strongest individual hotel-property evidence of any Accor brand found in Qatar this pass."
+C36,cc-doha-golf-club,cc-doha-golf-club,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+C37,cc-tivoli-qatar,cc-tivoli-qatar,proposed-qatar-staging.csv,promoted,no,"approve_unchanged; same Minor Hotels cross-cutting note as C22, no change made"
+C38,cc-american-academy-school-qatar,cc-american-academy-school-qatar,proposed-qatar-staging.csv,promoted,no,approve_unchanged
+(new) C39,"(new row, no prior candidate ID)",cc-accor,proposed-qatar-staging.csv,promoted,n/a,"New consolidated Accor Qatar employer row created by merging C27 and C35 per product-owner decision. Reuses the existing shared canonical_company_id cc-accor (see master-company-registry.csv / uae.csv sr-ae-accor row) per the documented cross-market-ID-reuse convention already used for cc-newtecx/cc-netways/cc-people365. Covers Doha; named properties preserved in researcher_notes: Pullman Doha West Bay, ibis Doha / ibis and Adagio Doha, plus two newly-observed Accor-network Doha properties found during this pass's re-verification (La Cigale Hotel Managed by Accor, Our Habitas Ras Abrouq)."
