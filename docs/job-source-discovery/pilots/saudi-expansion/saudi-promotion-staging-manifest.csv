@@ -1,0 +1,86 @@
+﻿canonical_company_id,company_name,raw_input_name,city,ats_provider,review_status,source_confidence,audit_final_decision,final_disposition
+cc-qiddiya,Qiddiya,Qiddiya,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-assystem-sa,Assystem,Assystem,multi_city,SmartRecruiters,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-saudi-azm,Saudi AZM,Saudi AZM,Riyadh,Recruitee,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-rime,RIME,RIME,Riyadh (remote-first),unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-accenture-sa,Accenture,Accenture Middle East,Riyadh; Jeddah,unknown,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-igate-sa,iGate,iGate,Riyadh,unknown,needs_manual_review,medium,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-innovationteam,InnovationTeam,InnovationTeam,Riyadh,unknown,needs_manual_review,high,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-datarobot,DataRobot,DataRobot,Remote (Saudi-eligible),Workday,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-cohere,Cohere,Cohere,Riyadh,unknown,needs_manual_review,high,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-infosys,Infosys,Infosys,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-tawantech,TAWANTECH,TAWANTECH,Saudi Arabia,Workable,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-infinite-pl,Infinite pl,Infinite PL,Riyadh,Lever,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-alpaca-ksa,Alpaca,Alpaca,Riyadh (Saudi/GCC-focused),Greenhouse,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-innovaccer,Innovaccer,Innovaccer,Saudi Arabia,unknown,needs_manual_review,high,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-elevenlabs,ElevenLabs,ElevenLabs,Saudi Arabia,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-naphora,Naphora Games Group,NAPHORA Games Group,Riyadh,unknown,needs_manual_review,medium,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-uxbert-labs,UXBERT Labs,UXBERT Labs,Riyadh,unknown,needs_manual_review,medium,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-yokogawa-sa,Yokogawa Middle East,Yokogawa,Al Khobar (multi-city),unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-mozn,MOZN,MOZN,Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-intech-aai,INTECH Automation & Intelligence,INTECH Automation & Intelligence,Al Khobar,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-sans,Saudi Air Navigation Services,Saudi Air Navigation Services / SANS,Saudi Arabia (country-wide),Oracle Cloud HCM,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-fakeeh-care-group,Fakeeh Care Group,Fakeeh Care Group,Riyadh; Jeddah,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-wisys,Al Watania Information Systems,Al Watania Information Systems / WiSys,Saudi Arabia,Workable,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-datamatics,Datamatics Technologies,Datamatics Technologies,Riyadh,JazzHR,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-gathern,Gathern,Gathern,Riyadh,Workable,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-sifi,SiFi,SiFi,Riyadh,Breezy HR,needs_manual_review,high,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-lenovo-sa,Lenovo,Lenovo,Riyadh,unknown,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-capgemini-sa,Capgemini,Capgemini Engineering,Riyadh; Al Khobar,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-devsinc-sa,Devsinc,Devsinc,Riyadh,MapleHR,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-bcg-platinion-sa,BCG Platinion,BCG Platinion / Boston Consulting Group,Riyadh,unknown,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-apparel-group-sa,Apparel Group,Apparel Group,Saudi Arabia (country-wide),unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-bmc-helix-sa,BMC Helix,BMC Helix,Riyadh,unknown,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-mirai-games,Mirai,Mirai,Riyadh,Workable,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-amazon-sa,Amazon,Amazon Web Services / Amazon,Riyadh; Jeddah,unknown,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-coorb-sa,CoorB,CoorB,Riyadh,unknown,needs_manual_review,high,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-sulava-mea,Sulava MEA,Sulava MEA,Riyadh (hybrid),unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-jeddah-airports,Jeddah Airports Company,Jeddah Airports,Jeddah,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-ncr-atleos-sa,NCR Atleos,NCR Atleos,Riyadh; Jeddah,Workday,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-ninja-sa,Ninja,Ninja,Riyadh,unknown,needs_manual_review,high,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-bupa-arabia,Bupa Arabia,Bupa Arabia,Jeddah; Riyadh; Al Khobar,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-wipro-sa,Wipro,Wipro,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-nahdi-medical,Nahdi Medical Company,Nahdi Medical Company,Riyadh; Jeddah (multi-city),unknown,needs_manual_review,medium,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-alnafitha-it,Alnafitha IT,Alnafitha IT,Riyadh (+Eastern Province),Zoho Recruit,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-perfect-vision,Perfect Vision,Perfect Vision,Dammam,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-zatca,"Zakat, Tax and Customs Authority","Zakat, Tax and Customs Authority",Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-atmaal,Atmaal,atmaal,Saudi Arabia (country-wide),unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-kun-sports,KUN Sports,KUN Sports,Jeddah,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-neoleap,neoleap,neoleap,Riyadh,unknown,needs_manual_review,medium,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-sj-group,SJ Group,SJ Group,Jeddah,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-sihamco,SIHAMCO,SIHAMCO,Jeddah,Workable,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-azeus-systems,Azeus Systems Limited,Azeus Systems,Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-aloula-aviation,Aloula Aviation,Aloula Aviation,Dammam,unknown,needs_manual_review,medium,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-al-othman-holding,Al-Othman Holding Company,Al-Othman Holding Company,Al Khobar,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-hala,HALA,HALA,Country-wide,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-cognizant,Cognizant,Cognizant,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-azadea-group,Azadea Group,Azadea Group,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-riyad-bank,Riyad Bank,Riyad Bank,Country-wide,Talentera,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-dentsu,dentsu,dentsu,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-nextera-tech,NextEra,NextEra,Riyadh (unconfirmed exact city),unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-sheba-joy,SHEBA JOY,SHEBA JOY,Riyadh,SmartRecruiters,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-haji-husein-alireza,Haji Husein Alireza & Co. Ltd.,Haji Husein Alireza & Co.,Jeddah,unknown,needs_manual_review,medium,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-jeddah-central-dev,Jeddah Central Development Company,Jeddah Central Development Company,Jeddah,unknown,needs_manual_review,medium,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-intelmatix,Intelmatix,intelmatix,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-ericsson,Ericsson,Ericsson,Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-akkodis,Akkodis,Akkodis,Medina/multi-city,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-mis-al-moammar,MIS,MIS / Al Moammar Information Systems,Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-albawani,Albawani,Albawani,Country-wide,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-slb,SLB,SLB,multi-city (Eastern Province likely),unknown,needs_manual_review,medium,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-tamkeen-technologies,Tamkeen Technologies,Tamkeen Technologies,Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-sap,SAP,SAP,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-searce,Searce,Searce,Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-sedco-holding,SEDCO Holding,SEDCO,Jeddah,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-2p-perfect-presentation,2P Perfect Presentation,Perfect Presentation,Riyadh,unknown,needs_manual_review,medium,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-minio,MinIO,MinIO,Riyadh,Greenhouse,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-atkinsrealis,AtkinsRéalis,AtkinsRéalis,Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-gt-medical,GT Medical,GT Medical,Jeddah,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-snap-inc,Snap Inc.,Snap Inc.,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-tcs,Tata Consultancy Services,Tata Consultancy Services,Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-salesforce,Salesforce,Salesforce,Riyadh,unknown,needs_manual_review,high,correct_then_approve,promoted_to_saudi_arabia_csv
+cc-noon-academy,Noon,Noon – Education for Everyone,Riyadh,unknown,needs_manual_review,medium,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-kbr,KBR,KBR,Eastern Province (Jubail/Khobar),unknown,needs_manual_review,high,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-remat-al-riyadh,Remat Al-Riyadh Development Co.,Remat Al-Riyadh Development Company,Riyadh,unknown,needs_manual_review,medium,hold_manual_review,held_see_manual_review_queue_SA_HOLD
+cc-luma-ai,Luma AI,Luma,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-democrance,Democrance,Democrance,Riyadh,unknown,needs_manual_review,high,approve_unchanged,promoted_to_saudi_arabia_csv
+cc-apple,Apple,Apple,Jeddah/Riyadh (multi-city),unknown,needs_manual_review,medium,correct_then_approve,promoted_to_saudi_arabia_csv

@@ -1,0 +1,63 @@
+raw_email,normalized_email,apparent_company,first_party_evidence_found,evidence_type,final_status,changed_from_prior_pass,evidence_urls,notes
+CV@Arabianfal.com,cv@arabianfal.com,Arabian Fal,no,none,third_party_or_free_mail_unverified,no,https://arabianfal.com/apply_cv/,"Careers page uses a web form + lists info@arabianfal.com; not re-fetched this pass, reasoning reviewed and upheld."
+Cv@aldawaa.com.sa,cv@aldawaa.com.sa,Al-Dawaa Pharmacies,no,none,domain_mismatch_or_suspicious,no,https://careers.al-dawaa.com/,Re-fetch of aldawaa.com.sa returned an empty/inconclusive response this pass; classification upheld.
+Hr.qrm@hotmail.com,hr.qrm@hotmail.com,unknown (free mail),no,none,third_party_or_free_mail_unverified,no,none,"Free mail, upheld."
+Rec@alojaimi.com,rec@alojaimi.com,Alojaimi Holding,no,none,third_party_or_free_mail_unverified,no,https://alojaimi.com,Not re-fetched; reasoning upheld.
+Recruitment@rawabiholding.com,recruitment@rawabiholding.com,Rawabi Holding,no,none,third_party_or_free_mail_unverified,no,https://careers.rawabiholding.com/en/login,"Login-gated ATS, no public email; upheld."
+Job.s6@hotmail.com,job.s6@hotmail.com,unknown (free mail),no,none,third_party_or_free_mail_unverified,no,none,"Free mail, upheld."
+Careers@dnata.com,careers@dnata.com,dnata (Emirates Group),no,none,third_party_or_free_mail_unverified,no,https://www.dnata.com/en/careers/,FLAG: Saudi presence remains unclear/weak; recommend deprioritizing on promotion.
+Hr@alesayi_motors.com,hr@alesayi_motors.com,Alesayi Motors,no,none,domain_mismatch_or_suspicious,no,https://careers.alesayi.com/,Underscore invalid in DNS hostname; upheld.
+Hr@alarayan.com,hr@alarayan.com,unknown,no,none,company_identity_unresolved,no,none,Upheld.
+Recruiting.ksa@mcmermott.com,recruiting.ksa@mcmermott.com,possibly McDermott (unconfirmed),no,none,domain_mismatch_or_suspicious,no,https://www.mcdermott.com/careers/search-apply,RE-VERIFIED: fresh fetch of mcmermott.com returned DNS ENOTFOUND (domain does not resolve). Strengthens the suspicious classification.
+Recruitment@aytb.com,recruitment@aytb.com,AYTB,no,none,third_party_or_free_mail_unverified,no,https://www.gulftalent.com/companies/aytb,Upheld.
+Wadaef@gtecorp.com,wadaef@gtecorp.com,GTE,no,none,third_party_or_free_mail_unverified,no,https://gte.sa/careers,Upheld.
+Careers@nesr.com,careers@nesr.com,NESR,no,none,third_party_or_free_mail_unverified,no,https://www.nesr.com/careers.html,"Form-based application, not email; upheld."
+Recruit@farm.com.sa,recruit@farm.com.sa,Farm/SAMCO,no,none,third_party_or_free_mail_unverified,no,https://www.farm.com.sa/en/Contact_Us,Upheld.
+Info@alhumamlaw.com,info@alhumamlaw.com,Al-Hamam Law Firm,yes,official_page,official_general_contact_not_recruitment,no,http://alhumamlaw.com/,"Generic firm inbox, upheld."
+Hr1@gulfteksaudi.com,hr1@gulfteksaudi.com,GulfTek Saudi,no,none,third_party_or_free_mail_unverified,no,http://www.gulfteksaudi.com/,Upheld.
+Catcosa@catcosa.com,catcosa@catcosa.com,unknown,no,none,domain_mismatch_or_suspicious,yes (upgraded from company_identity_unresolved),none,"RE-VERIFIED: fresh fetch returned a TLS cert mismatch (cert for *.sucuri.net, not catcosa.com) -- new red flag found this pass."
+Cv@tafear.com,cv@tafear.com,TAFE Arabia,no,none,third_party_or_free_mail_unverified,no,https://www.linkedin.com/company/tafear,"DATA-QUALITY FLAG: official_domain_confirmed=yes is only backed by a LinkedIn page, not a fetched company domain -- recommend downgrading to partial."
+Recruitment@sraco.com.sa,recruitment@sraco.com.sa,SRACO,no,none,third_party_or_free_mail_unverified,no,https://sraco.com.sa/careers/,Upheld.
+Career@sidco.com.sa,career@sidco.com.sa,SIDCO,no,none,third_party_or_free_mail_unverified,no,https://sidco.com.sa/,Upheld.
+Info@atco.com.sa,info@atco.com.sa,ATCO Group,yes,official_page,official_general_contact_not_recruitment,no,"https://www.glassdoor.com/Overview/Working-at-ATCO-Group-EI_IE1101852.11,21.htm",Upheld.
+HRdepartmental@sa.yokogawa.com,hrdepartmental@sa.yokogawa.com,Yokogawa Saudi Arabia,no,none,third_party_or_free_mail_unverified,no,https://www.yokogawa.com/about/careers/,Upheld.
+Recruitment@shadeco.com,recruitment@shadeco.com,SHADE Corporation,no,none,third_party_or_free_mail_unverified,no,https://shadeco.com/careers,Upheld.
+Klc.hr@alkafaa.com,klc.hr@alkafaa.com,Al Kafaa Limited Co.,yes,job_posting,official_recruitment_email_verified,"no (re-verified, held up)",https://alkafaa.com/careers-page/,RE-FETCHED THIS PASS: mailto:klc.hr@alkafaa.com confirmed live on a Sales Executive posting. Verification holds.
+Kbr-amcdehr@kbr.com,kbr-amcdehr@kbr.com,KBR/KBR-AMCDE,no,none,third_party_or_free_mail_unverified,no,https://www.linkedin.com/company/kbr-amcde,Upheld.
+Recruitment@batook.com,recruitment@batook.com,Batook Holding,no,none,third_party_or_free_mail_unverified,no,http://www.batook.com/career/,Upheld.
+Career@shawarmer.com,career@shawarmer.com,Shawarmer,no,none,third_party_or_free_mail_unverified,no,https://shawarmer.referrals.selectminds.com/,"ATS portal, not email; upheld."
+Hrsupport@archirodon.net,hrsupport@archirodon.net,Archirodon Group,no,none,third_party_or_free_mail_unverified,no,https://www.archirodon.net/careers/building-the-future-together/,Upheld.
+Jobs@binajinah.com,jobs@binajinah.com,Bin Ajinah Group,no,none,third_party_or_free_mail_unverified,no,https://binajinah.com/about-us/,Upheld.
+Marketing.np@nesma.com,marketing.np@nesma.com,Nesma,yes,official_page,official_general_contact_not_recruitment,no,https://www.nesma.com/en/careers,"Marketing dept, not recruitment; upheld."
+Wadaef2019@abdulla-fouad.com,wadaef2019@abdulla-fouad.com,Abdulla Fouad Group,no,none,third_party_or_free_mail_unverified,no,https://www.abdulla-fouad.com/careers.html,"ATS-linked, no email listed; upheld."
+Careers@innosoft.sa,careers@innosoft.sa,Innosoft,no,none,domain_mismatch_or_suspicious,no,https://innosoft.com/careers,Domain spelling mismatch; upheld.
+M@startime.com.sa,m@startime.com.sa,Startime,no,none,domain_mismatch_or_suspicious,no,https://startime.sa/discover-us/,Domain spelling mismatch; upheld.
+job@musk.sa.com,job@musk.sa.com,MUSK Perfumes,no,none,third_party_or_free_mail_unverified,no,https://musk.sa.com/en,Upheld.
+Shababwatansa@gmail.com,shababwatansa@gmail.com,unknown (free mail),no,none,third_party_or_free_mail_unverified,no,none,Upheld.
+j@sabksa.com,j@sabksa.com,unknown,no,none,company_identity_unresolved,no,none,"RE-FETCHED this pass: ECONNRESET again. Genuine, reproducible access gap; upheld."
+al.alshaikh@bonyan.sa,al.alshaikh@bonyan.sa,Bonyan,no,none,third_party_or_free_mail_unverified,no,https://bonyan.sa/,Upheld.
+ymohammed@innovest.com.sa,ymohammed@innovest.com.sa,Innovest Properties,no,none,third_party_or_free_mail_unverified,no,https://www.arabnews.com/node/1906171/business-economy,Upheld.
+s.alwadi@nhc.sa,s.alwadi@nhc.sa,National Housing Company,no,none,third_party_or_free_mail_unverified,no,https://nhc.sa/en/careers/,Upheld.
+i.atassi@artar.com.sa,i.atassi@artar.com.sa,ARTAR,no,none,third_party_or_free_mail_unverified,no,https://www.artar.com.sa/en/contact-us,Upheld.
+oalkhunaizi@darwaemaar.com,oalkhunaizi@darwaemaar.com,Dar Wa Emaar,no,none,third_party_or_free_mail_unverified,no,https://darwaemaar.com/en/contact/,Upheld.
+jobs@almasah.net,jobs@almasah.net,unknown (ambiguous),no,none,company_identity_unresolved,no,none,Upheld.
+recruitment.amjad@gmail.com,recruitment.amjad@gmail.com,unknown (free mail),no,none,third_party_or_free_mail_unverified,no,none,Upheld.
+jobrydlaw@gmail.com,jobrydlaw@gmail.com,unknown (free mail),no,none,third_party_or_free_mail_unverified,no,none,Upheld.
+Job@almoosahospital.com.sa,job@almoosahospital.com.sa,Almoosa Health Group,no,none,third_party_or_free_mail_unverified,no,https://almoosahealthgroup.org/about-us-en/careers/,HTTP 410 on careers page; upheld.
+recruitment@almoosahospital.com.sa,recruitment@almoosahospital.com.sa,Almoosa Health Group,no,none,third_party_or_free_mail_unverified,no,https://almoosahealthgroup.org/about-us-en/careers/,Aggregator-sourced only; upheld.
+jobs@sghgroup.net,jobs@sghgroup.net,Saudi German Hospitals Group,no,none,third_party_or_free_mail_unverified,no,https://career.saudigermanhealth.com/,RE-FETCHED: HTTP 403 again. Confirmed same evidence tier as career.dmm@ below.
+career.dmm@sghgroup.net,career.dmm@sghgroup.net,Saudi German Hospitals Group (Dammam),no,none,third_party_or_free_mail_unverified,no,https://career.saudigermanhealth.com/,RE-FETCHED: HTTP 403 again. Confirmed equal evidence tier vs. jobs@ above -- no differentiation possible.
+talent.acquisition@drsulaimanalhabib.com,talent.acquisition@drsulaimanalhabib.com,Dr. Sulaiman Al Habib Medical Group,no,none,third_party_or_free_mail_unverified,no,https://www.gulftalent.com/companies/dr-sulaiman-al-habib-medical-group-hmg-careers,RE-FETCHED: ECONNRESET again on official careers page. Confirmed same evidence tier as hr.phc@ below.
+Careers@jhah.com,careers@jhah.com,Johns Hopkins Aramco Healthcare,no,none,third_party_or_free_mail_unverified,no,https://careers.jhah.com/,"ATS portal, no email; upheld."
+hrd@alahsahospital.com.sa,hrd@alahsahospital.com.sa,Al Ahsa Hospital / Dallah Hospital,no,none,third_party_or_free_mail_unverified,no,https://www.alahsahospital.com.sa,Upheld.
+career@almanahospital.com.sa,career@almanahospital.com.sa,Almana General Hospital,no,none,third_party_or_free_mail_unverified,no,https://www.linkedin.com/company/almana-general-hospitals,Upheld.
+info@familycare.com.sa,info@familycare.com.sa,Family Care Hospital,yes,official_page,official_general_contact_not_recruitment,no,https://www.facebook.com/Familycareksa7/,Upheld.
+info@ramclinics.com,info@ramclinics.com,unknown,no,none,company_identity_unresolved,no,none,RE-FETCHED: identical SSL handshake failure reproduced. Confirmed genuine access gap.
+HR.DSFHR@fakeeh.care,hr.dsfhr@fakeeh.care,Fakeeh Care Group,no,none,third_party_or_free_mail_unverified,no,https://careers.fakeeh.care/,Upheld.
+career@mouwasat.com,career@mouwasat.com,Al Mouwasat Medical,no,none,third_party_or_free_mail_unverified,no,https://www.mouwasat.com/en/careers,Upheld.
+careers@dallah-hospital.com,careers@dallah-hospital.com,Dallah Hospital,no,none,third_party_or_free_mail_unverified,no,https://www.dallah-hospital.com,Upheld.
+hr.phc@drsulaimanalhabib.com,hr.phc@drsulaimanalhabib.com,Dr. Sulaiman Al Habib Medical Group -- PHC division,no,none,third_party_or_free_mail_unverified,no,https://www.gulftalent.com/companies/dr-sulaiman-al-habib-medical-group-hmg-careers,Confirmed equal evidence tier vs. talent.acquisition@ above.
+careers@almurjanhospital.com,careers@almurjanhospital.com,Al Murjan Hospital,no,none,third_party_or_free_mail_unverified,no,https://www.almurjanhospital.com,Upheld.
+hiringnow.ksa@gmail.com,hiringnow.ksa@gmail.com,unknown (free mail),no,none,third_party_or_free_mail_unverified,no,none,Upheld.
+recruitment@wecareksa.com,recruitment@wecareksa.com,WeCare Hospital,no,none,third_party_or_free_mail_unverified,no,https://wecareksa.com,Upheld.
+al.alshaikh@bonyan.sa,al.alshaikh@bonyan.sa (duplicate),Bonyan,no,none,duplicate,no,https://bonyan.sa/,"Confirmed counted once with duplicate recorded, not dropped."
