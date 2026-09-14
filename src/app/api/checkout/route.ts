@@ -1,5 +1,5 @@
 import { NextResponse } from "next/server";
-import { isPayablePlanCode } from "@/lib/plans/types";
+import { parseCheckoutRequestBody } from "./parseCheckoutRequest";
 import { startCheckout, NotAuthenticatedError, CheckoutRateLimitedError } from "@/lib/payments/checkout";
 
 // Starts (or resumes) a paid-plan checkout attempt for the signed-in user.
@@ -9,20 +9,19 @@ import { startCheckout, NotAuthenticatedError, CheckoutRateLimitedError } from "
 // (enforced in the create_payment_attempt database function), so a page
 // refresh can never create a duplicate.
 export async function POST(request: Request) {
-  let planCode: string | undefined;
+  let rawBody: unknown;
 
   try {
-    const body = (await request.json()) as { planCode?: unknown };
-    if (typeof body.planCode === "string") {
-      planCode = body.planCode;
-    }
+    rawBody = await request.json();
   } catch {
     return NextResponse.json({ error: "Invalid request body" }, { status: 400 });
   }
 
-  if (!isPayablePlanCode(planCode)) {
-    return NextResponse.json({ error: "Unknown or invalid plan" }, { status: 400 });
+  const parsed = parseCheckoutRequestBody(rawBody);
+  if (!parsed.ok) {
+    return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
+  const { planCode } = parsed;
 
   try {
     const { paymentAttempt, whishConfigured } = await startCheckout(planCode);

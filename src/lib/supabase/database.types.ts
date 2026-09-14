@@ -1992,6 +1992,18 @@ export type Database = {
         }
       }
       get_onboarding_readiness: { Args: never; Returns: Json }
+      get_public_plan_catalog: {
+        Args: never
+        Returns: {
+          billing_period: string
+          cover_letter_limit: number
+          currency: string
+          display_name: string
+          job_match_limit: number
+          plan_code: string
+          price_amount: number
+        }[]
+      }
       is_admin: { Args: never; Returns: boolean }
       is_cv_analysis_matching_eligible: {
         Args: { p_analysis_id: string }
@@ -2105,6 +2117,22 @@ export type Database = {
       promote_due_subscription_period: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      publish_price_version: {
+        Args: { p_label: string; p_prices: Json }
+        Returns: {
+          created_at: string
+          effective_at: string
+          id: string
+          is_active: boolean
+          label: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "price_versions"
+          isOneToOne: true
+          isSetofReturn: false
+        }
       }
       quote_student_to_pro_upgrade: {
         Args: { p_user_id: string }
