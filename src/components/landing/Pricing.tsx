@@ -1,6 +1,7 @@
 import PricingCta from "./PricingCta";
 import type { PlanCode } from "@/lib/plans/types";
 import { createClient } from "@/lib/supabase/server";
+import { getPublicPlanCatalog, formatPlanPrice } from "@/lib/plans/getPublicPlanCatalog";
 
 // Confirmed MVP market: this product supports only users currently
 // residing in Lebanon (AGENTS.md). There is no selectable residence
@@ -8,29 +9,34 @@ import { createClient } from "@/lib/supabase/server";
 // difference is the optional (Pro-only) international job search
 // configured in onboarding/settings, not a resident-country distinction.
 //
-// Marketing copy below (price, limits) must match the canonical values in
-// public.plans exactly (supabase/migrations/20260802090000_create_plans.sql).
-// That table — not this file — is what server-side entitlement and
-// payment-amount checks read; if pricing ever changes, update the
-// migration first, then this copy to match.
-const PLANS: {
-  planCode: PlanCode;
-  name: string;
-  price: string;
-  originalPrice?: string;
-  period: string;
-  description?: string;
-  badge?: string;
-  offer?: string;
-  features: string[];
-  cta: string;
-  highlighted: boolean;
-}[] = [
+// PRESENTATION content only — no price, currency, or billing period lives
+// here. The real, current, checkout-authoritative price for every plan
+// comes exclusively from public.get_public_plan_catalog() (see
+// src/lib/plans/getPublicPlanCatalog.ts) — never a frontend constant, and
+// never duplicated here. A future backend price change (via the
+// service-role-only publish_price_version RPC, see docs/PRICING.md) shows
+// up on this page after a normal refresh with zero edits to this file.
+//
+// originalPrice/offer below are a static "launch discount" marketing
+// framing, not a real historical price row anywhere in the database — kept
+// as presentational copy only, per the same reasoning "features"/"cta"
+// are presentational: they carry no billing authority and nothing is ever
+// charged based on them.
+const PLAN_PRESENTATION: Record<
+  PlanCode,
   {
-    planCode: "free",
+    name: string;
+    originalPrice?: string;
+    description?: string;
+    badge?: string;
+    offer?: string;
+    features: string[];
+    cta: string;
+    highlighted: boolean;
+  }
+> = {
+  free: {
     name: "Free",
-    price: "$0",
-    period: "/ forever",
     description: "Try your first AI job match.",
     features: [
       "1 best available job match per month",
@@ -43,12 +49,9 @@ const PLANS: {
     cta: "Start Free",
     highlighted: false,
   },
-  {
-    planCode: "student",
+  student: {
     name: "Student",
-    price: "$9",
     originalPrice: "$18",
-    period: "/ month",
     badge: "Most popular",
     offer: "Launch offer",
     features: [
@@ -64,12 +67,9 @@ const PLANS: {
     cta: "Get Student Plan",
     highlighted: true,
   },
-  {
-    planCode: "pro",
+  pro: {
     name: "Pro",
-    price: "$18",
     originalPrice: "$29",
-    period: "/ month",
     offer: "Launch offer",
     features: [
       "Everything in Student, for Lebanon-based matching",
@@ -86,7 +86,14 @@ const PLANS: {
     cta: "Go Pro",
     highlighted: false,
   },
-];
+};
+
+// Every plan code this page knows how to present. If the server catalog is
+// missing any one of these (misconfiguration, or a plan deliberately
+// deactivated), the whole section fails closed to the unavailable state
+// below rather than rendering a partial/confusing pricing table or
+// inventing a price for the missing plan.
+const EXPECTED_PLAN_CODES: PlanCode[] = ["free", "student", "pro"];
 
 // Server Component: reads the signed-in user's current subscription only
 // to relabel the Pro card as an upgrade for an active Student (never to
@@ -111,6 +118,28 @@ export default async function Pricing() {
     isActiveStudent = subscription?.plan_code === "student" && subscription?.status === "active";
   }
 
+  const catalog = await getPublicPlanCatalog();
+  const catalogByPlanCode = new Map(catalog?.map((entry) => [entry.planCode, entry]));
+  // Fail closed: only render the pricing table (and its checkout buttons)
+  // when EVERY plan this page presents actually came back from the server
+  // catalog. A partial or empty result never renders a stale/invented
+  // price or a checkout button that could start a mispriced attempt.
+  const pricingAvailable =
+    catalog !== null && EXPECTED_PLAN_CODES.every((code) => catalogByPlanCode.has(code));
+
+  const plans = pricingAvailable
+    ? EXPECTED_PLAN_CODES.map((planCode) => {
+        const entry = catalogByPlanCode.get(planCode)!;
+        const presentation = PLAN_PRESENTATION[planCode];
+        return {
+          planCode,
+          ...presentation,
+          price: formatPlanPrice(entry.priceAmount, entry.currency),
+          period: entry.billingPeriod === "forever" ? "/ forever" : "/ month",
+        };
+      })
+    : [];
+
   return (
     <section id="pricing" className="bg-white">
       <div className="mx-auto max-w-7xl px-6 py-20 lg:px-8 lg:py-24">
@@ -126,8 +155,17 @@ export default async function Pricing() {
           </p>
         </div>
 
+        {!pricingAvailable && (
+          <div className="mx-auto mt-14 max-w-xl rounded-3xl border border-slate-200 bg-bg p-8 text-center">
+            <p className="text-sm font-medium text-text">
+              Pricing is temporarily unavailable. Please check back shortly.
+            </p>
+          </div>
+        )}
+
+        {pricingAvailable && (
         <div className="mt-14 grid grid-cols-1 gap-6 lg:grid-cols-3">
-          {PLANS.map((plan) => {
+          {plans.map((plan) => {
             const isUpgradeCard = plan.planCode === "pro" && isActiveStudent;
 
             return (
@@ -241,6 +279,7 @@ export default async function Pricing() {
             );
           })}
         </div>
+        )}
 
         <p className="mx-auto mt-8 max-w-3xl text-center text-sm leading-relaxed text-muted">
           Match limits are monthly maximums, not guarantees. We prioritize

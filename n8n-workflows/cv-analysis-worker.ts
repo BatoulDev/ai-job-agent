@@ -1549,3 +1549,15 @@ export default workflow('cv-analysis-worker', 'CV Analysis Worker')
 // checkNeedsFullExtraction[1]  → loadPriorCvFacts → normalizeCvContext (input 0, same node the
 //                                 full path's extractPdfText also feeds — a genuine two-parent
 //                                 convergence node, applied in cv-analysis-worker.json)
+
+// The three consts above are genuinely used — each one's node config (type,
+// name, parameters/jsCode) is what n8n-workflows/cv-analysis-worker.json's
+// "Handle Context Failure" / "Load Prior CV Facts" / "Handle Ownership
+// Mismatch" nodes were authored from (confirmed present in that JSON) —
+// they're just never chained via .to() for the reason documented above, so
+// the linter can't see that. These lines exist only to make that explicit
+// to `no-unused-vars`; they have no runtime effect and change nothing about
+// the exported workflow.
+void handleContextFailure;
+void loadPriorCvFacts;
+void handleOwnershipMismatch;

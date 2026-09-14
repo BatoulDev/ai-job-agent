@@ -280,7 +280,6 @@ function runSplitTasks(inputItems) {
     all:   () => inputItems,
     first: () => (inputItems.length > 0 ? inputItems[0] : { json: null }),
   };
-  // eslint-disable-next-line no-new-func
   return new Function('$input', code)(mockInput);
 }
 
@@ -511,7 +510,6 @@ function runValidateCvContext(inputJson, splitTasksJson) {
   const mockDollar = (nodeName) => ({
     item: { json: nodeName === 'Split Tasks' ? splitTasksJson : null },
   });
-  // eslint-disable-next-line no-new-func
   return new Function('$input', '$', code)(mockInput, mockDollar);
 }
 
@@ -648,7 +646,6 @@ function runHandleContextFailure(inputJson, splitTasksJson) {
   const mockDollar = (nodeName) => ({
     item: { json: nodeName === 'Split Tasks' ? splitTasksJson : null },
   });
-  // eslint-disable-next-line no-new-func
   return new Function('$input', '$', code)(mockInput, mockDollar);
 }
 
@@ -820,7 +817,6 @@ function runMergePreferenceData({ validateCtxJson, loadPrefsJson, roleItems = []
     }
   };
 
-  // eslint-disable-next-line no-new-func
   return new Function('$input', '$', code)(mockInput, mockDollar);
 }
 
@@ -1146,7 +1142,6 @@ function runBuildOpenAIRequest({ taskCtxJson, normCtxJson, mergePrefsJson, feedb
   };
   // $input is no longer used in Build OpenAI Request (reads from named nodes).
   const mockInput = { item: { json: feedbackItemJson } };
-  // eslint-disable-next-line no-new-func
   return new Function('$input', '$', code)(mockInput, mockDollar);
 }
 
@@ -1417,7 +1412,6 @@ function runNormalizeCvContext({ taskCtxJson, inputJson }) {
     }
   };
   const mockInput = { item: { json: inputJson } };
-  // eslint-disable-next-line no-new-func
   return new Function('$input', '$', code)(mockInput, mockDollar);
 }
 
@@ -1501,7 +1495,6 @@ function runParseAIResponse({ reqCtxJson, aiResponseJson }) {
     }
   };
   const mockInput = { item: { json: aiResponseJson } };
-  // eslint-disable-next-line no-new-func
   return new Function('$input', '$', code)(mockInput, mockDollar);
 }
 
@@ -1678,7 +1671,6 @@ function runBuildTaskUpdate({
     return { item: { json: {} } };
   };
   const mockInput = { item: { json: insertResultJson } };
-  // eslint-disable-next-line no-new-func
   return new Function('$input', '$', code)(mockInput, mockDollar);
 }
 
