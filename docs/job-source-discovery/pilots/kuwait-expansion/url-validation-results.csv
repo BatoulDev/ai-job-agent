@@ -1,0 +1,95 @@
+company_or_entity,url_checked,http_status_or_error,finding,classification
+stc Kuwait,https://www.stc.com.kw/wps/wcm/connect/english/careers,HTTP 403,blocked,blocked_http_403
+Halliburton,https://careers.halliburton.com/search-jobs?k=&l=Kuwait,HTTP 200,5 Kuwait positions confirmed via location filter (Al Ahmadi),accessible_confirmed_kuwait_jobs
+Anton Oilfield Services,https://www.antonoil.com/en/,DNS ENOTFOUND,domain does not resolve,dns_failure
+Precision Drilling,https://www.precisiondrilling.com/careers,HTTP 200,No Kuwait mentioned; Calgary/Houston/Dubai only,accessible_no_kuwait
+Iron Mountain,https://www.ironmountain.com/about-us/locations/middle-east/kuwait,HTTP 404,not found,blocked_http_404
+Iron Mountain,https://www.ironmountain.com/locations/middle-east-and-africa/kuwait,HTTP 404,not found,blocked_http_404
+Majid Al Futtaim,https://www.majidalfuttaim.com/en/careers,timeout then HTTP 200 on retry,No Kuwait mentioned; Dubai HQ only,accessible_no_kuwait
+Emerson,https://www.emerson.com/en-us/about-us/careers,HTTP 404,not found,blocked_http_404
+Emerson,https://www.emerson.com/en-us/careers,HTTP 200,"generic content, no Kuwait filter results retrievable",accessible_inconclusive
+IHG Hotels & Resorts,https://www.ihg.com/hotels/gb/en/reservation/hotellisting?query=Kuwait,HTTP 403,blocked,blocked_http_403
+KPMG in Kuwait,https://kpmg.com/kw/en/home/careers.html,HTTP 200,"homepage only, links to careers subpage",accessible_partial
+KPMG in Kuwait,https://kpmg.com/kw/en/careers.html,HTTP 200,"Work with us section, no listings on this page",accessible_partial
+KPMG in Kuwait,https://kpmg.com/kw/en/careers/work-with-us.html,HTTP 200,5 live roles confirmed via SuccessFactors ATS,accessible_confirmed_kuwait_jobs
+ZainTECH,https://www.zaintech.com/careers,HTTP 403,blocked,blocked_http_403
+Cisco,https://jobs.cisco.com/jobs/SearchJobs/?21178=[380292]&21178_format=6020&listFilterMode=1,HTTP 302 redirect,redirected to careers.cisco.com,redirect_followed
+Cisco,https://careers.cisco.com/?21178=[380292]&21178_format=6020&listFilterMode=1,HTTP 200,"generic overview, no Kuwait-specific listings shown",accessible_inconclusive
+Hilton,https://www.hilton.com/en/locations/kuwait/,HTTP 200,"4 Kuwait properties confirmed (booking site, secondary evidence)",accessible_confirmed_kuwait_presence
+Accenture,https://www.accenture.com/kw-en/careers,HTTP 403,blocked,blocked_http_403
+Microsoft,https://careers.microsoft.com/v2/global/en/search?q=Kuwait,HTTP 404,not found,blocked_http_404
+Microsoft,https://jobs.careers.microsoft.com/global/en/search?q=Kuwait,HTTP 301 redirect,"redirected, not re-fetched",redirect_not_followed
+Siemens,https://www.siemens.com/global/en/company/jobs.html?jobSearchLocation=Kuwait,HTTP 200,"generic content only, external portal not fetched",accessible_inconclusive
+Deliveroo,https://careers.deliveroo.co.uk/,HTTP 200,No Kuwait mentioned; Milan/London/Manchester/Paris only,accessible_no_kuwait
+DHL Global Forwarding,https://www.logistics.dhl/kw-en/home/about-us/dhl-global-forwarding.html,HTTP 404,not found,blocked_http_404
+International Turnkey Systems (ITS),https://www.its.ws/,HTTP 200,"Kuwait City HQ confirmed, careers link found",accessible_confirmed_kuwait_presence
+International Turnkey Systems (ITS),https://its.ws/careers/,HTTP 200,"careers framework present, no specific listings extracted",accessible_partial
+International Turnkey Systems (ITS),https://www.itsmena.com/careers/,ECONNREFUSED,connection refused,connection_error
+Tabby,https://www.tabby.ai/careers,HTTP 200,No Kuwait office (Riyadh/Dubai/Cairo only); 'No open roles right now',accessible_no_kuwait
+United Real Estate Company (URC),https://apply.workable.com/urckw/,HTTP 200,"Workable tenant found, company identity not independently confirmed",accessible_inconclusive
+Australian University Kuwait,https://www.aui.edu.kw/,DNS ENOTFOUND,domain does not resolve,dns_failure
+American International University Kuwait,https://www.aiu.edu.kw/,HTTP 200,institution + careers links confirmed,accessible_confirmed_kuwait_presence
+Hyatt,https://www.hyatt.com/en-US/destinations/kuwait,HTTP 403,blocked,blocked_http_403
+Marriott,https://www.marriott.com/en-us/search/findHotels.mi?destinationAddress.country=KW,HTTP 403 (retry-after 28800),blocked,blocked_http_403_rate_limited
+Radisson Hotel Group,https://www.radissonhotels.com/en-us/destination/kuwait,HTTP 403,blocked,blocked_http_403
+Four Seasons,https://www.fourseasons.com/kuwait/,HTTP 403,blocked,blocked_http_403
+SLB,https://careers.slb.com/job-search-results?keywords=kuwait,HTTP 404,not found,blocked_http_404
+KBR,https://www.kbr.com/en/careers,HTTP 403,blocked,blocked_http_403
+Ecolab,https://www.ecolab.com/careers,HTTP 301 redirect,redirected to jobs.ecolab.com,redirect_followed
+Ecolab,https://jobs.ecolab.com/,HTTP 200,"content truncated, inconclusive",accessible_inconclusive
+Ecolab,https://jobs.ecolab.com/search?q=Kuwait,HTTP 200 (truncated),"inconclusive, could not confirm Kuwait listings",accessible_inconclusive
+Americana Restaurants,https://www.americanarestaurants.com/careers,HTTP 404,wrong domain guess,blocked_http_404
+Almarai,https://www.almarai.com/en/careers/,HTTP 404,not found,blocked_http_404
+Foodics,https://www.foodics.com/careers,HTTP 200,Kuwait office phone number confirmed (22086665),accessible_confirmed_kuwait_presence
+Snoonu,https://snoonu.com/careers,HTTP 403,blocked,blocked_http_403
+Worley,https://worley.com/en/careers,HTTP 200,"Kuwait only in contact-form dropdown, no confirmed office",accessible_weak_signal
+Fluor Corporation,https://www.fluor.com/careers,HTTP 200,Kuwait not individually named; Middle East generic only,accessible_no_specific_kuwait
+Mashreq,https://www.mashreq.com/en/uae/careers/,HTTP 404,not found,blocked_http_404
+Hitachi Energy,https://www.hitachienergy.com/careers,HTTP 200,Kuwait only as generic region selector option,accessible_weak_signal
+Bureau Veritas,https://www.bureauveritas.com/careers,HTTP 301 redirect,"redirected to group.bureauveritas.com/careers, not re-fetched",redirect_not_followed
+Larsen & Toubro,https://www.larsentoubro.com/corporate/careers/,HTTP 200,No specific countries/Kuwait named,accessible_no_kuwait
+General Dynamics IT (GDIT),https://www.gdit.com/careers/,HTTP 200,"US-focused only, no Kuwait mention",accessible_no_kuwait
+Leidos,https://www.leidos.com/careers,HTTP 301 redirect,"redirected to careers.leidos.com, not re-fetched",redirect_not_followed
+V2X,https://www.gov2x.com/careers,HTTP 200,No Kuwait mention despite 47-country global scale claim,accessible_no_kuwait
+Nestlé,https://www.nestle.com/jobs,HTTP 403,blocked,blocked_http_403
+Sephora,https://www.sephora.ae/en/careers,HTTP 403,blocked,blocked_http_403
+Apparel Group,https://www.apparelgroup.com/en/careers/,HTTP 200,Kuwait presence confirmed: 'KUWAIT Brands 50 Stores 153',accessible_confirmed_kuwait_presence
+Abercrombie & Fitch Co.,https://corporate.abercrombie.com/careers,HTTP 200,No Gulf/Kuwait mention; Columbus/London/Shanghai/HK/Bengaluru/Switzerland only,accessible_no_kuwait
+Libertex Group,https://libertex.com/careers,HTTP 403,blocked,blocked_http_403
+SpaStaff / Spa Staff.com,https://www.spastaff.com/,HTTP 200,Real platform confirmed; covers Oman/UAE/Qatar/Saudi/Bahrain but NOT Kuwait,accessible_confirmed_no_kuwait_coverage
+Diyar United Company,https://www.diyarunited.com/,DNS ENOTFOUND,domain does not resolve,dns_failure
+NADEC Foods,https://www.nadec.com.sa/en/careers,TLS certificate hostname mismatch,technical/access issue,ssl_failure
+Keeta,https://www.keeta.com/,HTTP 200,"Resolves to an UNRELATED blockchain-payments company, not Meituan's Keeta brand",accessible_wrong_entity_identity_conflict
+Apave International,https://www.apave.com/en/careers,HTTP 404,not found,blocked_http_404
+Egis,https://www.egis-group.com/careers,HTTP 404,not found,blocked_http_404
+Kuwait Foundation for the Advancement of Sciences (KFAS),https://www.kfas.org.kw/,TLS certificate expired,technical/access issue,ssl_failure
+Anton Oilfield Services,https://en.wikipedia.org/wiki/Anton_Oilfield_Services,HTTP 404,wrong page slug,blocked_http_404
+ADES International Holding,https://en.wikipedia.org/wiki/ADES_International_Holding,HTTP 404,wrong page slug,blocked_http_404
+Meituan,https://www.meituan.com/en-US/about-us,HTTP 200,No Keeta mention on corporate about page,accessible_no_keeta_mention
+Keeta (Meituan brand attempt),https://food.keeta.com/,DNS ENOTFOUND,domain does not resolve,dns_failure
+Libertex,https://www.libertex.org/careers,HTTP 403,blocked,blocked_http_403
+Public Authority for Manpower (PAM),https://www.pam.gov.kw/,DNS ENOTFOUND,wrong domain guess,dns_failure
+Kuwait Civil Service Commission,https://www.csc.gov.kw/,HTTP 200,CONFIRMED real government body with a recruitment portal link (portal2.csc.gov.kw),accessible_confirmed_new_source
+Kuwait Civil Service Commission Recruitment Portal,https://portal2.csc.gov.kw/,ECONNRESET,connection reset,connection_error
+Akhtaboot Kuwait,https://www.akhtaboot.com/en/jobs/kuwait,HTTP 200,Real MENA job board but Jordan-centric; 0 Kuwait postings visible,accessible_weak_kuwait_coverage
+Tanqeeb Kuwait,https://kw.tanqeeb.com/,HTTP 200 (blank content),inconclusive,accessible_inconclusive
+Wazzaf,https://www.wazzaf.com.kw/,DNS ENOTFOUND,wrong domain guess,dns_failure
+Manpower Authority alt,https://www.manpower.gov.kw/,ECONNRESET,connection reset,connection_error
+Bureau Veritas (retry),https://group.bureauveritas.com/careers,HTTP 200,No Kuwait mentioned; 140 countries claimed generically,accessible_no_kuwait
+Leidos (retry),https://careers.leidos.com/,HTTP 403,blocked,blocked_http_403
+Almarai (retry),https://www.almarai.com/en/media-center/news/,HTTP 406,blocked,blocked_http_406
+DHL (retry),https://www.dhl.com/kw-en/home.html,timeout,timeout after 60s,timeout
+talabat Kuwait,https://www.talabat.com/kuwait,HTTP 200,"CONFIRMED: multiple Kuwait cities listed (Ahmadi, Hawally, Al Jahra, Farwaniya, Mubarak Al-kabir, Kuwait City); careers link found",accessible_confirmed_kuwait_presence
+Four Seasons Kuwait City (retry),https://www.fourseasons.com/kuwaitcity/,HTTP 403,blocked,blocked_http_403
+talabat careers (Delivery Hero),https://careers.deliveryhero.com/talabat,HTTP 200,"CONFIRMED live Kuwait job: Sr. Specialist Real Estate & Construction, Salmiya",accessible_confirmed_kuwait_jobs
+KFAS (retry via http),http://www.kfas.org.kw/,TLS certificate expired,technical issue persists,ssl_failure
+Boursa Kuwait listed companies,https://www.boursakuwait.com.kw/en/listed-companies,HTTP 403,blocked,blocked_http_403
+Q8Jobs,https://www.q8jobs.com/,HTTP 500,server error,server_error
+GulfTalent Kuwait (re-verify),https://www.gulftalent.com/kuwait/jobs,HTTP 200,"CONFIRMED 813 listings, employer names disclosed -- matches existing src-kw-gulftalent-kuwait",accessible_confirmed_existing_source
+Naukrigulf Kuwait,https://www.naukrigulf.com/kuwait-jobs,timeout,timeout after 60s,timeout
+Bayt Kuwait (re-verify),https://www.bayt.com/en/kuwait/jobs/,HTTP 403,blocked (matches existing src-kw-bayt-kuwait access-status history),blocked_http_403
+Kuwait Oil Company,https://www.kockw.com/,HTTP 200 (minimal content),inconclusive,accessible_inconclusive
+Zain Group,https://www.zain.com/en/about-zain/zain-group-overview/,HTTP 307 redirect,not re-fetched,redirect_not_followed
+AMICO Group,https://amico-group.com/,HTTP 302 redirect to domain-resale page,CONFIRMED wrong/parked domain,domain_squatted_wrong_guess
+Kuwait Investment Authority,https://www.kia.gov.kw/en/,HTTP 404,"wrong path, root domain confirmed real via independent source",blocked_http_404
+Kuwait Capital Markets Authority,https://www.cma.gov.kw/en/,ECONNRESET,connection reset,connection_error

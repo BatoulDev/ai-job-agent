@@ -1,0 +1,81 @@
+canonical_company_id,company_name,lead_number,city,source_confidence,review_status,production_status,production_promoted_date,production_files
+cc-halliburton,Halliburton,2,Al Ahmadi,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-international-turnkey-systems-its,International Turnkey Systems,43,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-foodics,Foodics,61,unknown,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-american-international-university-kuwait,American International University | Kuwait,67,unknown,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-apparel-group,Apparel Group,104,unknown,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-iron-mountain,Iron Mountain,6,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-courtyard-by-marriott-kuwait-property,Courtyard by Marriott (Kuwait property),13,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-egis,Egis,15,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-hrinvest,HRInvest,29,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-united-real-estate-company-urc,United Real Estate Company (URC),32,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-procapita-group,Procapita Group,33,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-siemens-ag,Siemens AG,35,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-millennium-hotel-convention-centre-kuwait,Millennium Hotel & Convention Centre Kuwait,37,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-palms-agro-production-company,Palms Agro Production Company,38,Al Rai,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-bfl-group,BFL Group,39,Salmiya,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-millennium-central-kuwait-downtown-hotel,Millennium Central Kuwait Downtown Hotel,41,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-jw-marriott-kuwait-city,JW Marriott Kuwait City,50,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-sv7-advisory,SV7 Advisory,51,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-taiba-hospital,Taiba Hospital,60,Mubarak Al-Kabeer,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-sephora,Sephora,62,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-abyat,ABYAT,64,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-al-mashaan-general-trading-general-contracting-for-buildings,Al Mashaan General Trading & General Contracting for Buildings Co.,65,Al Rai,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-hitachi-energy-ltd,Hitachi Energy Ltd.,66,unknown,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-united-steel-industrial-co,United Steel Industrial Co.,72,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-four-seasons-hotel-kuwait-at-burj-alshaya,Four Seasons Hotel Kuwait at Burj Alshaya,73,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-srvme,SRVME,77,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-marriott-executive-apartments-kuwait-city,Marriott Executive Apartments Kuwait City,80,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-australian-university-kuwait,Australian University Kuwait,82,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-worley-limited,Worley Limited,83,Al Ahmadi,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-bureau-veritas-sa,Bureau Veritas SA,86,Al Shuwaikh,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-ali-abdulwahab-al-mutawa-commercial-co,Ali Abdulwahab Al Mutawa Commercial Co.,88,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-diyar-united-company,Diyar United Company,94,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-slb-formerly-schlumberger,SLB (formerly Schlumberger),96,unknown,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-oryx-holding-kuwait,Oryx Holding (Kuwait),97,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-radisson-hotel-group,Radisson Hotel Group,100,Al Fintas,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-larsen-toubro-limited,Larsen & Toubro Limited,101,Mirqab,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-nestle-sa,Nestlé S.A.,107,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-commercial-bank-of-kuwait-al-tijari,Commercial Bank of Kuwait (Al-Tijari),109,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-leidos-holdings-inc,"Leidos Holdings, Inc.",111,Camp Arifjan,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-fluor-corporation,Fluor Corporation,112,unknown,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-kitchenpark,KitchenPark,113,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-al-mulla-engineering,Al Mulla Engineering,118,Al Shuwaikh,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-residence-inn-by-marriott-kuwait-city,Residence Inn by Marriott Kuwait City,independent-discovery,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-grand-hyatt-kuwait,Grand Hyatt Kuwait,59,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-penspen-ltd,Penspen Ltd.,78,unknown,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-hyatt-regency-kuwait,Hyatt Regency Kuwait,90,Fahaheel,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-behbehani-motors-company,Behbehani Motors Company,independent-discovery,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-ali-alghanim-sons-automotive-company,Ali Alghanim & Sons Automotive Company,independent-discovery,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-warba-insurance-reinsurance-company,Warba Insurance & Reinsurance Company,independent-discovery,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-keo-international-consultants,KEO International Consultants,independent-discovery,Kuwait City,high,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-al-ahli-bank-of-kuwait,Al Ahli Bank of Kuwait,boursa-kuwait-walk,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-boubyan-petrochemical-company,Boubyan Petrochemical Company,boursa-kuwait-walk,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-gulf-cables-and-electrical-industries-group-company,Gulf Cables and Electrical Industries Group Company,boursa-kuwait-walk,Al Asimah (Safat),medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-kuwait-cement-company,Kuwait Cement Company,boursa-kuwait-walk,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-ifa-hotels-and-resorts,IFA Hotels and Resorts,boursa-kuwait-walk,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-salhia-real-estate-company,Salhia Real Estate Company,boursa-kuwait-walk,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-acico-industries-company-ksc,ACICO Industries Company - K.S.C.,boursa-kuwait-walk,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-national-investments-company,National Investments Company,boursa-kuwait-walk,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-al-ahleia-insurance-company-sakp,Al-Ahleia Insurance Company S.A.K.P.,boursa-kuwait-walk,Sharq,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-oula-fuel-marketing-company,Oula Fuel Marketing Company,boursa-kuwait-walk,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-automated-systems-company,Automated Systems Company,boursa-kuwait-walk,unknown,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-heavy-engineering-industries-and-shipbuilding-company,Heavy Engineering Industries and Shipbuilding Company,boursa-kuwait-walk,unknown,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-kuwait-reinsurance-company,Kuwait Reinsurance Company,boursa-kuwait-walk,unknown,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-kuwait-insurance-company-sakp,Kuwait Insurance Company S.A.K.P.,boursa-kuwait-walk,unknown,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-arkan-al-kuwait-real-estate-company,Arkan Al-Kuwait Real Estate Company,boursa-kuwait-walk,Al Asimah (Safat),medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-united-projects-company-for-aviation-services,United Projects Company For Aviation Services,boursa-kuwait-walk,unknown,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-national-industries-company,National Industries Company,boursa-kuwait-walk,Al Shuwaikh,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-aayan-real-estate-company,A'ayan Real Estate Company,boursa-kuwait-walk,unknown,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-national-cleaning-company,National Cleaning Company,boursa-kuwait-walk,Al Asimah (Safat),medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-digitus-group-for-digital-infrastructure-data-centers-commun,"Digitus Group for Digital Infrastructure, Data Centers & Communications (K.S.C.P)",boursa-kuwait-walk,Al Asimah (Safat),medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-trolley-general-trading-company-kscc,Trolley General Trading Company K.S.C.C.,boursa-kuwait-walk,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-tamdeen-real-estate-company,Tamdeen Real Estate Company,boursa-kuwait-walk,South Surra,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-shamal-az-zour-al-oula-power-and-water-company-ksc,Shamal Az-Zour Al-Oula Power and Water Company KSC,boursa-kuwait-walk,Az-Zour,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-commercial-facilities-company-sakp,Commercial Facilities Company S.A.K.P.,boursa-kuwait-walk,unknown,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-kuwait-projects-company-holding-kipco,Kuwait Projects Company Holding (KIPCO),boursa-individual-verification,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-makhazen,Makhazen,boursa-individual-verification,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-kuwait-company-for-process-plant-construction-and-contractin,Kuwait Company for Process Plant Construction and Contracting,boursa-individual-verification,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-metal-and-recycling-company,Metal and Recycling Company,boursa-individual-verification,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-mezzan-holding-company,Mezzan Holding Company,boursa-individual-verification,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
+cc-integrated-holding-company,Integrated Holding Company,boursa-individual-verification,Kuwait City,medium,needs_manual_review,promoted_to_production,2026-09-14,kuwait.csv;master-company-registry.csv
