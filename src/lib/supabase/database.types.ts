@@ -313,6 +313,7 @@ export type Database = {
           attempt_count: number
           completed_at: string | null
           created_at: string
+          failed_at: string | null
           id: string
           idempotency_key: string
           last_error: string | null
@@ -331,6 +332,7 @@ export type Database = {
           attempt_count?: number
           completed_at?: string | null
           created_at?: string
+          failed_at?: string | null
           id?: string
           idempotency_key: string
           last_error?: string | null
@@ -349,6 +351,7 @@ export type Database = {
           attempt_count?: number
           completed_at?: string | null
           created_at?: string
+          failed_at?: string | null
           id?: string
           idempotency_key?: string
           last_error?: string | null
@@ -364,6 +367,93 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      companies: {
+        Row: {
+          created_at: string
+          display_name: string
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          display_name: string
+          id: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          display_name?: string
+          id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      company_sources: {
+        Row: {
+          ats_provider: string | null
+          automation_eligibility: string | null
+          company_id: string
+          company_name: string
+          country_code: string | null
+          id: string
+          imported_at: string
+          last_verified_at: string | null
+          official_careers_url: string | null
+          official_website_url: string | null
+          researcher_notes: string | null
+          review_status: string
+          target_country: string
+          updated_at: string
+        }
+        Insert: {
+          ats_provider?: string | null
+          automation_eligibility?: string | null
+          company_id: string
+          company_name: string
+          country_code?: string | null
+          id: string
+          imported_at?: string
+          last_verified_at?: string | null
+          official_careers_url?: string | null
+          official_website_url?: string | null
+          researcher_notes?: string | null
+          review_status: string
+          target_country: string
+          updated_at?: string
+        }
+        Update: {
+          ats_provider?: string | null
+          automation_eligibility?: string | null
+          company_id?: string
+          company_name?: string
+          country_code?: string | null
+          id?: string
+          imported_at?: string
+          last_verified_at?: string | null
+          official_careers_url?: string | null
+          official_website_url?: string | null
+          researcher_notes?: string | null
+          review_status?: string
+          target_country?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "company_sources_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "company_sources_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+        ]
       }
       countries: {
         Row: {
@@ -890,7 +980,11 @@ export type Database = {
           application_email: string | null
           application_method: string
           application_url: string | null
+          city: string | null
+          closed_at: string | null
+          closing_date: string | null
           company_name: string
+          country_code: string | null
           created_at: string
           created_by: string | null
           description: string
@@ -898,13 +992,22 @@ export type Database = {
           employment_type: string | null
           expires_at: string | null
           external_id: string | null
+          first_seen_at: string | null
           id: string
+          last_checked_at: string | null
+          last_seen_at: string | null
+          last_successful_check_at: string | null
           location: string | null
           published_at: string | null
+          relocation_required: boolean | null
+          remote_scope: string | null
           seniority: string | null
+          source_id: string | null
+          source_last_modified_at: string | null
           source_type: string
           source_url: string | null
           status: string
+          status_reason: string | null
           title: string
           updated_at: string
           work_arrangement: string | null
@@ -913,7 +1016,11 @@ export type Database = {
           application_email?: string | null
           application_method: string
           application_url?: string | null
+          city?: string | null
+          closed_at?: string | null
+          closing_date?: string | null
           company_name: string
+          country_code?: string | null
           created_at?: string
           created_by?: string | null
           description: string
@@ -921,13 +1028,22 @@ export type Database = {
           employment_type?: string | null
           expires_at?: string | null
           external_id?: string | null
+          first_seen_at?: string | null
           id?: string
+          last_checked_at?: string | null
+          last_seen_at?: string | null
+          last_successful_check_at?: string | null
           location?: string | null
           published_at?: string | null
+          relocation_required?: boolean | null
+          remote_scope?: string | null
           seniority?: string | null
+          source_id?: string | null
+          source_last_modified_at?: string | null
           source_type: string
           source_url?: string | null
           status?: string
+          status_reason?: string | null
           title: string
           updated_at?: string
           work_arrangement?: string | null
@@ -936,7 +1052,11 @@ export type Database = {
           application_email?: string | null
           application_method?: string
           application_url?: string | null
+          city?: string | null
+          closed_at?: string | null
+          closing_date?: string | null
           company_name?: string
+          country_code?: string | null
           created_at?: string
           created_by?: string | null
           description?: string
@@ -944,18 +1064,42 @@ export type Database = {
           employment_type?: string | null
           expires_at?: string | null
           external_id?: string | null
+          first_seen_at?: string | null
           id?: string
+          last_checked_at?: string | null
+          last_seen_at?: string | null
+          last_successful_check_at?: string | null
           location?: string | null
           published_at?: string | null
+          relocation_required?: boolean | null
+          remote_scope?: string | null
           seniority?: string | null
+          source_id?: string | null
+          source_last_modified_at?: string | null
           source_type?: string
           source_url?: string | null
           status?: string
+          status_reason?: string | null
           title?: string
           updated_at?: string
           work_arrangement?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "jobs_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "jobs_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "company_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       location_nearby_areas: {
         Row: {
@@ -1788,6 +1932,34 @@ export type Database = {
           isSetofReturn: true
         }
       }
+      claim_automation_task: {
+        Args: { p_batch_size?: number; p_worker_id: string }
+        Returns: {
+          attempt_count: number
+          completed_at: string | null
+          created_at: string
+          failed_at: string | null
+          id: string
+          idempotency_key: string
+          last_error: string | null
+          locked_at: string | null
+          locked_by: string | null
+          max_attempts: number
+          next_attempt_at: string
+          started_at: string | null
+          status: string
+          subject_id: string
+          subject_type: string
+          task_type: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "automation_tasks"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       clear_auth_attempts: {
         Args: {
           p_action: string
@@ -1972,6 +2144,10 @@ export type Database = {
         }
       }
       fail_stale_analysis_tasks: {
+        Args: { p_lease_minutes?: number }
+        Returns: number
+      }
+      fail_stale_automation_tasks: {
         Args: { p_lease_minutes?: number }
         Returns: number
       }
