@@ -1,0 +1,19 @@
+-- source_intelligence's own creation migration (20260916171255) enabled RLS
+-- with zero policies, relying on service_role's BYPASSRLS attribute alone —
+-- but never granted the underlying table-level privileges PostgREST checks
+-- first (the same GRANT layer 20260803090010_grant_service_role_table_access.sql
+-- and company_sources/companies already carry: BYPASSRLS bypasses row-level
+-- security policies, it does not substitute for a missing GRANT). Confirmed
+-- via audit: service_role had only incidental REFERENCES/TRIGGER/TRUNCATE on
+-- this table, no SELECT/INSERT — every write-mode insert attempt from the
+-- Source Intelligence Analyzer n8n workflow would fail with a Postgres
+-- permission-denied error.
+--
+-- SELECT + INSERT only, deliberately no UPDATE/DELETE: source_intelligence
+-- is an append-only observation log (see its own creation migration's
+-- comment) — a re-probe inserts a new row, it never edits or removes a
+-- previous one. Granting UPDATE/DELETE here would let a client acquire
+-- write access this table was explicitly designed never to need.
+--
+-- Reversible with: revoke select, insert on public.source_intelligence from service_role;
+grant select, insert on public.source_intelligence to service_role;

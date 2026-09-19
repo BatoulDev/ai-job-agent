@@ -1,0 +1,1495 @@
+{
+  "name": "Job Ingestion — Pilot Orchestrator",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "97d6f3c3-e394-46b5-912a-128d35e3a4e8",
+      "name": "Start Pilot Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "mode-field",
+              "name": "mode",
+              "value": "dry_run",
+              "type": "string"
+            },
+            {
+              "id": "supabase-base-url",
+              "name": "supabaseBaseUrl",
+              "value": "http://host.docker.internal:55321",
+              "type": "string"
+            },
+            {
+              "id": "environment-field",
+              "name": "environment",
+              "value": "local",
+              "type": "string"
+            },
+            {
+              "id": "max-jobs-field",
+              "name": "maxJobsPerSource",
+              "value": 5,
+              "type": "number"
+            },
+            {
+              "id": "rate-limit-field",
+              "name": "rateLimitDelaySeconds",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "started-at-field",
+              "name": "startedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c6e3ffe3-e76b-4466-8829-dd713c39decf",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const PILOT_SOURCES = [\n  { source_id: 'sr-qa-scale-ai', ats_type: 'greenhouse', feed_url: 'https://boards-api.greenhouse.io/v1/boards/scaleai/jobs?content=true' },\n  { source_id: 'sr-sa-alpaca',   ats_type: 'greenhouse', feed_url: 'https://boards-api.greenhouse.io/v1/boards/alpaca/jobs?content=true' },\n  { source_id: 'sr-intl-wahed',  ats_type: 'lever',      feed_url: 'https://api.lever.co/v0/postings/wahed.com?mode=json' },\n  { source_id: 'sr-sa-salla',    ats_type: 'workable',   feed_url: 'https://apply.workable.com/api/v1/widget/accounts/salla?details=true' },\n];\nreturn PILOT_SOURCES.map(s => ({ json: s }));"
+      },
+      "id": "7e619d90-387c-4ede-ae27-82e4986de80e",
+      "name": "Load Approved Pilot Sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/company_sources?id=in.(sr-qa-scale-ai,sr-sa-alpaca,sr-intl-wahed,sr-sa-salla)&select=id,company_name,review_status,automation_eligibility",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "eb91611b-0e0e-4603-8407-f53a367e9fe6",
+      "name": "Fetch Source Provenance",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        700,
+        0
+      ],
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const provenanceRows = $input.all().map(i => i.json);\nconst provenanceById = new Map(provenanceRows.map(r => [r.id, r]));\n\nconst out = [];\nfor (const item of $('Load Approved Pilot Sources').all()) {\n  const src = item.json;\n  const prov = provenanceById.get(src.source_id);\n  if (!prov) {\n    out.push({ json: { ...src, company_name: null, review_status: null, automation_eligibility: null, approved: false, reviewReason: 'company_sources row not found for source_id' } });\n    continue;\n  }\n  const approved = prov.review_status === 'verified' && prov.automation_eligibility === 'suitable_public_ats';\n  out.push({\n    json: {\n      ...src,\n      company_name: prov.company_name,\n      review_status: prov.review_status,\n      automation_eligibility: prov.automation_eligibility,\n      approved,\n      reviewReason: approved ? null : ('review_status=' + prov.review_status + ', automation_eligibility=' + prov.automation_eligibility),\n    },\n  });\n}\nreturn out;"
+      },
+      "id": "b9772ee6-9fc8-4e31-a0f1-3972bc0ab942",
+      "name": "Attach Provenance & Guard",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst results = $input.all().map(i => i.json);\nconst sum = (key) => results.reduce((acc, r) => acc + (r[key] || 0), 0);\n\nconst startedAtMs = new Date(cfg.startedAt).getTime();\n\nreturn [{ json: {\n  mode: cfg.mode,\n  environment: cfg.environment,\n  sourcesAttempted: results.length,\n  sourcesSucceeded: results.filter(r => r.succeeded).length,\n  sourcesFailed: results.filter(r => !r.succeeded).length,\n  jobsFetched: sum('jobsFetched'),\n  jobsValid: sum('jobsValid'),\n  jobsRejected: sum('jobsRejected'),\n  jobsCreated: sum('jobsCreated'),\n  jobsUpdated: sum('jobsUpdated'),\n  jobsUnchanged: sum('jobsUnchanged'),\n  jobsClosed: sum('jobsClosed'),\n  retries: sum('retries'),\n  totalDurationMs: Date.now() - startedAtMs,\n  perSource: results,\n  finishedAt: new Date().toISOString(),\n} }];"
+      },
+      "id": "e9b68e1a-b62d-4e91-8bdc-369066c57373",
+      "name": "Build Execution Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        6100,
+        -700
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.approved }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "06df3f24-18f9-43c9-a8aa-a72c5da51ea6",
+      "name": "Is Source Approved?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1600,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.ats_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "greenhouse"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.ats_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "lever"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 1
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.ats_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "workable"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Unsupported"
+        }
+      },
+      "id": "ceaeda14-a8e8-470c-990e-fbc72425f7b3",
+      "name": "Route By ATS Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.feed_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "8b9c77cf-38ab-4557-838a-fe654e384ae8",
+      "name": "Fetch Greenhouse Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2200,
+        -300
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Attach Provenance & Guard').item.json;\nconst evalResult = $input.first().json;\nconst retriesUsed = Math.max(0, (evalResult.attempt || 1) - 1);\n\nif (!evalResult.success) {\n  return [{ json: {\n    source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name,\n    outcome: evalResult.outcome, attempted: true, succeeded: false,\n    jobsFetched: 0, jobsValid: 0, jobsRejected: 0,\n    jobsCreated: 0, jobsUpdated: 0, jobsUnchanged: 0,\n    retries: retriesUsed, error: evalResult.errorMessage, normalizedJobs: [],\n  } }];\n}\n\nfunction stripHtml(html) {\n  if (!html || typeof html !== 'string') return '';\n  return html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\\s+/g, ' ').trim();\n}\n\nconst body = evalResult.body || {};\nconst rawJobs = Array.isArray(body.jobs) ? body.jobs : [];\nconst normalized = [];\nlet rejected = 0;\n\nfor (const job of rawJobs) {\n  const externalId = job.id != null ? String(job.id) : null;\n  const title = typeof job.title === 'string' ? job.title.trim() : '';\n  const applicationUrl = typeof job.absolute_url === 'string' ? job.absolute_url : null;\n  const description = stripHtml(job.content);\n  const locationName = job.location && typeof job.location.name === 'string' ? job.location.name : null;\n\n  if (!externalId || !title || !applicationUrl || !/^https?:\\/\\//.test(applicationUrl) || !description) {\n    rejected++;\n    continue;\n  }\n\n  normalized.push({\n    source_type: 'greenhouse', external_id: externalId, title, company_name: src.company_name,\n    description, application_method: 'external_link', application_url: applicationUrl, status: 'active',\n    location: locationName,\n    work_arrangement: locationName && /remote/i.test(locationName) ? 'remote' : null,\n    employment_type: null,\n    source_id: src.source_id,\n    published_at: job.first_published || null,\n    source_last_modified_at: job.updated_at || null,\n  });\n}\n\nreturn [{ json: {\n  source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name,\n  outcome: 'fetched', attempted: true, succeeded: true,\n  jobsFetched: rawJobs.length, jobsValid: normalized.length, jobsRejected: rejected,\n  jobsCreated: 0, jobsUpdated: 0, jobsUnchanged: 0,\n  retries: retriesUsed, error: null, normalizedJobs: normalized,\n} }];"
+      },
+      "id": "9e9c4a23-148c-4c1b-8ce6-e46a2268d3be",
+      "name": "Classify & Normalize Greenhouse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3100,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.succeeded }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true
+            },
+            {
+              "leftValue": "={{ $json.jobsValid }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            },
+            {
+              "leftValue": "={{ $('Workflow Configuration').first().json.mode }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "local_pilot"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "8aa475ba-7c0e-4a85-999f-05bab179da84",
+      "name": "Should Write To DB?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst cap = typeof cfg.maxJobsPerSource === 'number' ? cfg.maxJobsPerSource : 5;\nconst j = $input.first().json;\nconst seenExternalIds = new Set();\nconst dedupedJobs = [];\nfor (const job of j.normalizedJobs) {\n  if (seenExternalIds.has(job.external_id)) continue;\n  seenExternalIds.add(job.external_id);\n  dedupedJobs.push(job);\n}\nconst boundedJobs = dedupedJobs.slice(0, cap);\nconst truncated = dedupedJobs.length > cap;\nreturn [{ json: {\n  source_id: j.source_id, ats_type: j.ats_type, company_name: j.company_name,\n  outcome: j.outcome, succeeded: j.succeeded,\n  jobsFetched: j.jobsFetched, jobsValid: j.jobsValid, jobsRejected: j.jobsRejected,\n  retries: j.retries, error: j.error,\n  boundedJobs, truncated,\n  externalIdList: boundedJobs.map(x => x.external_id),\n} }];"
+      },
+      "id": "52fd4838-8ecc-468a-af8b-aa38f2828f27",
+      "name": "Prepare Bounded Write Set",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3700,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/jobs?source_id=eq.{{ $json.source_id }}&status=eq.active&select=external_id,first_seen_at,title,description,application_url,location,work_arrangement,employment_type",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "16e9b369-d16f-499d-8041-c246d4095864",
+      "name": "Select Existing Jobs For Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4000,
+        0
+      ],
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "jsCode": "const prepared = $('Prepare Bounded Write Set').item.json;\nconst boundedJobs = prepared.boundedJobs;\nconst fetchedIdSet = new Set(boundedJobs.map(j => j.external_id));\n\nconst existingRows = $input.all().map(i => i.json).filter(r => r && r.external_id);\nconst existingByExtId = new Map(existingRows.map(r => [r.external_id, r]));\n\nlet created = 0, updated = 0, unchanged = 0;\nconst nowIso = new Date().toISOString();\nconst upsertPayload = boundedJobs.map(job => {\n  const existing = existingByExtId.get(job.external_id);\n  if (!existing) {\n    created++;\n    return { ...job, first_seen_at: nowIso, last_seen_at: nowIso, last_checked_at: nowIso, last_successful_check_at: nowIso };\n  }\n  const changed = existing.title !== job.title || existing.description !== job.description\n    || existing.application_url !== job.application_url || existing.location !== job.location\n    || existing.work_arrangement !== job.work_arrangement || existing.employment_type !== job.employment_type;\n  if (changed) updated++; else unchanged++;\n  return { ...job, first_seen_at: existing.first_seen_at, last_seen_at: nowIso, last_checked_at: nowIso, last_successful_check_at: nowIso };\n});\n\nconst staleExternalIds = existingRows.map(r => r.external_id).filter(extId => !fetchedIdSet.has(extId));\n\nreturn [{ json: { ...prepared, upsertPayload, diffCreated: created, diffUpdated: updated, diffUnchanged: unchanged, staleExternalIds } }];"
+      },
+      "id": "7269f48c-f532-4d45-bea9-0275d90b71b6",
+      "name": "Compute Diff Plan",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/jobs?on_conflict=dedup_scope,external_id",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "resolution=merge-duplicates,return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.upsertPayload }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "ea373b82-2520-4113-a0a8-cfdf37f256a9",
+      "name": "Upsert Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4600,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const plan = $('Compute Diff Plan').item.json;\nconst resultRaw = $input.first().json;\nif (resultRaw && resultRaw.error) {\n  return [{ json: { ...plan, writeSucceeded: false, jobsCreated: 0, jobsUpdated: 0, jobsUnchanged: 0, writeError: String(resultRaw.error).slice(0, 300) } }];\n}\nreturn [{ json: { ...plan, writeSucceeded: true, jobsCreated: plan.diffCreated, jobsUpdated: plan.diffUpdated, jobsUnchanged: plan.diffUnchanged, writeError: null } }];"
+      },
+      "id": "4d33388d-c11c-4ac5-a7c6-32990f5c3256",
+      "name": "Merge Upsert Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4900,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.writeSucceeded }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true
+            },
+            {
+              "leftValue": "={{ $json.staleExternalIds.length }}",
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              },
+              "rightValue": 0
+            },
+            {
+              "leftValue": "={{ $json.truncated }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "false"
+              },
+              "rightValue": false
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "2fc4d6ef-0324-487a-821e-92ebd126eadd",
+      "name": "Should Close Stale Jobs?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        5200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "PATCH",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/jobs?source_id=eq.{{ $json.source_id }}&external_id=in.({{ $json.staleExternalIds.join(',') }})",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            },
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": {
+          "status": "unavailable",
+          "status_reason": "Not present in latest pilot ingestion run (source fetch succeeded)"
+        },
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "d1a3e58f-e44b-42fc-8d21-f8d619920289",
+      "name": "Close Stale Jobs For Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        5500,
+        -180
+      ],
+      "alwaysOutputData": true,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nconst out = [];\nfor (const item of items) {\n  let j;\n  try {\n    j = $('Merge Upsert Result').item.json;\n  } catch (e) {\n    j = item.json;\n  }\n  out.push({ json: {\n    source_id: j.source_id, ats_type: j.ats_type, company_name: j.company_name || null,\n    outcome: j.writeSucceeded === false ? 'db_write_failed' : (j.outcome || 'unknown'),\n    attempted: true,\n    succeeded: j.writeSucceeded !== false && j.succeeded !== false,\n    jobsFetched: j.jobsFetched || 0, jobsValid: j.jobsValid || 0, jobsRejected: j.jobsRejected || 0,\n    jobsCreated: j.jobsCreated || 0, jobsUpdated: j.jobsUpdated || 0, jobsUnchanged: j.jobsUnchanged || 0,\n    jobsClosed: Array.isArray(j.staleExternalIds) ? j.staleExternalIds.length : 0,\n    retries: j.retries || 0,\n    error: j.writeError || j.error || null,\n    truncated: j.truncated === true,\n  } });\n}\nreturn out;"
+      },
+      "id": "51f12d11-84be-4ea6-bf0d-be9f150c4412",
+      "name": "Finalize Source Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        5800,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
+      },
+      "id": "d0005e2b-8ec8-4ed9-834c-bd6bb0205d84",
+      "name": "Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        6100,
+        200
+      ],
+      "webhookId": "f7714a7e-8636-42a1-ae86-c96c06c7f036"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "62d62671-978e-4ed1-9df9-b6b73ca7e5cd",
+      "name": "Process Sources",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1300,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.feed_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "7481e4c4-a1c0-421a-8d87-badf32649632",
+      "name": "Fetch Lever Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2200,
+        0
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Attach Provenance & Guard').item.json;\nconst evalResult = $input.first().json;\nconst retriesUsed = Math.max(0, (evalResult.attempt || 1) - 1);\n\nif (!evalResult.success) {\n  return [{ json: {\n    source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name,\n    outcome: evalResult.outcome, attempted: true, succeeded: false,\n    jobsFetched: 0, jobsValid: 0, jobsRejected: 0,\n    jobsCreated: 0, jobsUpdated: 0, jobsUnchanged: 0,\n    retries: retriesUsed, error: evalResult.errorMessage, normalizedJobs: [],\n  } }];\n}\n\nconst EMPLOYMENT_MAP = { 'full-time': 'full-time', 'part-time': 'part-time', contract: 'contract', contractual: 'contract', internship: 'internship' };\nconst WORKPLACE_MAP = { remote: 'remote', 'on-site': 'onsite', onsite: 'onsite', hybrid: 'hybrid' };\n\nconst rawJobs = Array.isArray(evalResult.body) ? evalResult.body : [];\nconst normalized = [];\nlet rejected = 0;\n\nfor (const job of rawJobs) {\n  const externalId = typeof job.id === 'string' ? job.id : null;\n  const title = typeof job.text === 'string' ? job.text.trim() : '';\n  const applicationUrl = job.applyUrl || job.hostedUrl || null;\n  const description = (typeof job.descriptionPlain === 'string' && job.descriptionPlain.trim()) ? job.descriptionPlain.trim() : '';\n\n  if (!externalId || !title || !applicationUrl || !/^https?:\\/\\//.test(applicationUrl) || !description) {\n    rejected++;\n    continue;\n  }\n\n  const commitment = job.categories && typeof job.categories.commitment === 'string' ? job.categories.commitment.toLowerCase() : null;\n  const workplaceType = job.categories && typeof job.categories.workplaceType === 'string' ? job.categories.workplaceType.toLowerCase() : null;\n\n  normalized.push({\n    source_type: 'lever', external_id: externalId, title, company_name: src.company_name,\n    description, application_method: 'external_link', application_url: applicationUrl, status: 'active',\n    location: (job.categories && job.categories.location) || null,\n    work_arrangement: workplaceType && WORKPLACE_MAP[workplaceType] ? WORKPLACE_MAP[workplaceType] : null,\n    employment_type: commitment && EMPLOYMENT_MAP[commitment] ? EMPLOYMENT_MAP[commitment] : null,\n    source_id: src.source_id,\n    published_at: typeof job.createdAt === 'number' ? new Date(job.createdAt).toISOString() : null,\n    source_last_modified_at: null,\n  });\n}\n\nreturn [{ json: {\n  source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name,\n  outcome: 'fetched', attempted: true, succeeded: true,\n  jobsFetched: rawJobs.length, jobsValid: normalized.length, jobsRejected: rejected,\n  jobsCreated: 0, jobsUpdated: 0, jobsUnchanged: 0,\n  retries: retriesUsed, error: null, normalizedJobs: normalized,\n} }];"
+      },
+      "id": "5b5f4401-da1f-4a31-afeb-ba05c163b4b8",
+      "name": "Classify & Normalize Lever",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.feed_url }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true
+            }
+          },
+          "timeout": 15000
+        }
+      },
+      "id": "d4b763c4-6818-4f08-92fb-c0641bff0432",
+      "name": "Fetch Workable Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2200,
+        300
+      ],
+      "retryOnFail": false,
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Attach Provenance & Guard').item.json;\nconst evalResult = $input.first().json;\nconst retriesUsed = Math.max(0, (evalResult.attempt || 1) - 1);\n\nif (!evalResult.success) {\n  return [{ json: {\n    source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name,\n    outcome: evalResult.outcome, attempted: true, succeeded: false,\n    jobsFetched: 0, jobsValid: 0, jobsRejected: 0,\n    jobsCreated: 0, jobsUpdated: 0, jobsUnchanged: 0,\n    retries: retriesUsed, error: evalResult.errorMessage, normalizedJobs: [],\n  } }];\n}\n\nfunction stripHtml(html) {\n  if (!html || typeof html !== 'string') return '';\n  return html.replace(/<[^>]*>/g, ' ').replace(/&nbsp;/g, ' ').replace(/&amp;/g, '&').replace(/\\s+/g, ' ').trim();\n}\n\nconst EMPLOYMENT_MAP = { 'full-time': 'full-time', 'part-time': 'part-time', contract: 'contract', internship: 'internship' };\n\nconst body = evalResult.body || {};\nconst rawJobs = Array.isArray(body.jobs) ? body.jobs : [];\nconst normalized = [];\nlet rejected = 0;\n\nfor (const job of rawJobs) {\n  const externalId = typeof job.shortcode === 'string' ? job.shortcode : null;\n  const title = typeof job.title === 'string' ? job.title.trim() : '';\n  const applicationUrl = job.application_url || job.url || null;\n  const description = stripHtml(job.description);\n\n  if (!externalId || !title || !applicationUrl || !/^https?:\\/\\//.test(applicationUrl) || !description) {\n    rejected++;\n    continue;\n  }\n\n  const empType = typeof job.employment_type === 'string' ? job.employment_type.toLowerCase() : null;\n  const locationParts = [job.city, job.country].filter(v => typeof v === 'string' && v.trim());\n\n  normalized.push({\n    source_type: 'workable', external_id: externalId, title, company_name: src.company_name,\n    description, application_method: 'external_link', application_url: applicationUrl, status: 'active',\n    location: locationParts.length ? locationParts.join(', ') : null,\n    work_arrangement: job.telecommuting === true ? 'remote' : null,\n    employment_type: empType && EMPLOYMENT_MAP[empType] ? EMPLOYMENT_MAP[empType] : null,\n    source_id: src.source_id,\n    published_at: (typeof job.published_on === 'string' && job.published_on) ? new Date(job.published_on).toISOString() : null,\n    source_last_modified_at: null,\n  });\n}\n\nreturn [{ json: {\n  source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name,\n  outcome: 'fetched', attempted: true, succeeded: true,\n  jobsFetched: rawJobs.length, jobsValid: normalized.length, jobsRejected: rejected,\n  jobsCreated: 0, jobsUpdated: 0, jobsUnchanged: 0,\n  retries: retriesUsed, error: null, normalizedJobs: normalized,\n} }];"
+      },
+      "id": "5e4cd0e8-b37d-4995-aad7-75bae5a155fa",
+      "name": "Classify & Normalize Workable",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3100,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nreturn items.map(item => {\n  const s = item.json;\n  return { json: {\n    source_id: s.source_id, ats_type: s.ats_type, company_name: s.company_name || null,\n    outcome: 'permanent_unsupported_ats', attempted: true, succeeded: false,\n    jobsFetched: 0, jobsValid: 0, jobsRejected: 0, jobsCreated: 0, jobsUpdated: 0, jobsUnchanged: 0, jobsClosed: 0,\n    retries: 0, error: 'Unsupported ats_type: ' + s.ats_type,\n  } };\n});"
+      },
+      "id": "d3607f71-9538-415e-9c63-dced60a31a89",
+      "name": "Build Unsupported ATS Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const items = $input.all();\nreturn items.map(item => {\n  const s = item.json;\n  return { json: {\n    source_id: s.source_id, ats_type: s.ats_type, company_name: s.company_name || null,\n    outcome: 'review_required', attempted: true, succeeded: false,\n    jobsFetched: 0, jobsValid: 0, jobsRejected: 0,\n    jobsCreated: 0, jobsUpdated: 0, jobsUnchanged: 0, jobsClosed: 0,\n    retries: 0, error: s.reviewReason || 'source not approved for automated ingestion',\n  } };\n});"
+      },
+      "id": "6aa1f815-e8bd-4b3c-86bd-ffcc6a0f3534",
+      "name": "Build Review-Required Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Job Ingestion — Pilot Orchestrator\nManual, controlled pilot over 4 pre-verified sources (Greenhouse x2, Lever, Workable). Set mode to dry_run (no DB writes) or local_pilot (bounded DB writes) in Workflow Configuration. No Schedule Trigger in this phase. See docs/job-ingestion-pilot.md.",
+        "height": 200,
+        "width": 540,
+        "color": 6
+      },
+      "id": "3a5e6f7d-31b3-43c1-b928-c1ed753c9910",
+      "name": "Sticky Note 040fac63",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -260,
+        -260
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Retry/backoff design\nEach ATS adapter is a real graph loop: Fetch -> Evaluate Fetch Attempt -> Should Retry? -> (true) Compute Backoff -> Backoff Wait -> back to Fetch. Bounded exponential backoff with jitter (max 4 attempts, 500ms base, 8000ms cap), respects a valid Retry-After header. Retryable: timeouts, 429, 500/502/503/504. Never retried: other 4xx/5xx. See docs/job-ingestion-pilot.md section 8.",
+        "height": 170,
+        "width": 550,
+        "color": 4
+      },
+      "id": "8a8f0259-c733-475a-83f7-dc7d59e7ab72",
+      "name": "Sticky Note af478dc2",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2350,
+        -650
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Attach Provenance & Guard').item.json;\nconst inputItem = $input.first().json;\nlet attempt = 1;\ntry { attempt = $('Compute Backoff Greenhouse').item.json.attempt; } catch (e) { attempt = 1; }\n\nconst MAX_ATTEMPTS = 4;\nconst BASE_DELAY_MS = 500;\nconst MAX_DELAY_MS = 8000;\nconst RETRYABLE_5XX = new Set([500, 502, 503, 504]);\n\nfunction computeBackoffMs(retryAfterMs) {\n  if (typeof retryAfterMs === 'number' && retryAfterMs >= 0) return Math.min(MAX_DELAY_MS, retryAfterMs);\n  const exp = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, attempt - 1));\n  const jitter = Math.random() * exp;\n  return Math.min(MAX_DELAY_MS, Math.round((exp + jitter) / 2));\n}\n\nfunction retryableResult(kind, message, retryAfterMs) {\n  const canRetry = attempt < MAX_ATTEMPTS;\n  return [{ json: {\n    source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name, feed_url: src.feed_url,\n    success: false, shouldRetry: canRetry, attempt, nextAttempt: attempt + 1,\n    nextDelayMs: canRetry ? computeBackoffMs(retryAfterMs) : null,\n    outcome: canRetry ? kind : (kind + '_retries_exhausted'),\n    errorMessage: message, statusCode: (inputItem && inputItem.statusCode) || null,\n  } }];\n}\n\nfunction permanentResult(outcome, message, statusCode) {\n  return [{ json: {\n    source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name, feed_url: src.feed_url,\n    success: false, shouldRetry: false, attempt, outcome, errorMessage: message, statusCode: statusCode || null,\n  } }];\n}\n\nif (inputItem && inputItem.error) {\n  return retryableResult('retryable_network_error', String(inputItem.error).slice(0, 300), null);\n}\n\nconst statusCode = inputItem.statusCode;\nif (statusCode === 429) {\n  const headers = inputItem.headers || {};\n  const retryAfterRaw = headers['retry-after'] || headers['Retry-After'];\n  let retryAfterMs = null;\n  if (retryAfterRaw != null) {\n    const asSeconds = Number(retryAfterRaw);\n    if (Number.isFinite(asSeconds) && asSeconds >= 0) {\n      retryAfterMs = asSeconds * 1000;\n    } else {\n      const asDate = Date.parse(retryAfterRaw);\n      if (!Number.isNaN(asDate)) retryAfterMs = Math.max(0, asDate - Date.now());\n    }\n  }\n  return retryableResult('retryable_rate_limited', 'HTTP 429 from Greenhouse', retryAfterMs);\n}\nif (RETRYABLE_5XX.has(statusCode)) {\n  return retryableResult('retryable_server_error', 'HTTP ' + statusCode + ' from Greenhouse', null);\n}\nif (statusCode >= 500) {\n  return permanentResult('permanent_server_error', 'HTTP ' + statusCode + ' from Greenhouse', statusCode);\n}\nif (statusCode >= 400) {\n  return permanentResult('permanent_client_error', 'HTTP ' + statusCode + ' from Greenhouse', statusCode);\n}\n\nreturn [{ json: {\n  source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name, feed_url: src.feed_url,\n  success: true, shouldRetry: false, attempt, outcome: 'fetched', statusCode, body: inputItem.body,\n} }];"
+      },
+      "id": "53d509d1-0cc8-4023-b33f-3bc9b03a4b8f",
+      "name": "Evaluate Greenhouse Fetch Attempt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2500,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.shouldRetry }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "2c39c895-8a98-44cd-aed1-ad3af632518a",
+      "name": "Should Retry Greenhouse?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2800,
+        -300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ev = $input.first().json;\nreturn [{ json: { attempt: ev.nextAttempt, nextDelayMs: ev.nextDelayMs, feed_url: ev.feed_url } }];"
+      },
+      "id": "4da84766-0a54-437a-bef9-964631a045b1",
+      "name": "Compute Backoff Greenhouse",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        -150
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.max(1, Math.round($json.nextDelayMs / 1000)) }}"
+      },
+      "id": "c9023178-c7c6-4be0-bb2d-699137e4d4d3",
+      "name": "Backoff Wait Greenhouse",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2800,
+        -50
+      ],
+      "webhookId": "a50e0e03-ac33-49da-8f98-61148b8ea3ca"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Attach Provenance & Guard').item.json;\nconst inputItem = $input.first().json;\nlet attempt = 1;\ntry { attempt = $('Compute Backoff Lever').item.json.attempt; } catch (e) { attempt = 1; }\n\nconst MAX_ATTEMPTS = 4;\nconst BASE_DELAY_MS = 500;\nconst MAX_DELAY_MS = 8000;\nconst RETRYABLE_5XX = new Set([500, 502, 503, 504]);\n\nfunction computeBackoffMs(retryAfterMs) {\n  if (typeof retryAfterMs === 'number' && retryAfterMs >= 0) return Math.min(MAX_DELAY_MS, retryAfterMs);\n  const exp = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, attempt - 1));\n  const jitter = Math.random() * exp;\n  return Math.min(MAX_DELAY_MS, Math.round((exp + jitter) / 2));\n}\n\nfunction retryableResult(kind, message, retryAfterMs) {\n  const canRetry = attempt < MAX_ATTEMPTS;\n  return [{ json: {\n    source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name, feed_url: src.feed_url,\n    success: false, shouldRetry: canRetry, attempt, nextAttempt: attempt + 1,\n    nextDelayMs: canRetry ? computeBackoffMs(retryAfterMs) : null,\n    outcome: canRetry ? kind : (kind + '_retries_exhausted'),\n    errorMessage: message, statusCode: (inputItem && inputItem.statusCode) || null,\n  } }];\n}\n\nfunction permanentResult(outcome, message, statusCode) {\n  return [{ json: {\n    source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name, feed_url: src.feed_url,\n    success: false, shouldRetry: false, attempt, outcome, errorMessage: message, statusCode: statusCode || null,\n  } }];\n}\n\nif (inputItem && inputItem.error) {\n  return retryableResult('retryable_network_error', String(inputItem.error).slice(0, 300), null);\n}\n\nconst statusCode = inputItem.statusCode;\nif (statusCode === 429) {\n  const headers = inputItem.headers || {};\n  const retryAfterRaw = headers['retry-after'] || headers['Retry-After'];\n  let retryAfterMs = null;\n  if (retryAfterRaw != null) {\n    const asSeconds = Number(retryAfterRaw);\n    if (Number.isFinite(asSeconds) && asSeconds >= 0) {\n      retryAfterMs = asSeconds * 1000;\n    } else {\n      const asDate = Date.parse(retryAfterRaw);\n      if (!Number.isNaN(asDate)) retryAfterMs = Math.max(0, asDate - Date.now());\n    }\n  }\n  return retryableResult('retryable_rate_limited', 'HTTP 429 from Lever', retryAfterMs);\n}\nif (RETRYABLE_5XX.has(statusCode)) {\n  return retryableResult('retryable_server_error', 'HTTP ' + statusCode + ' from Lever', null);\n}\nif (statusCode >= 500) {\n  return permanentResult('permanent_server_error', 'HTTP ' + statusCode + ' from Lever', statusCode);\n}\nif (statusCode >= 400) {\n  return permanentResult('permanent_client_error', 'HTTP ' + statusCode + ' from Lever', statusCode);\n}\n\nreturn [{ json: {\n  source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name, feed_url: src.feed_url,\n  success: true, shouldRetry: false, attempt, outcome: 'fetched', statusCode, body: inputItem.body,\n} }];"
+      },
+      "id": "70bdb052-6750-440d-b8b7-0671bfe92d26",
+      "name": "Evaluate Lever Fetch Attempt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2500,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.shouldRetry }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "1820b14e-c10e-4f0f-b83f-627d67ec341b",
+      "name": "Should Retry Lever?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2800,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ev = $input.first().json;\nreturn [{ json: { attempt: ev.nextAttempt, nextDelayMs: ev.nextDelayMs, feed_url: ev.feed_url } }];"
+      },
+      "id": "73b74289-ef21-47e3-b2cf-6d7ceb7fa913",
+      "name": "Compute Backoff Lever",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        150
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.max(1, Math.round($json.nextDelayMs / 1000)) }}"
+      },
+      "id": "b4d13b95-ecb7-4473-988e-dfd4c3484da8",
+      "name": "Backoff Wait Lever",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2800,
+        250
+      ],
+      "webhookId": "d99effaf-b199-4ccd-add5-5fceb5b05800"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Attach Provenance & Guard').item.json;\nconst inputItem = $input.first().json;\nlet attempt = 1;\ntry { attempt = $('Compute Backoff Workable').item.json.attempt; } catch (e) { attempt = 1; }\n\nconst MAX_ATTEMPTS = 4;\nconst BASE_DELAY_MS = 500;\nconst MAX_DELAY_MS = 8000;\nconst RETRYABLE_5XX = new Set([500, 502, 503, 504]);\n\nfunction computeBackoffMs(retryAfterMs) {\n  if (typeof retryAfterMs === 'number' && retryAfterMs >= 0) return Math.min(MAX_DELAY_MS, retryAfterMs);\n  const exp = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, attempt - 1));\n  const jitter = Math.random() * exp;\n  return Math.min(MAX_DELAY_MS, Math.round((exp + jitter) / 2));\n}\n\nfunction retryableResult(kind, message, retryAfterMs) {\n  const canRetry = attempt < MAX_ATTEMPTS;\n  return [{ json: {\n    source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name, feed_url: src.feed_url,\n    success: false, shouldRetry: canRetry, attempt, nextAttempt: attempt + 1,\n    nextDelayMs: canRetry ? computeBackoffMs(retryAfterMs) : null,\n    outcome: canRetry ? kind : (kind + '_retries_exhausted'),\n    errorMessage: message, statusCode: (inputItem && inputItem.statusCode) || null,\n  } }];\n}\n\nfunction permanentResult(outcome, message, statusCode) {\n  return [{ json: {\n    source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name, feed_url: src.feed_url,\n    success: false, shouldRetry: false, attempt, outcome, errorMessage: message, statusCode: statusCode || null,\n  } }];\n}\n\nif (inputItem && inputItem.error) {\n  return retryableResult('retryable_network_error', String(inputItem.error).slice(0, 300), null);\n}\n\nconst statusCode = inputItem.statusCode;\nif (statusCode === 429) {\n  const headers = inputItem.headers || {};\n  const retryAfterRaw = headers['retry-after'] || headers['Retry-After'];\n  let retryAfterMs = null;\n  if (retryAfterRaw != null) {\n    const asSeconds = Number(retryAfterRaw);\n    if (Number.isFinite(asSeconds) && asSeconds >= 0) {\n      retryAfterMs = asSeconds * 1000;\n    } else {\n      const asDate = Date.parse(retryAfterRaw);\n      if (!Number.isNaN(asDate)) retryAfterMs = Math.max(0, asDate - Date.now());\n    }\n  }\n  return retryableResult('retryable_rate_limited', 'HTTP 429 from Workable', retryAfterMs);\n}\nif (RETRYABLE_5XX.has(statusCode)) {\n  return retryableResult('retryable_server_error', 'HTTP ' + statusCode + ' from Workable', null);\n}\nif (statusCode >= 500) {\n  return permanentResult('permanent_server_error', 'HTTP ' + statusCode + ' from Workable', statusCode);\n}\nif (statusCode >= 400) {\n  return permanentResult('permanent_client_error', 'HTTP ' + statusCode + ' from Workable', statusCode);\n}\n\nreturn [{ json: {\n  source_id: src.source_id, ats_type: src.ats_type, company_name: src.company_name, feed_url: src.feed_url,\n  success: true, shouldRetry: false, attempt, outcome: 'fetched', statusCode, body: inputItem.body,\n} }];"
+      },
+      "id": "60dcac55-ac6f-4db9-9dba-76b50ed6bac5",
+      "name": "Evaluate Workable Fetch Attempt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2500,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.shouldRetry }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {},
+        "looseTypeValidation": true
+      },
+      "id": "bf23a90e-90f6-49cd-8b47-0e4960deaf14",
+      "name": "Should Retry Workable?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2800,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const ev = $input.first().json;\nreturn [{ json: { attempt: ev.nextAttempt, nextDelayMs: ev.nextDelayMs, feed_url: ev.feed_url } }];"
+      },
+      "id": "a60ebcdf-722c-4104-9336-9b1f255ff72e",
+      "name": "Compute Backoff Workable",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        450
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ Math.max(1, Math.round($json.nextDelayMs / 1000)) }}"
+      },
+      "id": "07a3e972-bea4-49ec-9f9d-2db7719c2107",
+      "name": "Backoff Wait Workable",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2800,
+        550
+      ],
+      "webhookId": "37c4fa1e-fe5b-4c52-ae0b-d435d7f1f6a4"
+    },
+    {
+      "id": "d1e2f3a4-0001-4aaa-8bbb-000000000001",
+      "name": "Sticky Note - Adapter Architecture",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1550,
+        -380
+      ],
+      "parameters": {
+        "content": "### Adapter Architecture (future direction)\nThis workflow should evolve from provider-specific branches into a provider-agnostic ingestion framework. Greenhouse/Lever/Workable are the first three adapters, not the ceiling — Oracle, SAP, HTML extraction, and custom parsers are expected to plug into the same fetch -> normalize -> validate -> write pipeline. Do not assume this switch/branch shape is the final architecture.",
+        "height": 220,
+        "width": 480,
+        "color": 3
+      }
+    },
+    {
+      "id": "d1e2f3a4-0002-4aaa-8bbb-000000000002",
+      "name": "Sticky Note - Normalization Contract",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3104,
+        480
+      ],
+      "parameters": {
+        "content": "### Shared Normalization Contract\nAll providers must output into the same normalized job shape before reaching Should Write To DB? — external_id, title, description, application_url, location, work_arrangement, employment_type, source_id, published_at. An adapter is done only when it produces this exact shape; provider-specific fields must never leak downstream of Classify & Normalize.",
+        "height": 200,
+        "width": 480,
+        "color": 3
+      }
+    },
+    {
+      "id": "d1e2f3a4-0003-4aaa-8bbb-000000000003",
+      "name": "Sticky Note - Source Registry Direction",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        220
+      ],
+      "parameters": {
+        "content": "### Source Registry Direction\nLoad Approved Pilot Sources is a hardcoded 4-row list for this pilot only. Future execution should be driven by source configuration (company_sources) instead of a hardcoded provider list — Attach Provenance & Guard already re-checks review_status/automation_eligibility live from the database on every run; that pattern is what a registry-driven version should extend, not replace.",
+        "height": 200,
+        "width": 520,
+        "color": 3
+      }
+    },
+    {
+      "id": "d1e2f3a4-0004-4aaa-8bbb-000000000004",
+      "name": "Sticky Note - Safety Invariants",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1030,
+        -380
+      ],
+      "parameters": {
+        "content": "### Safety Invariants — keep these when extending\ndry_run support, bounded writes (maxJobsPerSource), retry/backoff limits, per-source approval (review_status + automation_eligibility), and source-scoped stale-close are load-bearing safety mechanisms, not pilot-only scaffolding. Any new adapter or future scheduled version must preserve all five before activation.",
+        "height": 220,
+        "width": 480,
+        "color": 3
+      }
+    },
+    {
+      "id": "d1e2f3a4-0005-4aaa-8bbb-000000000005",
+      "name": "Sticky Note - Future Target Architecture",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        100,
+        950
+      ],
+      "parameters": {
+        "content": "### Future Target Architecture (not yet implemented)\nSource Registry -> Ingestion Orchestrator -> Adapter Selection -> Fetch -> Normalize -> Validate -> Write.\n\nThe current Greenhouse/Lever/Workable branches are the first concrete adapter implementations of this shape: Route By ATS Type is today's \"Adapter Selection\", and Classify & Normalize <ATS> is today's \"Normalize\". This note documents the target direction only — no refactor has been implemented, and this pilot's execution logic is unchanged.",
+        "height": 320,
+        "width": 750,
+        "color": 5
+      }
+    }
+  ],
+  "connections": {
+    "Start Pilot Run": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Load Approved Pilot Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Approved Pilot Sources": {
+      "main": [
+        [
+          {
+            "node": "Fetch Source Provenance",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Source Provenance": {
+      "main": [
+        [
+          {
+            "node": "Attach Provenance & Guard",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Attach Provenance & Guard": {
+      "main": [
+        [
+          {
+            "node": "Process Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Source Approved?": {
+      "main": [
+        [
+          {
+            "node": "Route By ATS Type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Review-Required Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route By ATS Type": {
+      "main": [
+        [
+          {
+            "node": "Fetch Greenhouse Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Lever Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Workable Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Unsupported ATS Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify & Normalize Greenhouse": {
+      "main": [
+        [
+          {
+            "node": "Should Write To DB?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Write To DB?": {
+      "main": [
+        [
+          {
+            "node": "Prepare Bounded Write Set",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finalize Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Bounded Write Set": {
+      "main": [
+        [
+          {
+            "node": "Select Existing Jobs For Source",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Select Existing Jobs For Source": {
+      "main": [
+        [
+          {
+            "node": "Compute Diff Plan",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Diff Plan": {
+      "main": [
+        [
+          {
+            "node": "Upsert Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Upsert Jobs": {
+      "main": [
+        [
+          {
+            "node": "Merge Upsert Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge Upsert Result": {
+      "main": [
+        [
+          {
+            "node": "Should Close Stale Jobs?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Close Stale Jobs?": {
+      "main": [
+        [
+          {
+            "node": "Close Stale Jobs For Source",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Finalize Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Close Stale Jobs For Source": {
+      "main": [
+        [
+          {
+            "node": "Finalize Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Source Result": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Process Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Sources": {
+      "main": [
+        [
+          {
+            "node": "Build Execution Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is Source Approved?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify & Normalize Lever": {
+      "main": [
+        [
+          {
+            "node": "Should Write To DB?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify & Normalize Workable": {
+      "main": [
+        [
+          {
+            "node": "Should Write To DB?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Unsupported ATS Result": {
+      "main": [
+        [
+          {
+            "node": "Finalize Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Review-Required Result": {
+      "main": [
+        [
+          {
+            "node": "Finalize Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Greenhouse Jobs": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Greenhouse Fetch Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Greenhouse Fetch Attempt": {
+      "main": [
+        [
+          {
+            "node": "Should Retry Greenhouse?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Retry Greenhouse?": {
+      "main": [
+        [
+          {
+            "node": "Compute Backoff Greenhouse",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Classify & Normalize Greenhouse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Backoff Greenhouse": {
+      "main": [
+        [
+          {
+            "node": "Backoff Wait Greenhouse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backoff Wait Greenhouse": {
+      "main": [
+        [
+          {
+            "node": "Fetch Greenhouse Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Lever Jobs": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Lever Fetch Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Lever Fetch Attempt": {
+      "main": [
+        [
+          {
+            "node": "Should Retry Lever?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Retry Lever?": {
+      "main": [
+        [
+          {
+            "node": "Compute Backoff Lever",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Classify & Normalize Lever",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Backoff Lever": {
+      "main": [
+        [
+          {
+            "node": "Backoff Wait Lever",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backoff Wait Lever": {
+      "main": [
+        [
+          {
+            "node": "Fetch Lever Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Workable Jobs": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Workable Fetch Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Workable Fetch Attempt": {
+      "main": [
+        [
+          {
+            "node": "Should Retry Workable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Retry Workable?": {
+      "main": [
+        [
+          {
+            "node": "Compute Backoff Workable",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Classify & Normalize Workable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Backoff Workable": {
+      "main": [
+        [
+          {
+            "node": "Backoff Wait Workable",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Backoff Wait Workable": {
+      "main": [
+        [
+          {
+            "node": "Fetch Workable Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

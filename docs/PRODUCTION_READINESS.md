@@ -180,6 +180,30 @@ Everything below is carried forward from the audit as-is; Phase 1 intentionally 
 |---|---|---|---|---|---|---|
 | Incident-response runbook | Not Implemented | Medium | Before deployment | No runbook file found | Write one before public launch | Verified 2026-08-21 |
 
+### n8n automation workflows (Source Intelligence Analyzer, Job Ingestion Pilot Orchestrator)
+
+Findings from the 2026-09-19 final pre-database-migration audit. No structural blockers found in either workflow — see `docs/n8n-workflow-change-process.md` for the deployment process itself. Also see AGENTS.md §34: n8n changes require the repo→validate→diff→live→re-read sequence, full-replacement node updates only (never partial JSON-pointer paths into arrays — see the 2026-09-19 incident documented in `docs/n8n-workflow-change-process.md`).
+
+**A. Required environment promotion tasks** (before production activation of either workflow):
+- Change the centralized `supabaseBaseUrl` in each workflow's `Workflow Configuration` node from the local Docker URL to the production Supabase URL. Confirmed only-working pattern on this n8n Community instance — `$env` is blocked (`N8N_BLOCK_ENV_ACCESS_IN_NODE`), n8n Variables requires an unavailable license tier, and `{{ $credentials.host }}` is not accessible from a generic `httpRequest` node's own expressions. All three confirmed empirically 2026-09-19.
+- Change `environment` from `'local'` to the appropriate production value (informational only — not a safety gate, does not affect behavior).
+- Configure and bind the correct production `Supabase Service Role` credential (same name, new environment-specific values) to every node that needs it.
+- Verify no production workflow still references `localhost`, `host.docker.internal`, `127.0.0.1`, local ports, or development-only services.
+- Explicitly review `mode`, schedule configuration, and `active` state before production activation — do not assume today's local values are what production should start with.
+- Perform a controlled production smoke test (one manual execution, dry-run or bounded write) before enabling normal scheduled execution.
+
+**B. Required before expanding Job Ingestion to new providers:**
+- Review/widen the `jobs.source_type` database check constraint before ingesting providers beyond the currently-supported `greenhouse`/`lever`/`workable` values (e.g. `oracle`, which Source Intelligence Analyzer can already detect but Job Ingestion cannot yet write).
+
+**C. Pre-launch hardening / scale items** (not blockers for continuing development — explicit reminders for later):
+- Evaluate a DB-level uniqueness constraint on `source_intelligence.source_id` as defense-in-depth against concurrent Source Intelligence executions (currently correctness relies entirely on the selection RPC's `NOT EXISTS`, not a schema constraint).
+- Add/verify protection against overlapping Source Intelligence executions before increasing run frequency or introducing concurrency (no overlap guard exists today).
+- Review pagination for ATS job boards before Registry-driven ingestion expands to sources with very large job counts (none of the 3 current adapters paginate).
+- Review the Source Intelligence RPC/index/query performance as `source_intelligence` history grows significantly.
+- Review execution-summary/result array sizes (`Build Run Summary`, `Build Execution Summary`) before batches grow to hundreds of sources per execution.
+- Add a lightweight production pre-flight/config sanity check so a workflow cannot accidentally be activated while still pointing at local infrastructure.
+- Verify production failure/recovery behavior for Supabase outages, provider 429/5xx responses, n8n restarts, and partial batch failures — today's behavior was audited and is reasonable at pilot scale (graceful per-item failure isolation in both workflows, real backoff in Job Ingestion) but has not been tested against a real production outage.
+
 ---
 
-*Last full audit: 2026-08-21. This file supersedes any severity/timing labels stated in prior chat-only reports — if the two ever disagree, this file is correct.*
+*Last full audit: 2026-08-21 (web app). n8n automation-layer audit: 2026-09-19 — see the section above. This file supersedes any severity/timing labels stated in prior chat-only reports — if the two ever disagree, this file is correct.*
