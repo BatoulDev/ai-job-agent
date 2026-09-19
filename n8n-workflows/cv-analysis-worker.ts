@@ -20,10 +20,22 @@
  *
  * WORKFLOW CONFIGURATION NODE (first node after the trigger — edit before activating)
  * ──────────────────────────────────────────────────────────────────────────────────
- *   supabaseBaseUrl — base URL of your Supabase project (no trailing slash)
- *                     local: http://host.docker.internal:55321
- *                     cloud: https://<project-ref>.supabase.co
- *   environment     — "local" or "production" (informational label)
+ *   supabaseBaseUrl — local: http://host.docker.internal:55321. Centralized
+ *                     here deliberately — every downstream node reads it via
+ *                     $('Workflow Configuration').first().json.supabaseBaseUrl,
+ *                     never a second literal copy. n8n environment variables
+ *                     ($env) and Variables ($vars) were both evaluated as
+ *                     alternatives and are not usable on this instance —
+ *                     $env is blocked (N8N_BLOCK_ENV_ACCESS_IN_NODE), and
+ *                     Variables requires a license tier this Community
+ *                     install doesn't have (verified via `n8n license:info`
+ *                     inside the container, 2026-09-19 — no variables
+ *                     entitlement present). Promoting this workflow to a
+ *                     new n8n environment means editing this one field by
+ *                     hand — see docs/PRODUCTION_READINESS.md's n8n
+ *                     promotion checklist.
+ *   environment     — 'local' (informational label). Nothing in this
+ *                     workflow branches on it; it is not a safety gate.
  *
  *   All Supabase endpoint URLs read from this node via
  *   $('Workflow Configuration').first().json.supabaseBaseUrl

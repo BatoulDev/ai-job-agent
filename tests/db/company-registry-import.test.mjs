@@ -33,6 +33,23 @@ let companies;
 let companySources;
 let ordinaryUser;
 
+// Bug fixed here (job-ingestion pilot remediation): this suite deliberately
+// exercises the REAL 11 CSV rows for the 5 flagged companies (see header
+// comment) rather than synthetic fixture ids, so their ids collide with
+// whatever the shared local registry already has imported. The old
+// after() unconditionally deleted every id in `companySources`/`companies`
+// — safe only when the registry was empty beforehand, but silently
+// destructive (11 company_sources + 7 companies rows) when
+// `node scripts/import-company-registry.mjs` had already run, which it
+// normally has on this branch. Fix: snapshot which of these exact ids
+// existed BEFORE this test's upsert, and only ever delete ids this test
+// itself created. Pre-existing rows are never touched by cleanup, and
+// their untouched survival (same company_id/review_status) is asserted
+// below as a regression guard.
+let preExistingSourceIds;
+let preExistingCompanyIds;
+let registryTotalsBefore;
+
 before(async () => {
   await assertExpectedLocalProject();
 
@@ -43,6 +60,27 @@ before(async () => {
   companies = buildCompanies(relevantRows);
   companySources = buildCompanySources(relevantRows);
 
+  // Snapshot BEFORE any write: which of these exact ids (and what data)
+  // already exist in the shared registry. This is the only thing that
+  // makes it safe to upsert real CSV-derived rows against a possibly
+  // already-populated table.
+  const { data: preSources } = await adminClient
+    .from("company_sources")
+    .select("id")
+    .in("id", companySources.map((s) => s.id));
+  const { data: preCompanies } = await adminClient
+    .from("companies")
+    .select("id")
+    .in("id", companies.map((c) => c.id));
+  preExistingSourceIds = new Set((preSources ?? []).map((r) => r.id));
+  preExistingCompanyIds = new Set((preCompanies ?? []).map((r) => r.id));
+
+  const [{ count: companiesTotalBefore }, { count: sourcesTotalBefore }] = await Promise.all([
+    adminClient.from("companies").select("id", { count: "exact", head: true }),
+    adminClient.from("company_sources").select("id", { count: "exact", head: true }),
+  ]);
+  registryTotalsBefore = { companies: companiesTotalBefore, sources: sourcesTotalBefore };
+
   const { error: companiesError } = await adminClient.from("companies").upsert(companies, { onConflict: "id" });
   if (companiesError) throw new Error(`fixture companies upsert failed: ${companiesError.message}`);
   const { error: sourcesError } = await adminClient.from("company_sources").upsert(companySources, { onConflict: "id" });
@@ -52,18 +90,55 @@ before(async () => {
 });
 
 after(async () => {
-  const sourceIds = companySources.map((s) => s.id);
-  const companyIds = companies.map((c) => c.id);
-  if (sourceIds.length > 0) {
-    const { error } = await adminClient.from("company_sources").delete().in("id", sourceIds);
-    if (error) throw new Error(`cleanup: failed to delete fixture company_sources: ${error.message}`);
+  // Only delete ids this test run actually created — never an id that was
+  // already present in the shared registry before this file's before().
+  const sourceIdsToDelete = companySources.map((s) => s.id).filter((id) => !preExistingSourceIds.has(id));
+  const companyIdsToDelete = companies.map((c) => c.id).filter((id) => !preExistingCompanyIds.has(id));
+
+  if (sourceIdsToDelete.length > 0) {
+    const { error } = await adminClient.from("company_sources").delete().in("id", sourceIdsToDelete);
+    if (error) throw new Error(`cleanup: failed to delete fixture-created company_sources: ${error.message}`);
   }
-  if (companyIds.length > 0) {
-    const { error } = await adminClient.from("companies").delete().in("id", companyIds);
-    if (error) throw new Error(`cleanup: failed to delete fixture companies: ${error.message}`);
+  if (companyIdsToDelete.length > 0) {
+    const { error } = await adminClient.from("companies").delete().in("id", companyIdsToDelete);
+    if (error) throw new Error(`cleanup: failed to delete fixture-created companies: ${error.message}`);
   }
-  const { data: remaining } = await adminClient.from("company_sources").select("id").in("id", sourceIds);
-  assert.equal(remaining?.length ?? 0, 0, "fixture company_sources rows must not survive cleanup");
+
+  const { data: remaining } = await adminClient.from("company_sources").select("id").in("id", sourceIdsToDelete);
+  assert.equal(remaining?.length ?? 0, 0, "company_sources rows this test created must not survive cleanup");
+
+  // Regression guard: every id that pre-existed before this test touched
+  // it must still be present, with unchanged provenance — proving this
+  // suite's own upsert+cleanup lifecycle never rewrites or removes real
+  // registry data. This is the direct fix for the destructive-cleanup bug.
+  if (preExistingSourceIds.size > 0) {
+    const { data: survivors } = await adminClient
+      .from("company_sources")
+      .select("id, company_id, review_status")
+      .in("id", [...preExistingSourceIds]);
+    assert.equal(survivors?.length ?? 0, preExistingSourceIds.size, "every pre-existing company_sources row must survive this test's lifecycle");
+    const byId = Object.fromEntries((companySources ?? []).map((s) => [s.id, s]));
+    for (const row of survivors) {
+      const expected = byId[row.id];
+      assert.equal(row.company_id, expected.company_id, `pre-existing ${row.id} company_id must be unchanged after this test's lifecycle`);
+      assert.equal(row.review_status, expected.review_status, `pre-existing ${row.id} review_status must be unchanged after this test's lifecycle`);
+    }
+  }
+  if (preExistingCompanyIds.size > 0) {
+    const { data: survivors } = await adminClient.from("companies").select("id").in("id", [...preExistingCompanyIds]);
+    assert.equal(survivors?.length ?? 0, preExistingCompanyIds.size, "every pre-existing companies row must survive this test's lifecycle");
+  }
+
+  // Whole-registry regression guard: this test's own upsert+cleanup
+  // lifecycle must never change the total row counts of either table,
+  // regardless of whether the registry was empty or fully populated
+  // going in.
+  const [{ count: companiesTotalAfter }, { count: sourcesTotalAfter }] = await Promise.all([
+    adminClient.from("companies").select("id", { count: "exact", head: true }),
+    adminClient.from("company_sources").select("id", { count: "exact", head: true }),
+  ]);
+  assert.equal(companiesTotalAfter, registryTotalsBefore.companies, "total companies row count must be unchanged after this test's lifecycle");
+  assert.equal(sourcesTotalAfter, registryTotalsBefore.sources, "total company_sources row count must be unchanged after this test's lifecycle");
 
   await deleteTestUsers([ordinaryUser]);
 });

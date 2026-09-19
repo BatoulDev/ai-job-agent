@@ -987,6 +987,7 @@ export type Database = {
           country_code: string | null
           created_at: string
           created_by: string | null
+          dedup_scope: string | null
           description: string
           discovered_at: string
           employment_type: string | null
@@ -1023,6 +1024,7 @@ export type Database = {
           country_code?: string | null
           created_at?: string
           created_by?: string | null
+          dedup_scope?: string | null
           description: string
           discovered_at?: string
           employment_type?: string | null
@@ -1059,6 +1061,7 @@ export type Database = {
           country_code?: string | null
           created_at?: string
           created_by?: string | null
+          dedup_scope?: string | null
           description?: string
           discovered_at?: string
           employment_type?: string | null
@@ -1617,6 +1620,50 @@ export type Database = {
           user_id?: string
         }
         Relationships: []
+      }
+      source_intelligence: {
+        Row: {
+          analyzed_at: string
+          confidence: string
+          created_at: string
+          detected_provider: string
+          evidence: Json
+          id: string
+          ingestion_type: string
+          run_id: string
+          source_id: string
+        }
+        Insert: {
+          analyzed_at?: string
+          confidence: string
+          created_at?: string
+          detected_provider: string
+          evidence?: Json
+          id?: string
+          ingestion_type: string
+          run_id: string
+          source_id: string
+        }
+        Update: {
+          analyzed_at?: string
+          confidence?: string
+          created_at?: string
+          detected_provider?: string
+          evidence?: Json
+          id?: string
+          ingestion_type?: string
+          run_id?: string
+          source_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "source_intelligence_source_id_fkey"
+            columns: ["source_id"]
+            isOneToOne: false
+            referencedRelation: "company_sources"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       subscriptions: {
         Row: {
@@ -2179,6 +2226,31 @@ export type Database = {
           plan_code: string
           price_amount: number
         }[]
+      }
+      get_source_intelligence_candidates: {
+        Args: { p_limit?: number }
+        Returns: {
+          ats_provider: string | null
+          automation_eligibility: string | null
+          company_id: string
+          company_name: string
+          country_code: string | null
+          id: string
+          imported_at: string
+          last_verified_at: string | null
+          official_careers_url: string | null
+          official_website_url: string | null
+          researcher_notes: string | null
+          review_status: string
+          target_country: string
+          updated_at: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "company_sources"
+          isOneToOne: false
+          isSetofReturn: true
+        }
       }
       is_admin: { Args: never; Returns: boolean }
       is_cv_analysis_matching_eligible: {
