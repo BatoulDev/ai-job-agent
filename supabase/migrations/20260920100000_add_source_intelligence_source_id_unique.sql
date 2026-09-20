@@ -1,0 +1,65 @@
+-- Fixes a confirmed, reproduced duplication defect: source_intelligence had
+-- no uniqueness guarantee on source_id at all, only a plain (non-unique)
+-- index on (source_id, analyzed_at desc). A real incident on this branch's
+-- own local dev database produced 10 duplicate (source_id, second-row)
+-- pairs — proven, from n8n's own execution_entity table, to be the very
+-- first ever `mode: 'trigger'` (scheduled) execution of the Source
+-- Intelligence Analyzer (2026-09-20 11:00:14–11:01:11) re-classifying 10
+-- sources that an earlier manual execution (2026-09-19 12:34:43) had
+-- already classified identically. get_source_intelligence_candidates()
+-- itself is correct — its NOT EXISTS check is real SQL and was independently
+-- re-verified against the live database to already exclude every
+-- currently-duplicated source_id today. The window this incident actually
+-- exploited was environmental (this branch's own `supabase db reset --local`
+-- cycles, run for unrelated Registry Sync migration testing, transiently
+-- emptied source_intelligence while the already-active, independently
+-- scheduled n8n workflow kept polling the same shared local database) —
+-- but the underlying schema gap is real and general: NOTHING in the
+-- database itself prevents two writers (a genuine concurrent race, a retry,
+-- or any future reset/restore cycle) from both inserting a row for the same
+-- source_id. This migration closes that gap at the only layer that can
+-- actually guarantee it: the database, not workflow timing.
+--
+-- Data-model decision (proven, not assumed): this table's own creation
+-- migration (20260916171255) intended append-only HISTORY ("a re-probe
+-- inserts a new row"), but no mechanism to legitimately trigger a re-probe
+-- has ever been built — get_source_intelligence_candidates()'s NOT EXISTS
+-- check permanently excludes a source the moment it has any
+-- source_intelligence row, and grep across the full n8n workflow, every
+-- migration, and every test in this repository confirms no code path ever
+-- intentionally requests re-analysis of an already-classified source. Every
+-- one of the 15 real n8n executions before the incident (2026-09-18/19,
+-- all mode='manual', confirmed via n8n's own execution_entity) produced
+-- disjoint, non-overlapping source_id sets — direct evidence that "exactly
+-- one classification per source" is not merely this migration's assumption
+-- but the ACTUAL, already-relied-upon operational behavior. This migration
+-- makes that real, already-followed rule a database guarantee (Model A) —
+-- it does not invent a new one. A future, explicit re-analysis feature
+-- (e.g. an admin-triggered reclassification) remains buildable later,
+-- additively (a superseded_at/generation column, or a dedicated RPC that
+-- deletes-and-reinserts under service_role, the same non-silent pattern
+-- company_sources_reject_remap already established for a comparable
+-- "identity must not change silently" concern) — this migration does not
+-- foreclose that, it only removes the accidental, no-approval path.
+--
+-- NOTE ON APPLYING THIS MIGRATION: as of this migration's authoring, the
+-- shared local dev database's public.source_intelligence table itself
+-- still contains the 10 duplicate pairs from the incident above, untouched,
+-- pending an explicitly separate, human-approved cleanup decision (never
+-- executed by this migration or by any other code in this change). A plain
+-- CREATE UNIQUE INDEX cannot be applied to a table that currently violates
+-- it — Postgres will reject it outright. This migration is therefore
+-- written and validated but is NOT applied against that populated table in
+-- this change; it applies cleanly today only against an empty/reset
+-- database (confirmed: a fresh `supabase db reset --local` runs it with
+-- zero existing rows, trivially satisfying uniqueness), and will apply
+-- cleanly against the current shared dev database the moment the separate,
+-- approved cleanup removes the 10 accidental duplicate rows — no change to
+-- this migration will be needed for that; it is complete and correct as
+-- written.
+
+create unique index source_intelligence_source_id_key
+  on public.source_intelligence (source_id);
+
+comment on index public.source_intelligence_source_id_key is
+  'Exactly one source_intelligence row per source_id, ever — the real, already-followed operational behavior (see this migration''s header for the evidence) made a DB guarantee. Also the ON CONFLICT (source_id) inference target for an idempotent insert from the Source Intelligence Analyzer. Closes a confirmed incident (2026-09-20): with no such constraint, nothing stopped a duplicate classification from a concurrent execution, a retry, or a database reset/restore cycle happening to overlap with a live, independently-scheduled n8n execution.';
