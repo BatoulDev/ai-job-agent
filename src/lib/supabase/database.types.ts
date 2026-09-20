@@ -371,20 +371,35 @@ export type Database = {
       companies: {
         Row: {
           created_at: string
+          discovery_channels: string[]
+          discovery_run_id: string | null
+          discovery_source: string | null
           display_name: string
+          first_discovered_at: string | null
           id: string
+          last_seen_at: string | null
           updated_at: string
         }
         Insert: {
           created_at?: string
+          discovery_channels?: string[]
+          discovery_run_id?: string | null
+          discovery_source?: string | null
           display_name: string
+          first_discovered_at?: string | null
           id: string
+          last_seen_at?: string | null
           updated_at?: string
         }
         Update: {
           created_at?: string
+          discovery_channels?: string[]
+          discovery_run_id?: string | null
+          discovery_source?: string | null
           display_name?: string
+          first_discovered_at?: string | null
           id?: string
+          last_seen_at?: string | null
           updated_at?: string
         }
         Relationships: []
@@ -396,9 +411,15 @@ export type Database = {
           company_id: string
           company_name: string
           country_code: string | null
+          discovery_channels: string[]
+          discovery_run_id: string | null
+          discovery_source: string | null
+          first_discovered_at: string | null
           id: string
           imported_at: string
+          last_seen_at: string | null
           last_verified_at: string | null
+          normalized_source_key: string | null
           official_careers_url: string | null
           official_website_url: string | null
           researcher_notes: string | null
@@ -412,9 +433,15 @@ export type Database = {
           company_id: string
           company_name: string
           country_code?: string | null
+          discovery_channels?: string[]
+          discovery_run_id?: string | null
+          discovery_source?: string | null
+          first_discovered_at?: string | null
           id: string
           imported_at?: string
+          last_seen_at?: string | null
           last_verified_at?: string | null
+          normalized_source_key?: string | null
           official_careers_url?: string | null
           official_website_url?: string | null
           researcher_notes?: string | null
@@ -428,9 +455,15 @@ export type Database = {
           company_id?: string
           company_name?: string
           country_code?: string | null
+          discovery_channels?: string[]
+          discovery_run_id?: string | null
+          discovery_source?: string | null
+          first_discovered_at?: string | null
           id?: string
           imported_at?: string
+          last_seen_at?: string | null
           last_verified_at?: string | null
+          normalized_source_key?: string | null
           official_careers_url?: string | null
           official_website_url?: string | null
           researcher_notes?: string | null
@@ -1621,6 +1654,95 @@ export type Database = {
         }
         Relationships: []
       }
+      registry_sync_staging: {
+        Row: {
+          candidate_company_id: string | null
+          company_name: string | null
+          country_code: string | null
+          created_at: string
+          discovery_run_id: string | null
+          discovery_source: string
+          id: string
+          normalized_name: string | null
+          normalized_source_key: string | null
+          raw_payload: Json
+          resolved_at: string | null
+          resolved_by: string | null
+          resolved_company_id: string | null
+          resolved_source_id: string | null
+          staging_reason: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          candidate_company_id?: string | null
+          company_name?: string | null
+          country_code?: string | null
+          created_at?: string
+          discovery_run_id?: string | null
+          discovery_source: string
+          id?: string
+          normalized_name?: string | null
+          normalized_source_key?: string | null
+          raw_payload?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_company_id?: string | null
+          resolved_source_id?: string | null
+          staging_reason: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          candidate_company_id?: string | null
+          company_name?: string | null
+          country_code?: string | null
+          created_at?: string
+          discovery_run_id?: string | null
+          discovery_source?: string
+          id?: string
+          normalized_name?: string | null
+          normalized_source_key?: string | null
+          raw_payload?: Json
+          resolved_at?: string | null
+          resolved_by?: string | null
+          resolved_company_id?: string | null
+          resolved_source_id?: string | null
+          staging_reason?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "registry_sync_staging_candidate_company_id_fkey"
+            columns: ["candidate_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registry_sync_staging_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "registry_sync_staging_resolved_company_id_fkey"
+            columns: ["resolved_company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "registry_sync_staging_resolved_source_id_fkey"
+            columns: ["resolved_source_id"]
+            isOneToOne: false
+            referencedRelation: "company_sources"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       source_intelligence: {
         Row: {
           analyzed_at: string
@@ -2235,9 +2357,15 @@ export type Database = {
           company_id: string
           company_name: string
           country_code: string | null
+          discovery_channels: string[]
+          discovery_run_id: string | null
+          discovery_source: string | null
+          first_discovered_at: string | null
           id: string
           imported_at: string
+          last_seen_at: string | null
           last_verified_at: string | null
+          normalized_source_key: string | null
           official_careers_url: string | null
           official_website_url: string | null
           researcher_notes: string | null
@@ -2362,6 +2490,8 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      normalize_company_name: { Args: { p_name: string }; Returns: string }
+      normalize_source_url: { Args: { p_url: string }; Returns: string }
       promote_due_subscription_period: {
         Args: { p_user_id: string }
         Returns: undefined
@@ -2457,6 +2587,25 @@ export type Database = {
         Returns: {
           allowed: boolean
           retry_after_seconds: number
+        }[]
+      }
+      resolve_registry_candidate: {
+        Args: {
+          p_ats_provider_hint?: string
+          p_company_id_hint?: string
+          p_company_name: string
+          p_country_code?: string
+          p_discovery_run_id?: string
+          p_discovery_source: string
+          p_official_careers_url?: string
+          p_official_website_url?: string
+          p_raw_payload?: Json
+        }
+        Returns: {
+          out_company_id: string
+          out_source_id: string
+          out_staging_id: string
+          outcome: string
         }[]
       }
       save_cover_letter_edit: {
