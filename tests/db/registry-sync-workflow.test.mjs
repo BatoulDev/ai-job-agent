@@ -54,8 +54,11 @@ function normalizeAndValidate(discoverySource, raw, maxCandidatesPerRun = 25) {
 
 // Mirrors exactly what Resolve Registry Candidate's jsonBody expression
 // sends, and what Classify RPC Outcome does with the response — using the
-// real local RPC, not a mock.
-async function resolveViaWorkflow(validatedCandidate) {
+// real local RPC, not a mock. discoveryRunId mirrors what the real
+// Generate Discovery Run ID node produces (a real uuid, generated once per
+// simulated "run" — callers share one across processCandidate() calls to
+// simulate multiple candidates in the same execution).
+async function resolveViaWorkflow(validatedCandidate, discoveryRunId) {
   if (validatedCandidate.validationStatus !== "valid") {
     return runNode("Build Validation Failed Result", () => { throw new Error("no $() expected"); }, [validatedCandidate])[0].json;
   }
@@ -67,7 +70,7 @@ async function resolveViaWorkflow(validatedCandidate) {
     p_official_careers_url: validatedCandidate.official_careers_url,
     p_company_id_hint: validatedCandidate.company_id_hint,
     p_ats_provider_hint: validatedCandidate.ats_provider_hint,
-    p_discovery_run_id: null,
+    p_discovery_run_id: discoveryRunId,
     p_raw_payload: validatedCandidate.raw_payload ?? {},
   });
   const respShape = error ? { error: error.message } : { statusCode: 200, body: data };
@@ -81,8 +84,11 @@ async function resolveViaWorkflow(validatedCandidate) {
   )[0].json;
 }
 
-async function processCandidate(discoverySource, raw) {
-  return resolveViaWorkflow(normalizeAndValidate(discoverySource, raw));
+// Defaults to a fresh uuid per call (one candidate = one simulated run)
+// unless the caller passes a shared discoveryRunId to simulate several
+// candidates processed within the SAME Registry Sync execution.
+async function processCandidate(discoverySource, raw, discoveryRunId = randomUUID()) {
+  return resolveViaWorkflow(normalizeAndValidate(discoverySource, raw), discoveryRunId);
 }
 
 const fixtureCompanyIds = new Set();
@@ -344,6 +350,50 @@ test("N. rediscovering a real, pre-existing canonical source (sr-ae-accor) resol
 
   const { data: after } = await adminClient.from("company_sources").select("review_status").eq("id", "sr-ae-accor").single();
   assert.equal(after.review_status, before.review_status, "rediscovery must never change an existing review decision");
+});
+
+// ── O. discovery_run_id provenance ─────────────────────────────────────────
+
+test("O. a real discoveryRunId reaches both companies.discovery_run_id and company_sources.discovery_run_id for a new candidate", async () => {
+  const name = fixtureName("Run Id New");
+  const url = `https://${randomUUID()}.example/careers`;
+  const runId = randomUUID();
+  const r = await track(await processCandidate("apify", { name, country: "LB", careers_url: url }, runId));
+  assert.equal(r.outcome, "created_new");
+  const { data: company } = await adminClient.from("companies").select("discovery_run_id").eq("id", r.company_id).single();
+  const { data: source } = await adminClient.from("company_sources").select("discovery_run_id").eq("id", r.source_id).single();
+  assert.equal(company.discovery_run_id, runId);
+  assert.equal(source.discovery_run_id, runId);
+});
+
+test("P. multiple candidates processed with the same discoveryRunId (one simulated Registry Sync execution) all store that identical value", async () => {
+  const runId = randomUUID();
+  const nameA = fixtureName("Same Run A");
+  const nameB = fixtureName("Same Run B");
+  const a = await track(await processCandidate("apify", { name: nameA, country: "SA", careers_url: `https://${randomUUID()}.example/careers` }, runId));
+  const b = await track(await processCandidate("apify", { name: nameB, country: "SA", careers_url: `https://${randomUUID()}.example/careers` }, runId));
+  assert.equal(a.outcome, "created_new");
+  assert.equal(b.outcome, "created_new");
+  const { data: companyA } = await adminClient.from("companies").select("discovery_run_id").eq("id", a.company_id).single();
+  const { data: companyB } = await adminClient.from("companies").select("discovery_run_id").eq("id", b.company_id).single();
+  assert.equal(companyA.discovery_run_id, runId);
+  assert.equal(companyB.discovery_run_id, runId, "every candidate in the same simulated run must share the identical discoveryRunId");
+});
+
+test("Q. rediscovery with a new discoveryRunId advances discovery_run_id via coalesce, and resolved_existing/dedup still holds", async () => {
+  const name = fixtureName("Run Id Rediscover");
+  const url = `https://${randomUUID()}.example/careers`;
+  const firstRunId = randomUUID();
+  const secondRunId = randomUUID();
+  const first = await track(await processCandidate("manual", { company_name: name, country_code: "LB", official_careers_url: url }, firstRunId));
+  const second = await track(await processCandidate("manual", { company_name: name, country_code: "LB", official_careers_url: url }, secondRunId));
+  assert.equal(first.outcome, "created_new");
+  assert.equal(second.outcome, "resolved_existing");
+  assert.equal(second.source_id, first.source_id, "rediscovery must still resolve to the same canonical source, never duplicate it");
+  const { count } = await adminClient.from("company_sources").select("id", { count: "exact", head: true }).eq("company_id", first.company_id);
+  assert.equal(count, 1, "idempotency/dedup is unaffected by discovery_run_id changing");
+  const { data: source } = await adminClient.from("company_sources").select("discovery_run_id").eq("id", first.source_id).single();
+  assert.equal(source.discovery_run_id, secondRunId, "discovery_run_id must advance to the most recent run that (re)saw this source");
 });
 
 // ── Registry Sync never writes source_intelligence, end to end ────────────

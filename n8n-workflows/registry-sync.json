@@ -43,12 +43,6 @@
               "type": "number"
             },
             {
-              "id": "discovery-run-id-field",
-              "name": "discoveryRunId",
-              "value": "={{ $jmespath($now, \"@\").split(\".\")[0] }}-{{ $execution.id }}",
-              "type": "string"
-            },
-            {
               "id": "started-at-field",
               "name": "startedAt",
               "value": "={{ $now.toISO() }}",
@@ -89,6 +83,21 @@
       "position": [
         100,
         0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "let uuid;\ntry {\n  uuid = require('crypto').randomUUID();\n} catch (e) {\n  // Fallback RFC4122 v4 uuid if the Code node sandbox blocks require('crypto').\n  uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {\n    const r = (Math.random() * 16) | 0;\n    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);\n  });\n}\nreturn [{ json: { discoveryRunId: uuid } }];"
+      },
+      "id": "7f3a9c2e-114b-4a3d-9c77-2b6e8f0a11cd",
+      "name": "Generate Discovery Run ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        100
       ]
     },
     {
@@ -353,7 +362,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst items = $input.all().map((i) => i.json).slice(0, cfg.maxCandidatesPerRun);\n\nfunction firstNonEmpty(...values) {\n  for (const v of values) { if (typeof v === 'string' && v.trim() !== '') return v.trim(); }\n  return null;\n}\n\nreturn items.map(({ discovery_source, raw }) => ({\n  json: {\n    discovery_source,\n    company_name: firstNonEmpty(raw.company_name, raw.name),\n    country_code: firstNonEmpty(raw.country_code, raw.country),\n    official_website_url: firstNonEmpty(raw.official_website_url, raw.website, raw.website_url),\n    official_careers_url: firstNonEmpty(raw.official_careers_url, raw.careers_url, raw.careers_page),\n    company_id_hint: firstNonEmpty(raw.company_id_hint, raw.company_id),\n    ats_provider_hint: firstNonEmpty(raw.ats_provider_hint, raw.ats_provider),\n    raw_payload: raw,\n  },\n}));"
+        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst items = $input.all().map((i) => i.json).slice(0, cfg.maxCandidatesPerRun);\n\nfunction firstNonEmpty(...values) {\n  for (const v of values) { if (typeof v === 'string' && v.trim() !== '') return v.trim(); }\n  return null;\n}\n\nreturn items.map(({ discovery_source, raw }) => ({\n  json: {\n    discovery_source,\n    company_name: firstNonEmpty(raw.company_name, raw.name, raw.title),\n    country_code: firstNonEmpty(raw.country_code, raw.country, raw.countryCode),\n    official_website_url: firstNonEmpty(raw.official_website_url, raw.website, raw.website_url),\n    official_careers_url: firstNonEmpty(raw.official_careers_url, raw.careers_url, raw.careers_page),\n    company_id_hint: firstNonEmpty(raw.company_id_hint, raw.company_id),\n    ats_provider_hint: firstNonEmpty(raw.ats_provider_hint, raw.ats_provider),\n    raw_payload: raw,\n  },\n}));"
       },
       "id": "db2c4354-aae9-48b8-8fef-ec82c99e716c",
       "name": "Normalize Candidates",
@@ -458,7 +467,7 @@
         "sendBody": true,
         "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { p_discovery_source: $json.discovery_source, p_company_name: $json.company_name, p_country_code: $json.country_code, p_official_website_url: $json.official_website_url, p_official_careers_url: $json.official_careers_url, p_company_id_hint: $json.company_id_hint, p_ats_provider_hint: $json.ats_provider_hint, p_discovery_run_id: null, p_raw_payload: $json.raw_payload } }}",
+        "jsonBody": "={{ { p_discovery_source: $json.discovery_source, p_company_name: $json.company_name, p_country_code: $json.country_code, p_official_website_url: $json.official_website_url, p_official_careers_url: $json.official_careers_url, p_company_id_hint: $json.company_id_hint, p_ats_provider_hint: $json.ats_provider_hint, p_discovery_run_id: $('Generate Discovery Run ID').first().json.discoveryRunId, p_raw_payload: $json.raw_payload } }}",
         "options": {
           "timeout": "={{ $('Workflow Configuration').first().json.timeoutSeconds * 1000 }}",
           "response": {
@@ -499,7 +508,7 @@
       "parameters": {
         "mode": "runOnceForAllItems",
         "language": "javaScript",
-        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst results = $input.all().map((i) => i.json);\nconst startedAtMs = new Date(cfg.startedAt).getTime();\nconst countBy = (val) => results.filter((r) => r.outcome === val).length;\n\nconst failedItems = results\n  .filter((r) => r.outcome === 'validation_failed' || r.outcome === 'infrastructure_failed')\n  .slice(0, 50)\n  .map((r) => ({ company_name: r.company_name, outcome: r.outcome, reason: r.reason }));\n\nreturn [{ json: {\n  runId: cfg.discoveryRunId,\n  mode: cfg.mode,\n  environment: cfg.environment,\n  inputCount: results.length,\n  validCount: results.filter((r) => r.outcome !== 'validation_failed').length,\n  createdNew: countBy('created_new'),\n  resolvedExisting: countBy('resolved_existing'),\n  staged: countBy('staged'),\n  validationFailed: countBy('validation_failed'),\n  infrastructureFailed: countBy('infrastructure_failed'),\n  failedItems,\n  totalDurationMs: Date.now() - startedAtMs,\n  finishedAt: new Date().toISOString(),\n} }];"
+        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst discoveryRunId = $('Generate Discovery Run ID').first().json.discoveryRunId;\nconst results = $input.all().map((i) => i.json);\nconst startedAtMs = new Date(cfg.startedAt).getTime();\nconst countBy = (val) => results.filter((r) => r.outcome === val).length;\n\nconst failedItems = results\n  .filter((r) => r.outcome === 'validation_failed' || r.outcome === 'infrastructure_failed')\n  .slice(0, 50)\n  .map((r) => ({ company_name: r.company_name, outcome: r.outcome, reason: r.reason }));\n\nreturn [{ json: {\n  runId: discoveryRunId,\n  mode: cfg.mode,\n  environment: cfg.environment,\n  inputCount: results.length,\n  validCount: results.filter((r) => r.outcome !== 'validation_failed').length,\n  createdNew: countBy('created_new'),\n  resolvedExisting: countBy('resolved_existing'),\n  staged: countBy('staged'),\n  validationFailed: countBy('validation_failed'),\n  infrastructureFailed: countBy('infrastructure_failed'),\n  failedItems,\n  totalDurationMs: Date.now() - startedAtMs,\n  finishedAt: new Date().toISOString(),\n} }];"
       },
       "id": "3846cdfd-f50f-42a2-9c7f-f3cc75a6f5c5",
       "name": "Build Run Summary",
@@ -569,6 +578,17 @@
       ]
     },
     "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Generate Discovery Run ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Discovery Run ID": {
       "main": [
         [
           {

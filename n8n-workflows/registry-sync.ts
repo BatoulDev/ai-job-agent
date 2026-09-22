@@ -51,11 +51,13 @@
  *                            adapter's output before any candidate reaches
  *                            resolve_registry_candidate() — "do not load an
  *                            arbitrarily huge CSV/dataset without bounds."
- *   discoveryRunId          — generated once per execution (see Workflow
- *                            Configuration's own assignment), passed as
- *                            p_discovery_run_id to every resolve_registry_
- *                            candidate() call in this run — the correlation
- *                            id for "which Registry Sync run saw this."
+ *   discoveryRunId          — a real UUID generated once per execution by
+ *                            the dedicated Generate Discovery Run ID node
+ *                            (not this node — see that node's own comment
+ *                            for why), passed as p_discovery_run_id to
+ *                            every resolve_registry_candidate() call in
+ *                            this run — the correlation id for "which
+ *                            Registry Sync run saw this."
  *   startedAt               — execution start timestamp, for the summary's
  *                            duration figure.
  *   csvContent              — raw CSV text (mode='csv' only). Pasted/set by
@@ -192,7 +194,6 @@ const workflowConfiguration = node({
           { id: 'supabase-base-url', name: 'supabaseBaseUrl', value: 'http://host.docker.internal:55321', type: 'string' },
           { id: 'environment-field', name: 'environment', value: 'local', type: 'string' },
           { id: 'max-candidates-field', name: 'maxCandidatesPerRun', value: 25, type: 'number' },
-          { id: 'discovery-run-id-field', name: 'discoveryRunId', value: expr('{{ $jmespath($now, "@").split(".")[0] }}-{{ $execution.id }}'), type: 'string' },
           { id: 'started-at-field', name: 'startedAt', value: expr('{{ $now.toISO() }}'), type: 'string' },
           { id: 'csv-content-field', name: 'csvContent', value: '', type: 'string' },
           { id: 'apify-dataset-id-field', name: 'apifyDatasetId', value: '', type: 'string' },
@@ -202,7 +203,44 @@ const workflowConfiguration = node({
       },
     },
   },
-  output: [{ mode: 'manual', supabaseBaseUrl: 'http://host.docker.internal:55321', environment: 'local', maxCandidatesPerRun: 25, discoveryRunId: 'run-example', startedAt: '2026-09-21T00:00:00.000Z', csvContent: '', apifyDatasetId: '', apifyMaxItems: 50, timeoutSeconds: 15 }],
+  output: [{ mode: 'manual', supabaseBaseUrl: 'http://host.docker.internal:55321', environment: 'local', maxCandidatesPerRun: 25, startedAt: '2026-09-21T00:00:00.000Z', csvContent: '', apifyDatasetId: '', apifyMaxItems: 50, timeoutSeconds: 15 }],
+});
+
+// Generates ONE real UUID per Registry Sync execution — runs exactly once,
+// upstream of Process Candidates' per-candidate batch loop, so every
+// candidate processed in this execution reads the identical discoveryRunId
+// via $('Generate Discovery Run ID').first() (the same safe pattern this
+// workflow already uses for $('Workflow Configuration').first() from inside
+// that same loop). Lives in its own Code node rather than inside Workflow
+// Configuration itself: only specific built-in functions, not raw Node
+// globals like crypto, are available inside a Set node's own {{ }}
+// expression — this replaces the previous
+// $jmespath($now, "@").split(".")[0]-based attempt, which reliably
+// evaluated to an empty string and never produced a valid uuid.
+const generateDiscoveryRunId = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'Generate Discovery Run ID',
+    position: [250, 100],
+    parameters: {
+      mode: 'runOnceForAllItems',
+      language: 'javaScript',
+      jsCode:
+        "let uuid;\n" +
+        "try {\n" +
+        "  uuid = require('crypto').randomUUID();\n" +
+        "} catch (e) {\n" +
+        "  // Fallback RFC4122 v4 uuid if the Code node sandbox blocks require('crypto').\n" +
+        "  uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {\n" +
+        "    const r = (Math.random() * 16) | 0;\n" +
+        "    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);\n" +
+        "  });\n" +
+        "}\n" +
+        "return [{ json: { discoveryRunId: uuid } }];",
+    },
+  },
+  output: [{ discoveryRunId: '5b1f2c3a-9e4d-4b6a-8c2e-1a2b3c4d5e6f' }],
 });
 
 // Manual entry point: the operator edits this ONE array field directly in
@@ -538,8 +576,8 @@ const normalizeCandidates = node({
         "return items.map(({ discovery_source, raw }) => ({\n" +
         "  json: {\n" +
         "    discovery_source,\n" +
-        "    company_name: firstNonEmpty(raw.company_name, raw.name),\n" +
-        "    country_code: firstNonEmpty(raw.country_code, raw.country),\n" +
+        "    company_name: firstNonEmpty(raw.company_name, raw.name, raw.title),\n" +
+        "    country_code: firstNonEmpty(raw.country_code, raw.country, raw.countryCode),\n" +
         "    official_website_url: firstNonEmpty(raw.official_website_url, raw.website, raw.website_url),\n" +
         "    official_careers_url: firstNonEmpty(raw.official_careers_url, raw.careers_url, raw.careers_page),\n" +
         "    company_id_hint: firstNonEmpty(raw.company_id_hint, raw.company_id),\n" +
@@ -649,7 +687,7 @@ const resolveRegistryCandidate = node({
       contentType: 'json',
       specifyBody: 'json',
       jsonBody: expr(
-        "{{ { p_discovery_source: $json.discovery_source, p_company_name: $json.company_name, p_country_code: $json.country_code, p_official_website_url: $json.official_website_url, p_official_careers_url: $json.official_careers_url, p_company_id_hint: $json.company_id_hint, p_ats_provider_hint: $json.ats_provider_hint, p_discovery_run_id: null, p_raw_payload: $json.raw_payload } }}"
+        "{{ { p_discovery_source: $json.discovery_source, p_company_name: $json.company_name, p_country_code: $json.country_code, p_official_website_url: $json.official_website_url, p_official_careers_url: $json.official_careers_url, p_company_id_hint: $json.company_id_hint, p_ats_provider_hint: $json.ats_provider_hint, p_discovery_run_id: $('Generate Discovery Run ID').first().json.discoveryRunId, p_raw_payload: $json.raw_payload } }}"
       ),
       options: {
         timeout: expr("{{ $('Workflow Configuration').first().json.timeoutSeconds * 1000 }}"),
@@ -718,6 +756,7 @@ const buildRunSummary = node({
       language: 'javaScript',
       jsCode:
         "const cfg = $('Workflow Configuration').first().json;\n" +
+        "const discoveryRunId = $('Generate Discovery Run ID').first().json.discoveryRunId;\n" +
         "const results = $input.all().map((i) => i.json);\n" +
         "const startedAtMs = new Date(cfg.startedAt).getTime();\n" +
         "const countBy = (val) => results.filter((r) => r.outcome === val).length;\n" +
@@ -728,7 +767,7 @@ const buildRunSummary = node({
         "  .map((r) => ({ company_name: r.company_name, outcome: r.outcome, reason: r.reason }));\n" +
         "\n" +
         "return [{ json: {\n" +
-        "  runId: cfg.discoveryRunId,\n" +
+        "  runId: discoveryRunId,\n" +
         "  mode: cfg.mode,\n" +
         "  environment: cfg.environment,\n" +
         "  inputCount: results.length,\n" +
@@ -830,7 +869,7 @@ const inputRouting = isManualMode
   .onTrue(loadManualCandidates.to(sharedFromNormalize))
   .onFalse(isCsvMode.onTrue(parseCsvCandidates.to(sharedFromNormalize)).onFalse(apifyBranch));
 
-const mainFlow = workflowConfiguration.to(manualCandidatesInput.to(inputRouting));
+const mainFlow = workflowConfiguration.to(generateDiscoveryRunId.to(manualCandidatesInput.to(inputRouting)));
 
 export default workflow('registry-sync', 'AI Job Agent - Registry Sync')
   .add(startTrigger)

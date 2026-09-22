@@ -56,6 +56,7 @@ test('no duplicate node names or ids', () => {
 const REQUIRED_NODES = [
   'Start Registry Sync Run',
   'Workflow Configuration',
+  'Generate Discovery Run ID',
   'Manual Candidates Input',
   'Is Manual Mode?',
   'Is CSV Mode?',
@@ -86,6 +87,13 @@ test('every required node exists', () => {
 test('Start Registry Sync Run connects to Workflow Configuration', () => {
   const outbound = wf.connections['Start Registry Sync Run']?.main?.[0] ?? [];
   assert.ok(outbound.some((c) => c.node === 'Workflow Configuration'));
+});
+
+test('Workflow Configuration connects to Generate Discovery Run ID, which connects to Manual Candidates Input', () => {
+  const fromConfig = wf.connections['Workflow Configuration']?.main?.[0] ?? [];
+  assert.ok(fromConfig.some((c) => c.node === 'Generate Discovery Run ID'), 'the uuid must be generated before any input adapter runs');
+  const fromGenerate = wf.connections['Generate Discovery Run ID']?.main?.[0] ?? [];
+  assert.ok(fromGenerate.some((c) => c.node === 'Manual Candidates Input'));
 });
 
 test('all three input adapters converge on Normalize Candidates', () => {
@@ -175,6 +183,16 @@ test('the RPC request body matches the exact resolve_registry_candidate paramete
   ]) {
     assert.ok(body.includes(param), `RPC body must include ${param}`);
   }
+});
+
+test('p_discovery_run_id is bound to the generated per-run uuid, never a hardcoded null', () => {
+  const rpcNode = findNode('Resolve Registry Candidate');
+  const body = rpcNode.parameters.jsonBody;
+  assert.ok(!body.includes('p_discovery_run_id: null'), 'p_discovery_run_id must not be a literal null');
+  assert.ok(
+    body.includes("p_discovery_run_id: $('Generate Discovery Run ID').first().json.discoveryRunId"),
+    'p_discovery_run_id must reference the Generate Discovery Run ID node'
+  );
 });
 
 // ─── 5. Credentials — declared, never bound/embedded ───────────────────────
@@ -273,6 +291,22 @@ test('Parse CSV Candidates: duplicate rows in the same CSV both pass through unc
   assert.equal(out.length, 2, 'the parser itself must not deduplicate — resolve_registry_candidate does');
 });
 
+// -- Generate Discovery Run ID --
+
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i;
+
+test('Generate Discovery Run ID: produces a real RFC4122 v4 uuid, never the broken empty-prefix label', () => {
+  const out = runNode('Generate Discovery Run ID', () => { throw new Error('should not call $()'); }, []);
+  assert.equal(out.length, 1);
+  assert.match(out[0].json.discoveryRunId, UUID_RE, 'discoveryRunId must be a valid uuid');
+});
+
+test('Generate Discovery Run ID: two invocations produce two different uuids (it is not a constant)', () => {
+  const first = runNode('Generate Discovery Run ID', () => { throw new Error('should not call $()'); }, [])[0].json.discoveryRunId;
+  const second = runNode('Generate Discovery Run ID', () => { throw new Error('should not call $()'); }, [])[0].json.discoveryRunId;
+  assert.notEqual(first, second);
+});
+
 // -- Normalize Candidates --
 
 test('Normalize Candidates: maps manual/csv/apify raw shapes into the identical common contract', () => {
@@ -295,6 +329,26 @@ test('Normalize Candidates: maps manual/csv/apify raw shapes into the identical 
   for (const item of out) {
     assert.ok('raw_payload' in item.json, 'raw provenance must be preserved for staging/debugging');
   }
+});
+
+test('Normalize Candidates: maps a Google Maps/Places-style Apify actor shape (title/countryCode) without breaking the name/country shape', () => {
+  const cfgDollar = () => ({ first: () => ({ json: { maxCandidatesPerRun: 25 } }) });
+  const items = [
+    {
+      discovery_source: 'apify',
+      raw: {
+        title: 'Concept Plus Architects',
+        countryCode: 'AE',
+        website: 'https://linktr.ee/cpaconceptplusarchitect?utm_source=linktree_admin_share',
+        categoryName: 'Engineering consultant',
+      },
+    },
+  ];
+  const out = runNode('Normalize Candidates', cfgDollar, items);
+  assert.equal(out.length, 1);
+  assert.equal(out[0].json.company_name, 'Concept Plus Architects', 'apify\'s "title" field must map to company_name');
+  assert.equal(out[0].json.country_code, 'AE', 'apify\'s "countryCode" field must map to country_code');
+  assert.equal(out[0].json.official_website_url, 'https://linktr.ee/cpaconceptplusarchitect?utm_source=linktree_admin_share', 'existing website mapping must still work for this shape');
 });
 
 test('Normalize Candidates: enforces maxCandidatesPerRun as a hard bound regardless of adapter', () => {
@@ -468,10 +522,12 @@ test('Build Run Summary: counts every outcome category independently and lists f
     { outcome: 'infrastructure_failed', company_name: 'D', reason: 'ETIMEDOUT' },
   ];
   const out = runNode('Build Run Summary', (name) => {
-    if (name === 'Workflow Configuration') return { first: () => ({ json: { discoveryRunId: 'run-1', mode: 'csv', environment: 'local', startedAt: new Date(Date.now() - 1000).toISOString() } }) };
+    if (name === 'Workflow Configuration') return { first: () => ({ json: { mode: 'csv', environment: 'local', startedAt: new Date(Date.now() - 1000).toISOString() } }) };
+    if (name === 'Generate Discovery Run ID') return { first: () => ({ json: { discoveryRunId: '5b1f2c3a-9e4d-4b6a-8c2e-1a2b3c4d5e6f' } }) };
     throw new Error(`unexpected $('${name}')`);
   }, results);
   const s = out[0].json;
+  assert.equal(s.runId, '5b1f2c3a-9e4d-4b6a-8c2e-1a2b3c4d5e6f', 'the run summary must report the same uuid Resolve Registry Candidate sent to the RPC');
   assert.equal(s.inputCount, 5);
   assert.equal(s.createdNew, 1);
   assert.equal(s.resolvedExisting, 1);
