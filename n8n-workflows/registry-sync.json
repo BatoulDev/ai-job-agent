@@ -1,0 +1,839 @@
+{
+  "name": "AI Job Agent - Registry Sync",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2db6df0f-c4af-4fb9-a022-a133a0228772",
+      "name": "Start Registry Sync Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "mode-field",
+              "name": "mode",
+              "value": "manual",
+              "type": "string"
+            },
+            {
+              "id": "supabase-base-url",
+              "name": "supabaseBaseUrl",
+              "value": "http://host.docker.internal:55321",
+              "type": "string"
+            },
+            {
+              "id": "environment-field",
+              "name": "environment",
+              "value": "local",
+              "type": "string"
+            },
+            {
+              "id": "max-candidates-field",
+              "name": "maxCandidatesPerRun",
+              "value": 25,
+              "type": "number"
+            },
+            {
+              "id": "started-at-field",
+              "name": "startedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "csv-content-field",
+              "name": "csvContent",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "apify-dataset-id-field",
+              "name": "apifyDatasetId",
+              "value": "",
+              "type": "string"
+            },
+            {
+              "id": "apify-max-items-field",
+              "name": "apifyMaxItems",
+              "value": 50,
+              "type": "number"
+            },
+            {
+              "id": "timeout-field",
+              "name": "timeoutSeconds",
+              "value": 15,
+              "type": "number"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "fd88223e-ddf1-4406-8c14-66b3dc0a6575",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        100,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "let uuid;\ntry {\n  uuid = require('crypto').randomUUID();\n} catch (e) {\n  // Fallback RFC4122 v4 uuid if the Code node sandbox blocks require('crypto').\n  uuid = 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, (c) => {\n    const r = (Math.random() * 16) | 0;\n    return (c === 'x' ? r : (r & 0x3) | 0x8).toString(16);\n  });\n}\nreturn [{ json: { discoveryRunId: uuid } }];"
+      },
+      "id": "7f3a9c2e-114b-4a3d-9c77-2b6e8f0a11cd",
+      "name": "Generate Discovery Run ID",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        250,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "includeOtherFields": false,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "manual-candidates-field",
+              "name": "manualCandidates",
+              "type": "array",
+              "value": [
+                {
+                  "company_name": "Example Company",
+                  "country_code": "LB",
+                  "official_website_url": "https://example.com",
+                  "official_careers_url": "https://example.com/careers"
+                }
+              ]
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b6c7ee94-d0d0-4eb1-99eb-d7ce819c376d",
+      "name": "Manual Candidates Input",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        100,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Workflow Configuration').first().json.mode }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "manual"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "990cfbe1-e6eb-4810-9ce4-1260d4b3f0c6",
+      "name": "Is Manual Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        400,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $('Workflow Configuration').first().json.mode }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "csv"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "a728e584-cb73-4218-998f-ba0dbf8bd201",
+      "name": "Is CSV Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        700,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const rows = $('Manual Candidates Input').first().json.manualCandidates || [];\nreturn rows.map((r) => ({ json: { discovery_source: 'manual', raw: r } }));"
+      },
+      "id": "b8a2cd4b-55d9-474f-9648-c48c99af38ce",
+      "name": "Load Manual Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        700,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "function parseCsv(text) {\n  const rows = [];\n  let row = [];\n  let field = '';\n  let inQuotes = false;\n  let i = 0;\n  const n = text.length;\n  while (i < n) {\n    const c = text[i];\n    if (inQuotes) {\n      if (c === '\"') {\n        if (text[i + 1] === '\"') { field += '\"'; i += 2; continue; }\n        inQuotes = false; i++; continue;\n      }\n      field += c; i++; continue;\n    }\n    if (c === '\"') { inQuotes = true; i++; continue; }\n    if (c === ',') { row.push(field); field = ''; i++; continue; }\n    if (c === '\\r') { i++; continue; }\n    if (c === '\\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }\n    field += c; i++;\n  }\n  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }\n  return rows.filter((r) => !(r.length === 1 && r[0] === ''));\n}\n\nconst content = $('Workflow Configuration').first().json.csvContent || '';\nconst rows = parseCsv(content.replace(/^\\uFEFF/, ''));\nif (rows.length === 0) return [];\nconst header = rows[0];\nconst dataRows = rows.slice(1).map((r) => Object.fromEntries(header.map((h, idx) => [h.trim(), (r[idx] ?? '').trim()])));\nreturn dataRows.map((r) => ({ json: { discovery_source: 'csv', raw: r } }));"
+      },
+      "id": "a7837417-0fe7-4037-b5d1-978730f9f014",
+      "name": "Parse CSV Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.apify.com/v2/datasets/' + $('Workflow Configuration').first().json.apifyDatasetId + '/items' }}",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "httpHeaderAuth",
+        "sendQuery": true,
+        "queryParameters": {
+          "parameters": [
+            {
+              "name": "limit",
+              "value": "={{ $('Workflow Configuration').first().json.apifyMaxItems }}"
+            },
+            {
+              "name": "clean",
+              "value": "true"
+            }
+          ]
+        },
+        "options": {
+          "timeout": "={{ $('Workflow Configuration').first().json.timeoutSeconds * 1000 }}",
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "9fab9d49-3569-4a52-abaf-866856529960",
+      "name": "Fetch Apify Dataset",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1000,
+        500
+      ],
+      "onError": "continueRegularOutput",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const MAX_ATTEMPTS = 4;\nlet attempt = 1;\ntry { attempt = $('Compute Apify Backoff').item.json.attempt; } catch (e) { attempt = 1; }\n\nconst datasetId = $('Workflow Configuration').first().json.apifyDatasetId;\nif (!datasetId) {\n  return [{ json: { shouldRetry: false, succeeded: false, attempt, items: [], error: 'apify_dataset_id_not_configured' } }];\n}\n\nconst resp = $input.first().json;\nconst networkError = !!resp.error;\nconst statusCode = resp.statusCode || null;\nconst retryableStatus = statusCode === 429 || [500, 502, 503, 504].includes(statusCode);\n\nif (!networkError && statusCode >= 200 && statusCode < 300) {\n  const items = Array.isArray(resp.body) ? resp.body : [];\n  return [{ json: { shouldRetry: false, succeeded: true, attempt, items, error: null } }];\n}\n\nconst canRetry = (networkError || retryableStatus) && attempt < MAX_ATTEMPTS;\nconst errorMessage = networkError ? String(resp.error).slice(0, 300) : `apify_fetch_failed_status_${statusCode}`;\nreturn [{ json: { shouldRetry: canRetry, succeeded: false, attempt, items: [], error: errorMessage } }];"
+      },
+      "id": "d3e8f4e3-1c8c-4971-846e-a8cb3677fdc8",
+      "name": "Evaluate Apify Fetch",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1300,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.shouldRetry }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "20215c7a-2ffb-4e20-b72b-825bbe7b65fb",
+      "name": "Should Retry Apify Fetch?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1600,
+        500
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const BASE_DELAY_MS = 1000;\nconst MAX_DELAY_MS = 15000;\nconst prev = $input.first().json;\nconst nextAttempt = prev.attempt + 1;\nconst exp = Math.min(MAX_DELAY_MS, BASE_DELAY_MS * Math.pow(2, prev.attempt - 1));\nconst jitterMs = Math.floor(Math.random() * exp * 0.25);\nreturn [{ json: { attempt: nextAttempt, delayMs: exp + jitterMs } }];"
+      },
+      "id": "0dfa2617-fba6-43bf-977e-64ea9cb10572",
+      "name": "Compute Apify Backoff",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": "={{ $json.delayMs / 1000 }}",
+        "unit": "seconds"
+      },
+      "id": "afbe5807-3489-4a4a-8eb0-cf5d9e851119",
+      "name": "Apify Backoff Wait",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2200,
+        600
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const evalResult = $('Evaluate Apify Fetch').first().json;\nconst cfg = $('Workflow Configuration').first().json;\nif (!evalResult.succeeded) return [];\nconst items = (evalResult.items || []).slice(0, cfg.apifyMaxItems);\nreturn items.map((r) => ({ json: { discovery_source: 'apify', raw: r } }));"
+      },
+      "id": "481b4524-a7b5-4d33-aac4-b27de1bfe0bd",
+      "name": "Extract Apify Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1900,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst items = $input.all().map((i) => i.json).slice(0, cfg.maxCandidatesPerRun);\n\nfunction firstNonEmpty(...values) {\n  for (const v of values) { if (typeof v === 'string' && v.trim() !== '') return v.trim(); }\n  return null;\n}\n\nreturn items.map(({ discovery_source, raw }) => ({\n  json: {\n    discovery_source,\n    company_name: firstNonEmpty(raw.company_name, raw.name, raw.title),\n    country_code: firstNonEmpty(raw.country_code, raw.country, raw.countryCode),\n    official_website_url: firstNonEmpty(raw.official_website_url, raw.website, raw.website_url),\n    official_careers_url: firstNonEmpty(raw.official_careers_url, raw.careers_url, raw.careers_page),\n    company_id_hint: firstNonEmpty(raw.company_id_hint, raw.company_id),\n    ats_provider_hint: firstNonEmpty(raw.ats_provider_hint, raw.ats_provider),\n    raw_payload: raw,\n  },\n}));"
+      },
+      "id": "db2c4354-aae9-48b8-8fef-ec82c99e716c",
+      "name": "Normalize Candidates",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2200,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "batchSize": 1,
+        "options": {}
+      },
+      "id": "5acaa809-7915-4982-919f-f63d470fea2f",
+      "name": "Process Candidates",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2500,
+        200
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $input.first().json;\nconst nameValid = typeof c.company_name === 'string' && c.company_name.trim() !== '';\nreturn [{ json: {\n  ...c,\n  validationStatus: nameValid ? 'valid' : 'validation_failed',\n  validationReason: nameValid ? null : 'company_name is required and was missing or blank',\n} }];"
+      },
+      "id": "b8c8ae77-f5b7-4818-8449-2a2c338ad7c9",
+      "name": "Validate Candidate",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2800,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.validationStatus }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "valid"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "6df308d5-616c-4198-8c0b-dda7f0346474",
+      "name": "Is Candidate Valid?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3100,
+        100
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $input.first().json;\nreturn [{ json: {\n  discovery_source: c.discovery_source,\n  company_name: c.company_name,\n  country_code: c.country_code,\n  outcome: 'validation_failed',\n  reason: c.validationReason,\n  company_id: null,\n  source_id: null,\n  staging_id: null,\n} }];"
+      },
+      "id": "99171dc9-7aa9-41cc-8d48-7886fced1c19",
+      "name": "Build Validation Failed Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3400,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/rpc/resolve_registry_candidate",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_discovery_source: $json.discovery_source, p_company_name: $json.company_name, p_country_code: $json.country_code, p_official_website_url: $json.official_website_url, p_official_careers_url: $json.official_careers_url, p_company_id_hint: $json.company_id_hint, p_ats_provider_hint: $json.ats_provider_hint, p_discovery_run_id: $('Generate Discovery Run ID').first().json.discoveryRunId, p_raw_payload: $json.raw_payload } }}",
+        "options": {
+          "timeout": "={{ $('Workflow Configuration').first().json.timeoutSeconds * 1000 }}",
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "35b0055c-d90e-4025-821e-bf27b2c2f964",
+      "name": "Resolve Registry Candidate",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3400,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const c = $('Validate Candidate').first().json;\nconst resp = $input.first().json;\nconst networkError = !!resp.error;\nconst statusCode = resp.statusCode || null;\nconst ok = !networkError && statusCode >= 200 && statusCode < 300;\n\nif (!ok) {\n  const body = resp.body;\n  const message = networkError\n    ? String(resp.error).slice(0, 300)\n    : (body && typeof body === 'object' && body.message ? String(body.message).slice(0, 300) : `rpc_call_failed_status_${statusCode}`);\n  return [{ json: {\n    discovery_source: c.discovery_source, company_name: c.company_name, country_code: c.country_code,\n    outcome: 'infrastructure_failed', reason: message,\n    company_id: null, source_id: null, staging_id: null,\n  } }];\n}\n\nconst row = Array.isArray(resp.body) ? resp.body[0] : resp.body;\nreturn [{ json: {\n  discovery_source: c.discovery_source, company_name: c.company_name, country_code: c.country_code,\n  outcome: row.outcome, reason: null,\n  company_id: row.out_company_id || null, source_id: row.out_source_id || null, staging_id: row.out_staging_id || null,\n} }];"
+      },
+      "id": "ef94082d-c2be-48a3-b0dd-0e3dfb624e09",
+      "name": "Classify RPC Outcome",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3700,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst discoveryRunId = $('Generate Discovery Run ID').first().json.discoveryRunId;\nconst results = $input.all().map((i) => i.json);\nconst startedAtMs = new Date(cfg.startedAt).getTime();\nconst countBy = (val) => results.filter((r) => r.outcome === val).length;\n\nconst failedItems = results\n  .filter((r) => r.outcome === 'validation_failed' || r.outcome === 'infrastructure_failed')\n  .slice(0, 50)\n  .map((r) => ({ company_name: r.company_name, outcome: r.outcome, reason: r.reason }));\n\nreturn [{ json: {\n  runId: discoveryRunId,\n  mode: cfg.mode,\n  environment: cfg.environment,\n  inputCount: results.length,\n  validCount: results.filter((r) => r.outcome !== 'validation_failed').length,\n  createdNew: countBy('created_new'),\n  resolvedExisting: countBy('resolved_existing'),\n  staged: countBy('staged'),\n  validationFailed: countBy('validation_failed'),\n  infrastructureFailed: countBy('infrastructure_failed'),\n  failedItems,\n  totalDurationMs: Date.now() - startedAtMs,\n  finishedAt: new Date().toISOString(),\n} }];"
+      },
+      "id": "3846cdfd-f50f-42a2-9c7f-f3cc75a6f5c5",
+      "name": "Build Run Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3400,
+        -400
+      ]
+    },
+    {
+      "parameters": {
+        "width": 560,
+        "height": 260,
+        "content": "### Registry Sync\nConverges manual/csv/apify input into ONE shared normalize -> validate -> resolve_registry_candidate() path. Every candidate makes exactly one atomic RPC call; this workflow never performs its own SELECT-then-INSERT company/source resolution. staged is a normal, safe outcome, never a failure. Inactive by default — set mode in Workflow Configuration, review Manual Candidates Input (manual mode) or csvContent (csv mode) or apifyDatasetId + bind the Apify API Token credential (apify mode), then run manually."
+      },
+      "id": "a5263cc8-82c7-4743-b45c-c63883365ea5",
+      "name": "Overview",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -200,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "width": 560,
+        "height": 300,
+        "content": "### Safety invariants\n- No UNIQUE(display_name); ambiguous company matches always stage, never guess.\n- Source identity is (company_id, country_code, normalized_source_key) — enforced in Postgres, not here.\n- review_status / automation_eligibility are not parameters this workflow can send.\n- Never writes source_intelligence or jobs.\n- Concurrent/duplicate executions are protected by the RPC itself (advisory lock + real unique index), not by anything in this workflow."
+      },
+      "id": "675d255f-f73a-4143-9e53-73352eeeadf3",
+      "name": "Safety Invariants",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2200,
+        -420
+      ]
+    },
+    {
+      "parameters": {
+        "width": 560,
+        "height": 240,
+        "content": "### Apify is discovery input only\nReads previously-completed dataset items only (GET .../datasets/{id}/items) — cannot start, modify, or pay for an Apify run. apifyDatasetId is an explicit single id set per run, never arbitrary/attacker-supplied. Apify rows flow through the exact same normalize/validate/resolve path as manual/CSV — Apify is never a trusted canonical writer on its own."
+      },
+      "id": "e763de55-8513-467d-b73d-f5f9edb5f689",
+      "name": "Apify Trust Boundary",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1000,
+        780
+      ]
+    }
+  ],
+  "connections": {
+    "Start Registry Sync Run": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Generate Discovery Run ID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate Discovery Run ID": {
+      "main": [
+        [
+          {
+            "node": "Manual Candidates Input",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Manual Candidates Input": {
+      "main": [
+        [
+          {
+            "node": "Is Manual Mode?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Manual Mode?": {
+      "main": [
+        [
+          {
+            "node": "Load Manual Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Is CSV Mode?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is CSV Mode?": {
+      "main": [
+        [
+          {
+            "node": "Parse CSV Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Fetch Apify Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Manual Candidates": {
+      "main": [
+        [
+          {
+            "node": "Normalize Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse CSV Candidates": {
+      "main": [
+        [
+          {
+            "node": "Normalize Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Apify Dataset": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Apify Fetch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Apify Fetch": {
+      "main": [
+        [
+          {
+            "node": "Should Retry Apify Fetch?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Should Retry Apify Fetch?": {
+      "main": [
+        [
+          {
+            "node": "Compute Apify Backoff",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Apify Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compute Apify Backoff": {
+      "main": [
+        [
+          {
+            "node": "Apify Backoff Wait",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Backoff Wait": {
+      "main": [
+        [
+          {
+            "node": "Fetch Apify Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Apify Candidates": {
+      "main": [
+        [
+          {
+            "node": "Normalize Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Candidates": {
+      "main": [
+        [
+          {
+            "node": "Process Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Candidates": {
+      "main": [
+        [
+          {
+            "node": "Build Run Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Validate Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Validate Candidate": {
+      "main": [
+        [
+          {
+            "node": "Is Candidate Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Candidate Valid?": {
+      "main": [
+        [
+          {
+            "node": "Resolve Registry Candidate",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Validation Failed Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resolve Registry Candidate": {
+      "main": [
+        [
+          {
+            "node": "Classify RPC Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classify RPC Outcome": {
+      "main": [
+        [
+          {
+            "node": "Process Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Validation Failed Result": {
+      "main": [
+        [
+          {
+            "node": "Process Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}
