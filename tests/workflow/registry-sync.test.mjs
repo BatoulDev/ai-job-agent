@@ -59,9 +59,10 @@ const REQUIRED_NODES = [
   'Generate Discovery Run ID',
   'Manual Candidates Input',
   'Is Manual Mode?',
-  'Is CSV Mode?',
+  'Is Google Sheets Mode?',
   'Load Manual Candidates',
-  'Parse CSV Candidates',
+  'Read Google Sheet Candidates',
+  'Extract Google Sheet Candidates',
   'Fetch Apify Dataset',
   'Evaluate Apify Fetch',
   'Should Retry Apify Fetch?',
@@ -98,23 +99,48 @@ test('Workflow Configuration connects to Generate Discovery Run ID, which connec
 
 test('all three input adapters converge on Normalize Candidates', () => {
   const manualOut = wf.connections['Load Manual Candidates']?.main?.[0] ?? [];
-  const csvOut = wf.connections['Parse CSV Candidates']?.main?.[0] ?? [];
+  const googleSheetsOut = wf.connections['Extract Google Sheet Candidates']?.main?.[0] ?? [];
   const apifyOut = wf.connections['Extract Apify Candidates']?.main?.[0] ?? [];
   assert.ok(manualOut.some((c) => c.node === 'Normalize Candidates'), 'manual adapter must reach Normalize Candidates');
-  assert.ok(csvOut.some((c) => c.node === 'Normalize Candidates'), 'csv adapter must reach Normalize Candidates');
+  assert.ok(googleSheetsOut.some((c) => c.node === 'Normalize Candidates'), 'google_sheets adapter must reach Normalize Candidates');
   assert.ok(apifyOut.some((c) => c.node === 'Normalize Candidates'), 'apify adapter must reach Normalize Candidates');
 });
 
-test('Is Manual Mode? routes true to Load Manual Candidates, false toward Is CSV Mode?', () => {
+test('Is Manual Mode? routes true to Load Manual Candidates, false toward Is Google Sheets Mode?', () => {
   const outputs = wf.connections['Is Manual Mode?']?.main ?? [];
   assert.ok(outputs[0]?.some((c) => c.node === 'Load Manual Candidates'));
-  assert.ok(outputs[1]?.some((c) => c.node === 'Is CSV Mode?'));
+  assert.ok(outputs[1]?.some((c) => c.node === 'Is Google Sheets Mode?'));
 });
 
-test('Is CSV Mode? routes true to Parse CSV Candidates, false to Fetch Apify Dataset', () => {
-  const outputs = wf.connections['Is CSV Mode?']?.main ?? [];
-  assert.ok(outputs[0]?.some((c) => c.node === 'Parse CSV Candidates'));
+test('Is Google Sheets Mode? routes true to Read Google Sheet Candidates, false to Fetch Apify Dataset', () => {
+  const outputs = wf.connections['Is Google Sheets Mode?']?.main ?? [];
+  assert.ok(outputs[0]?.some((c) => c.node === 'Read Google Sheet Candidates'));
   assert.ok(outputs[1]?.some((c) => c.node === 'Fetch Apify Dataset'));
+});
+
+test('Read Google Sheet Candidates connects to Extract Google Sheet Candidates, which connects to Normalize Candidates', () => {
+  const fromRead = wf.connections['Read Google Sheet Candidates']?.main?.[0] ?? [];
+  assert.ok(fromRead.some((c) => c.node === 'Extract Google Sheet Candidates'));
+  const fromExtract = wf.connections['Extract Google Sheet Candidates']?.main?.[0] ?? [];
+  assert.ok(fromExtract.some((c) => c.node === 'Normalize Candidates'));
+});
+
+test('CSV text-paste mode no longer exists: no Is CSV Mode?, no Parse CSV Candidates node, no csvContent field', () => {
+  assert.ok(!wf.nodes.some((n) => n.name === 'Is CSV Mode?'), 'Is CSV Mode? must be removed');
+  assert.ok(!wf.nodes.some((n) => n.name === 'Parse CSV Candidates'), 'Parse CSV Candidates must be removed');
+  const cfgNode = findNode('Workflow Configuration');
+  const fieldNames = cfgNode.parameters.assignments.assignments.map((a) => a.name);
+  assert.ok(!fieldNames.includes('csvContent'), 'csvContent must be removed from Workflow Configuration');
+  assert.ok(fieldNames.includes('googleSheetSpreadsheetId'), 'googleSheetSpreadsheetId must exist in Workflow Configuration');
+  assert.ok(fieldNames.includes('googleSheetTabName'), 'googleSheetTabName must exist in Workflow Configuration');
+});
+
+test('the only mode values the workflow itself checks for are manual, google_sheets, and apify', () => {
+  const isManualRightValue = findNode('Is Manual Mode?').parameters.conditions.conditions[0].rightValue;
+  const isGoogleSheetsRightValue = findNode('Is Google Sheets Mode?').parameters.conditions.conditions[0].rightValue;
+  assert.equal(isManualRightValue, 'manual');
+  assert.equal(isGoogleSheetsRightValue, 'google_sheets');
+  assert.ok(!wf.nodes.some((n) => JSON.stringify(n.parameters ?? {}).includes("rightValue\":\"csv\"")), 'no IF node may still branch on mode === csv');
 });
 
 test('Should Retry Apify Fetch? routes true to Compute Apify Backoff (loop), false to Extract Apify Candidates (proceed)', () => {
@@ -256,39 +282,44 @@ function runNode(nodeName, mockDollarImpl, inputItems) {
   return new Function('$', '$input', code)(mockDollar, mockInput);
 }
 
-// -- Parse CSV Candidates --
+// -- Extract Google Sheet Candidates --
 
-test('Parse CSV Candidates: parses a well-formed CSV with a quoted field containing a comma', () => {
-  const csv = 'company_name,country_code,official_website_url,official_careers_url\n' + '"Acme, Inc.",LB,https://acme.test,https://acme.test/careers\n';
-  const out = runNode('Parse CSV Candidates', (name) => {
-    if (name === 'Workflow Configuration') return { first: () => ({ json: { csvContent: csv } }) };
-    throw new Error(`unexpected $('${name}')`);
-  }, []);
+test('Extract Google Sheet Candidates: wraps each row the native Google Sheets node emits into { discovery_source: "google_sheets", raw: row }', () => {
+  const rows = [
+    { company_name: 'Acme, Inc.', country_code: 'LB', official_website_url: 'https://acme.test', official_careers_url: 'https://acme.test/careers' },
+  ];
+  const out = runNode('Extract Google Sheet Candidates', () => { throw new Error('should not call $()'); }, rows);
   assert.equal(out.length, 1);
-  assert.equal(out[0].json.discovery_source, 'csv');
+  assert.equal(out[0].json.discovery_source, 'google_sheets');
   assert.equal(out[0].json.raw.company_name, 'Acme, Inc.');
   assert.equal(out[0].json.raw.country_code, 'LB');
 });
 
-test('Parse CSV Candidates: a missing column value becomes an empty string, not a crash, not a dropped row', () => {
-  const csv = 'company_name,country_code,official_website_url,official_careers_url\n' + 'No URL Co,LB,,\n';
-  const out = runNode('Parse CSV Candidates', () => ({ first: () => ({ json: { csvContent: csv } }) }), []);
+test('Extract Google Sheet Candidates: a row with a missing column value passes through with that field simply absent/blank, not a crash', () => {
+  const rows = [{ company_name: 'No URL Co', country_code: 'LB', official_website_url: '', official_careers_url: '' }];
+  const out = runNode('Extract Google Sheet Candidates', () => { throw new Error('should not call $()'); }, rows);
   assert.equal(out.length, 1);
   assert.equal(out[0].json.raw.official_careers_url, '');
 });
 
-test('Parse CSV Candidates: empty csvContent produces zero rows, not an error', () => {
-  const out = runNode('Parse CSV Candidates', () => ({ first: () => ({ json: { csvContent: '' } }) }), []);
+test('Extract Google Sheet Candidates: zero rows read produces zero candidates, not an error', () => {
+  const out = runNode('Extract Google Sheet Candidates', () => { throw new Error('should not call $()'); }, []);
   assert.deepEqual(out, []);
 });
 
-test('Parse CSV Candidates: duplicate rows in the same CSV both pass through unchanged (dedup is the RPC\'s job, not the parser\'s)', () => {
-  const csv =
-    'company_name,country_code,official_website_url,official_careers_url\n' +
-    'Dup Co,LB,https://dup.test,https://dup.test/careers\n' +
-    'Dup Co,LB,https://dup.test,https://dup.test/careers\n';
-  const out = runNode('Parse CSV Candidates', () => ({ first: () => ({ json: { csvContent: csv } }) }), []);
-  assert.equal(out.length, 2, 'the parser itself must not deduplicate — resolve_registry_candidate does');
+test('Extract Google Sheet Candidates: duplicate rows in the sheet both pass through unchanged (dedup is the RPC\'s job, not this adapter\'s)', () => {
+  const rows = [
+    { company_name: 'Dup Co', country_code: 'LB', official_website_url: 'https://dup.test', official_careers_url: 'https://dup.test/careers' },
+    { company_name: 'Dup Co', country_code: 'LB', official_website_url: 'https://dup.test', official_careers_url: 'https://dup.test/careers' },
+  ];
+  const out = runNode('Extract Google Sheet Candidates', () => { throw new Error('should not call $()'); }, rows);
+  assert.equal(out.length, 2, 'this adapter must not deduplicate — resolve_registry_candidate does');
+});
+
+test('Extract Google Sheet Candidates: does not itself apply maxCandidatesPerRun — that bound is Normalize Candidates\' job, the single shared bounding point', () => {
+  const rows = Array.from({ length: 5 }, (_, i) => ({ company_name: `Co ${i}` }));
+  const out = runNode('Extract Google Sheet Candidates', () => { throw new Error('should not call $()'); }, rows);
+  assert.equal(out.length, 5, 'this adapter must not read Workflow Configuration or trim the list itself');
 });
 
 // -- Generate Discovery Run ID --
@@ -309,14 +340,14 @@ test('Generate Discovery Run ID: two invocations produce two different uuids (it
 
 // -- Normalize Candidates --
 
-test('Normalize Candidates: maps manual/csv/apify raw shapes into the identical common contract', () => {
+test('Normalize Candidates: maps manual/google_sheets/apify raw shapes into the identical common contract', () => {
   const cfgDollar = (name) => {
     if (name === 'Workflow Configuration') return { first: () => ({ json: { maxCandidatesPerRun: 25 } }) };
     throw new Error(`unexpected $('${name}')`);
   };
   const items = [
     { discovery_source: 'manual', raw: { company_name: 'Manual Co', country_code: 'LB', official_website_url: 'https://m.test', official_careers_url: 'https://m.test/careers' } },
-    { discovery_source: 'csv', raw: { company_name: 'CSV Co', country_code: 'AE', official_website_url: 'https://c.test', official_careers_url: '' } },
+    { discovery_source: 'google_sheets', raw: { company_name: 'Sheet Co', country_code: 'AE', official_website_url: 'https://c.test', official_careers_url: '' } },
     { discovery_source: 'apify', raw: { name: 'Apify Co', country: 'QA', website: 'https://a.test', careers_url: 'https://a.test/careers' } },
   ];
   const out = runNode('Normalize Candidates', cfgDollar, items);
@@ -353,7 +384,7 @@ test('Normalize Candidates: maps a Google Maps/Places-style Apify actor shape (t
 
 test('Normalize Candidates: enforces maxCandidatesPerRun as a hard bound regardless of adapter', () => {
   const cfgDollar = () => ({ first: () => ({ json: { maxCandidatesPerRun: 2 } }) });
-  const items = Array.from({ length: 10 }, (_, i) => ({ discovery_source: 'csv', raw: { company_name: `Co ${i}` } }));
+  const items = Array.from({ length: 10 }, (_, i) => ({ discovery_source: 'google_sheets', raw: { company_name: `Co ${i}` } }));
   const out = runNode('Normalize Candidates', cfgDollar, items);
   assert.equal(out.length, 2, 'must never process more than maxCandidatesPerRun candidates in one execution');
 });
@@ -522,7 +553,7 @@ test('Build Run Summary: counts every outcome category independently and lists f
     { outcome: 'infrastructure_failed', company_name: 'D', reason: 'ETIMEDOUT' },
   ];
   const out = runNode('Build Run Summary', (name) => {
-    if (name === 'Workflow Configuration') return { first: () => ({ json: { mode: 'csv', environment: 'local', startedAt: new Date(Date.now() - 1000).toISOString() } }) };
+    if (name === 'Workflow Configuration') return { first: () => ({ json: { mode: 'google_sheets', environment: 'local', startedAt: new Date(Date.now() - 1000).toISOString() } }) };
     if (name === 'Generate Discovery Run ID') return { first: () => ({ json: { discoveryRunId: '5b1f2c3a-9e4d-4b6a-8c2e-1a2b3c4d5e6f' } }) };
     throw new Error(`unexpected $('${name}')`);
   }, results);

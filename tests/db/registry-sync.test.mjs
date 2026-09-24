@@ -529,3 +529,81 @@ test("a newly created, still-unclassified source naturally becomes a Source Inte
   const { count: siCount } = await adminClient.from("source_intelligence").select("id", { count: "exact", head: true }).eq("source_id", result.out_source_id);
   assert.equal(siCount, 0, "Registry Sync must never write source_intelligence rows itself");
 });
+
+// ── 22. google_sheets is a valid discovery_source (migration 20260923120000) ──
+// Registry Sync's n8n workflow replaced its CSV-paste input mode with a
+// native Google Sheets read. These tests exercise the same outcomes already
+// covered for manual/csv/apify above, this time through google_sheets, plus
+// confirm csv remains a fully valid historical value (never removed).
+
+test("google_sheets is accepted as a discovery_source and can create a new company/source", async () => {
+  const name = fixtureName("Sheets New");
+  const result = await trackResult(
+    await resolve({
+      p_discovery_source: "google_sheets",
+      p_company_name: name,
+      p_country_code: "LB",
+      p_official_careers_url: `https://${randomUUID()}.example/careers`,
+      p_raw_payload: { via: "google_sheets" },
+    })
+  );
+  assert.equal(result.outcome, "created_new");
+
+  const { data: company } = await adminClient.from("companies").select("discovery_source, discovery_channels").eq("id", result.out_company_id).single();
+  assert.equal(company.discovery_source, "google_sheets");
+  assert.deepEqual([...company.discovery_channels], ["google_sheets"]);
+});
+
+test("a google_sheets rediscovery of an existing manual candidate resolves to the same company/source and provenance accumulates", async () => {
+  const name = fixtureName("Sheets Rediscover");
+  const url = `https://${randomUUID()}.example/careers`;
+
+  const manual = await trackResult(await resolve({ p_discovery_source: "manual", p_company_name: name, p_country_code: "QA", p_official_careers_url: url, p_raw_payload: {} }));
+  assert.equal(manual.outcome, "created_new");
+
+  const viaSheets = await trackResult(await resolve({ p_discovery_source: "google_sheets", p_company_name: name, p_country_code: "QA", p_official_careers_url: url, p_raw_payload: {} }));
+  assert.equal(viaSheets.outcome, "resolved_existing");
+  assert.equal(viaSheets.out_company_id, manual.out_company_id);
+  assert.equal(viaSheets.out_source_id, manual.out_source_id);
+
+  const { data: source } = await adminClient.from("company_sources").select("discovery_channels").eq("id", manual.out_source_id).single();
+  assert.deepEqual([...source.discovery_channels].sort(), ["google_sheets", "manual"]);
+});
+
+test("a google_sheets candidate with no resolvable URL is staged with reason no_resolvable_url, same as any other channel", async () => {
+  const result = await trackResult(
+    await resolve({
+      p_discovery_source: "google_sheets",
+      p_company_name: fixtureName("Sheets No URL"),
+      p_country_code: "LB",
+      p_raw_payload: {},
+    })
+  );
+  assert.equal(result.outcome, "staged");
+  const { data: staging } = await adminClient.from("registry_sync_staging").select("staging_reason, discovery_source").eq("id", result.out_staging_id).single();
+  assert.equal(staging.staging_reason, "no_resolvable_url");
+  assert.equal(staging.discovery_source, "google_sheets");
+});
+
+test("discovery_source='csv' remains valid for new rows — google_sheets was added, csv was never removed", async () => {
+  const name = fixtureName("Csv Still Valid");
+  const companyId = expectedCompanyId(name);
+  const { error } = await adminClient.from("companies").insert({
+    id: companyId,
+    display_name: name,
+    discovery_source: "csv",
+    discovery_channels: ["csv"],
+  });
+  assert.equal(error, null, "the widened CHECK constraint must still accept csv");
+  fixtureCompanyIds.add(companyId);
+});
+
+test("resolve_registry_candidate still rejects a p_discovery_source value outside manual/csv/apify/google_sheets", async () => {
+  const { error } = await adminClient.rpc("resolve_registry_candidate", {
+    p_discovery_source: "spreadsheet",
+    p_company_name: fixtureName("Bad Source"),
+    p_country_code: "LB",
+    p_raw_payload: {},
+  });
+  assert.notEqual(error, null, "an unrecognized discovery_source must still be rejected, not silently accepted");
+});
