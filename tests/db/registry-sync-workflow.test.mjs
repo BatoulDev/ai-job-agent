@@ -230,24 +230,21 @@ test("G. a candidate matching two existing companies by normalized name is stage
   assert.equal(bCount, 0);
 });
 
-// ── H. Duplicate rows inside one CSV ───────────────────────────────────────
+// ── H. Duplicate rows inside one Google Sheet read ─────────────────────────
 
-test("H. two identical rows in the same CSV parse converge on one canonical identity", async () => {
-  const name = fixtureName("CSV Dup Rows");
+test("H. two identical rows read from Google Sheets converge on one canonical identity", async () => {
+  const name = fixtureName("Sheet Dup Rows");
   const url = `https://${randomUUID()}.example/careers`;
-  const csvContent =
-    "company_name,country_code,official_website_url,official_careers_url\n" +
-    `${name},AE,,${url}\n` +
-    `${name},AE,,${url}\n`;
+  const sheetRows = [
+    { company_name: name, country_code: "AE", official_careers_url: url },
+    { company_name: name, country_code: "AE", official_careers_url: url },
+  ];
 
-  const parsed = runNode("Parse CSV Candidates", (n) => {
-    if (n === "Workflow Configuration") return { first: () => ({ json: { csvContent } }) };
-    throw new Error(`unexpected $('${n}')`);
-  }, []);
-  assert.equal(parsed.length, 2, "the parser itself does not deduplicate");
+  const extracted = runNode("Extract Google Sheet Candidates", () => { throw new Error("no $() expected"); }, sheetRows);
+  assert.equal(extracted.length, 2, "the adapter itself does not deduplicate");
 
   const results = [];
-  for (const item of parsed) {
+  for (const item of extracted) {
     results.push(await track(await processCandidate(item.json.discovery_source, item.json.raw)));
   }
   assert.equal(results[0].outcome, "created_new");
@@ -255,24 +252,24 @@ test("H. two identical rows in the same CSV parse converge on one canonical iden
   assert.equal(results[1].source_id, results[0].source_id);
 });
 
-// ── I. Re-import the same CSV ──────────────────────────────────────────────
+// ── I. Re-read the same Google Sheet row ───────────────────────────────────
 
-test("I. re-processing the identical CSV content a second time produces zero new canonical rows", async () => {
-  const name = fixtureName("CSV Reimport");
+test("I. re-processing the identical Google Sheet row a second time produces zero new canonical rows", async () => {
+  const name = fixtureName("Sheet Reread");
   const url = `https://${randomUUID()}.example/careers`;
-  const csvContent = `company_name,country_code,official_website_url,official_careers_url\n${name},SA,,${url}\n`;
+  const sheetRow = { company_name: name, country_code: "SA", official_careers_url: url };
 
   async function runOnce() {
-    const parsed = runNode("Parse CSV Candidates", () => ({ first: () => ({ json: { csvContent } }) }), []);
-    return await track(await processCandidate(parsed[0].json.discovery_source, parsed[0].json.raw));
+    const extracted = runNode("Extract Google Sheet Candidates", () => { throw new Error("no $() expected"); }, [sheetRow]);
+    return await track(await processCandidate(extracted[0].json.discovery_source, extracted[0].json.raw));
   }
 
-  const firstImport = await runOnce();
-  const secondImport = await runOnce();
-  assert.equal(firstImport.outcome, "created_new");
-  assert.equal(secondImport.outcome, "resolved_existing");
-  const { count } = await adminClient.from("company_sources").select("id", { count: "exact", head: true }).eq("company_id", firstImport.company_id);
-  assert.equal(count, 1, "a full CSV re-import must be idempotent at the canonical registry level");
+  const firstRead = await runOnce();
+  const secondRead = await runOnce();
+  assert.equal(firstRead.outcome, "created_new");
+  assert.equal(secondRead.outcome, "resolved_existing");
+  const { count } = await adminClient.from("company_sources").select("id", { count: "exact", head: true }).eq("company_id", firstRead.company_id);
+  assert.equal(count, 1, "re-reading the same Google Sheet row must be idempotent at the canonical registry level");
 });
 
 // ── J. Concurrent duplicate candidate attempts ─────────────────────────────

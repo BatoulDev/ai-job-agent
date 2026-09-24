@@ -5,13 +5,13 @@
  * ───────────────────
  * Import the companion JSON file via n8n UI → (hamburger menu) → Import
  * from File → registry-sync.json, or via n8n MCP create_workflow_from_code /
- * update_workflow using this source. This repository session had no n8n MCP
- * connection available — the companion JSON was hand-authored to match this
- * source and the exact schema of the other two committed workflow exports
- * (job-ingestion-pilot-orchestrator.json), but has NOT been round-tripped
- * through a live n8n instance. Treat it as "believed correct, pending first
- * real import," not independently verified — see the PR/commit notes for
- * what was and wasn't validated this session.
+ * update_workflow using this source. Reconciled 2026-09-24 against the live
+ * n8n workflow "AI Job Agent - Registry Sync - step 1 (manual)"
+ * (id LpDt8c8811kTCF2a) after manual/Google Sheets/Apify were all tested
+ * successfully in that instance — node set, connections, and shared
+ * candidate-processing pipeline confirmed structurally identical via
+ * n8n-mcp get_workflow_details. See the PR/commit notes for exactly what
+ * was and wasn't verified.
  *
  * CREDENTIALS (configure in n8n → Settings → Credentials before running)
  * ──────────────────────────────────────────────────────────────────────
@@ -29,13 +29,20 @@
  *      version — this makes the adapter portable across n8n versions and
  *      keeps the token exclusively in n8n's own encrypted credential
  *      store, never in workflow JSON, logs, or provenance payloads.
+ *   3. Type: Google Sheets OAuth2 (or Service Account), Name: "Google
+ *      Sheets" — only required for mode='google_sheets'. Bound directly to
+ *      the Read Google Sheet Candidates node, never referenced from
+ *      Workflow Configuration. Not bound in the committed JSON — bind it
+ *      manually in n8n once a real Google credential is available.
  *
  * WORKFLOW CONFIGURATION NODE (first node after the trigger — edit before running)
  * ──────────────────────────────────────────────────────────────────────────────
- *   mode                  — 'manual' | 'csv' | 'apify'. Selects exactly one
- *                            input adapter per execution; never mixed. The
- *                            operator sets this before clicking Execute —
- *                            nothing switches it automatically.
+ *   mode                  — 'manual' | 'google_sheets' | 'apify'. Selects
+ *                            exactly one input adapter per execution; never
+ *                            mixed. The operator sets this before clicking
+ *                            Execute — nothing switches it automatically.
+ *                            (CSV text-paste mode was removed — see
+ *                            "GOOGLE SHEETS REPLACES CSV" below.)
  *   supabaseBaseUrl        — local: http://host.docker.internal:55321.
  *                            Centralized here, same convention as every
  *                            other workflow in this repo — $env is blocked
@@ -60,19 +67,17 @@
  *                            Registry Sync run saw this."
  *   startedAt               — execution start timestamp, for the summary's
  *                            duration figure.
- *   csvContent              — raw CSV text (mode='csv' only). Pasted/set by
- *                            the operator. Required columns: company_name,
- *                            country_code, official_website_url,
- *                            official_careers_url (header row required,
- *                            exact names). A file-path-based variant (Read/
- *                            Write Files From Disk + Extract From File) is a
- *                            natural later extension, deliberately not built
- *                            now — it would need a container volume mount
- *                            this environment's availability was not
- *                            confirmed for, whereas pasted content works
- *                            identically everywhere and was the one that
- *                            could actually be tested end-to-end this
- *                            session.
+ *   googleSheetSpreadsheetId — mode='google_sheets' only. Empty by default.
+ *                            The target spreadsheet's plain ID (not a
+ *                            secret) — read by the Read Google Sheet
+ *                            Candidates node via an expression, so the
+ *                            operator changes which sheet is read entirely
+ *                            from this field, never by editing that node.
+ *   googleSheetTabName      — mode='google_sheets' only. The tab/sheet name
+ *                            to read — "Registry Sync Candidates" is the
+ *                            tab actually used in the working sheet. Same
+ *                            expression-driven pattern as the spreadsheet
+ *                            id above.
  *   apifyDatasetId          — mode='apify' only. Empty by default. An
  *                            explicit, single dataset id the operator sets
  *                            per run — never an arbitrary/attacker-supplied
@@ -90,11 +95,28 @@
  *   timeoutSeconds          — per-HTTP-call timeout (RPC calls and the
  *                            Apify fetch alike).
  *
+ * GOOGLE SHEETS REPLACES CSV
+ * ─────────────────────────────
+ * mode='csv' (raw CSV text pasted into Workflow Configuration.csvContent,
+ * parsed by a hand-rolled Code-node parser) has been removed — pasting an
+ * entire file's contents into a node field was never a practical real-world
+ * input path. mode='google_sheets' replaces it: the operator maintains a
+ * normal Google Sheet, Registry Sync reads it directly via the native
+ * Google Sheets node every run, no copy/paste required. discovery_source
+ * 'csv' remains a fully valid, permanently supported value everywhere in
+ * the database (migration 20260923120000 only ADDED 'google_sheets', never
+ * removed 'csv') — historical companies/company_sources rows created by
+ * the original standalone import script (scripts/import-company-registry.mjs,
+ * unrelated to and unaffected by this workflow) still carry it, and it is
+ * still accepted if anything ever calls resolve_registry_candidate() with
+ * p_discovery_source='csv' directly. Only this n8n workflow's own input
+ * mode was retired, not the database's memory of it.
+ *
  * CORE ARCHITECTURE — one resolution boundary, three adapters
  * ─────────────────────────────────────────────────────────────
- *   Manual ──┐
- *   CSV ─────┼──> Normalize Candidates ──> Validate Candidate ──>
- *   Apify ───┘        (shared, one shape)      (company_name only —
+ *   Manual ────────┐
+ *   Google Sheets ─┼──> Normalize Candidates ──> Validate Candidate ──>
+ *   Apify ─────────┘        (shared, one shape)      (company_name only —
  *                                                everything else is the
  *                                                RPC's own job)
  *                                                     │
@@ -116,9 +138,9 @@
  * This workflow NEVER performs "SELECT, then decide, then INSERT" itself —
  * every candidate, from every adapter, makes exactly one POST to
  * /rest/v1/rpc/resolve_registry_candidate and trusts its answer completely.
- * That is what makes repeated execution, CSV re-import, overlapping
- * executions, and Manual→CSV→Apify rediscovery of the same source all safe
- * by construction: the atomicity and identity guarantees live in Postgres
+ * That is what makes repeated execution, Google Sheet re-reads, overlapping
+ * executions, and Manual→Google Sheets→Apify rediscovery of the same source
+ * all safe by construction: the atomicity and identity guarantees live in Postgres
  * (supabase/migrations/20260920090000...20260920090030), not in this
  * workflow's control flow.
  *
@@ -167,7 +189,7 @@
  * needs for external page fetches does not apply here.
  */
 
-import { workflow, node, trigger, sticky, ifElse, splitInBatches, nextBatch, newCredential, expr } from '@n8n/workflow-sdk';
+import { workflow, node, trigger, ifElse, splitInBatches, nextBatch, newCredential, expr } from '@n8n/workflow-sdk';
 
 // ─────────────────────────────────────────────────────────────────────────
 // Trigger + configuration
@@ -195,7 +217,8 @@ const workflowConfiguration = node({
           { id: 'environment-field', name: 'environment', value: 'local', type: 'string' },
           { id: 'max-candidates-field', name: 'maxCandidatesPerRun', value: 25, type: 'number' },
           { id: 'started-at-field', name: 'startedAt', value: expr('{{ $now.toISO() }}'), type: 'string' },
-          { id: 'csv-content-field', name: 'csvContent', value: '', type: 'string' },
+          { id: 'google-sheet-spreadsheet-id-field', name: 'googleSheetSpreadsheetId', value: '', type: 'string' },
+          { id: 'google-sheet-tab-name-field', name: 'googleSheetTabName', value: 'Registry Sync Candidates', type: 'string' },
           { id: 'apify-dataset-id-field', name: 'apifyDatasetId', value: '', type: 'string' },
           { id: 'apify-max-items-field', name: 'apifyMaxItems', value: 50, type: 'number' },
           { id: 'timeout-field', name: 'timeoutSeconds', value: 15, type: 'number' },
@@ -203,7 +226,7 @@ const workflowConfiguration = node({
       },
     },
   },
-  output: [{ mode: 'manual', supabaseBaseUrl: 'http://host.docker.internal:55321', environment: 'local', maxCandidatesPerRun: 25, startedAt: '2026-09-21T00:00:00.000Z', csvContent: '', apifyDatasetId: '', apifyMaxItems: 50, timeoutSeconds: 15 }],
+  output: [{ mode: 'manual', supabaseBaseUrl: 'http://host.docker.internal:55321', environment: 'local', maxCandidatesPerRun: 25, startedAt: '2026-09-21T00:00:00.000Z', googleSheetSpreadsheetId: '', googleSheetTabName: 'Registry Sync Candidates', apifyDatasetId: '', apifyMaxItems: 50, timeoutSeconds: 15 }],
 });
 
 // Generates ONE real UUID per Registry Sync execution — runs exactly once,
@@ -301,15 +324,15 @@ const isManualMode = ifElse({
   },
 });
 
-const isCsvMode = ifElse({
+const isGoogleSheetsMode = ifElse({
   version: 2.3,
   config: {
-    name: 'Is CSV Mode?',
+    name: 'Is Google Sheets Mode?',
     position: [700, 300],
     parameters: {
       conditions: {
         options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
-        conditions: [{ leftValue: expr("{{ $('Workflow Configuration').first().json.mode }}"), operator: { type: 'string', operation: 'equals' }, rightValue: 'csv' }],
+        conditions: [{ leftValue: expr("{{ $('Workflow Configuration').first().json.mode }}"), operator: { type: 'string', operation: 'equals' }, rightValue: 'google_sheets' }],
         combinator: 'and',
       },
     },
@@ -336,59 +359,66 @@ const loadManualCandidates = node({
   output: [{ discovery_source: 'manual', raw: { company_name: 'Example Company', country_code: 'LB', official_website_url: 'https://example.com', official_careers_url: 'https://example.com/careers' } }],
 });
 
-// Parse CSV Candidates: a small, deterministic, tested RFC4180 parser —
-// ported directly from scripts/import-company-registry.mjs's own
-// parseCsv() (already covered by tests/db/company-registry-import.test.mjs
-// against real registry CSVs), not reinvented, per the production-
-// automation-engineer skill's guidance to keep Code nodes small and reuse
-// tested logic over ad hoc parsing. Handles embedded commas/quotes/
-// newlines inside quoted fields correctly (a naive split(',') would
-// corrupt those, exactly as that script's own header documents).
-const parseCsvCandidates = node({
+// Read Google Sheet Candidates: the native Google Sheets node (resource
+// 'sheet', operation 'read') — reads the configured tab's rows directly,
+// one n8n item per row, using the real installed node schema (confirmed
+// via n8n MCP get_node_types, not guessed). Spreadsheet and tab both come
+// from Workflow Configuration via expressions in the resource-locator
+// `value` fields — the operator changes which sheet is read by editing
+// that ONE node's fields, never this node. mode: 'id'/'name' (not 'list')
+// deliberately, since 'list' mode expects a UI-resolved cachedResultName
+// and cannot take a pure expression value the way 'id'/'name' can. No real
+// spreadsheet id is ever committed here — the placeholder is empty,
+// exactly like apifyDatasetId's own empty-by-default convention.
+const readGoogleSheetCandidates = node({
+  type: 'n8n-nodes-base.googleSheets',
+  version: 4.7,
+  config: {
+    name: 'Read Google Sheet Candidates',
+    position: [1000, 300],
+    parameters: {
+      resource: 'sheet',
+      operation: 'read',
+      authentication: 'oAuth2',
+      documentId: {
+        __rl: true,
+        mode: 'id',
+        value: expr("{{ $('Workflow Configuration').first().json.googleSheetSpreadsheetId }}"),
+      },
+      sheetName: {
+        __rl: true,
+        mode: 'name',
+        value: expr("{{ $('Workflow Configuration').first().json.googleSheetTabName }}"),
+      },
+      options: {},
+    },
+    credentials: { googleSheetsOAuth2Api: newCredential('Google Sheets') },
+  },
+  output: [{ company_name: 'Example Discovered Co', country_code: 'LB', official_website_url: 'https://example.com', official_careers_url: 'https://example.com/careers' }],
+});
+
+// Extract Google Sheet Candidates: the Google Sheets node already emits one
+// n8n item per row (no parsing needed, unlike CSV text) — this step only
+// wraps each row into the same { discovery_source, raw } envelope every
+// other adapter produces. Deliberately does not apply maxCandidatesPerRun
+// here (same convention as Load Manual Candidates and the Apify branch):
+// that bound is enforced once, in Normalize Candidates, the single shared
+// bounding point regardless of which adapter produced the items.
+const extractGoogleSheetCandidates = node({
   type: 'n8n-nodes-base.code',
   version: 2,
   config: {
-    name: 'Parse CSV Candidates',
-    position: [1000, 300],
+    name: 'Extract Google Sheet Candidates',
+    position: [1300, 300],
     parameters: {
       mode: 'runOnceForAllItems',
       language: 'javaScript',
       jsCode:
-        "function parseCsv(text) {\n" +
-        "  const rows = [];\n" +
-        "  let row = [];\n" +
-        "  let field = '';\n" +
-        "  let inQuotes = false;\n" +
-        "  let i = 0;\n" +
-        "  const n = text.length;\n" +
-        "  while (i < n) {\n" +
-        "    const c = text[i];\n" +
-        "    if (inQuotes) {\n" +
-        "      if (c === '\"') {\n" +
-        "        if (text[i + 1] === '\"') { field += '\"'; i += 2; continue; }\n" +
-        "        inQuotes = false; i++; continue;\n" +
-        "      }\n" +
-        "      field += c; i++; continue;\n" +
-        "    }\n" +
-        "    if (c === '\"') { inQuotes = true; i++; continue; }\n" +
-        "    if (c === ',') { row.push(field); field = ''; i++; continue; }\n" +
-        "    if (c === '\\r') { i++; continue; }\n" +
-        "    if (c === '\\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }\n" +
-        "    field += c; i++;\n" +
-        "  }\n" +
-        "  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }\n" +
-        "  return rows.filter((r) => !(r.length === 1 && r[0] === ''));\n" +
-        "}\n" +
-        "\n" +
-        "const content = $('Workflow Configuration').first().json.csvContent || '';\n" +
-        "const rows = parseCsv(content.replace(/^\\uFEFF/, ''));\n" +
-        "if (rows.length === 0) return [];\n" +
-        "const header = rows[0];\n" +
-        "const dataRows = rows.slice(1).map((r) => Object.fromEntries(header.map((h, idx) => [h.trim(), (r[idx] ?? '').trim()])));\n" +
-        "return dataRows.map((r) => ({ json: { discovery_source: 'csv', raw: r } }));",
+        "const rows = $input.all().map((i) => i.json);\n" +
+        "return rows.map((r) => ({ json: { discovery_source: 'google_sheets', raw: r } }));",
     },
   },
-  output: [{ discovery_source: 'csv', raw: { company_name: 'Example Company', country_code: 'LB', official_website_url: 'https://example.com', official_careers_url: 'https://example.com/careers' } }],
+  output: [{ discovery_source: 'google_sheets', raw: { company_name: 'Example Company', country_code: 'LB', official_website_url: 'https://example.com', official_careers_url: 'https://example.com/careers' } }],
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -790,51 +820,107 @@ const buildRunSummary = node({
 // Sticky notes
 // ─────────────────────────────────────────────────────────────────────────
 
-const overviewNote = sticky(
-  '### Registry Sync\n' +
-    'Converges manual/csv/apify input into ONE shared normalize -> validate -> resolve_registry_candidate() ' +
-    'path. Every candidate makes exactly one atomic RPC call; this workflow never performs its own SELECT-then-' +
-    'INSERT company/source resolution. staged is a normal, safe outcome, never a failure. Inactive by default — ' +
-    'set mode in Workflow Configuration, review Manual Candidates Input (manual mode) or csvContent (csv mode) ' +
-    'or apifyDatasetId + bind the Apify API Token credential (apify mode), then run manually.',
-  { name: 'Overview', position: [-200, -420], width: 560, height: 260 }
-);
-
-const safetyInvariantsNote = node({
+// The single documentation sticky note for this canvas — a plain-English
+// walkthrough for a non-technical reader coming back months later. Placed
+// well below the main flow so it doesn't sit over any node or connection
+// line. Adds no logic — purely explanatory. Previously this canvas also had
+// three smaller, overlapping notes (Overview, Safety Invariants, Apify
+// Trust Boundary); their meaning is folded in here (sections 5 and 8) and
+// they were removed to avoid duplicated/stale documentation living in two
+// places at once. Rewritten to describe the REAL, currently-implemented
+// workflow after the CSV-paste input mode was replaced with Google Sheets.
+const quickGuideNote = node({
   type: 'n8n-nodes-base.stickyNote',
   version: 1,
   config: {
-    name: 'Safety Invariants',
-    position: [2200, -420],
+    name: 'Registry Sync Quick Guide',
+    position: [-688, 1250],
     parameters: {
-      width: 560,
-      height: 300,
+      width: 1200,
+      height: 3150,
       content:
-        '### Safety invariants\n' +
-        '- No UNIQUE(display_name); ambiguous company matches always stage, never guess.\n' +
-        '- Source identity is (company_id, country_code, normalized_source_key) — enforced in Postgres, not here.\n' +
-        '- review_status / automation_eligibility are not parameters this workflow can send.\n' +
-        '- Never writes source_intelligence or jobs.\n' +
-        '- Concurrent/duplicate executions are protected by the RPC itself (advisory lock + real unique index), not by anything in this workflow.',
-    },
-  },
-});
-
-const apifyBoundaryNote = node({
-  type: 'n8n-nodes-base.stickyNote',
-  version: 1,
-  config: {
-    name: 'Apify Trust Boundary',
-    position: [1000, 780],
-    parameters: {
-      width: 560,
-      height: 240,
-      content:
-        '### Apify is discovery input only\n' +
-        'Reads previously-completed dataset items only (GET .../datasets/{id}/items) — cannot start, modify, or ' +
-        'pay for an Apify run. apifyDatasetId is an explicit single id set per run, never arbitrary/attacker-' +
-        'supplied. Apify rows flow through the exact same normalize/validate/resolve path as manual/CSV — Apify ' +
-        'is never a trusted canonical writer on its own.',
+        '## REGISTRY SYNC — QUICK GUIDE\n\n' +
+        '**1. Purpose**\n' +
+        'Registry Sync takes newly discovered companies/career-source candidates — typed in by hand, read from a ' +
+        'Google Sheet, or read from an Apify dataset — and safely checks them against our official company registry.\n' +
+        'It does NOT collect job postings, and it does NOT figure out which applicant-tracking system (ATS) a ' +
+        'company uses. Those happen in other workflows.\n\n' +
+        '**2. Start / configuration**\n' +
+        '- Start Registry Sync Run → the manual button you click to run this workflow. It never runs on its own.\n' +
+        '- Workflow Configuration → where you set the mode (manual / google_sheets / apify) and other settings ' +
+        'before running. For Google Sheets mode, this is also where you set googleSheetSpreadsheetId (which ' +
+        'spreadsheet) and googleSheetTabName (which tab) — you never need to edit the Read Google Sheet Candidates ' +
+        'node itself to point at a different sheet.\n' +
+        '- The Google account Registry Sync reads the sheet as is attached to the Read Google Sheet Candidates ' +
+        'node itself, as an n8n Credential — never typed into Workflow Configuration, never stored in this file.\n' +
+        '- Generate Discovery Run ID → creates one unique ID for this run, so every candidate checked in this run ' +
+        'can be traced back to it later.\n' +
+        '- Manual Candidates Input → where you type company details directly. Only used when mode = manual.\n\n' +
+        '**3. Manual scenario (mode = manual)**\n' +
+        'Start Registry Sync Run → Workflow Configuration → Generate Discovery Run ID → Manual Candidates Input → ' +
+        'Is Manual Mode? → Load Manual Candidates → shared processing (section 6)\n' +
+        '- Is Manual Mode? → checks whether mode is set to "manual".\n' +
+        '- Load Manual Candidates → reads the companies you typed in and gets them ready to be checked.\n\n' +
+        '**4. Google Sheets scenario (mode = google_sheets)**\n' +
+        'Is Manual Mode? (No) → Is Google Sheets Mode? (Yes) → Read Google Sheet Candidates → Extract Google ' +
+        'Sheet Candidates → shared processing (section 6)\n' +
+        '- Read Google Sheet Candidates → reads every row directly from the configured Google Sheet tab, right ' +
+        'at run time. No copying, no pasting, no CSV file needed — you just keep the sheet up to date and run ' +
+        'Registry Sync.\n' +
+        '- Extract Google Sheet Candidates → gets each row ready to be checked, the same way every other input ' +
+        'does.\n' +
+        '- The sheet needs a header row with these column names: company_name (required — a row without this is ' +
+        'rejected before it reaches the database), and country_code, official_website_url, official_careers_url, ' +
+        'company_id_hint, ats_provider_hint (all optional).\n\n' +
+        '**5. Apify scenario (mode = apify)**\n' +
+        'Is Manual Mode? (No) → Is Google Sheets Mode? (No) → Fetch Apify Dataset → Evaluate Apify Fetch → ' +
+        'retry/wait if needed → Extract Apify Candidates → shared processing (section 6)\n' +
+        '- Fetch Apify Dataset → reads a list of companies that Apify already collected earlier. IMPORTANT: this ' +
+        'only READS a finished dataset — it does NOT start a new Apify run. The dataset ID is set on purpose by a ' +
+        'person before running — never automatic, never guessed.\n' +
+        '- Evaluate Apify Fetch → checks whether that read worked.\n' +
+        '- Should Retry Apify Fetch? / Compute Apify Backoff / Apify Backoff Wait → if the read failed for a ' +
+        'temporary reason (like a timeout), these wait a short time and try again, up to a few times, so one ' +
+        'hiccup does not stop the whole run.\n' +
+        '- Extract Apify Candidates → pulls the company list out of a successful response.\n\n' +
+        '**6. Shared processing (used by all three scenarios)**\n' +
+        '- Normalize Candidates → makes manual, Google Sheets, and Apify data look the same shape, so the rest ' +
+        'of the workflow does not need to care where a candidate came from.\n' +
+        '- Process Candidates → goes through the candidates one at a time.\n' +
+        '- Validate Candidate → checks that the candidate at least has a company name. Nothing else is checked ' +
+        'here.\n' +
+        '- Is Candidate Valid? → sends valid candidates onward, and sends candidates missing a name to be ' +
+        'recorded as failed.\n' +
+        '- Resolve Registry Candidate → asks the database to decide: is this a brand-new company/source, an ' +
+        'existing one, or unclear? This is the ONLY step that writes to the registry.\n' +
+        '- Classify RPC Outcome → reads the database\'s answer and labels what happened to this candidate.\n' +
+        '- Build Validation Failed Result → records a candidate that was missing a name, before it ever reached ' +
+        'the database.\n' +
+        '- Build Run Summary → once every candidate has been checked, this builds one summary of the whole run.\n\n' +
+        '**7. Possible outcomes**\n' +
+        '- created_new → a brand-new company/source was added to the registry.\n' +
+        '- resolved_existing → the company/source was already known and was reused — no duplicate was created.\n' +
+        '- staged → the candidate is uncertain or incomplete (for example, missing or unrecognized country, or ' +
+        'no usable website/careers link), so it was set aside for a person to review instead of guessing and ' +
+        'polluting the registry.\n' +
+        '- validation_failed → the candidate\'s own info was invalid (usually a missing name) before it ever ' +
+        'reached the database.\n' +
+        '- infrastructure_failed → a technical problem (network, timeout, database) happened while checking this ' +
+        'candidate. It is safe to run again later.\n\n' +
+        '**8. Important boundaries**\n' +
+        '- Registry Sync only discovers/resolves company sources.\n' +
+        '- Source Intelligence later classifies unknown sources.\n' +
+        '- Job Ingestion later fetches the actual jobs.\n' +
+        '- New or uncertain candidates should never bypass Resolve Registry Candidate.\n' +
+        '- Discovering a company/source never approves it. Registry Sync cannot set review or approval status — ' +
+        'that is always a separate, deliberate action by a person.\n' +
+        '- It is safe to run this workflow more than once, or to have two runs overlap — the database (not this ' +
+        'workflow) prevents duplicates.\n' +
+        '- The database decides if two entries are really the same company/source (using the company, its ' +
+        'country, and the source together) — this workflow never guesses that itself.\n' +
+        '- A missing or unrecognized country is never blocked by this workflow — that candidate is simply sent ' +
+        'to the database, which safely sets it aside for review. Country checking is never duplicated here.\n' +
+        '- This workflow should stay switched OFF unless someone is intentionally running or configuring it.',
     },
   },
 });
@@ -867,13 +953,11 @@ const apifyBranch = fetchApifyDataset.to(evaluateApifyFetch.to(apifyRetryLoop));
 
 const inputRouting = isManualMode
   .onTrue(loadManualCandidates.to(sharedFromNormalize))
-  .onFalse(isCsvMode.onTrue(parseCsvCandidates.to(sharedFromNormalize)).onFalse(apifyBranch));
+  .onFalse(isGoogleSheetsMode.onTrue(readGoogleSheetCandidates.to(extractGoogleSheetCandidates.to(sharedFromNormalize))).onFalse(apifyBranch));
 
 const mainFlow = workflowConfiguration.to(generateDiscoveryRunId.to(manualCandidatesInput.to(inputRouting)));
 
-export default workflow('registry-sync', 'AI Job Agent - Registry Sync')
+export default workflow('registry-sync', 'AI Job Agent - Registry Sync - step 1 (manual)')
   .add(startTrigger)
   .to(mainFlow)
-  .add(overviewNote)
-  .add(safetyInvariantsNote)
-  .add(apifyBoundaryNote);
+  .add(quickGuideNote);

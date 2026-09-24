@@ -1,5 +1,5 @@
 {
-  "name": "AI Job Agent - Registry Sync",
+  "name": "AI Job Agent - Registry Sync - step 1 (manual)",
   "active": false,
   "nodes": [
     {
@@ -49,9 +49,15 @@
               "type": "string"
             },
             {
-              "id": "csv-content-field",
-              "name": "csvContent",
+              "id": "google-sheet-spreadsheet-id-field",
+              "name": "googleSheetSpreadsheetId",
               "value": "",
+              "type": "string"
+            },
+            {
+              "id": "google-sheet-tab-name-field",
+              "name": "googleSheetTabName",
+              "value": "Registry Sync Candidates",
               "type": "string"
             },
             {
@@ -179,7 +185,7 @@
                 "type": "string",
                 "operation": "equals"
               },
-              "rightValue": "csv"
+              "rightValue": "google_sheets"
             }
           ],
           "combinator": "and"
@@ -187,7 +193,7 @@
         "options": {}
       },
       "id": "a728e584-cb73-4218-998f-ba0dbf8bd201",
-      "name": "Is CSV Mode?",
+      "name": "Is Google Sheets Mode?",
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.3,
       "position": [
@@ -212,16 +218,42 @@
     },
     {
       "parameters": {
-        "mode": "runOnceForAllItems",
-        "language": "javaScript",
-        "jsCode": "function parseCsv(text) {\n  const rows = [];\n  let row = [];\n  let field = '';\n  let inQuotes = false;\n  let i = 0;\n  const n = text.length;\n  while (i < n) {\n    const c = text[i];\n    if (inQuotes) {\n      if (c === '\"') {\n        if (text[i + 1] === '\"') { field += '\"'; i += 2; continue; }\n        inQuotes = false; i++; continue;\n      }\n      field += c; i++; continue;\n    }\n    if (c === '\"') { inQuotes = true; i++; continue; }\n    if (c === ',') { row.push(field); field = ''; i++; continue; }\n    if (c === '\\r') { i++; continue; }\n    if (c === '\\n') { row.push(field); rows.push(row); row = []; field = ''; i++; continue; }\n    field += c; i++;\n  }\n  if (field.length > 0 || row.length > 0) { row.push(field); rows.push(row); }\n  return rows.filter((r) => !(r.length === 1 && r[0] === ''));\n}\n\nconst content = $('Workflow Configuration').first().json.csvContent || '';\nconst rows = parseCsv(content.replace(/^\\uFEFF/, ''));\nif (rows.length === 0) return [];\nconst header = rows[0];\nconst dataRows = rows.slice(1).map((r) => Object.fromEntries(header.map((h, idx) => [h.trim(), (r[idx] ?? '').trim()])));\nreturn dataRows.map((r) => ({ json: { discovery_source: 'csv', raw: r } }));"
+        "resource": "sheet",
+        "operation": "read",
+        "authentication": "oAuth2",
+        "documentId": {
+          "__rl": true,
+          "mode": "id",
+          "value": "={{ $('Workflow Configuration').first().json.googleSheetSpreadsheetId }}"
+        },
+        "sheetName": {
+          "__rl": true,
+          "mode": "name",
+          "value": "={{ $('Workflow Configuration').first().json.googleSheetTabName }}"
+        },
+        "options": {}
       },
       "id": "a7837417-0fe7-4037-b5d1-978730f9f014",
-      "name": "Parse CSV Candidates",
+      "name": "Read Google Sheet Candidates",
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1000,
+        300
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const rows = $input.all().map((i) => i.json);\nreturn rows.map((r) => ({ json: { discovery_source: 'google_sheets', raw: r } }));"
+      },
+      "id": "c1e0a6ab-7e3b-4b1a-9d3c-2f6a8b0c4e15",
+      "name": "Extract Google Sheet Candidates",
       "type": "n8n-nodes-base.code",
       "typeVersion": 2,
       "position": [
-        1000,
+        1300,
         300
       ]
     },
@@ -521,47 +553,17 @@
     },
     {
       "parameters": {
-        "width": 560,
-        "height": 260,
-        "content": "### Registry Sync\nConverges manual/csv/apify input into ONE shared normalize -> validate -> resolve_registry_candidate() path. Every candidate makes exactly one atomic RPC call; this workflow never performs its own SELECT-then-INSERT company/source resolution. staged is a normal, safe outcome, never a failure. Inactive by default — set mode in Workflow Configuration, review Manual Candidates Input (manual mode) or csvContent (csv mode) or apifyDatasetId + bind the Apify API Token credential (apify mode), then run manually."
+        "width": 1200,
+        "height": 3150,
+        "content": "## REGISTRY SYNC — QUICK GUIDE\n\n**1. Purpose**\nRegistry Sync takes newly discovered companies/career-source candidates — typed in by hand, read from a Google Sheet, or read from an Apify dataset — and safely checks them against our official company registry.\nIt does NOT collect job postings, and it does NOT figure out which applicant-tracking system (ATS) a company uses. Those happen in other workflows.\n\n**2. Start / configuration**\n- Start Registry Sync Run → the manual button you click to run this workflow. It never runs on its own.\n- Workflow Configuration → where you set the mode (manual / google_sheets / apify) and other settings before running. For Google Sheets mode, this is also where you set googleSheetSpreadsheetId (which spreadsheet) and googleSheetTabName (which tab) — you never need to edit the Read Google Sheet Candidates node itself to point at a different sheet.\n- The Google account Registry Sync reads the sheet as is attached to the Read Google Sheet Candidates node itself, as an n8n Credential — never typed into Workflow Configuration, never stored in this file.\n- Generate Discovery Run ID → creates one unique ID for this run, so every candidate checked in this run can be traced back to it later.\n- Manual Candidates Input → where you type company details directly. Only used when mode = manual.\n\n**3. Manual scenario (mode = manual)**\nStart Registry Sync Run → Workflow Configuration → Generate Discovery Run ID → Manual Candidates Input → Is Manual Mode? → Load Manual Candidates → shared processing (section 6)\n- Is Manual Mode? → checks whether mode is set to \"manual\".\n- Load Manual Candidates → reads the companies you typed in and gets them ready to be checked.\n\n**4. Google Sheets scenario (mode = google_sheets)**\nIs Manual Mode? (No) → Is Google Sheets Mode? (Yes) → Read Google Sheet Candidates → Extract Google Sheet Candidates → shared processing (section 6)\n- Read Google Sheet Candidates → reads every row directly from the configured Google Sheet tab, right at run time. No copying, no pasting, no CSV file needed — you just keep the sheet up to date and run Registry Sync.\n- Extract Google Sheet Candidates → gets each row ready to be checked, the same way every other input does.\n- The sheet needs a header row with these column names: company_name (required — a row without this is rejected before it reaches the database), and country_code, official_website_url, official_careers_url, company_id_hint, ats_provider_hint (all optional).\n\n**5. Apify scenario (mode = apify)**\nIs Manual Mode? (No) → Is Google Sheets Mode? (No) → Fetch Apify Dataset → Evaluate Apify Fetch → retry/wait if needed → Extract Apify Candidates → shared processing (section 6)\n- Fetch Apify Dataset → reads a list of companies that Apify already collected earlier. IMPORTANT: this only READS a finished dataset — it does NOT start a new Apify run. The dataset ID is set on purpose by a person before running — never automatic, never guessed.\n- Evaluate Apify Fetch → checks whether that read worked.\n- Should Retry Apify Fetch? / Compute Apify Backoff / Apify Backoff Wait → if the read failed for a temporary reason (like a timeout), these wait a short time and try again, up to a few times, so one hiccup does not stop the whole run.\n- Extract Apify Candidates → pulls the company list out of a successful response.\n\n**6. Shared processing (used by all three scenarios)**\n- Normalize Candidates → makes manual, Google Sheets, and Apify data look the same shape, so the rest of the workflow does not need to care where a candidate came from.\n- Process Candidates → goes through the candidates one at a time.\n- Validate Candidate → checks that the candidate at least has a company name. Nothing else is checked here.\n- Is Candidate Valid? → sends valid candidates onward, and sends candidates missing a name to be recorded as failed.\n- Resolve Registry Candidate → asks the database to decide: is this a brand-new company/source, an existing one, or unclear? This is the ONLY step that writes to the registry.\n- Classify RPC Outcome → reads the database's answer and labels what happened to this candidate.\n- Build Validation Failed Result → records a candidate that was missing a name, before it ever reached the database.\n- Build Run Summary → once every candidate has been checked, this builds one summary of the whole run.\n\n**7. Possible outcomes**\n- created_new → a brand-new company/source was added to the registry.\n- resolved_existing → the company/source was already known and was reused — no duplicate was created.\n- staged → the candidate is uncertain or incomplete (for example, missing or unrecognized country, or no usable website/careers link), so it was set aside for a person to review instead of guessing and polluting the registry.\n- validation_failed → the candidate's own info was invalid (usually a missing name) before it ever reached the database.\n- infrastructure_failed → a technical problem (network, timeout, database) happened while checking this candidate. It is safe to run again later.\n\n**8. Important boundaries**\n- Registry Sync only discovers/resolves company sources.\n- Source Intelligence later classifies unknown sources.\n- Job Ingestion later fetches the actual jobs.\n- New or uncertain candidates should never bypass Resolve Registry Candidate.\n- Discovering a company/source never approves it. Registry Sync cannot set review or approval status — that is always a separate, deliberate action by a person.\n- It is safe to run this workflow more than once, or to have two runs overlap — the database (not this workflow) prevents duplicates.\n- The database decides if two entries are really the same company/source (using the company, its country, and the source together) — this workflow never guesses that itself.\n- A missing or unrecognized country is never blocked by this workflow — that candidate is simply sent to the database, which safely sets it aside for review. Country checking is never duplicated here.\n- This workflow should stay switched OFF unless someone is intentionally running or configuring it."
       },
-      "id": "a5263cc8-82c7-4743-b45c-c63883365ea5",
-      "name": "Overview",
+      "id": "5b180782-4d29-4d1f-83e3-cb9ae1adfec1",
+      "name": "Registry Sync Quick Guide",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
-        -200,
-        -420
-      ]
-    },
-    {
-      "parameters": {
-        "width": 560,
-        "height": 300,
-        "content": "### Safety invariants\n- No UNIQUE(display_name); ambiguous company matches always stage, never guess.\n- Source identity is (company_id, country_code, normalized_source_key) — enforced in Postgres, not here.\n- review_status / automation_eligibility are not parameters this workflow can send.\n- Never writes source_intelligence or jobs.\n- Concurrent/duplicate executions are protected by the RPC itself (advisory lock + real unique index), not by anything in this workflow."
-      },
-      "id": "675d255f-f73a-4143-9e53-73352eeeadf3",
-      "name": "Safety Invariants",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        2200,
-        -420
-      ]
-    },
-    {
-      "parameters": {
-        "width": 560,
-        "height": 240,
-        "content": "### Apify is discovery input only\nReads previously-completed dataset items only (GET .../datasets/{id}/items) — cannot start, modify, or pay for an Apify run. apifyDatasetId is an explicit single id set per run, never arbitrary/attacker-supplied. Apify rows flow through the exact same normalize/validate/resolve path as manual/CSV — Apify is never a trusted canonical writer on its own."
-      },
-      "id": "e763de55-8513-467d-b73d-f5f9edb5f689",
-      "name": "Apify Trust Boundary",
-      "type": "n8n-nodes-base.stickyNote",
-      "typeVersion": 1,
-      "position": [
-        1000,
-        780
+        -688,
+        1250
       ]
     }
   ],
@@ -621,18 +623,18 @@
         ],
         [
           {
-            "node": "Is CSV Mode?",
+            "node": "Is Google Sheets Mode?",
             "type": "main",
             "index": 0
           }
         ]
       ]
     },
-    "Is CSV Mode?": {
+    "Is Google Sheets Mode?": {
       "main": [
         [
           {
-            "node": "Parse CSV Candidates",
+            "node": "Read Google Sheet Candidates",
             "type": "main",
             "index": 0
           }
@@ -657,7 +659,18 @@
         ]
       ]
     },
-    "Parse CSV Candidates": {
+    "Read Google Sheet Candidates": {
+      "main": [
+        [
+          {
+            "node": "Extract Google Sheet Candidates",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Extract Google Sheet Candidates": {
       "main": [
         [
           {
