@@ -18,12 +18,12 @@ The user was asked directly (this was a genuine cost-bearing decision, not somet
 ## n8n credential: "Matching Worker Secret" (Bearer Auth) — required before any real run of "AI Job Agent / 02 Job Matching"
 
 - Env var: `MATCHING_WORKER_SECRET` (server-only; already generated and set in this machine's `.env.local` — value not recorded here, never commit it)
-- Needed for: the `Prepare Embeddings` and `Save Embeddings` nodes in `n8n-workflows/ai-job-agent-02-job-matching.ts`/`.json`, which POST to `/api/internal/matching/prepare-embeddings` and `/api/internal/matching/save-embeddings`
+- Needed for: **four** nodes total in `n8n-workflows/ai-job-agent-02-job-matching.ts`/`.json` — `Prepare Embeddings` and `Save Embeddings` (Phase 05), plus `Prepare Rerank` and `Save Rerank Result` (Phase 06, added in the same workflow's second stage) — which POST to `/api/internal/matching/{prepare-embeddings,save-embeddings,prepare-rerank,save-rerank-results}`.
 - Why: same reason as `INGESTION_WORKER_SECRET` in Phase 04 — the n8n MCP cannot create credentials, only bind existing ones. A separate secret from `INGESTION_WORKER_SECRET` (least privilege — either can be rotated independently).
-- Where to add it: n8n UI → Settings → Credentials → New → Bearer Auth → name it exactly `Matching Worker Secret` → paste the `MATCHING_WORKER_SECRET` value from `.env.local` → attach to both the `Prepare Embeddings` and `Save Embeddings` nodes.
-- Also verify: the `Generate Embeddings` node's `openAiApi` credential is bound to the existing "OpenAI account" credential (should auto-bind since it's the only one of that type in this instance, but the workflow-creation response reported all three HTTP nodes need manual credential confirmation — open the workflow and check).
-- Validation to run once added: open the workflow (`http://localhost:5678/workflow/7CEh04hBepZkLCKl`), run the Manual Trigger, confirm the execution succeeds; check `public.jobs`/`public.cv_analyses` for newly-populated `embedding`/`profile_embedding` columns on rows that previously had none.
-- Not blocking: the workflow is created **inactive** with no schedule, and was fully validated via `test_workflow` with pinned/mocked HTTP and OpenAI responses (both the "has jobs to embed" and "nothing to embed" branches) — this credential is only needed for a human-initiated real run.
+- Where to add it: n8n UI → Settings → Credentials → New → Bearer Auth → name it exactly `Matching Worker Secret` → paste the `MATCHING_WORKER_SECRET` value from `.env.local` → attach to all **four** nodes named above.
+- Also verify: the `Generate Embeddings` node's (Phase 05) and the `Call OpenAI Chat` node's (Phase 06) `openAiApi` credential are both bound to the existing "OpenAI account" credential (should auto-bind since it's the only one of that type in this instance, but the workflow-creation/update responses reported every HTTP node needs manual credential confirmation — open the workflow and check all four).
+- Validation to run once added: open the workflow (`http://localhost:5678/workflow/7CEh04hBepZkLCKl`), run the Manual Trigger, confirm the execution succeeds; check `public.jobs`/`public.cv_analyses` for newly-populated `embedding`/`profile_embedding` columns on rows that previously had none, and check `public.matches` for newly-scored rows.
+- Not blocking: the workflow is created **inactive** with no schedule, and both stages were fully validated via `test_workflow` with pinned/mocked HTTP and OpenAI responses (embeddings: "has jobs to embed" and "nothing to embed"; rerank: "has candidates" with correct per-candidate vector/response mapping, and "no candidates") — this credential is only needed for a human-initiated real run.
 
 This file will gain one entry per credential a later phase is `BLOCKED_ON_CREDENTIAL` for, in this format:
 
@@ -42,6 +42,5 @@ Anticipated (not yet blocking, listed here for visibility only — do not create
 - Job-board/provider API keys for Tier B ingestion sources (Phase 04) — exact providers not yet chosen; recorded once the provider research doc names them.
 - Any Apify or structured-scraping provider token, if research recommends one over direct ATS APIs (Phase 04).
 - An email-sending credential for the application-delivery flow (Phase 09) — must remain gated behind explicit per-message user approval regardless of whether it's configured.
-- LLM provider key for rerank (Phase 06) — the embeddings entry above already confirmed no OpenAI key is reachable from the Next.js app; the same investigation applies here once Phase 06 starts.
 
 None of the above blocks Phase 01 or the immediately following schema/eligibility work in Phase 02, which is pure logic over already-existing tables.

@@ -1,11 +1,13 @@
 /**
- * Static-analysis tests for the "AI Job Agent / 02 Job Matching" workflow's
- * embedding step (Phase 05). No database or n8n connection required — reads
- * the exported workflow JSON directly. All discovery/persistence logic
- * itself is covered by tests/db/matching-embeddings.test.mjs; this file
- * only checks that the workflow graph wires the n8n-owned provider call
- * correctly (retry, error handling, credential shape, index-safe vector
- * remapping, the empty-input guard).
+ * Static-analysis tests for the "AI Job Agent / 02 Job Matching" workflow —
+ * both the embedding step (Phase 05) and the rerank step (Phase 06). No
+ * database or n8n connection required — reads the exported workflow JSON
+ * directly. All discovery/persistence logic itself is covered by
+ * tests/db/matching-embeddings.test.mjs and tests/db/matching-rerank.test.mjs;
+ * this file only checks that the workflow graph wires the n8n-owned
+ * provider calls correctly (retry, error handling, credential shape,
+ * index-safe vector remapping, the empty-input guard, per-item rerank
+ * looping with immediate save).
  *
  * Run: node --test tests/workflow/ai-job-agent-02-job-matching.test.mjs
  */
@@ -91,4 +93,77 @@ test('the empty-input guard routes to a no-op instead of calling OpenAI with an 
 test('Build Save Embeddings Request maps vectors back by response index, not array order', () => {
   const node = findNode('Build Save Embeddings Request');
   assert.match(node.parameters.jsonOutput, /vectors\[d\.index\] = d\.embedding/, 'must index by the API response\'s own index field, since OpenAI batch responses are not guaranteed to preserve input order');
+});
+
+// ── Rerank stage (Phase 06) ──────────────────────────────────────────────
+
+test('the rerank stage is reachable from every embedding-stage outcome', () => {
+  assert.equal(wf.connections['Save Embeddings']?.main?.[0]?.[0]?.node, 'Prepare Rerank', 'a successful embedding save must continue to rerank');
+  assert.equal(wf.connections['Nothing To Embed']?.main?.[0]?.[0]?.node, 'Prepare Rerank', 'having nothing to embed must still continue to rerank');
+  assert.equal(wf.connections['Log Embeddings Failure']?.main?.[0]?.[0]?.node, 'Prepare Rerank', 'an embedding-stage failure must still continue to rerank — it reranks whatever is already embedded');
+});
+
+test('Prepare Rerank and Save Rerank Result use Bearer auth against the internal endpoints, never Supabase directly', () => {
+  const prepare = findNode('Prepare Rerank');
+  const save = findNode('Save Rerank Result');
+  assert.match(prepare.parameters.url, /\/api\/internal\/matching\/prepare-rerank$/);
+  assert.match(save.parameters.url, /\/api\/internal\/matching\/save-rerank-results$/);
+  assert.equal(prepare.parameters.authentication, 'genericCredentialType');
+  assert.equal(prepare.parameters.genericAuthType, 'httpBearerAuth');
+  assert.equal(save.parameters.authentication, 'genericCredentialType');
+  assert.equal(save.parameters.genericAuthType, 'httpBearerAuth');
+});
+
+test('Call OpenAI Chat uses the predefined credential type, matching cv-analysis-worker.ts and Generate Embeddings', () => {
+  const node = findNode('Call OpenAI Chat');
+  assert.equal(node.parameters.url, 'https://api.openai.com/v1/chat/completions');
+  assert.equal(node.parameters.authentication, 'predefinedCredentialType');
+  assert.equal(node.parameters.nodeCredentialType, 'openAiApi');
+  assert.ok(node.credentials?.openAiApi);
+});
+
+test('rerank requests a strict JSON response from the model', () => {
+  const node = findNode('Build Chat Request');
+  assert.match(node.parameters.jsonOutput, /response_format:\s*\{\s*type:\s*'json_object'\s*\}/);
+});
+
+test('the rerank loop processes one candidate at a time (chat completions has no batch endpoint)', () => {
+  const loop = findNode('Loop Candidates (Rate Limited)');
+  assert.equal(loop.type, 'n8n-nodes-base.splitInBatches');
+  assert.equal(loop.parameters.batchSize, 1);
+});
+
+test('every rerank network-calling node has native retry configured', () => {
+  for (const name of ['Prepare Rerank', 'Call OpenAI Chat', 'Save Rerank Result']) {
+    const node = findNode(name);
+    assert.equal(node.retryOnFail, true, `${name} must have retryOnFail enabled`);
+    assert.ok(node.maxTries >= 2 && node.maxTries <= 5, `${name}.maxTries must respect the n8n engine cap of 5`);
+    assert.ok(node.waitBetweenTries <= 5000, `${name}.waitBetweenTries must respect the n8n engine cap of 5000ms`);
+    assert.equal(node.onError, 'continueErrorOutput', `${name} must continue to its error output, not halt the whole rerank run over one candidate`);
+  }
+});
+
+test('every fallible rerank node error output is wired to Log Rerank Failure', () => {
+  for (const name of ['Prepare Rerank', 'Call OpenAI Chat', 'Save Rerank Result']) {
+    const errorOutput = wf.connections[name]?.main?.[1] ?? [];
+    assert.ok(errorOutput.some((c) => c.node === 'Log Rerank Failure'), `${name}'s error output must be wired to Log Rerank Failure`);
+  }
+});
+
+test('a failed candidate still reaches the rate-limit delay and loops to the next one, instead of stalling the run', () => {
+  const fromFailure = wf.connections['Log Rerank Failure']?.main?.[0] ?? [];
+  assert.ok(fromFailure.some((c) => c.node === 'Rerank Rate Limit Delay'));
+  const fromSuccess = wf.connections['Save Rerank Result']?.main?.[0] ?? [];
+  assert.ok(fromSuccess.some((c) => c.node === 'Rerank Rate Limit Delay'));
+  const loopBack = wf.connections['Rerank Rate Limit Delay']?.main?.[0] ?? [];
+  assert.ok(loopBack.some((c) => c.node === 'Loop Candidates (Rate Limited)'));
+});
+
+test('each rerank result is saved immediately per candidate, never aggregated across the loop', () => {
+  const node = findNode('Build Save Rerank Request');
+  // A single-element results array built from *this* candidate's own data —
+  // not $('Loop...').all() or any other cross-iteration aggregation, which
+  // Phase 05 already found unreliable across splitInBatches iterations.
+  assert.match(node.parameters.jsonOutput, /results:\s*\[\s*\{\s*candidateId:/);
+  assert.doesNotMatch(node.parameters.jsonOutput, /\.all\(\)/);
 });
