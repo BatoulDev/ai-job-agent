@@ -1,0 +1,363 @@
+{
+  "name": "AI Job Agent / 01 Job Ingestion",
+  "active": false,
+  "nodes": [
+    {
+      "id": "28d0b4de-d306-42c0-8514-9cc716903e2d",
+      "name": "Start Job Ingestion Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 464],
+      "parameters": {}
+    },
+    {
+      "id": "d4bdc059-5b22-4207-824c-2f5732cd19f5",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [224, 464],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"appBaseUrl\":\"http://host.docker.internal:3000\",\"maxJobsPerSource\":5,\"rateLimitDelaySeconds\":2,\"dryRun\":true}"
+      }
+    },
+    {
+      "id": "a523807c-ff69-4c69-8804-ebefd1c34a36",
+      "name": "Static Pilot Source List",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [448, 464],
+      "notes": "Only the 4 sources already verified live by the job-ingestion pilot (docs/job-ingestion-pilot.md). company_sources has no feed-url/board-token column, so the full 588-row registry cannot be resolved to a real ATS endpoint yet — see the sticky note on this workflow for the follow-up.",
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"sources\":[{\"source_id\":\"sr-qa-scale-ai\",\"ats_type\":\"greenhouse\",\"feed_url\":\"https://boards-api.greenhouse.io/v1/boards/scaleai/jobs?content=true\"},{\"source_id\":\"sr-sa-alpaca\",\"ats_type\":\"greenhouse\",\"feed_url\":\"https://boards-api.greenhouse.io/v1/boards/alpaca/jobs?content=true\"},{\"source_id\":\"sr-intl-wahed\",\"ats_type\":\"lever\",\"feed_url\":\"https://api.lever.co/v0/postings/wahed.com?mode=json\"},{\"source_id\":\"sr-sa-salla\",\"ats_type\":\"workable\",\"feed_url\":\"https://apply.workable.com/api/v1/widget/accounts/salla?details=true\"}]}"
+      }
+    },
+    {
+      "id": "307af5a9-520d-4788-8ff3-5db314be4043",
+      "name": "Split Out Sources",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [672, 464],
+      "parameters": { "fieldToSplitOut": "sources" }
+    },
+    {
+      "id": "d4fda19b-89d0-4ce7-99d4-6df854e6e147",
+      "name": "Loop Sources (Rate Limited)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [896, 464],
+      "parameters": { "batchSize": 1 }
+    },
+    {
+      "id": "77446e74-48d1-4334-bcb8-912b4f85f219",
+      "name": "Fetch Source Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1120, 464],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.feed_url }}",
+        "authentication": "none",
+        "options": { "timeout": 15000 }
+      }
+    },
+    {
+      "id": "59497294-33fe-4800-ab9e-dba98d8bead4",
+      "name": "Extract Jobs By ATS Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [1344, 240],
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "outputKey": "greenhouse",
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "greenhouse" }],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "lever",
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "lever" }],
+                "combinator": "and"
+              }
+            },
+            {
+              "outputKey": "workable",
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+                "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "workable" }],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": { "fallbackOutput": "extra", "renameFallbackOutput": "Unsupported" }
+      }
+    },
+    {
+      "id": "13d5c141-3dc5-4dbb-8ef3-d5e7dfffc1de",
+      "name": "Extract Greenhouse Jobs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1568, 0],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "rawJobs", "name": "rawJobs", "value": "={{ $json.jobs }}", "type": "array" }] }
+      }
+    },
+    {
+      "id": "f469d074-2d67-415a-8db0-16665a0be094",
+      "name": "Extract Lever Jobs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1568, 192],
+      "notes": "Lever's postings API returns a bare top-level array — the whole response body IS the jobs list (docs/job-ingestion-pilot.md §5).",
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "rawJobs", "name": "rawJobs", "value": "={{ $json }}", "type": "array" }] }
+      }
+    },
+    {
+      "id": "dbec8e1b-8d46-422e-bd3a-25a3bced21ae",
+      "name": "Extract Workable Jobs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1568, 384],
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "rawJobs", "name": "rawJobs", "value": "={{ $json.jobs }}", "type": "array" }] }
+      }
+    },
+    {
+      "id": "13dc2df2-1d01-47ed-8c86-63afdd9d47a3",
+      "name": "Call Ingestion Batch Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1792, 272],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-batch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  sourceId: $('Split Out Sources').item.json.source_id,\n  sourceType: $('Split Out Sources').item.json.ats_type,\n  rawJobs: $json.rawJobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
+        "options": { "timeout": 30000 }
+      },
+      "credentials": { "httpBearerAuth": { "name": "Ingestion Worker Secret" } }
+    },
+    {
+      "id": "dc6d5184-50ae-451c-a268-0a1a5a442ab1",
+      "name": "Build Success Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2016, 80],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Sources').item.json.source_id }}", "type": "string" },
+            { "id": "ats_type", "name": "ats_type", "value": "={{ $('Split Out Sources').item.json.ats_type }}", "type": "string" },
+            { "id": "succeeded", "name": "succeeded", "value": "={{ $json.outcome === 'succeeded' }}", "type": "boolean" },
+            { "id": "error", "name": "error", "value": null, "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "55d6fb05-dab5-4741-8cae-7f7710aaf32e",
+      "name": "Build Endpoint Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2016, 336],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Sources').item.json.source_id }}", "type": "string" },
+            { "id": "ats_type", "name": "ats_type", "value": "={{ $('Split Out Sources').item.json.ats_type }}", "type": "string" },
+            { "id": "outcome", "name": "outcome", "value": "endpoint_call_failed", "type": "string" },
+            { "id": "succeeded", "name": "succeeded", "value": false, "type": "boolean" },
+            { "id": "jobsFetched", "name": "jobsFetched", "value": 0, "type": "number" },
+            { "id": "jobsValid", "name": "jobsValid", "value": 0, "type": "number" },
+            { "id": "jobsRejected", "name": "jobsRejected", "value": 0, "type": "number" },
+            { "id": "jobsCreated", "name": "jobsCreated", "value": 0, "type": "number" },
+            { "id": "jobsUpdated", "name": "jobsUpdated", "value": 0, "type": "number" },
+            { "id": "jobsClosed", "name": "jobsClosed", "value": 0, "type": "number" },
+            { "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'ingestion batch endpoint call failed after retries' }}", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "81b33b60-6761-4fa5-9139-bbef960bd5e2",
+      "name": "Build Unsupported Source Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2016, 528],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Sources').item.json.source_id }}", "type": "string" },
+            { "id": "ats_type", "name": "ats_type", "value": "={{ $('Split Out Sources').item.json.ats_type }}", "type": "string" },
+            { "id": "outcome", "name": "outcome", "value": "unsupported_ats_type", "type": "string" },
+            { "id": "succeeded", "name": "succeeded", "value": false, "type": "boolean" },
+            { "id": "jobsFetched", "name": "jobsFetched", "value": 0, "type": "number" },
+            { "id": "jobsValid", "name": "jobsValid", "value": 0, "type": "number" },
+            { "id": "jobsRejected", "name": "jobsRejected", "value": 0, "type": "number" },
+            { "id": "jobsCreated", "name": "jobsCreated", "value": 0, "type": "number" },
+            { "id": "jobsUpdated", "name": "jobsUpdated", "value": 0, "type": "number" },
+            { "id": "jobsClosed", "name": "jobsClosed", "value": 0, "type": "number" },
+            { "id": "error", "name": "error", "value": "no adapter registered for this ats_type", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "331b9cd7-c935-4a69-8c83-ada76644e42b",
+      "name": "Build Fetch Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2016, 720],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Sources').item.json.source_id }}", "type": "string" },
+            { "id": "ats_type", "name": "ats_type", "value": "={{ $('Split Out Sources').item.json.ats_type }}", "type": "string" },
+            { "id": "outcome", "name": "outcome", "value": "fetch_failed", "type": "string" },
+            { "id": "succeeded", "name": "succeeded", "value": false, "type": "boolean" },
+            { "id": "jobsFetched", "name": "jobsFetched", "value": 0, "type": "number" },
+            { "id": "jobsValid", "name": "jobsValid", "value": 0, "type": "number" },
+            { "id": "jobsRejected", "name": "jobsRejected", "value": 0, "type": "number" },
+            { "id": "jobsCreated", "name": "jobsCreated", "value": 0, "type": "number" },
+            { "id": "jobsUpdated", "name": "jobsUpdated", "value": 0, "type": "number" },
+            { "id": "jobsClosed", "name": "jobsClosed", "value": 0, "type": "number" },
+            { "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'fetch failed after retries' }}", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "68f41690-5e23-475c-a9d2-bc564fd176a9",
+      "name": "Record Source Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2240, 560],
+      "notes": "Pure convergence point — every per-source path (success, fetch failure, endpoint-call failure, unsupported ats_type) lands here with the same shape. Each iteration's outcome is visible in this node's own execution history in the n8n UI (no combined summary node — see the overview sticky note).",
+      "parameters": { "mode": "manual", "includeOtherFields": true, "assignments": { "assignments": [] } }
+    },
+    {
+      "id": "1a2dc791-515a-4552-be08-54b94e7fca9d",
+      "name": "Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2464, 720],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}",
+        "unit": "seconds"
+      }
+    },
+    {
+      "id": "77baa830-cd22-4b2f-be53-639d1627d5f8",
+      "name": "Sticky Note 1d6c1cae",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-50, -50],
+      "parameters": {
+        "content": "### AI Job Agent / 01 Job Ingestion\nManual trigger, stays inactive until a human reviews a `local_pilot`-equivalent run (dryRun:false) and decides on a schedule. n8n owns provider HTTP calls + retry/backoff (native `retryOnFail`) + per-source rate limiting; ALL validation, field mapping, dedup identity, idempotent persistence, and stale-close safety live in src/lib/ingestion/* (Phase 03) behind POST /api/internal/ingestion/run-batch, which also re-verifies each source's company_sources.review_status live on every call — n8n never needs Supabase access for this workflow at all.\n\nNo combined execution-summary node: n8n's cross-loop-iteration item linking does not reliably expose every iteration's result to a single downstream node once Loop Sources (Rate Limited)'s done output fires (confirmed by direct testing — `.all()` from that branch only resolved the last iteration). Each source's real outcome is fully visible per-iteration in Record Source Result's own execution history in the n8n UI, sufficient for this manually-reviewed, inactive workflow. Revisit if this is ever scheduled unattended and a single rollup notification becomes necessary.",
+        "color": 4,
+        "width": 300,
+        "height": 200
+      }
+    },
+    {
+      "id": "2a99762b-cfa2-4e9b-a9e8-e4b93b79c7ca",
+      "name": "Sticky Note 8c4d4722",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-50, -50],
+      "parameters": {
+        "content": "### Known limitation: only 4 sources, not the full registry\ncompany_sources (588 rows) has no feed-url/board-token column, so this workflow cannot yet resolve an arbitrary approved source to a real ATS endpoint. It reuses the same 4 pre-verified sources as the retired pilot (docs/job-ingestion-pilot.md §2). Scaling further requires either a company_sources.feed_url column or a URL-derivation heuristic — a data/product decision for a follow-up phase, not guessed here.",
+        "color": 6,
+        "width": 300,
+        "height": 200
+      }
+    }
+  ],
+  "connections": {
+    "Start Job Ingestion Run": { "main": [[{ "node": "Workflow Configuration", "type": "main", "index": 0 }]] },
+    "Workflow Configuration": { "main": [[{ "node": "Static Pilot Source List", "type": "main", "index": 0 }]] },
+    "Static Pilot Source List": { "main": [[{ "node": "Split Out Sources", "type": "main", "index": 0 }]] },
+    "Split Out Sources": { "main": [[{ "node": "Loop Sources (Rate Limited)", "type": "main", "index": 0 }]] },
+    "Loop Sources (Rate Limited)": { "main": [[], [{ "node": "Fetch Source Jobs", "type": "main", "index": 0 }]] },
+    "Fetch Source Jobs": {
+      "main": [
+        [{ "node": "Extract Jobs By ATS Type", "type": "main", "index": 0 }],
+        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Jobs By ATS Type": {
+      "main": [
+        [{ "node": "Extract Greenhouse Jobs", "type": "main", "index": 0 }],
+        [{ "node": "Extract Lever Jobs", "type": "main", "index": 0 }],
+        [{ "node": "Extract Workable Jobs", "type": "main", "index": 0 }],
+        [{ "node": "Build Unsupported Source Result", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Greenhouse Jobs": {
+      "main": [
+        [{ "node": "Call Ingestion Batch Endpoint", "type": "main", "index": 0 }],
+        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Lever Jobs": {
+      "main": [
+        [{ "node": "Call Ingestion Batch Endpoint", "type": "main", "index": 0 }],
+        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Workable Jobs": {
+      "main": [
+        [{ "node": "Call Ingestion Batch Endpoint", "type": "main", "index": 0 }],
+        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+      ]
+    },
+    "Call Ingestion Batch Endpoint": {
+      "main": [
+        [{ "node": "Build Success Result", "type": "main", "index": 0 }],
+        [{ "node": "Build Endpoint Failure Result", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Success Result": { "main": [[{ "node": "Record Source Result", "type": "main", "index": 0 }]] },
+    "Build Endpoint Failure Result": { "main": [[{ "node": "Record Source Result", "type": "main", "index": 0 }]] },
+    "Build Unsupported Source Result": { "main": [[{ "node": "Record Source Result", "type": "main", "index": 0 }]] },
+    "Build Fetch Failure Result": { "main": [[{ "node": "Record Source Result", "type": "main", "index": 0 }]] },
+    "Record Source Result": { "main": [[{ "node": "Rate Limit Delay", "type": "main", "index": 0 }]] },
+    "Rate Limit Delay": { "main": [[{ "node": "Loop Sources (Rate Limited)", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

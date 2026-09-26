@@ -1,6 +1,15 @@
 # Overnight Build — Credentials Required
 
-None yet. Phase 01 (location normalization) is a pure, dependency-free TypeScript function — no API key, OAuth credential, Supabase secret, or external account was needed to build or test it.
+Phase 01 (location normalization) is a pure, dependency-free TypeScript function — no API key, OAuth credential, Supabase secret, or external account was needed to build or test it.
+
+## n8n credential: "Ingestion Worker Secret" (Bearer Auth) — required before any real (non-`dryRun`) run of "AI Job Agent / 01 Job Ingestion"
+
+- Env var: `INGESTION_WORKER_SECRET` (server-only; already generated and set in this machine's `.env.local` — value not recorded here, never commit it)
+- Needed for: the `Call Ingestion Batch Endpoint` node in `n8n-workflows/ai-job-agent-01-job-ingestion.ts`/`.json` (Phase 04), which POSTs to `/api/internal/ingestion/run-batch`
+- Why: the n8n MCP cannot create credentials — only list/bind them (`n8n-credentials-and-security-official` skill). The workflow was created with `newCredential('Ingestion Worker Secret')` as a placeholder; a human must create the actual credential once, in the n8n UI, of type **Bearer Auth**, with the token value set to this machine's `INGESTION_WORKER_SECRET` value (read it from `.env.local`, never re-type/regenerate it), then attach it to the `Call Ingestion Batch Endpoint` node. Until then, that node has no bound credential and any real (non-mocked) execution will fail auth against the internal endpoint with 401.
+- Where to add it: n8n UI → Settings → Credentials → New → Bearer Auth → name it exactly `Ingestion Worker Secret` → paste the `INGESTION_WORKER_SECRET` value from `.env.local` → attach to the node.
+- Validation to run once added: open the workflow (`http://localhost:5678/workflow/I8WYkMfYCKug5ky4`), confirm `dryRun: true` in `Workflow Configuration`, run the Manual Trigger, confirm the execution succeeds and `public.jobs` is unchanged (`select count(*) from jobs;` before/after) — mirrors the retired pilot's own dry-run instructions (`docs/job-ingestion-pilot.md` §9).
+- Not blocking: the workflow is created **inactive** with no schedule, and was fully validated via `test_workflow` with pinned/mocked HTTP data (see `docs/OVERNIGHT_BUILD_PROGRESS.md` Phase 04) — this credential is only needed for a human-initiated real run, not for the build itself.
 
 This file will gain one entry per credential a later phase is `BLOCKED_ON_CREDENTIAL` for, in this format:
 
