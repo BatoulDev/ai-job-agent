@@ -59,3 +59,58 @@ export async function embedJobIfChanged(
 
   return { updated: true, reason: "embedded" };
 }
+
+// ── Two-step split for an external caller that owns the embedding-provider
+// call itself (n8n, reusing its existing OpenAI credential — see
+// docs/OVERNIGHT_BUILD_PROGRESS.md Phase 05's architecture decision).
+// findJobsNeedingEmbedding() and saveJobEmbedding() below are what the new
+// internal endpoints wrap; embedJobIfChanged() above remains valid for any
+// future caller that already has its own EmbeddingGenerator in-process.
+
+export interface PendingJobEmbedding {
+  jobId: string;
+  text: string;
+  contentHash: string;
+}
+
+/**
+ * Bounded discovery query: active jobs with no embedding yet. Deliberately
+ * scoped to "never embedded" rather than also detecting later content
+ * drift on an already-embedded job (which would need a cross-column
+ * updated_at/embedding_generated_at comparison PostgREST cannot express
+ * directly) — a documented MVP simplification, not an oversight. A caller
+ * that already knows a specific job's content changed should call
+ * embedJobIfChanged() directly instead.
+ */
+export async function findJobsNeedingEmbedding(supabase: SupabaseClient, limit: number): Promise<PendingJobEmbedding[]> {
+  const { data, error } = await supabase
+    .from("jobs")
+    .select("id, title, description, company_name, location, work_arrangement, seniority, employment_type")
+    .eq("status", "active")
+    .is("embedding", null)
+    .order("last_seen_at", { ascending: false })
+    .limit(limit);
+  if (error) throw new Error(`findJobsNeedingEmbedding: query failed: ${error.message}`);
+
+  return (data ?? []).map((job) => {
+    const text = buildJobEmbeddingText({
+      title: job.title,
+      description: job.description,
+      company_name: job.company_name,
+      location: job.location,
+      work_arrangement: job.work_arrangement,
+      seniority: job.seniority,
+      employment_type: job.employment_type,
+    });
+    return { jobId: job.id, text, contentHash: hashEmbeddingText(text) };
+  });
+}
+
+/** Persists an embedding computed externally for a job already returned by findJobsNeedingEmbedding(). */
+export async function saveJobEmbedding(supabase: SupabaseClient, jobId: string, embedding: number[], contentHash: string): Promise<void> {
+  const { error } = await supabase
+    .from("jobs")
+    .update({ embedding, embedding_content_hash: contentHash, embedding_generated_at: new Date().toISOString() })
+    .eq("id", jobId);
+  if (error) throw new Error(`saveJobEmbedding: failed to persist embedding for ${jobId}: ${error.message}`);
+}

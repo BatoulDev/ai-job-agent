@@ -144,10 +144,30 @@ Continuing in a local VS Code session (Docker + local Supabase reachable, unlike
   - `npm run build` → succeeds.
 - **Ending commit**: recorded after commit below.
 
+### Phase 05 continued — architecture decision resolved, embedding workflow built
+
+The user was asked directly (AskUserQuestion — a genuine cost-bearing decision, not guessed) and chose: **new n8n workflow, reuse the existing OpenAI credential**, over issuing a new key to the Next.js app or switching to Google Gemini. This closes the blocker above; it was never actually `BLOCKED_ON_CREDENTIAL` in the "no provider available at all" sense — OpenAI access already existed in n8n, just not reachable from `src/`.
+
+- **Refactor**: `embedJob.ts`/`embedProfile.ts`'s single-call orchestration (`embedJobIfChanged`/`embedProfileIfEligible`, kept unchanged and still valid for any future direct-server-side caller) gained a two-step split, since the caller (n8n) now owns the actual provider call instead of an in-process injected function: `findJobsNeedingEmbedding()`/`findProfilesNeedingEmbedding()` (bounded discovery — "what needs embedding and what's the exact text") and `saveJobEmbedding()`/`saveProfileEmbedding()` (persist a precomputed vector). `saveProfileEmbedding()` re-verifies `is_cv_analysis_matching_eligible()` again at save time, not just at discovery time, since eligibility can change in between.
+- **New**: `src/lib/internalAuth.ts` — extracted the Bearer-secret check from Phase 04's route into a shared helper (`isAuthorizedInternalRequest`), used by every route under `src/app/api/internal/*` now; Phase 04's route was updated to use it too, removing the duplication rather than leaving two copies to drift.
+- **New internal endpoints**: `POST /api/internal/matching/prepare-embeddings` (decides what needs embedding, returns `{jobs, profiles}` with exact text + content hash) and `POST /api/internal/matching/save-embeddings` (persists precomputed vectors, re-checking profile eligibility). Both gated by a new `MATCHING_WORKER_SECRET` (separate from `INGESTION_WORKER_SECRET` — least privilege, independently rotatable), request bodies validated as strictly as a client-facing endpoint (bounded array sizes, embedding dimension bounds 1–4096 covering any realistic model without hardcoding one).
+- **"AI Job Agent / 02 Job Matching" n8n workflow** (`http://localhost:5678/workflow/7CEh04hBepZkLCKl`, inactive, manual trigger, 11 nodes): calls `prepare-embeddings`, batches every pending job+profile text into a **single** OpenAI `/v1/embeddings` request (not one call per item — real cost control), maps the response back to the right job/profile **by the API's own `index` field**, not array position, then calls `save-embeddings`. An explicit `IF` guard (`itemCount > 0`) prevents ever calling OpenAI with an empty `input` array when nothing needs embedding. The OpenAI call uses `authentication: 'predefinedCredentialType', nodeCredentialType: 'openAiApi'` — the exact pattern already established by `cv-analysis-worker.ts`, reusing its "OpenAI account" credential rather than creating a parallel one.
+- **Files added**: `n8n-workflows/ai-job-agent-02-job-matching.{ts,json}`, `tests/workflow/ai-job-agent-02-job-matching.test.mjs` (9 tests), `tests/unit/internal-auth.test.mjs` (7), `tests/unit/parse-prepare-embeddings-request.test.mjs` (6), `tests/unit/parse-save-embeddings-request.test.mjs` (12), 6 new DB tests appended to `tests/db/matching-embeddings.test.mjs` for the two-step functions.
+- **Required manual step before any real run**: create the `Matching Worker Secret` Bearer Auth n8n credential (same drill as Phase 04's `Ingestion Worker Secret`) and confirm the `Generate Embeddings` node's `openAiApi` credential is bound. Recorded in `docs/OVERNIGHT_CREDENTIALS_REQUIRED.md`. Not blocking — fully validated via `test_workflow` with pinned/mocked HTTP and OpenAI responses (both the "has items" and "nothing to embed" branches independently confirmed correct via `get_execution`).
+- **Validation actually executed, this session**:
+  - `npm run lint` / `npx tsc --noEmit` (whole repo) → clean.
+  - `npm run test:unit` (whole repo) → **446/446** (25 new + all 421 pre-existing).
+  - `npm run test:db` (whole repo) → **494/494, 83 suites**, zero fixture leakage.
+  - `npm run test:workflow` (whole repo) → **320/320** (9 new + all 311 pre-existing).
+  - **Live end-to-end smoke test** against the real dev server and real local Postgres: a real fixture job round-tripped through `prepare-embeddings` → (fake vector standing in for OpenAI) → `save-embeddings`, confirmed persisted correctly; unauthorized call confirmed `401`; fixture cleaned up and re-verified gone.
+  - n8n workflow: `validate_workflow` clean, `get_workflow_details` connections verified, `test_workflow` run twice against pinned/mocked data — the "has 1 job + 1 profile" path confirmed the index-based vector remapping is correct (job got vector index 0, profile got index 1, not assumed array order), and the "nothing to embed" path confirmed it short-circuits to a no-op instead of calling OpenAI with an empty batch.
+  - `npm run build` → succeeds, both new routes registered.
+- **Ending commit**: recorded after commit below.
+
 ---
 
 ## Remaining phases (not yet started)
 
-06 matching-rerank · 07 match-delivery · 08 cover-letters · 09 application-delivery · 10 application-tracking · 11 e2e-hardening.
+06 matching-rerank (LLM call needed — likely the identical "n8n reusing the existing OpenAI credential" pattern, now already proven out by this phase) · 07 match-delivery · 08 cover-letters · 09 application-delivery · 10 application-tracking · 11 e2e-hardening.
 
 **Phase 06 (LLM rerank) is expected to hit the identical embeddings-provider blocker** — it needs an LLM call, and the same "no key reachable from the Next.js app, only inside n8n's CV Analysis Worker" finding applies. Recommend resolving the Phase 05 provider/architecture decision once (embeddings + rerank likely share the same answer) rather than re-investigating it twice.

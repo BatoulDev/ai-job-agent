@@ -1,0 +1,194 @@
+{
+  "name": "AI Job Agent / 02 Job Matching",
+  "active": false,
+  "nodes": [
+    {
+      "id": "558a2ad1-2d2a-4276-a285-f83836e893c9",
+      "name": "Start Job Matching Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 240],
+      "parameters": {}
+    },
+    {
+      "id": "4cce432f-e718-4943-a306-785865d44b1e",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [224, 240],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"appBaseUrl\":\"http://host.docker.internal:3000\",\"jobLimit\":50,\"profileLimit\":50,\"embeddingModel\":\"text-embedding-3-small\"}"
+      }
+    },
+    {
+      "id": "0b59cf83-caf6-456e-9132-b3996c4d888b",
+      "name": "Prepare Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [448, 240],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.appBaseUrl }}/api/internal/matching/prepare-embeddings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { jobLimit: $json.jobLimit, profileLimit: $json.profileLimit } }}",
+        "options": { "timeout": 30000 }
+      },
+      "credentials": { "httpBearerAuth": { "name": "Matching Worker Secret" } }
+    },
+    {
+      "id": "051313f7-4eaf-4459-8586-1977d96157fc",
+      "name": "Build Embeddings Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, 176],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ (() => {\n  const jobs = $json.jobs || [];\n  const profiles = $json.profiles || [];\n  const input = [...jobs.map(j => j.text), ...profiles.map(p => p.text)];\n  return { input, jobs, profiles, itemCount: input.length, model: $('Workflow Configuration').first().json.embeddingModel };\n})() }}"
+      }
+    },
+    {
+      "id": "23f7ee70-5739-4324-af5a-0e8b4e945f68",
+      "name": "Has Anything To Embed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [896, 176],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [{ "leftValue": "={{ $json.itemCount }}", "operator": { "type": "number", "operation": "gt" }, "rightValue": 0 }],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "3c841a34-15ed-4e87-bcae-3f1b4bcaa07e",
+      "name": "Generate Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1120, 80],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $json.model, input: $json.input } }}",
+        "options": { "timeout": 60000 }
+      },
+      "credentials": { "openAiApi": { "name": "OpenAI account" } }
+    },
+    {
+      "id": "04259d64-6909-41f1-b9e5-b75a0ea536d5",
+      "name": "Build Save Embeddings Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1344, 0],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ (() => {\n  const jobs = $('Build Embeddings Request').item.json.jobs;\n  const profiles = $('Build Embeddings Request').item.json.profiles;\n  const vectors = [];\n  for (const d of $json.data) vectors[d.index] = d.embedding;\n  const jobPayload = jobs.map((j, i) => ({ jobId: j.jobId, embedding: vectors[i], contentHash: j.contentHash }));\n  const profilePayload = profiles.map((p, i) => ({ cvAnalysisId: p.cvAnalysisId, embedding: vectors[jobs.length + i], contentHash: p.contentHash }));\n  return { jobs: jobPayload, profiles: profilePayload };\n})() }}"
+      }
+    },
+    {
+      "id": "c315cf16-9003-473b-83b5-d86c16164e7b",
+      "name": "Save Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1568, 0],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/matching/save-embeddings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { jobs: $json.jobs, profiles: $json.profiles } }}",
+        "options": { "timeout": 30000 }
+      },
+      "credentials": { "httpBearerAuth": { "name": "Matching Worker Secret" } }
+    },
+    {
+      "id": "49752a1e-bc0a-4f5b-94a8-be06c75261a1",
+      "name": "Nothing To Embed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 272],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "message", "name": "message", "value": "No jobs or profiles currently need embedding.", "type": "string" }] }
+      }
+    },
+    {
+      "id": "0608ddbb-c73a-4c93-b288-4eba03452c93",
+      "name": "Log Embeddings Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1792, 192],
+      "notes": "Terminal failure node for this manually-triggered maintenance run — a human reviews the n8n execution log directly (no per-source loop/summary needed here, unlike Job Ingestion).",
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'embeddings step failed' }}", "type": "string" }] }
+      }
+    },
+    {
+      "id": "90372200-28ab-4c1b-8238-b8f84fa52185",
+      "name": "Sticky Note 8d72aba5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-50, -50],
+      "parameters": {
+        "content": "### AI Job Agent / 02 Job Matching — embedding step\nManual trigger, stays inactive. Splits the \"embed things\" concern from the \"call the AI provider\" concern: POST /api/internal/matching/prepare-embeddings (TypeScript, Phase 05) decides *what* needs embedding and builds the exact text; this workflow calls OpenAI (reusing the existing \"OpenAI account\" credential, same one cv-analysis-worker.ts already uses) exactly once per run for every pending job+profile combined into a single batched /v1/embeddings request; POST /api/internal/matching/save-embeddings persists the results and re-verifies each profile is still matching-eligible before writing. LLM rerank (Phase 06) will extend this same workflow with a second stage, not a new one.",
+        "color": 4,
+        "width": 300,
+        "height": 200
+      }
+    }
+  ],
+  "connections": {
+    "Start Job Matching Run": { "main": [[{ "node": "Workflow Configuration", "type": "main", "index": 0 }]] },
+    "Workflow Configuration": { "main": [[{ "node": "Prepare Embeddings", "type": "main", "index": 0 }]] },
+    "Prepare Embeddings": {
+      "main": [
+        [{ "node": "Build Embeddings Request", "type": "main", "index": 0 }],
+        [{ "node": "Log Embeddings Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Embeddings Request": { "main": [[{ "node": "Has Anything To Embed?", "type": "main", "index": 0 }]] },
+    "Has Anything To Embed?": {
+      "main": [
+        [{ "node": "Generate Embeddings", "type": "main", "index": 0 }],
+        [{ "node": "Nothing To Embed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Embeddings": {
+      "main": [
+        [{ "node": "Build Save Embeddings Request", "type": "main", "index": 0 }],
+        [{ "node": "Log Embeddings Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Save Embeddings Request": { "main": [[{ "node": "Save Embeddings", "type": "main", "index": 0 }]] },
+    "Save Embeddings": { "main": [[], [{ "node": "Log Embeddings Failure", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

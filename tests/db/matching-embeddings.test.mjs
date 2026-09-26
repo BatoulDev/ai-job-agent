@@ -8,8 +8,8 @@ import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { adminClient, assertExpectedLocalProject, createTestUser, deleteTestUsers, uploadFakeCv, insertFakeAnalysis, deleteFakeJobs } from "./helpers.mjs";
-import { embedJobIfChanged } from "../../src/lib/matching/embedJob.ts";
-import { embedProfileIfEligible } from "../../src/lib/matching/embedProfile.ts";
+import { embedJobIfChanged, findJobsNeedingEmbedding, saveJobEmbedding } from "../../src/lib/matching/embedJob.ts";
+import { embedProfileIfEligible, findProfilesNeedingEmbedding, saveProfileEmbedding } from "../../src/lib/matching/embedProfile.ts";
 import { shortlistJobsForUser } from "../../src/lib/matching/shortlist.ts";
 import { hashEmbeddingText, buildJobEmbeddingText } from "../../src/lib/matching/embeddingText.ts";
 
@@ -204,4 +204,78 @@ test("shortlistJobsForUser: respects shortlistSize even when more eligible jobs 
     { candidatePoolSize: 100, shortlistSize: 2 }
   );
   assert.equal(results.length, 2);
+});
+
+// ── Two-step split for the n8n-owned provider call (Phase 05 architecture
+// decision) ─────────────────────────────────────────────────────────────
+
+test("findJobsNeedingEmbedding: returns only active jobs with no embedding yet, bounded by limit", async () => {
+  const alreadyEmbedded = await insertFixtureJob({ title: "Already Embedded Job" });
+  await adminClient.from("jobs").update({ embedding: [0.1, 0.2] }).eq("id", alreadyEmbedded.id);
+  const needsEmbedding = await insertFixtureJob({ title: "Needs Embedding Job" });
+
+  const pending = await findJobsNeedingEmbedding(adminClient, 500);
+  const ids = pending.map((p) => p.jobId);
+  assert.ok(ids.includes(needsEmbedding.id));
+  assert.ok(!ids.includes(alreadyEmbedded.id), "a job that already has an embedding must not be returned again");
+
+  const entry = pending.find((p) => p.jobId === needsEmbedding.id);
+  assert.equal(entry.contentHash, hashEmbeddingText(entry.text));
+});
+
+test("findJobsNeedingEmbedding: respects the limit parameter", async () => {
+  for (let i = 0; i < 3; i++) {
+    await insertFixtureJob({ title: `Limit Test Job ${i}` });
+  }
+  const pending = await findJobsNeedingEmbedding(adminClient, 1);
+  assert.ok(pending.length <= 1);
+});
+
+test("saveJobEmbedding: persists an embedding and hash computed elsewhere", async () => {
+  const job = await insertFixtureJob({ title: "Save Embedding Job" });
+  const vector = [0.9, 0.8, 0.7];
+  await saveJobEmbedding(adminClient, job.id, vector, "precomputed-hash");
+
+  const { data: row } = await adminClient.from("jobs").select("embedding, embedding_content_hash, embedding_generated_at").eq("id", job.id).single();
+  assert.deepEqual(row.embedding, vector);
+  assert.equal(row.embedding_content_hash, "precomputed-hash");
+  assert.notEqual(row.embedding_generated_at, null);
+});
+
+test("findProfilesNeedingEmbedding: returns only matching-eligible analyses with no profile embedding, and excludes an unapproved one", async () => {
+  const cv = await uploadFakeCv(user, "matching-embed-findprofiles.pdf");
+  const unapproved = await insertFakeAnalysis(user, cv.id);
+
+  const approvedCv = await uploadFakeCv(user, "matching-embed-findprofiles-2.pdf");
+  const analysisToApprove = await insertFakeAnalysis(user, approvedCv.id);
+  const { data: approved, error } = await user.client.rpc("confirm_cv_analysis", { p_analysis_id: analysisToApprove.id });
+  assert.equal(error, null);
+
+  const pending = await findProfilesNeedingEmbedding(adminClient, 500);
+  const ids = pending.map((p) => p.cvAnalysisId);
+  assert.ok(ids.includes(approved.id));
+  assert.ok(!ids.includes(unapproved.id), "a pending analysis must never be returned as needing embedding");
+});
+
+test("saveProfileEmbedding: persists when eligible", async () => {
+  const cv = await uploadFakeCv(user, "matching-embed-saveprofile.pdf");
+  const analysis = await insertFakeAnalysis(user, cv.id);
+  const { data: approved } = await user.client.rpc("confirm_cv_analysis", { p_analysis_id: analysis.id });
+
+  const saved = await saveProfileEmbedding(adminClient, approved.id, [0.1, 0.2, 0.3], "hash-1");
+  assert.deepEqual(saved, { saved: true });
+
+  const { data: row } = await adminClient.from("cv_analyses").select("profile_embedding").eq("id", approved.id).single();
+  assert.deepEqual(row.profile_embedding, [0.1, 0.2, 0.3]);
+});
+
+test("saveProfileEmbedding: refuses to persist for a not-yet-approved analysis, even with a valid embedding in hand", async () => {
+  const cv = await uploadFakeCv(user, "matching-embed-saveprofile-refuse.pdf");
+  const pending = await insertFakeAnalysis(user, cv.id);
+
+  const refused = await saveProfileEmbedding(adminClient, pending.id, [0.4, 0.5, 0.6], "hash-2");
+  assert.deepEqual(refused, { saved: false, reason: "not_matching_eligible" });
+
+  const { data: row } = await adminClient.from("cv_analyses").select("profile_embedding").eq("id", pending.id).single();
+  assert.equal(row.profile_embedding, null, "a refused save must never write the embedding anyway");
 });

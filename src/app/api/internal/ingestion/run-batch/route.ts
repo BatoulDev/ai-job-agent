@@ -1,9 +1,9 @@
 import { NextResponse } from "next/server";
-import { timingSafeEqual } from "node:crypto";
 import { parseIngestionBatchRequestBody } from "./parseIngestionBatchRequest";
 import { getProviderAdapter } from "@/lib/ingestion/providers";
 import { runIngestionBatch } from "@/lib/ingestion/ingestSourceBatch";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { isAuthorizedInternalRequest } from "@/lib/internalAuth";
 
 // Internal, service-to-service endpoint: the Phase 04 n8n ingestion
 // orchestrator fetches each source's raw job list (its job — "provider
@@ -13,22 +13,9 @@ import { createAdminClient } from "@/lib/supabase/admin";
 // is no user session, no RLS-scoped client, and no rate limit tied to a
 // user id, so authorization is a single shared secret instead (fails
 // closed if unconfigured, per AGENTS.md §21 "no insecure fallback secret").
-function isAuthorized(request: Request): boolean {
-  const secret = process.env.INGESTION_WORKER_SECRET;
-  if (!secret) return false;
-
-  const header = request.headers.get("authorization");
-  const provided = header?.startsWith("Bearer ") ? header.slice("Bearer ".length) : null;
-  if (!provided) return false;
-
-  const expected = Buffer.from(secret);
-  const actual = Buffer.from(provided);
-  if (expected.length !== actual.length) return false;
-  return timingSafeEqual(expected, actual);
-}
 
 export async function POST(request: Request) {
-  if (!isAuthorized(request)) {
+  if (!isAuthorizedInternalRequest(request, "INGESTION_WORKER_SECRET")) {
     return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
   }
 
