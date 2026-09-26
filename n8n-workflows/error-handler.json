@@ -1,0 +1,73 @@
+{
+  "name": "AI Job Agent - Error Handler",
+  "active": false,
+  "nodes": [
+    {
+      "id": "62f2ea0d-f7d4-4ce7-b908-d3b774e19a0c",
+      "name": "Error Trigger",
+      "type": "n8n-nodes-base.errorTrigger",
+      "typeVersion": 1,
+      "position": [-200, 0],
+      "parameters": {}
+    },
+    {
+      "id": "e9595bc7-afb0-46d0-8863-9a2095b82423",
+      "name": "Normalize Error Event",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [100, 0],
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $input.first().json;\nconst exec = r.execution ?? null;\nconst trig = r.trigger ?? null;\n\nconst workflowName = r.workflow?.name ?? 'unknown workflow';\nconst workflowId = r.workflow?.id ?? null;\nconst executionId = exec?.id ?? null;\nconst executionUrl = exec?.url ?? null;\nconst executionMode = exec?.mode ?? trig?.mode ?? null;\nconst retryOf = exec?.retryOf ?? null;\n// lastNodeExecuted (a plain node-name string) is n8n's documented,\n// always-present way to know which node failed for a normal\n// (non-trigger-node) error — execution.error has no .node field.\nconst failedNodeName = exec?.lastNodeExecuted ?? trig?.error?.node ?? null;\nconst errorMessage = exec?.error?.message\n  ?? trig?.error?.cause?.message\n  ?? trig?.error?.context?.message\n  ?? trig?.error?.name\n  ?? 'No error message provided by n8n';\nconst timestamp = new Date().toISOString();\n\nreturn [{ json: {\n  workflowName,\n  workflowId,\n  executionId,\n  executionUrl,\n  executionMode,\n  retryOf,\n  failedNodeName,\n  errorMessage,\n  timestamp,\n} }];"
+      }
+    },
+    {
+      "id": "0160d67c-4e4e-43a5-8571-a604b3f3a347",
+      "name": "Build Alert Message",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [400, 0],
+      "parameters": {
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "alert-text-field",
+              "name": "alertText",
+              "type": "string",
+              "value": "={{ 'AI Job Agent — Workflow Failure\\n\\n' + 'Workflow: ' + $json.workflowName + '\\n' + 'Time: ' + $json.timestamp + '\\n' + 'Execution: ' + ($json.executionUrl || $json.executionId || 'unknown') + '\\n' + 'Failed node: ' + ($json.failedNodeName || 'unknown') + '\\n' + 'Error: ' + $json.errorMessage }}"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "22d76c85-42a5-4844-b62f-c9e57c61b0d7",
+      "name": "Notification Boundary",
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [700, 0],
+      "parameters": {}
+    },
+    {
+      "id": "974646fe-7fc2-4c22-8399-d387ae2871cf",
+      "name": "Sticky Note 7a61c758",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-250, -50],
+      "parameters": {
+        "content": "### AI Job Agent — Error Handler\nReusable execution-level failure handler — attach any AI Job Agent scheduled/unattended workflow to this one via its own Settings → Error Workflow (a manual, per-workflow n8n UI step; the SDK/MCP cannot set it — see this file's own header). Fires once per genuinely FAILED execution (a crashed node), never for expected per-source data outcomes (429/403/5xx/no-URL/etc. are handled as data inside the source workflows themselves and never reach here). Does NOT detect a schedule that never fired at all — no execution exists for this trigger to catch in that case; that is a separate, later, always-on-hosting-phase concern. Normalize Error Event → Build Alert Message → Notification Boundary (a placeholder — no channel wired yet, pending an explicit, approved credential).",
+        "color": 3,
+        "width": 300,
+        "height": 200
+      }
+    }
+  ],
+  "connections": {
+    "Error Trigger": { "main": [[{ "node": "Normalize Error Event", "type": "main", "index": 0 }]] },
+    "Normalize Error Event": { "main": [[{ "node": "Build Alert Message", "type": "main", "index": 0 }]] },
+    "Build Alert Message": { "main": [[{ "node": "Notification Boundary", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}
