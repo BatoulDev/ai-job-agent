@@ -30,6 +30,8 @@ import { isPreferencesComplete } from "@/lib/cvAnalysis/profileState";
 import { isProfileMatchingEligible } from "@/lib/cvAnalysis/matchingEligibility";
 import { fetchMatchesByStatus, surfaceAndFetchPendingMatches } from "@/lib/matches/fetchMatches";
 import type { MatchWithJob } from "@/lib/matches/types";
+import { fetchCoverLettersForMatches } from "@/lib/coverLetters/fetchCoverLetters";
+import type { CoverLetterRecord } from "@/lib/coverLetters/types";
 import {
   readAndClearProfileUpdatePending,
   computeEffectiveTaskState,
@@ -78,6 +80,7 @@ function DashboardPageContent() {
   const [rejectedMatches, setRejectedMatches] = useState<MatchWithJob[] | null>(null);
   const [matchesLoading, setMatchesLoading] = useState(true);
   const [matchesError, setMatchesError] = useState<string | null>(null);
+  const [coverLetters, setCoverLetters] = useState<Record<string, CoverLetterRecord>>({});
   // Read and immediately clear the sessionStorage flag on the first render.
   // DashboardPageContent is inside <Suspense> with useSearchParams(), so Next.js
   // only renders it on the client — sessionStorage is always available here.
@@ -404,6 +407,10 @@ function DashboardPageContent() {
         setPendingMatches(pending);
         setApprovedMatches(approved);
         setRejectedMatches(rejected);
+
+        const letters = await fetchCoverLettersForMatches(supabase, approved.map((m) => m.id));
+        if (!isMounted) return;
+        setCoverLetters(letters);
       } catch (err) {
         if (!isMounted) return;
         setMatchesError(err instanceof Error ? err.message : "Couldn't load your matches.");
@@ -444,6 +451,23 @@ function DashboardPageContent() {
         ...(prev ?? []),
       ]);
     }
+  }
+
+  async function handleSaveCoverLetterEdit(coverLetterId: string, content: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("save_cover_letter_edit", { p_cover_letter_id: coverLetterId, p_edited_content: content });
+    if (error) throw new Error(error.message);
+    setCoverLetters((prev) => ({ ...prev, [data.match_id]: { ...prev[data.match_id], editedContent: data.edited_content } }));
+  }
+
+  async function handleApproveCoverLetter(coverLetterId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("approve_cover_letter", { p_cover_letter_id: coverLetterId });
+    if (error) throw new Error(error.message);
+    setCoverLetters((prev) => ({
+      ...prev,
+      [data.match_id]: { ...prev[data.match_id], approvalStatus: "user_approved", approvedContent: data.approved_content },
+    }));
   }
 
   if (isLoading) {
@@ -496,7 +520,7 @@ function DashboardPageContent() {
           </p>
         </div>
 
-        <StatsGrid stats={computeDashboardStats(pendingMatches)} />
+        <StatsGrid stats={computeDashboardStats(pendingMatches, coverLetters)} />
 
         {!!cv && !preferencesComplete && (
           <div className="mt-8">
@@ -527,7 +551,14 @@ function DashboardPageContent() {
                 <LockedMatchesNotice onReviewProfile={() => setActiveTab("cv-profile")} />
               ))}
             {activeTab === "approved" && (
-              <ApprovedSection matches={approvedMatches} isLoading={matchesLoading} error={matchesError} />
+              <ApprovedSection
+                matches={approvedMatches}
+                isLoading={matchesLoading}
+                error={matchesError}
+                coverLetters={coverLetters}
+                onSaveCoverLetterEdit={handleSaveCoverLetterEdit}
+                onApproveCoverLetter={handleApproveCoverLetter}
+              />
             )}
             {activeTab === "sent" && <SentSection />}
             {activeTab === "rejected" && (

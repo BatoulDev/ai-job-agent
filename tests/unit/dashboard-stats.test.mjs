@@ -1,5 +1,5 @@
-// Unit tests for src/lib/dashboardData.ts's computeDashboardStats (Phase 07).
-// Pure logic, no DB, no network.
+// Unit tests for src/lib/dashboardData.ts's computeDashboardStats (Phase 07,
+// extended Phase 08 for cover-letter counts). Pure logic, no DB, no network.
 //
 // Run: node --test tests/unit/dashboard-stats.test.mjs
 
@@ -30,9 +30,23 @@ describe("computeDashboardStats", () => {
     assert.equal(statValue(stats, "Average match score"), "75%");
   });
 
-  test("cover letters and applications stay zero — no worker built yet", () => {
+  test("applications sent stays zero — no delivery worker built yet", () => {
     const stats = computeDashboardStats([{ score: 90 }]);
-    assert.equal(statValue(stats, "Cover letters ready"), "0");
     assert.equal(statValue(stats, "Applications sent"), "0");
+  });
+
+  test("counts only completed cover letters as ready", () => {
+    const coverLetters = {
+      "match-1": { generationStatus: "completed" },
+      "match-2": { generationStatus: "completed" },
+      "match-3": { generationStatus: "pending" },
+    };
+    const stats = computeDashboardStats([], coverLetters);
+    assert.equal(statValue(stats, "Cover letters ready"), "2");
+  });
+
+  test("defaults to zero cover letters ready when none are passed", () => {
+    const stats = computeDashboardStats([]);
+    assert.equal(statValue(stats, "Cover letters ready"), "0");
   });
 });

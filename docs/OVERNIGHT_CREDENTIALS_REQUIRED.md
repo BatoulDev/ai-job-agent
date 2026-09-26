@@ -25,6 +25,16 @@ The user was asked directly (this was a genuine cost-bearing decision, not somet
 - Validation to run once added: open the workflow (`http://localhost:5678/workflow/7CEh04hBepZkLCKl`), run the Manual Trigger, confirm the execution succeeds; check `public.jobs`/`public.cv_analyses` for newly-populated `embedding`/`profile_embedding` columns on rows that previously had none, and check `public.matches` for newly-scored rows.
 - Not blocking: the workflow is created **inactive** with no schedule, and both stages were fully validated via `test_workflow` with pinned/mocked HTTP and OpenAI responses (embeddings: "has jobs to embed" and "nothing to embed"; rerank: "has candidates" with correct per-candidate vector/response mapping, and "no candidates") — this credential is only needed for a human-initiated real run.
 
+## n8n credential: "Cover Letter Worker Secret" (Bearer Auth) — required before any real run of "AI Job Agent / 03 Cover Letter Generation"
+
+- Env var: `COVER_LETTER_WORKER_SECRET` (server-only; already generated and set in this machine's `.env.local` — value not recorded here, never commit it)
+- Needed for: the `Prepare Generation` and `Save Generation Result` nodes in `n8n-workflows/ai-job-agent-03-cover-letter-generation.ts`/`.json` (Phase 08), which POST to `/api/internal/cover-letters/{prepare-generation,save-generation}`.
+- Why: same reason as every other `*_WORKER_SECRET` in this build — the n8n MCP cannot create credentials, only bind existing ones. A separate secret from `INGESTION_WORKER_SECRET`/`MATCHING_WORKER_SECRET` (least privilege).
+- Where to add it: n8n UI → Settings → Credentials → New → Bearer Auth → name it exactly `Cover Letter Worker Secret` → paste the `COVER_LETTER_WORKER_SECRET` value from `.env.local` → attach to both nodes named above.
+- Also verify: the `Call OpenAI Chat` node's `openAiApi` credential is bound to the existing "OpenAI account" credential (same one `cv-analysis-worker.ts` and the Phase 05/06 matching workflow already use).
+- Validation to run once added: open the workflow (`http://localhost:5678/workflow/OmLtatSxRY4ErAxj`), run the Manual Trigger, confirm the execution succeeds; check `public.cover_letters` for newly-populated `generated_content` rows for previously-approved matches that had none.
+- Not blocking: the workflow is created **inactive** with no schedule, and was fully validated via `test_workflow` with pinned/mocked OpenAI responses (both "has 1 candidate" — verified the candidate-to-response mapping survives the round trip via `get_execution` — and "no candidates", which short-circuits with zero unnecessary node executions) plus a live end-to-end smoke test against the real dev server and real local Postgres (unauthorized call rejected with 401; a real fixture candidate discovered, drafted, and persisted; a completed draft correctly excluded from the next discovery pass). This credential is only needed for a human-initiated real run.
+
 This file will gain one entry per credential a later phase is `BLOCKED_ON_CREDENTIAL` for, in this format:
 
 ```
