@@ -1274,6 +1274,7 @@ export type Database = {
           score: number
           score_breakdown: Json
           status: string
+          surfaced_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1291,6 +1292,7 @@ export type Database = {
           score: number
           score_breakdown?: Json
           status?: string
+          surfaced_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1308,6 +1310,7 @@ export type Database = {
           score?: number
           score_breakdown?: Json
           status?: string
+          surfaced_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2054,6 +2057,7 @@ export type Database = {
           score: number
           score_breakdown: Json
           status: string
+          surfaced_at: string | null
           updated_at: string
           user_id: string
         }
@@ -2366,6 +2370,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_my_matches: {
+        Args: { p_status: string }
+        Returns: {
+          created_at: string
+          decided_at: string
+          explanation: string
+          job_application_email: string
+          job_application_method: string
+          job_application_url: string
+          job_company_name: string
+          job_employment_type: string
+          job_id: string
+          job_location: string
+          job_seniority: string
+          job_source_type: string
+          job_source_url: string
+          job_status: string
+          job_title: string
+          job_work_arrangement: string
+          match_id: string
+          match_status: string
+          matching_model: string
+          missing_skills: Json
+          score: number
+          score_breakdown: Json
+        }[]
+      }
       get_onboarding_readiness: { Args: never; Returns: Json }
       get_public_plan_catalog: {
         Args: never
@@ -2559,6 +2590,7 @@ export type Database = {
           score: number
           score_breakdown: Json
           status: string
+          surfaced_at: string | null
           updated_at: string
           user_id: string
         }
@@ -2724,6 +2756,33 @@ export type Database = {
           to: "analysis_feedback"
           isOneToOne: true
           isSetofReturn: false
+        }
+      }
+      surface_new_matches_for_user: {
+        Args: never
+        Returns: {
+          created_at: string
+          cv_analysis_id: string
+          decided_at: string | null
+          explanation: string | null
+          hard_filter_passed: boolean
+          id: string
+          job_id: string
+          matching_model: string | null
+          matching_version: string
+          missing_skills: Json
+          score: number
+          score_breakdown: Json
+          status: string
+          surfaced_at: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "matches"
+          isOneToOne: false
+          isSetofReturn: true
         }
       }
       update_cv_analysis_review: {

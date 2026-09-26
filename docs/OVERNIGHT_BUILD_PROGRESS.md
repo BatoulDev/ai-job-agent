@@ -192,6 +192,33 @@ The user was asked directly (AskUserQuestion — a genuine cost-bearing decision
 
 ---
 
+## Phase 07 — Match delivery
+
+- **Branch**: `phase/07-match-delivery`, forked from `phase/06-matching-rerank` @ `ee7bbee`.
+- **Quota/surfacing model** (new concept, not previously specced): Phase 06's rerank creates a `matches` row the moment a candidate is scored — that is not the same moment as "delivered to the user," so curated-match quota (AGENTS.md §6/§7: "prioritize high-quality matches" implies a bounded, deliberate feed, not everything ever scored) cannot be counted from row existence. Added `matches.surfaced_at` (nullable timestamptz) — the one event that actually counts against `plans.job_match_limit`. Quota window is scoped to the user's current approved `cv_analysis_id`, not a calendar month, because free-plan subscriptions never get `current_period_start`/`current_period_end` set (documented limitation: a true monthly reset for free-tier users needs a scheduled-job mechanism this build doesn't have).
+- **RLS gap found and fixed**: `jobs_select_active` (`using (status = 'active')`, from Phase 02/03's job schema) has no exception for a job a user already has a match on. Once stale-close (Phase 03/04) moves a job's status away from `'active'`, a direct client-side `jobs` query for that job silently returns nothing — even for a user whose Approved/Rejected decision on it is a permanent historical fact that must keep rendering. Reproduced first (a DB test proves the direct query returns null), then fixed with a `SECURITY DEFINER` RPC, `get_my_matches(p_status)`, that joins `matches`+`jobs` and re-derives ownership via `auth.uid()` — never delegating to the caller's own RLS-filtered read. `p_status` is validated against the exact three-value allowlist matches.status itself enforces (never trusted blindly), and only `surfaced_at is not null` rows are returned (an unsurfaced pending match must never leak through this path either).
+- **Files added**:
+  - `supabase/migrations/20260928090000_add_match_surfacing_and_quota.sql` — `matches.surfaced_at` column + `surface_new_matches_for_user()`: idempotent, quota-aware — surfaces up to `job_match_limit` new `pending_review` matches (highest score first) for the caller's current analysis, then returns everything ever surfaced for it. Re-calling never exceeds the limit.
+  - `supabase/migrations/20260928090010_add_get_my_matches_rpc.sql` — `get_my_matches(p_status)`, described above.
+  - `src/lib/matches/types.ts` — `MatchWithJob`, `mapMatchRow()`: manually maintained (this project's existing convention, see `src/lib/cvAnalysis/types.ts`), defensively re-validates `score_breakdown`/`missing_skills` shape on the way in since both round-trip through `jsonb`.
+  - `src/lib/matches/fetchMatches.ts` — `fetchMatchesByStatus()`, `surfaceAndFetchPendingMatches()`: thin RPC wrappers, no business logic duplicated from the DB layer.
+  - `src/components/dashboard/MatchCard.tsx` — presentational: title/company/location/score/explanation/strengths/missing-skills, optional Approve/Reject buttons (omitted entirely on Approved/Rejected tabs, not just disabled).
+  - `NewMatchesSection.tsx` / `ApprovedSection.tsx` / `RejectedSection.tsx` — converted from the honest static `EmptyTabState` placeholders (Automation-1 audit item 7) to real data-driven sections. Data is fetched once in `dashboard/page.tsx` and passed down as props, matching the existing `CvProfileSection`/`PreferencesSection` convention rather than each tab self-fetching.
+  - `dashboard/page.tsx` — new independent `useEffect` (fires once auth is confirmed, decoupled from the existing profile-loading effect since matches don't depend on profile/prefs/CV state) calls `surfaceAndFetchPendingMatches` + `fetchMatchesByStatus` for approved/rejected concurrently via `Promise.all`; `handleApproveMatch`/`handleRejectMatch` call `approve_match`/`reject_match` and optimistically move the card between the pending/approved/rejected local arrays without a refetch.
+  - `src/lib/dashboardData.ts` — `DASHBOARD_STATS` (static) replaced with `computeDashboardStats(pendingMatches)`: "New matches" and "Average match score" are now real; "Cover letters ready"/"Applications sent" stay hardcoded `0` — no cover-letter generator (Phase 08) or application-delivery worker (Phase 09/10) exists yet, so those are genuinely zero today, not a placeholder.
+  - `tests/db/get-my-matches.test.mjs` (6): unauthenticated rejected, invalid `p_status` rejected, **the RLS-bypass fix proven directly** (closes a job after matching, confirms a raw `jobs` query returns null, confirms `get_my_matches` still returns it correctly), cross-user isolation, unsurfaced matches never leak, status filter + score ordering.
+  - `tests/unit/match-row-mapping.test.mjs` (2), `tests/unit/dashboard-stats.test.mjs` (4).
+- **Validation actually executed, this session**:
+  - `npx tsc --noEmit` (whole repo) → clean.
+  - `npm run lint` (whole repo) → clean.
+  - `npm run test:unit` (whole repo) → **486/486** passing.
+  - `npm run test:db` (whole repo) → **512/512, 83 suites** passing, zero fixture leakage verified by the orchestrator.
+  - `npm run build` → succeeds; `/dashboard` still a valid static route.
+  - **Manual browser verification (AGENTS.md §3) was NOT completed**: the Claude-in-Chrome browser extension was not connected in this environment (`tabs_context_mcp` failed twice with "Browser extension is not connected"). Real fixture data was created directly against the local Supabase instance (one user with an approved analysis, a plan bumped to `pro`, and four fixture matches — pending/unsurfaced, pre-approved, pre-rejected, and one whose job was closed after matching to exercise the RLS-bypass path) and the dev server was confirmed to serve `/dashboard` without a compile or runtime error (307 redirect to `/login` for the unauthenticated `curl` request, as expected; no errors in the dev server log). The fixture was deleted again after this smoke check. **This does not substitute for actually clicking Approve/Reject in a browser** — that remains unverified and is the top risk carried into the next phase or into a human review pass.
+- **Ending commit**: recorded after commit below.
+
+---
+
 ## Remaining phases (not yet started)
 
-07 match-delivery · 08 cover-letters · 09 application-delivery · 10 application-tracking · 11 e2e-hardening.
+08 cover-letters · 09 application-delivery · 10 application-tracking · 11 e2e-hardening.
