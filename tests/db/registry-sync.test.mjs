@@ -523,7 +523,12 @@ test("a newly created, still-unclassified source naturally becomes a Source Inte
 
   const { data: candidates, error } = await adminClient.rpc("get_source_intelligence_candidates", { p_limit: 1000 });
   assert.equal(error, null);
-  const candidateIds = candidates.map((c) => c.id);
+  // get_source_intelligence_candidates() returns a nested `source` composite
+  // plus selection context since supabase/migrations/
+  // 20260924140000_add_source_intelligence_retry_eligibility.sql (needed to
+  // give dry_run visibility into new-vs-retry candidates) — not a flat
+  // company_sources row anymore.
+  const candidateIds = candidates.map((c) => c.source.id);
   assert.ok(candidateIds.includes(result.out_source_id), "a fresh, unclassified source must appear in the candidate-selection RPC without any push from Registry Sync");
 
   const { count: siCount } = await adminClient.from("source_intelligence").select("id", { count: "exact", head: true }).eq("source_id", result.out_source_id);

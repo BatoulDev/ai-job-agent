@@ -7,22 +7,30 @@
 // for the same fresh source_id both succeeding today.
 //
 // supabase/migrations/20260920100000_add_source_intelligence_source_id_
-// unique.sql adds the fix (UNIQUE(source_id)), but is deliberately NOT
-// applied to this shared local dev database yet: it cannot be — the
-// database still carries the 10 real duplicate pairs from the incident,
-// untouched, pending a separate, explicitly human-approved cleanup
-// decision (see the investigation report). A plain CREATE UNIQUE INDEX
-// cannot be created over data that currently violates it.
+// unique.sql (UNIQUE(source_id), now applied and verified here) closed
+// that gap — but made re-analysis structurally impossible (at most one
+// row per source, ever), which was then identified as its own separate
+// architecture gap (a transient 429/5xx/timeout wrongly excluded a source
+// from re-analysis forever, exactly like a genuine permanent finding).
 //
-// This file therefore describes the CORRECT, POST-FIX behavior and is
-// expected to be partially red until that cleanup + migration land — the
-// tests marked "REQUIRES MIGRATION" below will fail today for exactly that
-// reason (both concurrent inserts currently succeed) and will pass the
-// moment the pending migration is applied, with no test-file change
-// needed. This is intentional, not a masked gap: a test describing the
-// current, still-vulnerable behavior would become wrong the instant the
-// fix lands, so none is included here — see the investigation report for
-// the one-time, already-run proof that the vulnerability is real today.
+// supabase/migrations/20260924140000_add_source_intelligence_retry_
+// eligibility.sql replaced that absolute constraint with UNIQUE(source_id,
+// day) — at most one observation per source per UTC calendar day, not
+// per source ever. Tests 3 and 4 below (still named after the original
+// migration for history) now exercise that DAY-SCOPED protection: two
+// inserts for the same source within the same test run necessarily land
+// on the same UTC day, so the same-instant/same-day duplicate-prevention
+// behavior they describe is unchanged in observable outcome — only the
+// underlying mechanism changed. A LEGITIMATE retry occurring >= 3 days
+// later (the real, intended way a second row now gets created) is NOT
+// exercised here — see tests/db/source-intelligence-retry-eligibility.test.mjs
+// for that.
+//
+// get_source_intelligence_candidates() also changed return shape
+// (20260924140000): each row is now `{ source: {...company_sources...},
+// selection_reason, previous_ingestion_type, previous_confidence,
+// previous_analyzed_at }` instead of a flat company_sources row — tests 2
+// and 6 below read `.source.id` accordingly.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
@@ -94,22 +102,25 @@ test("first analysis of a new source succeeds", async () => {
 
 // ── 2. Candidate selection excludes an already-analyzed source ───────────
 
-test("get_source_intelligence_candidates excludes a source that already has a classification", async () => {
+test("get_source_intelligence_candidates excludes a source whose latest classification is not retryable", async () => {
   const sourceId = await createFixtureSource("already-classified", { ats_provider: "unknown" });
 
   const before = await adminClient.rpc("get_source_intelligence_candidates", { p_limit: 1000 });
-  assert.ok(before.data.some((c) => c.id === sourceId), "must be a candidate before any classification exists");
+  assert.ok(before.data.some((c) => c.source.id === sourceId), "must be a candidate before any classification exists");
 
+  // classification()'s default shape carries no `retryable` field, so this
+  // inserts retryable=NULL — treated as non-retryable/structural, exactly
+  // like a genuine successful or structural classification would be.
   const { error } = await adminClient.from("source_intelligence").insert(classification(sourceId));
   assert.equal(error, null);
 
   const after = await adminClient.rpc("get_source_intelligence_candidates", { p_limit: 1000 });
-  assert.ok(!after.data.some((c) => c.id === sourceId), "must no longer be a candidate once classified");
+  assert.ok(!after.data.some((c) => c.source.id === sourceId), "must no longer be a candidate once classified with a non-retryable result");
 });
 
-// ── 3. REQUIRES MIGRATION — concurrent attempts cannot duplicate ─────────
+// ── 3. Same-day concurrent attempts cannot duplicate ──────────────────────
 
-test("REQUIRES MIGRATION 20260920100000: two concurrent classification attempts for the same source produce exactly one row", async () => {
+test("two concurrent classification attempts for the same source on the same day produce exactly one row", async () => {
   const sourceId = await createFixtureSource("concurrent");
 
   const results = await Promise.allSettled([
@@ -121,20 +132,19 @@ test("REQUIRES MIGRATION 20260920100000: two concurrent classification attempts 
   assert.equal(
     succeeded.length,
     1,
-    "exactly one of two concurrent classification attempts for the same source must succeed — " +
-      "this fails today because supabase/migrations/20260920100000_add_source_intelligence_source_id_unique.sql " +
-      "has not been applied to this database yet (it cannot be, until the 10 real duplicate rows from the " +
-      "2026-09-20 incident are cleaned up — see the investigation report). It will pass unmodified once that " +
-      "migration is live."
+    "exactly one of two concurrent classification attempts for the same source on the same UTC day must succeed — " +
+      "enforced by source_intelligence_source_id_analyzed_day_key (supabase/migrations/" +
+      "20260924140000_add_source_intelligence_retry_eligibility.sql), which replaced the original absolute " +
+      "UNIQUE(source_id) once legitimate multi-day re-analysis needed to be possible."
   );
 
   const { count } = await adminClient.from("source_intelligence").select("id", { count: "exact", head: true }).eq("source_id", sourceId);
   assert.equal(count, 1);
 });
 
-// ── 4. REQUIRES MIGRATION — a sequential retry cannot duplicate ──────────
+// ── 4. A same-day retry cannot duplicate (a real, later retry is a separate, positive test) ──
 
-test("REQUIRES MIGRATION 20260920100000: a retried classification attempt for an already-classified source does not duplicate the row", async () => {
+test("a same-day retried classification attempt for an already-classified source does not duplicate the row", async () => {
   const sourceId = await createFixtureSource("retry");
 
   const first = await adminClient.from("source_intelligence").insert(classification(sourceId));
@@ -142,9 +152,13 @@ test("REQUIRES MIGRATION 20260920100000: a retried classification attempt for an
 
   // Simulates a retry (e.g. the n8n write node re-attempting after a
   // transient network error, believing the first write may not have
-  // landed) -- same source_id, a fresh run_id, sent again afterward.
+  // landed) -- same source_id, a fresh run_id, sent again the same day.
+  // A LEGITIMATE retry after the real 3-day backoff is expected to
+  // succeed and create a genuine second row — see
+  // tests/db/source-intelligence-retry-eligibility.test.mjs for that
+  // positive case; this test only covers the same-day duplicate guard.
   const retry = await adminClient.from("source_intelligence").insert(classification(sourceId));
-  assert.notEqual(retry.error, null, "a retried insert for an already-classified source must be rejected, not silently duplicated");
+  assert.notEqual(retry.error, null, "a same-day retried insert for an already-classified source must be rejected, not silently duplicated");
 
   const { count } = await adminClient.from("source_intelligence").select("id", { count: "exact", head: true }).eq("source_id", sourceId);
   assert.equal(count, 1);
@@ -176,7 +190,7 @@ test("a company_sources row created with ats_provider='unknown' (Registry Sync's
 
   const { data: candidates, error } = await adminClient.rpc("get_source_intelligence_candidates", { p_limit: 1000 });
   assert.equal(error, null);
-  assert.ok(candidates.some((c) => c.id === sourceId));
+  assert.ok(candidates.some((c) => c.source.id === sourceId));
 });
 
 // ── 7. Registry Sync never writes source_intelligence itself ─────────────

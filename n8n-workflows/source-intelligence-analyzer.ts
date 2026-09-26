@@ -13,6 +13,23 @@
  *   Job Ingestion Pilot Orchestrator and CV Analysis Worker already use —
  *   service-role key, local Supabase project).
  *
+ * ERROR WORKFLOW (added 2026-09-24 — manual n8n UI step, not repo-set)
+ * ──────────────────────────────────────────────────────────────────────
+ *   n8n-workflows/error-handler.ts is the reusable execution-level
+ *   failure handler (Error Trigger → normalize → alert message → a
+ *   not-yet-wired notification boundary — see its own header for the
+ *   full design and why a notification channel isn't connected yet).
+ *   Attach this workflow to it via Settings (three-dot menu) → Error
+ *   Workflow → "AI Job Agent - Error Handler". This is a one-time manual
+ *   step in the n8n UI — confirmed this session that neither the n8n
+ *   Workflow SDK nor n8n-mcp's update_workflow can set a workflow-level
+ *   setting like this, so it cannot be represented in this repo file or
+ *   applied by tooling. Only a genuinely FAILED execution (a crashed
+ *   node — bad credential, unreachable Supabase) reaches the handler;
+ *   per-source outcomes (429/403/5xx/no-URL/etc.) are deliberately
+ *   handled as data by this workflow's own classification/retry logic
+ *   and never propagate to a workflow-level failure.
+ *
  * WORKFLOW CONFIGURATION NODE (first node after the trigger — edit before running)
  * ──────────────────────────────────────────────────────────────────────────────
  *   mode                  — 'dry_run' (default) or 'write'. Only 'write' reaches
@@ -51,42 +68,40 @@
  *                             instruction — do not wire it back into the query without
  *                             a fresh, explicit request.
  *
- * SOURCE SELECTION — state-driven only, no cursor
- * ───────────────────────────────────────────────────
+ * SOURCE SELECTION — explicit eligibility model, no cursor (updated 2026-09-24)
+ * ───────────────────────────────────────────────────────────────────────────
  * Load Candidate Sources selects company_sources rows where
- * (ats_provider = 'unknown' OR automation_eligibility = 'unknown') AND no
- * source_intelligence row exists yet for that source_id, via a POST to
+ * (ats_provider = 'unknown' OR automation_eligibility = 'unknown') AND
+ * EITHER (A) never analyzed at all, OR (B) the LATEST source_intelligence
+ * observation is a retryable needs_investigation result whose 3-day
+ * backoff has elapsed — via a POST to
  * /rest/v1/rpc/get_source_intelligence_candidates — a SQL function
- * (supabase/migrations/20260919090000_create_source_intelligence_candidate_selector.sql)
- * that runs a real `NOT EXISTS (SELECT 1 FROM source_intelligence WHERE
- * source_id = company_sources.id)` inside Postgres.
+ * (supabase/migrations/20260919090000_create_source_intelligence_candidate_selector.sql,
+ * superseded by supabase/migrations/20260924140000_add_source_intelligence_retry_eligibility.sql)
+ * that runs the eligibility check as real SQL inside Postgres, never a
+ * PostgREST-translated filter (see that first migration's own header for
+ * the embedded-anti-join pattern proven broken here — do not revert to
+ * it).
  *
- * PRIOR APPROACH, CONFIRMED BROKEN — do not revert to this: an earlier
- * version of this node used a PostgREST embedded-resource anti-join
- * (`source_intelligence!left(source_id)` + `source_intelligence.source_id=
- * is.null` as top-level query params). That was believed to translate to a
- * genuine SQL LEFT JOIN ... WHERE source_intelligence.source_id IS NULL,
- * but was proven live (direct, read-only reproduction against this
- * project's local database, 2026-09-19) NOT to exclude the parent row —
- * PostgREST's embedded-filter semantics for a `!left` embed only prune the
- * *nested* embedded array in the JSON response; they never restrict which
- * top-level company_sources rows come back. Every run therefore reselected
- * the exact same top-N rows (ordered by id, LIMIT maxSourcesPerRun)
- * regardless of prior analysis, producing duplicate source_intelligence
- * rows for the same source_id across separate executions. The RPC above
- * has no such limitation since NOT EXISTS runs as real SQL, not a
- * PostgREST-translated filter.
- *
- * ANY existing source_intelligence row — regardless of ingestion_type,
- * including needs_investigation/blocked/no-URL outcomes — counts as
- * "already analyzed" and excludes that source from future runs. This is
- * deliberate: a blocked or inconclusive result is still a real, learned
- * observation, and re-analyzing it every run would starve the bounded
- * per-run budget of ever reaching genuinely unseen sources. Automatic
- * retry of blocked/inconclusive sources is an explicitly later phase (a
- * retry window), not implemented here. This is the ONLY selection
- * mechanism — the manual `id=gt.<sinceSourceId>` cursor fragment has been
- * removed from the query entirely.
+ * ANY successful classification (ats_adapter/html/custom_parser) still
+ * excludes a source from all future runs, exactly as before — a stable
+ * result is never re-analyzed without a specific reason. What changed is
+ * ONLY needs_investigation: it is no longer a permanent exclusion. The
+ * RPC distinguishes RETRYABLE (a transient fetch outcome — network error,
+ * HTTP 403/429/999, or 5xx — see Build Blocked Result's own retryable
+ * computation) from STRUCTURAL (404, no URL, or a successfully-fetched-
+ * but-genuinely-inconclusive page — see Build No-URL Result and Detect
+ * Provider Fingerprint's own needs_investigation branch) via the new
+ * source_intelligence.retryable column, set explicitly by the node that
+ * produced the result — never inferred later from evidence text. Only
+ * RETRYABLE results become eligible again, and only after 3 days —
+ * structural results are excluded exactly as permanently as before this
+ * change. The response now also carries selection_reason ('never_analyzed'
+ * | 'retry_after_backoff') and the previous observation's own
+ * ingestion_type/confidence/analyzed_at, purely for dry-run visibility —
+ * Bound Candidate Sources threads these straight through unchanged.
+ * This is the ONLY selection mechanism — the manual `id=gt.<sinceSourceId>`
+ * cursor fragment remains removed from the query entirely.
  *
  * DRY-RUN / CONTROLLED WRITE SCOPE
  * ─────────────────────────────────────────────────────────────
@@ -94,14 +109,37 @@
  * URL per source (GET), and — only when mode === 'write' — appends one
  * insert-only row per finalized classification into
  * public.source_intelligence (see
- * supabase/migrations/20260916171255_create_source_intelligence.sql).
- * It never UPDATEs/UPSERTs/DELETEs an existing source_intelligence row,
- * never writes to company_sources, never writes jobs, and never activates
- * a source. There is no adapter here and no connection to the Job
- * Ingestion Pilot Orchestrator — this is a separate, standalone workflow.
+ * supabase/migrations/20260916171255_create_source_intelligence.sql). It
+ * never UPDATEs/UPSERTs/DELETEs an existing source_intelligence row,
+ * never writes jobs, and never activates a source in the "make it live
+ * for job scraping" sense. There is no adapter here and no connection to
+ * the Job Ingestion Pilot Orchestrator — this is a separate, standalone
+ * workflow.
+ *
+ * CONTROLLED PROMOTION (write mode only, added 2026-09-24)
+ * ───────────────────────────────────────────────────────────
+ * After a successful insert, a newly-added branch decides — from the
+ * insert response alone, no re-fetch — whether this exact classification
+ * is auto-promotable per the approved rule: ingestion_type='ats_adapter'
+ * AND confidence='high' AND detected_provider<>'unknown' AND the insert
+ * itself actually succeeded. If so, it calls the single new
+ * public.promote_source_intelligence_observation(p_source_id) RPC (see
+ * supabase/migrations/20260924130000_add_source_intelligence_promotion.sql
+ * for the full rule and its reasoning) — this is now the one and only
+ * place this workflow ever writes to company_sources, and it only ever
+ * updates ats_provider/automation_eligibility, guarded so an already-
+ * non-'unknown' value (a human's or another process's decision) is never
+ * overwritten. review_status and company_id are never touched by this
+ * workflow, in dry_run or write mode alike. Everything that fails the
+ * auto-promotion rule (medium/low confidence, unknown provider,
+ * needs_investigation, html, custom_parser, a blocked/no-URL result, or a
+ * failed insert) is left exactly as before this change: an unresolved,
+ * reviewable source_intelligence row only, with company_sources
+ * untouched.
+ *
  * See the "Controlled write mode" sticky note for known pre-conditions
- * (a missing service_role GRANT, and a credential that must be bound
- * manually) that must be resolved before a real write-mode test.
+ * (a credential that must be bound manually) that must be resolved
+ * before a real write-mode test.
  *
  * SAFE FETCHING
  * ─────────────
@@ -255,10 +293,23 @@ const loadCandidateSources = node({
     credentials: { supabaseApi: newCredential('Supabase Service Role') },
   },
   output: [
-    { id: 'sr-example', company_name: 'Example Co', official_careers_url: 'https://example.com/careers', official_website_url: 'https://example.com', ats_provider: 'unknown', automation_eligibility: 'unknown', researcher_notes: null },
+    {
+      source: { id: 'sr-example', company_name: 'Example Co', official_careers_url: 'https://example.com/careers', official_website_url: 'https://example.com', ats_provider: 'unknown', automation_eligibility: 'unknown', researcher_notes: null },
+      selection_reason: 'never_analyzed',
+      previous_ingestion_type: null,
+      previous_confidence: null,
+      previous_analyzed_at: null,
+    },
   ],
 });
 
+// Reads the RPC's nested `source` composite (the return shape changed
+// 2026-09-24 from a flat setof company_sources to source + selection
+// context — see get_source_intelligence_candidates()'s own comment) and
+// threads selectionReason/previousIngestionType/previousConfidence/
+// previousAnalyzedAt straight through every downstream node via the
+// existing `...src` spread pattern — this is what gives dry_run real
+// visibility into "new vs retry, and why" without any further plumbing.
 const boundCandidateSources = node({
   type: 'n8n-nodes-base.code',
   version: 2,
@@ -280,20 +331,27 @@ const boundCandidateSources = node({
         "}\n" +
         "const runUuid = generateUuidV4();\n" +
         "const rows = $input.all().map(i => i.json).slice(0, cfg.maxSourcesPerRun);\n" +
-        "return rows.map(r => ({ json: {\n" +
-        "  source_id: r.id,\n" +
-        "  company_name: r.company_name,\n" +
-        "  official_careers_url: r.official_careers_url || null,\n" +
-        "  official_website_url: r.official_website_url || null,\n" +
-        "  existing_ats_provider: r.ats_provider || null,\n" +
-        "  existing_automation_eligibility: r.automation_eligibility || null,\n" +
-        "  researcher_notes: r.researcher_notes || null,\n" +
-        "  runId,\n" +
-        "  runUuid,\n" +
-        "} }));",
+        "return rows.map(r => {\n" +
+        "  const src = r.source;\n" +
+        "  return { json: {\n" +
+        "    source_id: src.id,\n" +
+        "    company_name: src.company_name,\n" +
+        "    official_careers_url: src.official_careers_url || null,\n" +
+        "    official_website_url: src.official_website_url || null,\n" +
+        "    existing_ats_provider: src.ats_provider || null,\n" +
+        "    existing_automation_eligibility: src.automation_eligibility || null,\n" +
+        "    researcher_notes: src.researcher_notes || null,\n" +
+        "    selectionReason: r.selection_reason,\n" +
+        "    previousIngestionType: r.previous_ingestion_type || null,\n" +
+        "    previousConfidence: r.previous_confidence || null,\n" +
+        "    previousAnalyzedAt: r.previous_analyzed_at || null,\n" +
+        "    runId,\n" +
+        "    runUuid,\n" +
+        "  } };\n" +
+        "});",
     },
   },
-  output: [{ source_id: 'sr-example', company_name: 'Example Co', official_careers_url: 'https://example.com/careers', official_website_url: 'https://example.com', existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', researcher_notes: null, runId: 'exec-1', runUuid: '00000000-0000-4000-8000-000000000000' }],
+  output: [{ source_id: 'sr-example', company_name: 'Example Co', official_careers_url: 'https://example.com/careers', official_website_url: 'https://example.com', existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', researcher_notes: null, selectionReason: 'never_analyzed', previousIngestionType: null, previousConfidence: null, previousAnalyzedAt: null, runId: 'exec-1', runUuid: '00000000-0000-4000-8000-000000000000' }],
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -364,14 +422,14 @@ const buildNoUrlResult = node({
         "const src = $input.first().json;\n" +
         "return [{ json: {\n" +
         "  source_id: src.source_id, company_name: src.company_name,\n" +
-        "  detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low',\n" +
+        "  detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', retryable: false,\n" +
         "  evidence: { matched_signal: null, detection_method: 'no_public_url_available', checked_url: null, http_status: null },\n" +
         "  existing_ats_provider: src.existing_ats_provider, existing_automation_eligibility: src.existing_automation_eligibility,\n" +
         "  runId: src.runId,\n" +
         "} }];",
     },
   },
-  output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', evidence: { matched_signal: null, detection_method: 'no_public_url_available', checked_url: null, http_status: null }, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1' }],
+  output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', retryable: false, evidence: { matched_signal: null, detection_method: 'no_public_url_available', checked_url: null, http_status: null }, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1' }],
 });
 
 const fetchSourcePage = node({
@@ -474,9 +532,28 @@ const buildBlockedResult = node({
       language: 'javaScript',
       jsCode:
         "const src = $input.first().json;\n" +
+        "const networkError = !!src.fetchError;\n" +
+        "const status = src.httpStatus;\n" +
+        "\n" +
+        "// Retryable: a network error (no response at all), or an HTTP status\n" +
+        "// that typically reflects a TRANSIENT condition — rate limiting (429),\n" +
+        "// a bot-block that can lift (403, or 999 as some sites use for it), or\n" +
+        "// a server-side failure (5xx). Explicitly NOT retryable: 404 (the page\n" +
+        "// genuinely does not exist), 401 (missing credentials this workflow\n" +
+        "// will never have), or any other 4xx — none of these change on a bare\n" +
+        "// re-fetch of the identical URL; a real fix requires a human/registry\n" +
+        "// correction, not a retry. Evidence-grounded against the 42 real\n" +
+        "// needs_investigation rows analyzed before this policy was written —\n" +
+        "// see supabase/migrations/20260924140000_add_source_intelligence_retry_eligibility.sql.\n" +
+        "const retryable = networkError\n" +
+        "  || status === 403\n" +
+        "  || status === 429\n" +
+        "  || status === 999\n" +
+        "  || (typeof status === 'number' && status >= 500);\n" +
+        "\n" +
         "return [{ json: {\n" +
         "  source_id: src.source_id, company_name: src.company_name,\n" +
-        "  detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low',\n" +
+        "  detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', retryable,\n" +
         "  evidence: {\n" +
         "    matched_signal: null,\n" +
         "    detection_method: src.fetchError ? 'fetch_network_error' : 'fetch_blocked_or_error_status',\n" +
@@ -490,7 +567,7 @@ const buildBlockedResult = node({
         "} }];",
     },
   },
-  output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', evidence: { matched_signal: null, detection_method: 'fetch_blocked_or_error_status', checked_url: 'https://example.com/careers', http_status: 403, page_title: null, canonical_url: null, header_evidence: { server: 'cloudflare', cloudflareDetected: true, wixDetected: false, wordpressDetected: false } }, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1' }],
+  output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', retryable: true, evidence: { matched_signal: null, detection_method: 'fetch_blocked_or_error_status', checked_url: 'https://example.com/careers', http_status: 403, page_title: null, canonical_url: null, header_evidence: { server: 'cloudflare', cloudflareDetected: true, wixDetected: false, wordpressDetected: false } }, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1' }],
 });
 
 const detectProviderFingerprint = node({
@@ -629,7 +706,7 @@ const detectProviderFingerprint = node({
         "if (match) {\n" +
         "  const directHit = url.includes(match.signal);\n" +
         "  result = {\n" +
-        "    detected_provider: match.provider, ingestion_type: 'ats_adapter', confidence: directHit ? 'high' : 'medium',\n" +
+        "    detected_provider: match.provider, ingestion_type: 'ats_adapter', confidence: directHit ? 'high' : 'medium', retryable: null,\n" +
         "    evidence: {\n" +
         "      matched_signal: match.signal,\n" +
         "      detection_method: directHit ? 'fetched_url_is_provider_domain' : 'provider_domain_referenced_in_page_content',\n" +
@@ -647,19 +724,26 @@ const detectProviderFingerprint = node({
         "\n" +
         "  if (looksLikeSpaShell) {\n" +
         "    result = {\n" +
-        "      detected_provider: 'unknown', ingestion_type: 'custom_parser', confidence: 'low',\n" +
+        "      detected_provider: 'unknown', ingestion_type: 'custom_parser', confidence: 'low', retryable: null,\n" +
         "      evidence: { matched_signal: null, detection_method: 'javascript_rendered_shell_detected', checked_url: src.fetchUrl, http_status: src.httpStatus, ...pageContext },\n" +
         "    };\n" +
         "  } else if (hasJobPostingSchema || hasDistinctJobDetailLinks || hasJobSearchStructure) {\n" +
         "    const signal = hasJobPostingSchema ? 'schema.org/JobPosting' : (hasJobSearchStructure ? jobSearchExample : 'distinct_job_detail_links');\n" +
         "    const method = hasJobPostingSchema ? 'jobposting_schema_detected' : (hasJobSearchStructure ? 'job_search_url_structure_detected' : 'distinct_job_detail_links_detected');\n" +
         "    result = {\n" +
-        "      detected_provider: 'unknown', ingestion_type: 'html', confidence: 'low',\n" +
+        "      detected_provider: 'unknown', ingestion_type: 'html', confidence: 'low', retryable: null,\n" +
         "      evidence: { matched_signal: signal, detection_method: method, checked_url: src.fetchUrl, http_status: src.httpStatus, ...pageContext },\n" +
         "    };\n" +
         "  } else {\n" +
+        "    // Fetched fine (status already succeeded upstream) but genuinely\n" +
+        "    // no recognizable signal at all — a real, stable finding. Re-\n" +
+        "    // fetching the identical page will not produce new information,\n" +
+        "    // so this is structural (retryable: false), never auto-retried —\n" +
+        "    // matches 32/42 of the real historical needs_investigation rows\n" +
+        "    // analyzed before this policy was written (29 no-signal + 3\n" +
+        "    // off-scope-destination-only, see the retry-eligibility migration).\n" +
         "    result = {\n" +
-        "      detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low',\n" +
+        "      detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', retryable: false,\n" +
         "      evidence: {\n" +
         "        matched_signal: null,\n" +
         "        detection_method: offScopeHosts.size > 0 ? 'off_scope_job_destination_only' : 'no_provider_fingerprint_or_job_content_detected',\n" +
@@ -679,7 +763,7 @@ const detectProviderFingerprint = node({
         "} }];",
     },
   },
-  output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'greenhouse', ingestion_type: 'ats_adapter', confidence: 'high', evidence: { matched_signal: 'boards-api.greenhouse.io', detection_method: 'fetched_url_is_provider_domain', checked_url: 'https://boards-api.greenhouse.io/v1/boards/example/jobs', http_status: 200 }, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1' }],
+  output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'greenhouse', ingestion_type: 'ats_adapter', confidence: 'high', retryable: null, evidence: { matched_signal: 'boards-api.greenhouse.io', detection_method: 'fetched_url_is_provider_domain', checked_url: 'https://boards-api.greenhouse.io/v1/boards/example/jobs', http_status: 200 }, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1' }],
 });
 
 const finalizeClassificationResult = node({
@@ -693,10 +777,22 @@ const finalizeClassificationResult = node({
       language: 'javaScript',
       jsCode:
         "const r = $input.first().json;\n" +
-        "return [{ json: { ...r, analyzedAt: new Date().toISOString(), insertAttempted: false, insertPerformed: false, insertError: null } }];",
+        "// Evaluated purely from the classification itself — mirrors Is Auto-\n" +
+        "// Promotable?'s own rule exactly, but independent of insertPerformed\n" +
+        "// (which does not exist yet at this point, and never will in dry_run)\n" +
+        "// — this is what gives dry_run visibility into \"would this be auto-\n" +
+        "// promoted\" without ever attempting a real insert or promotion.\n" +
+        "const wouldBeAutoPromotable = r.ingestion_type === 'ats_adapter' && r.confidence === 'high' && r.detected_provider !== 'unknown';\n" +
+        "return [{ json: {\n" +
+        "  ...r,\n" +
+        "  analyzedAt: new Date().toISOString(),\n" +
+        "  wouldBeAutoPromotable,\n" +
+        "  insertAttempted: false, insertPerformed: false, insertError: null,\n" +
+        "  promotionAttempted: false, promotionApplied: false, promotionReason: null,\n" +
+        "} }];",
     },
   },
-  output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', evidence: {}, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1', analyzedAt: '2026-09-18T00:00:05.000Z', insertAttempted: false, insertPerformed: false, insertError: null }],
+  output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', retryable: false, evidence: {}, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1', analyzedAt: '2026-09-18T00:00:05.000Z', wouldBeAutoPromotable: false, insertAttempted: false, insertPerformed: false, insertError: null, promotionAttempted: false, promotionApplied: false, promotionReason: null }],
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -736,7 +832,7 @@ const insertSourceIntelligenceObservation = node({
       contentType: 'json',
       specifyBody: 'json',
       jsonBody: expr(
-        "{{ { source_id: $json.source_id, run_id: $('Bound Candidate Sources').first().json.runUuid, detected_provider: $json.detected_provider, ingestion_type: $json.ingestion_type, confidence: $json.confidence, evidence: $json.evidence, analyzed_at: $json.analyzedAt } }}"
+        "{{ { source_id: $json.source_id, run_id: $('Bound Candidate Sources').first().json.runUuid, detected_provider: $json.detected_provider, ingestion_type: $json.ingestion_type, confidence: $json.confidence, retryable: $json.retryable, evidence: $json.evidence, analyzed_at: $json.analyzedAt } }}"
       ),
       options: {
         timeout: expr("{{ $('Workflow Configuration').first().json.timeoutSeconds * 1000 }}"),
@@ -783,6 +879,107 @@ const evaluateInsertAttempt = node({
   output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', evidence: {}, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1', analyzedAt: '2026-09-18T00:00:05.000Z', insertAttempted: true, insertPerformed: true, insertError: null }],
 });
 
+// Cheap, pure client-side pre-check — mirrors the RPC's own eligibility
+// condition exactly so an ineligible classification (the large majority —
+// see this file's own header) never even makes the round trip. This is an
+// efficiency gate ONLY, never the safety boundary: promote_source_
+// intelligence_observation() re-validates every one of these conditions
+// itself from the stored source_intelligence row, not from whatever this
+// node decided, so a bug here can never cause an unsafe promotion — at
+// worst it would skip a promotion the RPC would have allowed, never the
+// reverse.
+const isAutoPromotable = ifElse({
+  version: 2.3,
+  config: {
+    name: 'Is Auto-Promotable?',
+    position: [4200, -150],
+    parameters: {
+      conditions: {
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+        conditions: [
+          { leftValue: expr('{{ $json.insertPerformed }}'), operator: { type: 'boolean', operation: 'true' }, rightValue: true },
+          { leftValue: expr('{{ $json.ingestion_type }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'ats_adapter' },
+          { leftValue: expr('{{ $json.confidence }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'high' },
+          { leftValue: expr('{{ $json.detected_provider }}'), operator: { type: 'string', operation: 'notEquals' }, rightValue: 'unknown' },
+        ],
+        combinator: 'and',
+      },
+    },
+  },
+});
+
+// Calls the single controlled promotion RPC (supabase/migrations/
+// 20260924130000_add_source_intelligence_promotion.sql) — never a direct
+// PATCH/UPDATE against company_sources from this or any other node. The
+// RPC itself re-validates eligibility, resolves ats_provider and (only
+// for a provider with a real Job Ingestion adapter today) automation_
+// eligibility, guards against overwriting an already-non-'unknown' value,
+// never touches review_status/company_id, and is idempotent — safe to
+// call more than once for the same source_id.
+const promoteSource = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Promote Source',
+    position: [4500, -300],
+    onError: 'continueRegularOutput',
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/rpc/promote_source_intelligence_observation"),
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'supabaseApi',
+      sendHeaders: true,
+      headerParameters: { parameters: [{ name: 'Accept', value: 'application/json' }] },
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ { p_source_id: $json.source_id } }}'),
+      options: {
+        timeout: expr("{{ $('Workflow Configuration').first().json.timeoutSeconds * 1000 }}"),
+        response: { response: { fullResponse: true, neverError: true, responseFormat: 'json' } },
+      },
+    },
+    credentials: { supabaseApi: newCredential('Supabase Service Role') },
+  },
+  output: [{ statusCode: 200, body: [{ promoted: true, reason: 'promoted', source_id: 'sr-example', ats_provider_applied: true, automation_eligibility_applied: true, resulting_ats_provider: 'greenhouse', resulting_automation_eligibility: 'suitable_public_ats' }] }],
+});
+
+const evaluatePromotionAttempt = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'Evaluate Promotion Attempt',
+    position: [4800, -300],
+    parameters: {
+      mode: 'runOnceForAllItems',
+      language: 'javaScript',
+      jsCode:
+        "const src = $('Evaluate Insert Attempt').first().json;\n" +
+        "const resp = $input.first().json;\n" +
+        "const networkError = !!resp.error;\n" +
+        "const statusCode = resp.statusCode || null;\n" +
+        "const httpOk = !networkError && statusCode >= 200 && statusCode < 300;\n" +
+        "const body = resp.body;\n" +
+        "const row = httpOk && Array.isArray(body) ? body[0] : null;\n" +
+        "\n" +
+        "const promotionApplied = httpOk && !!row && row.promoted === true;\n" +
+        "const promotionReason = httpOk\n" +
+        "  ? (row ? row.reason : 'promotion_rpc_returned_no_row')\n" +
+        "  : (networkError\n" +
+        "      ? String(resp.error).slice(0, 300)\n" +
+        "      : (body && typeof body === 'object' && body.message ? String(body.message).slice(0, 300) : `promotion_failed_status_${statusCode}`));\n" +
+        "\n" +
+        "return [{ json: {\n" +
+        "  ...src,\n" +
+        "  promotionAttempted: true,\n" +
+        "  promotionApplied,\n" +
+        "  promotionReason,\n" +
+        "} }];",
+    },
+  },
+  output: [{ source_id: 'sr-example', company_name: 'Example Co', detected_provider: 'greenhouse', ingestion_type: 'ats_adapter', confidence: 'high', evidence: {}, existing_ats_provider: 'unknown', existing_automation_eligibility: 'unknown', runId: 'exec-1', insertAttempted: true, insertPerformed: true, insertError: null, promotionAttempted: true, promotionApplied: true, promotionReason: 'promoted' }],
+});
+
 const rateLimitDelay = node({
   type: 'n8n-nodes-base.wait',
   version: 1.1,
@@ -823,6 +1020,13 @@ const buildRunSummary = node({
         "const insertsAttempted = results.filter(r => r.insertAttempted === true).length;\n" +
         "const insertsPerformed = results.filter(r => r.insertPerformed === true).length;\n" +
         "const insertFailures = results.filter(r => r.insertAttempted === true && r.insertPerformed !== true).length;\n" +
+        "const promotionsAttempted = results.filter(r => r.promotionAttempted === true).length;\n" +
+        "const promotionsApplied = results.filter(r => r.promotionApplied === true).length;\n" +
+        "const newSources = results.filter(r => r.selectionReason === 'never_analyzed').length;\n" +
+        "const retriedSources = results.filter(r => r.selectionReason === 'retry_after_backoff').length;\n" +
+        "const retryableNeedsInvestigation = results.filter(r => r.ingestion_type === 'needs_investigation' && r.retryable === true).length;\n" +
+        "const structuralNeedsInvestigation = results.filter(r => r.ingestion_type === 'needs_investigation' && r.retryable !== true).length;\n" +
+        "const wouldBeAutoPromotedDryRun = results.filter(r => r.wouldBeAutoPromotable === true).length;\n" +
         "\n" +
         "return [{ json: {\n" +
         "  mode: cfg.mode,\n" +
@@ -830,23 +1034,30 @@ const buildRunSummary = node({
         "  runId: results.length ? results[0].runId : $execution.id,\n" +
         "  maxSourcesPerRun: cfg.maxSourcesPerRun,\n" +
         "  sourcesAnalyzed: results.length,\n" +
+        "  newSources,\n" +
+        "  retriedSources,\n" +
         "  detectedProviders,\n" +
         "  atsAdapterCandidates: countBy('ingestion_type', 'ats_adapter'),\n" +
         "  htmlCandidates: countBy('ingestion_type', 'html'),\n" +
         "  customCandidates: countBy('ingestion_type', 'custom_parser'),\n" +
         "  needsInvestigation: countBy('ingestion_type', 'needs_investigation'),\n" +
+        "  retryableNeedsInvestigation,\n" +
+        "  structuralNeedsInvestigation,\n" +
         "  stillUnknown: countBy('detected_provider', 'unknown'),\n" +
         "  writeMode: cfg.mode === 'write',\n" +
+        "  wouldBeAutoPromotedDryRun,\n" +
         "  insertsAttempted,\n" +
         "  insertsPerformed,\n" +
         "  insertFailures,\n" +
+        "  promotionsAttempted,\n" +
+        "  promotionsApplied,\n" +
         "  totalDurationMs: Date.now() - startedAtMs,\n" +
         "  results,\n" +
         "  finishedAt: new Date().toISOString(),\n" +
         "} }];",
     },
   },
-  output: [{ mode: 'dry_run', environment: 'local', runId: 'exec-1', maxSourcesPerRun: 10, sourcesAnalyzed: 10, detectedProviders: { greenhouse: 2 }, atsAdapterCandidates: 2, htmlCandidates: 3, customCandidates: 1, needsInvestigation: 4, stillUnknown: 8, writeMode: false, insertsAttempted: 0, insertsPerformed: 0, insertFailures: 0, totalDurationMs: 12000, results: [], finishedAt: '2026-09-18T00:00:12.000Z' }],
+  output: [{ mode: 'dry_run', environment: 'local', runId: 'exec-1', maxSourcesPerRun: 10, sourcesAnalyzed: 10, newSources: 7, retriedSources: 3, detectedProviders: { greenhouse: 2 }, atsAdapterCandidates: 2, htmlCandidates: 3, customCandidates: 1, needsInvestigation: 4, retryableNeedsInvestigation: 1, structuralNeedsInvestigation: 3, stillUnknown: 8, writeMode: false, wouldBeAutoPromotedDryRun: 2, insertsAttempted: 0, insertsPerformed: 0, insertFailures: 0, promotionsAttempted: 0, promotionsApplied: 0, totalDurationMs: 12000, results: [], finishedAt: '2026-09-18T00:00:12.000Z' }],
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -855,12 +1066,17 @@ const buildRunSummary = node({
 
 const overviewNote = sticky(
   '### Source Intelligence Analyzer\n' +
-    'Selects company_sources rows (ats_provider=unknown OR automation_eligibility=unknown) that have NO ' +
-    'source_intelligence observation yet (state-driven via the get_source_intelligence_candidates SQL RPC, not a ' +
-    'manual cursor), GETs each source\'s ' +
-    'public careers/website URL once, and classifies it. In dry_run mode (default) nothing is written anywhere. ' +
-    'In write mode, only an insert-only append to source_intelligence occurs — company_sources and jobs are ' +
-    'never written. No source is activated. Not connected to the Job Ingestion Pilot Orchestrator — a fully ' +
+    'Selects company_sources rows (ats_provider=unknown OR automation_eligibility=unknown) that are EITHER never ' +
+    'analyzed OR whose latest observation was a retryable transient failure past its 3-day backoff (state-driven ' +
+    'via the get_source_intelligence_candidates SQL RPC, not a manual cursor — see the Retry Policy note), GETs ' +
+    'each source\'s public careers/website URL once, and classifies it. In dry_run mode (default) nothing is ' +
+    'written anywhere. In write mode, each classification is appended to source_intelligence (now allowing ' +
+    'multiple observations per source over time — true history), and ONLY a high-confidence known-ATS result ' +
+    '(ingestion_type=ats_adapter, confidence=high) is then promoted through a single guarded RPC into ' +
+    'company_sources.ats_provider/automation_eligibility — never review_status, never company_id, never a ' +
+    'direct UPDATE from this workflow. Every other result (medium/low confidence, unknown, structural ' +
+    'needs_investigation, html, custom_parser, blocked/no-URL) stays an unresolved observation only. No source ' +
+    'is ever activated for job scraping here. Not connected to the Job Ingestion Pilot Orchestrator — a fully ' +
     'separate workflow.',
   [startTrigger, workflowConfiguration],
   { color: 6 }
@@ -907,6 +1123,32 @@ const confidenceRulesNote = node({
   output: [{}],
 });
 
+const retryPolicyNote = node({
+  type: 'n8n-nodes-base.stickyNote',
+  version: 1,
+  config: {
+    name: 'Sticky Note - Retry Policy',
+    position: [400, -420],
+    parameters: {
+      content:
+        '### Retry / re-analysis policy (added 2026-09-24)\n' +
+        'RETRYABLE (source_intelligence.retryable=true, set by Build Blocked Result) — a network error, or HTTP ' +
+        '403/429/999/5xx: a transient condition that may have cleared. Becomes an eligible candidate again once ' +
+        'analyzed_at is more than 3 days old. STRUCTURAL (retryable=false, set by Build No-URL Result and Detect ' +
+        'Provider Fingerprint\'s own inconclusive branch) — no URL, HTTP 404/401, or a page that fetched fine but ' +
+        'matched no signal at all: re-fetching the identical page will not change the answer, so these are never ' +
+        'auto-retried. A successful classification (ats_adapter/html/custom_parser) is likewise never re-selected ' +
+        '— retryable stays null, not applicable. Fixed 3-day backoff, not per-status or exponential — this ' +
+        'project runs at most once/day, so anything shorter is meaningless and same-day retries risk re-hitting ' +
+        'the exact outage that caused the failure.',
+      height: 240,
+      width: 620,
+      color: 4,
+    },
+  },
+  output: [{}],
+});
+
 const futureWriteModeNote = node({
   type: 'n8n-nodes-base.stickyNote',
   version: 1,
@@ -915,17 +1157,20 @@ const futureWriteModeNote = node({
     position: [3400, -750],
     parameters: {
       content:
-        '### Controlled write mode (gated, off by default)\n' +
+        '### Controlled write mode + promotion (gated, off by default)\n' +
         'When Workflow Configuration.mode === \'write\', each finalized classification is appended as a new row ' +
         'in public.source_intelligence (supabase/migrations/20260916171255_create_source_intelligence.sql) — ' +
-        'insert-only, never UPDATE/UPSERT/DELETE, and company_sources is never touched. Default mode stays ' +
-        '\'dry_run\', where this branch is skipped entirely (0 inserts attempted). Known pre-conditions for a ' +
-        'real write-mode test, not yet resolved: (1) service_role lacks INSERT/SELECT grants on ' +
-        'source_intelligence — the migration omitted the grant company_sources/companies both have; (2) the ' +
-        'Insert Source Intelligence Observation node\'s Supabase credential must be bound manually in the n8n UI ' +
-        '(the MCP could not auto-assign a predefinedCredentialType credential of type supabaseApi).',
-      height: 260,
-      width: 560,
+        'insert-only, never UPDATE/UPSERT/DELETE on that table. Then, ONLY if the insert succeeded AND the ' +
+        'result is ingestion_type=ats_adapter + confidence=high + a recognized provider, Promote Source calls ' +
+        'public.promote_source_intelligence_observation(p_source_id) (supabase/migrations/' +
+        '20260924130000_add_source_intelligence_promotion.sql) — the ONE place this workflow ever writes to ' +
+        'company_sources, guarded per-column so an already-non-unknown value is never overwritten, and never ' +
+        'touching review_status or company_id. Default mode stays \'dry_run\', where this entire branch — insert ' +
+        'and promotion alike — is skipped (0 inserts, 0 promotions attempted). Known pre-condition for a real ' +
+        'write-mode test: the Insert/Promote nodes\' Supabase credential must be bound manually in the n8n UI ' +
+        '(the MCP cannot auto-assign a predefinedCredentialType credential of type supabaseApi).',
+      height: 300,
+      width: 620,
       color: 5,
     },
   },
@@ -938,9 +1183,13 @@ const futureWriteModeNote = node({
 
 const afterWriteDecision = rateLimitDelay.to(nextBatch(processSources));
 
+const promotionBranch = isAutoPromotable
+  .onFalse(afterWriteDecision)
+  .onTrue(promoteSource.to(evaluatePromotionAttempt.to(afterWriteDecision)));
+
 const writeModeBranch = isWriteMode
   .onFalse(afterWriteDecision)
-  .onTrue(insertSourceIntelligenceObservation.to(evaluateInsertAttempt.to(afterWriteDecision)));
+  .onTrue(insertSourceIntelligenceObservation.to(evaluateInsertAttempt.to(promotionBranch)));
 
 const finalizeThenNextBatch = finalizeClassificationResult.to(writeModeBranch);
 
@@ -972,4 +1221,5 @@ export default workflow('source-intelligence-analyzer', 'AI Job Agent - Source I
   .add(overviewNote)
   .add(safetyInvariantsNote)
   .add(confidenceRulesNote)
+  .add(retryPolicyNote)
   .add(futureWriteModeNote);

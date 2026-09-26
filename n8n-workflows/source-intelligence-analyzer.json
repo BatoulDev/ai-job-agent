@@ -1,0 +1,927 @@
+{
+  "name": "AI Job Agent - Source Intelligence Analyzer",
+  "active": false,
+  "nodes": [
+    {
+      "parameters": {},
+      "id": "2ad4ae47-3221-46e2-a504-73448cd27f2a",
+      "name": "Start Source Intelligence Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [
+        -208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "mode-field",
+              "name": "mode",
+              "value": "dry_run",
+              "type": "string"
+            },
+            {
+              "id": "supabase-base-url",
+              "name": "supabaseBaseUrl",
+              "value": "http://host.docker.internal:55321",
+              "type": "string"
+            },
+            {
+              "id": "environment-field",
+              "name": "environment",
+              "value": "local",
+              "type": "string"
+            },
+            {
+              "id": "max-sources-field",
+              "name": "maxSourcesPerRun",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "rate-limit-field",
+              "name": "rateLimitDelaySeconds",
+              "value": 2,
+              "type": "number"
+            },
+            {
+              "id": "timeout-field",
+              "name": "timeoutSeconds",
+              "value": 10,
+              "type": "number"
+            },
+            {
+              "id": "started-at-field",
+              "name": "startedAt",
+              "value": "={{ $now.toISO() }}",
+              "type": "string"
+            },
+            {
+              "id": "since-source-id-field",
+              "name": "sinceSourceId",
+              "value": "sr-ae-aus",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "64b55b3e-4df0-455d-9b28-fe08eaf69823",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        112,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.supabaseBaseUrl }}/rest/v1/rpc/get_source_intelligence_candidates",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_limit: $json.maxSourcesPerRun } }}",
+        "options": {
+          "timeout": "={{ $json.timeoutSeconds * 1000 }}"
+        }
+      },
+      "id": "cb5fcca3-8258-47d6-8660-14db472a3fd9",
+      "name": "Load Candidate Sources",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        400,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst runId = $execution.id;\nfunction generateUuidV4() {\n  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {\n    const r = Math.random() * 16 | 0;\n    const v = c === 'x' ? r : (r & 0x3 | 0x8);\n    return v.toString(16);\n  });\n}\nconst runUuid = generateUuidV4();\nconst rows = $input.all().map(i => i.json).slice(0, cfg.maxSourcesPerRun);\nreturn rows.map(r => {\n  const src = r.source;\n  return { json: {\n    source_id: src.id,\n    company_name: src.company_name,\n    official_careers_url: src.official_careers_url || null,\n    official_website_url: src.official_website_url || null,\n    existing_ats_provider: src.ats_provider || null,\n    existing_automation_eligibility: src.automation_eligibility || null,\n    researcher_notes: src.researcher_notes || null,\n    selectionReason: r.selection_reason,\n    previousIngestionType: r.previous_ingestion_type || null,\n    previousConfidence: r.previous_confidence || null,\n    previousAnalyzedAt: r.previous_analyzed_at || null,\n    runId,\n    runUuid,\n  } };\n});"
+      },
+      "id": "21f2f768-ae99-47d5-b748-29bf0ae26f63",
+      "name": "Bound Candidate Sources",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        704,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const cfg = $('Workflow Configuration').first().json;\nconst results = $input.all().map(i => i.json);\nconst startedAtMs = new Date(cfg.startedAt).getTime();\nconst countBy = (key, val) => results.filter(r => r[key] === val).length;\n\nconst detectedProviders = {};\nfor (const r of results) {\n  if (r.detected_provider && r.detected_provider !== 'unknown') {\n    detectedProviders[r.detected_provider] = (detectedProviders[r.detected_provider] || 0) + 1;\n  }\n}\n\nconst insertsAttempted = results.filter(r => r.insertAttempted === true).length;\nconst insertsPerformed = results.filter(r => r.insertPerformed === true).length;\nconst insertFailures = results.filter(r => r.insertAttempted === true && r.insertPerformed !== true).length;\nconst promotionsAttempted = results.filter(r => r.promotionAttempted === true).length;\nconst promotionsApplied = results.filter(r => r.promotionApplied === true).length;\nconst newSources = results.filter(r => r.selectionReason === 'never_analyzed').length;\nconst retriedSources = results.filter(r => r.selectionReason === 'retry_after_backoff').length;\nconst retryableNeedsInvestigation = results.filter(r => r.ingestion_type === 'needs_investigation' && r.retryable === true).length;\nconst structuralNeedsInvestigation = results.filter(r => r.ingestion_type === 'needs_investigation' && r.retryable !== true).length;\nconst wouldBeAutoPromotedDryRun = results.filter(r => r.wouldBeAutoPromotable === true).length;\n\nreturn [{ json: {\n  mode: cfg.mode,\n  environment: cfg.environment,\n  runId: results.length ? results[0].runId : $execution.id,\n  maxSourcesPerRun: cfg.maxSourcesPerRun,\n  sourcesAnalyzed: results.length,\n  newSources,\n  retriedSources,\n  detectedProviders,\n  atsAdapterCandidates: countBy('ingestion_type', 'ats_adapter'),\n  htmlCandidates: countBy('ingestion_type', 'html'),\n  customCandidates: countBy('ingestion_type', 'custom_parser'),\n  needsInvestigation: countBy('ingestion_type', 'needs_investigation'),\n  retryableNeedsInvestigation,\n  structuralNeedsInvestigation,\n  stillUnknown: countBy('detected_provider', 'unknown'),\n  writeMode: cfg.mode === 'write',\n  wouldBeAutoPromotedDryRun,\n  insertsAttempted,\n  insertsPerformed,\n  insertFailures,\n  promotionsAttempted,\n  promotionsApplied,\n  totalDurationMs: Date.now() - startedAtMs,\n  results,\n  finishedAt: new Date().toISOString(),\n} }];"
+      },
+      "id": "2e27ed7b-957a-48ad-97a3-5c599d36607b",
+      "name": "Build Run Summary",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1696,
+        -256
+      ]
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $input.first().json;\n\nfunction isValidHttpUrl(value) {\n  if (typeof value !== 'string') return false;\n  const trimmed = value.trim();\n  if (!trimmed) return false;\n  return /^https?:\\/\\/[^\\s/?#][^\\s]*$/i.test(trimmed);\n}\n\nconst careersValid = isValidHttpUrl(src.official_careers_url);\nconst websiteValid = isValidHttpUrl(src.official_website_url);\n\nconst fetchUrl = careersValid ? src.official_careers_url : (websiteValid ? src.official_website_url : null);\nconst fetchUrlKind = careersValid ? 'careers' : (websiteValid ? 'website' : null);\n\nreturn [{ json: { ...src, fetchUrl, fetchUrlKind } }];"
+      },
+      "id": "8007832b-fe97-4e1f-800d-08282366111d",
+      "name": "Choose Fetch Target",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1312,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.fetchUrl }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty"
+              },
+              "rightValue": "",
+              "id": "ed29527d-4057-49c9-846c-fd137048fd56"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "df24f6f1-6b32-42c3-9475-37f3adf89a5f",
+      "name": "Has Fetchable URL?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        1600,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "url": "={{ $json.fetchUrl }}",
+        "options": {
+          "redirect": {
+            "redirect": {
+              "maxRedirects": 5
+            }
+          },
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "text",
+              "outputPropertyName": "body"
+            }
+          },
+          "timeout": "={{ $('Workflow Configuration').first().json.timeoutSeconds * 1000 }}"
+        }
+      },
+      "id": "55ff73a4-ef35-49e8-9912-01b3048ead46",
+      "name": "Fetch Source Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1904,
+        0
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Choose Fetch Target').first().json;\nconst resp = $input.first().json;\nconst networkError = !!resp.error;\nconst statusCode = resp.statusCode || null;\nconst bodyText = typeof resp.body === 'string' ? resp.body : (resp.body ? JSON.stringify(resp.body) : '');\nconst blocked = networkError || !statusCode || statusCode === 401 || statusCode === 403 || statusCode === 429 || statusCode === 999 || statusCode >= 500;\nconst success = !blocked && statusCode >= 200 && statusCode < 400;\n\nconst headers = resp.headers || {};\nconst serverHeader = typeof headers.server === 'string' ? headers.server.slice(0, 60) : null;\nconst linkHeader = typeof headers.link === 'string' ? headers.link : '';\nconst setCookieRaw = headers['set-cookie'];\nconst setCookieHeader = Array.isArray(setCookieRaw) ? setCookieRaw.join(';') : (typeof setCookieRaw === 'string' ? setCookieRaw : '');\n\nconst headerEvidence = {\n  server: serverHeader,\n  cloudflareDetected: /cloudflare/i.test(serverHeader || '') || /__cf_bm/i.test(setCookieHeader),\n  wixDetected: !!headers['x-wix-request-id'],\n  wordpressDetected: /wp-json/i.test(linkHeader),\n};\n\nconst titleMatch = bodyText.match(/<title[^>]*>([^<]{0,200})<\\/title>/i);\nconst pageTitle = titleMatch ? titleMatch[1].trim().slice(0, 200) : null;\n\nconst canonicalMatch = bodyText.match(/<link[^>]+rel=[\"']canonical[\"'][^>]+href=[\"']([^\"']{0,300})[\"']/i);\nconst canonicalUrl = canonicalMatch ? canonicalMatch[1].slice(0, 300) : null;\n\nreturn [{ json: {\n  ...src,\n  httpStatus: statusCode,\n  bodyText: success ? bodyText.slice(0, 200000) : '',\n  fetchSucceeded: success,\n  fetchError: networkError ? String(resp.error) : null,\n  headerEvidence,\n  pageTitle,\n  canonicalUrl,\n} }];"
+      },
+      "id": "48853f9a-89f6-49d4-8c25-e6acaf7ddfdc",
+      "name": "Evaluate Fetch Attempt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2208,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.fetchSucceeded }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true,
+              "id": "cc4787e2-b25e-45e1-b938-b7a6e201b7bc"
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "id": "ff38c0e4-2fea-407f-8671-7321a167c991",
+      "name": "Fetch Succeeded?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        2512,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const src = $input.first().json;\nconst url = (src.fetchUrl || '').toLowerCase();\nconst body = src.bodyText || '';\nconst haystack = (url + '\\n' + body).toLowerCase();\n\nconst PROVIDERS = [\n  { id: 'greenhouse', signals: ['boards-api.greenhouse.io', 'job-boards.greenhouse.io', 'boards.greenhouse.io'] },\n  { id: 'lever', signals: ['api.lever.co', 'jobs.lever.co'] },\n  { id: 'workable', signals: ['apply.workable.com'] },\n  { id: 'oracle', signals: ['oraclecloud.com', 'hcmui/candidateexperience'] },\n  { id: 'sap', signals: ['successfactors.com', 'sapsf.eu'] },\n  { id: 'workday', signals: ['myworkdayjobs.com'] },\n  { id: 'taleo', signals: ['taleo.net'] },\n  { id: 'smartrecruiters', signals: ['jobs.smartrecruiters.com'] },\n  { id: 'icims', signals: ['icims.com'] },\n];\n\nlet match = null;\nfor (const p of PROVIDERS) {\n  for (const sig of p.signals) {\n    if (haystack.includes(sig)) { match = { provider: p.id, signal: sig }; break; }\n  }\n  if (match) break;\n}\n\nconst OFF_SCOPE_HOSTS = ['linkedin.com'];\nconst JOB_HUB_KEYWORDS = ['jobs', 'job', 'careers', 'career', 'vacancies', 'vacancy', 'opportunities'];\nconst JOB_SEARCH_QUERY_HINTS = ['page=', 'q=', 'options=', 'location=', 'search', 'filter', 'category=', 'keyword'];\nconst JOB_ANCHOR_TEXT_PATTERN = /(job|career|apply|vacanc|recruit|hiring|position|opportunit)/i;\n\nfunction hostOf(href) {\n  const abs = href.match(/^https?:\\/\\/([^\\/?#]+)/i);\n  if (abs) return abs[1].toLowerCase().replace(/^www\\./, '');\n  const proto = href.match(/^\\/\\/([^\\/?#]+)/);\n  if (proto) return proto[1].toLowerCase().replace(/^www\\./, '');\n  return null;\n}\n\nconst pageHost = hostOf(src.fetchUrl || '') || '';\nconst rawAnchors = body.match(/<a\\s+[^>]*href=[\"']([^\"']+)[\"'][^>]*>([\\s\\S]*?)<\\/a>/gi) || [];\nconst anchorPattern = /<a\\s+[^>]*href=[\"']([^\"']+)[\"'][^>]*>([\\s\\S]*?)<\\/a>/i;\n\nconst seenHrefs = new Set();\nconst jobDetailLinks = [];\nlet jobDetailLinkTotal = 0;\nconst offScopeHosts = new Set();\nconst externalDomains = new Set();\nlet jobSearchExample = null;\n\nfor (const raw of rawAnchors.slice(0, 500)) {\n  const m = raw.match(anchorPattern);\n  if (!m) continue;\n  const href = m[1].trim();\n  const text = m[2].replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim().slice(0, 60);\n  if (!href || href.startsWith('#') || /^(mailto:|tel:|javascript:)/i.test(href)) continue;\n  if (seenHrefs.has(href)) continue;\n\n  const looksJobRelevant = JOB_ANCHOR_TEXT_PATTERN.test(href) || JOB_ANCHOR_TEXT_PATTERN.test(text);\n  if (!looksJobRelevant) continue;\n  seenHrefs.add(href);\n\n  const host = hostOf(href);\n  const isExternal = !!host && host !== pageHost;\n\n  if (isExternal && OFF_SCOPE_HOSTS.some(h => host.includes(h))) {\n    offScopeHosts.add(host);\n    continue;\n  }\n  if (isExternal) {\n    externalDomains.add(host);\n    continue;\n  }\n\n  const parts = href.split('?');\n  const pathPart = parts[0];\n  const queryPart = parts[1];\n  const segments = pathPart.split('/').filter(Boolean);\n  const lastSegment = (segments[segments.length - 1] || '').toLowerCase();\n  const isHubOnlyPath = JOB_HUB_KEYWORDS.includes(lastSegment);\n  const hasSearchQuery = !!queryPart && JOB_SEARCH_QUERY_HINTS.some(hint => queryPart.toLowerCase().includes(hint));\n  const pathHasHubKeyword = segments.some(seg => JOB_HUB_KEYWORDS.includes(seg.toLowerCase()));\n  const parentSegment = segments.length >= 2 ? segments[segments.length - 2].toLowerCase() : '';\n  const parentIsHubKeyword = JOB_HUB_KEYWORDS.includes(parentSegment);\n  const slugTokens = lastSegment.split(/[-_]+/).filter(Boolean);\n  const looksLikeSpecificSlug = slugTokens.length >= 4 || /\\d/.test(lastSegment);\n  const isPlausibleJobDetail = !isHubOnlyPath && (parentIsHubKeyword || looksLikeSpecificSlug);\n\n  if (isPlausibleJobDetail) {\n    jobDetailLinkTotal += 1;\n    if (jobDetailLinks.length < 5) jobDetailLinks.push({ href: href.slice(0, 150), text });\n  }\n  if (pathHasHubKeyword && hasSearchQuery && !jobSearchExample) {\n    jobSearchExample = href.slice(0, 200);\n  }\n}\n\nconst ldBlocks = body.match(/<script[^>]+type=[\"']application\\/ld\\+json[\"'][^>]*>([\\s\\S]*?)<\\/script>/gi) || [];\nconst ldTypeSet = new Set();\nfor (const block of ldBlocks) {\n  const types = block.match(/\"@type\"\\s*:\\s*\"([^\"]+)\"/g) || [];\n  for (const t of types) {\n    const mm = t.match(/\"@type\"\\s*:\\s*\"([^\"]+)\"/);\n    if (mm && mm[1]) ldTypeSet.add(mm[1].slice(0, 40));\n    if (ldTypeSet.size >= 8) break;\n  }\n  if (ldTypeSet.size >= 8) break;\n}\nconst jsonLdTypes = Array.from(ldTypeSet);\nconst hasJobPostingSchema = jsonLdTypes.some(t => t.toLowerCase() === 'jobposting') || haystack.includes('schema.org/jobposting');\n\nconst pageContext = {\n  page_title: src.pageTitle || null,\n  canonical_url: src.canonicalUrl || null,\n  header_evidence: src.headerEvidence || null,\n  json_ld_types: jsonLdTypes,\n  distinct_job_detail_links: jobDetailLinks,\n  job_detail_link_total: jobDetailLinkTotal,\n  job_search_url_example: jobSearchExample,\n  off_scope_platforms: Array.from(offScopeHosts).slice(0, 3),\n  external_domains_referenced: Array.from(externalDomains).slice(0, 5),\n};\n\nlet result;\nif (match) {\n  const directHit = url.includes(match.signal);\n  result = {\n    detected_provider: match.provider, ingestion_type: 'ats_adapter', confidence: directHit ? 'high' : 'medium', retryable: null,\n    evidence: {\n      matched_signal: match.signal,\n      detection_method: directHit ? 'fetched_url_is_provider_domain' : 'provider_domain_referenced_in_page_content',\n      checked_url: src.fetchUrl, http_status: src.httpStatus,\n      ...pageContext,\n    },\n  };\n} else {\n  const scriptTagCount = (body.match(/<script/gi) || []).length;\n  const visibleTextLength = body.replace(/<[^>]*>/g, ' ').replace(/\\s+/g, ' ').trim().length;\n  const looksLikeSpaShell = scriptTagCount >= 5 && visibleTextLength < 500;\n  const hasWeakKeywordSignal = /(job opening|open position|apply now|current openings|career opportunit|view job|job listing)/i.test(body);\n  const hasDistinctJobDetailLinks = jobDetailLinks.length >= 1;\n  const hasJobSearchStructure = !!jobSearchExample;\n\n  if (looksLikeSpaShell) {\n    result = {\n      detected_provider: 'unknown', ingestion_type: 'custom_parser', confidence: 'low', retryable: null,\n      evidence: { matched_signal: null, detection_method: 'javascript_rendered_shell_detected', checked_url: src.fetchUrl, http_status: src.httpStatus, ...pageContext },\n    };\n  } else if (hasJobPostingSchema || hasDistinctJobDetailLinks || hasJobSearchStructure) {\n    const signal = hasJobPostingSchema ? 'schema.org/JobPosting' : (hasJobSearchStructure ? jobSearchExample : 'distinct_job_detail_links');\n    const method = hasJobPostingSchema ? 'jobposting_schema_detected' : (hasJobSearchStructure ? 'job_search_url_structure_detected' : 'distinct_job_detail_links_detected');\n    result = {\n      detected_provider: 'unknown', ingestion_type: 'html', confidence: 'low', retryable: null,\n      evidence: { matched_signal: signal, detection_method: method, checked_url: src.fetchUrl, http_status: src.httpStatus, ...pageContext },\n    };\n  } else {\n    result = {\n      detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', retryable: false,\n      evidence: {\n        matched_signal: null,\n        detection_method: offScopeHosts.size > 0 ? 'off_scope_job_destination_only' : 'no_provider_fingerprint_or_job_content_detected',\n        checked_url: src.fetchUrl, http_status: src.httpStatus,\n        weak_keyword_signal: hasWeakKeywordSignal,\n        ...pageContext,\n      },\n    };\n  }\n}\n\nreturn [{ json: {\n  source_id: src.source_id, company_name: src.company_name,\n  ...result,\n  existing_ats_provider: src.existing_ats_provider, existing_automation_eligibility: src.existing_automation_eligibility,\n  runId: src.runId,\n} }];"
+      },
+      "id": "a298b9ba-1eec-4fdc-b862-76526e1fd3d4",
+      "name": "Detect Provider Fingerprint",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        -96
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const r = $input.first().json;\nconst wouldBeAutoPromotable = r.ingestion_type === 'ats_adapter' && r.confidence === 'high' && r.detected_provider !== 'unknown';\nreturn [{ json: {\n  ...r,\n  analyzedAt: new Date().toISOString(),\n  wouldBeAutoPromotable,\n  insertAttempted: false, insertPerformed: false, insertError: null,\n  promotionAttempted: false, promotionApplied: false, promotionReason: null,\n} }];"
+      },
+      "id": "9041e780-736a-4c3a-b24e-64cca5699e48",
+      "name": "Finalize Classification Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        3152,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
+      },
+      "id": "503517b7-70f0-4100-81ba-a8ff03c32417",
+      "name": "Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        3712,
+        16
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "5203eeb0-1700-4e62-8f97-e1136fe2656a",
+      "name": "Process Sources",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1008,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const src = $input.first().json;\nconst networkError = !!src.fetchError;\nconst status = src.httpStatus;\n\nconst retryable = networkError\n  || status === 403\n  || status === 429\n  || status === 999\n  || (typeof status === 'number' && status >= 500);\n\nreturn [{ json: {\n  source_id: src.source_id, company_name: src.company_name,\n  detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', retryable,\n  evidence: {\n    matched_signal: null,\n    detection_method: src.fetchError ? 'fetch_network_error' : 'fetch_blocked_or_error_status',\n    checked_url: src.fetchUrl, http_status: src.httpStatus,\n    page_title: src.pageTitle,\n    canonical_url: src.canonicalUrl,\n    header_evidence: src.headerEvidence,\n  },\n  existing_ats_provider: src.existing_ats_provider, existing_automation_eligibility: src.existing_automation_eligibility,\n  runId: src.runId,\n} }];"
+      },
+      "id": "f1e84856-38f4-49be-94e4-17ca369d24b1",
+      "name": "Build Blocked Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2816,
+        288
+      ]
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "const src = $input.first().json;\nreturn [{ json: {\n  source_id: src.source_id, company_name: src.company_name,\n  detected_provider: 'unknown', ingestion_type: 'needs_investigation', confidence: 'low', retryable: false,\n  evidence: { matched_signal: null, detection_method: 'no_public_url_available', checked_url: null, http_status: null },\n  existing_ats_provider: src.existing_ats_provider, existing_automation_eligibility: src.existing_automation_eligibility,\n  runId: src.runId,\n} }];"
+      },
+      "id": "3f7031a7-38af-4883-8bdc-51f2a56b037e",
+      "name": "Build No-URL Result",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2144,
+        416
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Source Intelligence Analyzer\nSelects company_sources rows (ats_provider=unknown OR automation_eligibility=unknown) that are EITHER never analyzed OR whose latest observation was a retryable transient failure past its 3-day backoff (state-driven via the get_source_intelligence_candidates SQL RPC, not a manual cursor — see the Retry Policy note), GETs each source's public careers/website URL once, and classifies it. In dry_run mode (default) nothing is written anywhere. In write mode, each classification is appended to source_intelligence (now allowing multiple observations per source over time — true history), and ONLY a high-confidence known-ATS result (ingestion_type=ats_adapter, confidence=high) is then promoted through a single guarded RPC into company_sources.ats_provider/automation_eligibility — never review_status, never company_id, never a direct UPDATE from this workflow. Every other result (medium/low confidence, unknown, structural needs_investigation, html, custom_parser, blocked/no-URL) stays an unresolved observation only. No source is ever activated for job scraping here. Not connected to the Job Ingestion Pilot Orchestrator — a fully separate workflow.",
+        "height": 344,
+        "width": 536,
+        "color": 6
+      },
+      "id": "9a320fb6-ecbf-42f7-8f5f-f42806af3bb5",
+      "name": "Sticky Note 61451ff4",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -320,
+        -512
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Safety invariants — keep these when extending\nGET-only, no auth/CAPTCHA/form bypass, no retry on a blocked/failed fetch (classify needs_investigation once and move on), maxSourcesPerRun bound, rateLimitDelaySeconds pacing between sources. These are load-bearing, not pilot-only scaffolding — preserve all of them before any future write-mode branch is added.",
+        "height": 248,
+        "width": 496,
+        "color": 3
+      },
+      "id": "b2ab2eaf-1543-4472-ac2d-9053cecc805d",
+      "name": "Sticky Note - Safety Invariants",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        944,
+        -464
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Confidence rules\nHIGH — the fetched URL itself is a known provider domain (direct hit). MEDIUM — a provider signal is referenced inside the fetched page, but the page isn't hosted on that domain. LOW — every heuristic classification (html / custom_parser / needs_investigation) with no provider fingerprint at all. Never guessed — a provider is only named when a signal was actually found.",
+        "height": 200,
+        "width": 480,
+        "color": 3
+      },
+      "id": "836a3e6f-32a1-49fa-8297-af457bfe9cd1",
+      "name": "Sticky Note - Confidence Rules",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        2800,
+        -416
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Controlled write mode + promotion (gated, off by default)\nWhen Workflow Configuration.mode === 'write', each finalized classification is appended as a new row in public.source_intelligence (supabase/migrations/20260916171255_create_source_intelligence.sql) — insert-only, never UPDATE/UPSERT/DELETE on that table. Then, ONLY if the insert succeeded AND the result is ingestion_type=ats_adapter + confidence=high + a recognized provider, Promote Source calls public.promote_source_intelligence_observation(p_source_id) (supabase/migrations/20260924130000_add_source_intelligence_promotion.sql) — the ONE place this workflow ever writes to company_sources, guarded per-column so an already-non-unknown value is never overwritten, and never touching review_status or company_id. Default mode stays 'dry_run', where this entire branch — insert and promotion alike — is skipped (0 inserts, 0 promotions attempted). Known pre-condition for a real write-mode test: the Insert/Promote nodes' Supabase credential must be bound manually in the n8n UI (the MCP cannot auto-assign a predefinedCredentialType credential of type supabaseApi).",
+        "height": 300,
+        "width": 620,
+        "color": 5
+      },
+      "id": "94b8ba32-6d26-4159-bc8d-e5162ca8411b",
+      "name": "Sticky Note - Future Write Mode",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        3408,
+        -752
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 3
+          },
+          "conditions": [
+            {
+              "id": "write-mode-check",
+              "leftValue": "={{ $('Workflow Configuration').first().json.mode }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "write"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "9090737a-9be8-4700-8456-b07226172179",
+      "name": "Is Write Mode?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        3376,
+        0
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/source_intelligence",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Prefer",
+              "value": "return=minimal"
+            }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { source_id: $json.source_id, run_id: $('Bound Candidate Sources').first().json.runUuid, detected_provider: $json.detected_provider, ingestion_type: $json.ingestion_type, confidence: $json.confidence, retryable: $json.retryable, evidence: $json.evidence, analyzed_at: $json.analyzedAt } }}",
+        "options": {
+          "timeout": "={{ $('Workflow Configuration').first().json.timeoutSeconds * 1000 }}",
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "dade7461-412c-4bec-9aa7-adeb96bea515",
+      "name": "Insert Source Intelligence Observation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3888,
+        -240
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Finalize Classification Result').first().json;\nconst resp = $input.first().json;\nconst networkError = !!resp.error;\nconst statusCode = resp.statusCode || null;\nconst insertPerformed = !networkError && statusCode >= 200 && statusCode < 300;\nconst responseBody = resp.body;\nconst errorMessage = insertPerformed\n  ? null\n  : (networkError\n      ? String(resp.error)\n      : (responseBody && typeof responseBody === 'object' && responseBody.message\n          ? String(responseBody.message).slice(0, 300)\n          : `insert_failed_status_${statusCode}`));\n\nreturn [{ json: {\n  ...src,\n  insertAttempted: true,\n  insertPerformed,\n  insertError: errorMessage,\n} }];"
+      },
+      "id": "0e23ab01-8d32-42d3-8291-060e5c8eafb2",
+      "name": "Evaluate Insert Attempt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4000,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "triggerAtHour": 14
+            }
+          ]
+        }
+      },
+      "id": "9fcb3eb5-6734-4879-a787-3b934a6ceffe",
+      "name": "Daily Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        208
+      ]
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 1
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.insertPerformed }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "true"
+              },
+              "rightValue": true
+            },
+            {
+              "leftValue": "={{ $json.ingestion_type }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "ats_adapter"
+            },
+            {
+              "leftValue": "={{ $json.confidence }}",
+              "operator": {
+                "type": "string",
+                "operation": "equals"
+              },
+              "rightValue": "high"
+            },
+            {
+              "leftValue": "={{ $json.detected_provider }}",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              },
+              "rightValue": "unknown"
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "id": "1ff48b27-ed78-4dff-96e5-6660a9194ad4",
+      "name": "Is Auto-Promotable?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [
+        4208,
+        -144
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/rpc/promote_source_intelligence_observation",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { p_source_id: $json.source_id } }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          },
+          "timeout": "={{ $('Workflow Configuration').first().json.timeoutSeconds * 1000 }}"
+        }
+      },
+      "id": "fc76e369-2ca6-4325-bcaf-0da4ac49fd3c",
+      "name": "Promote Source",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        4512,
+        -304
+      ],
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "jsCode": "const src = $('Evaluate Insert Attempt').first().json;\nconst resp = $input.first().json;\nconst networkError = !!resp.error;\nconst statusCode = resp.statusCode || null;\nconst httpOk = !networkError && statusCode >= 200 && statusCode < 300;\nconst body = resp.body;\nconst row = httpOk && Array.isArray(body) ? body[0] : null;\n\nconst promotionApplied = httpOk && !!row && row.promoted === true;\nconst promotionReason = httpOk\n  ? (row ? row.reason : 'promotion_rpc_returned_no_row')\n  : (networkError\n      ? String(resp.error).slice(0, 300)\n      : (body && typeof body === 'object' && body.message ? String(body.message).slice(0, 300) : `promotion_failed_status_${statusCode}`));\n\nreturn [{ json: {\n  ...src,\n  promotionAttempted: true,\n  promotionApplied,\n  promotionReason,\n} }];"
+      },
+      "id": "c948b0a9-1a47-4d23-851e-fb98e4eeeb0a",
+      "name": "Evaluate Promotion Attempt",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        4800,
+        -304
+      ]
+    },
+    {
+      "id": "b00f6aef-e53f-4925-bb04-2eae4b8ebdb3",
+      "name": "Sticky Note - Retry Policy",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        -420
+      ],
+      "parameters": {
+        "content": "### Retry / re-analysis policy (added 2026-09-24)\nRETRYABLE (source_intelligence.retryable=true, set by Build Blocked Result) — a network error, or HTTP 403/429/999/5xx: a transient condition that may have cleared. Becomes an eligible candidate again once analyzed_at is more than 3 days old. STRUCTURAL (retryable=false, set by Build No-URL Result and Detect Provider Fingerprint's own inconclusive branch) — no URL, HTTP 404/401, or a page that fetched fine but matched no signal at all: re-fetching the identical page will not change the answer, so these are never auto-retried. A successful classification (ats_adapter/html/custom_parser) is likewise never re-selected — retryable stays null, not applicable. Fixed 3-day backoff, not per-status or exponential — this project runs at most once/day, so anything shorter is meaningless and same-day retries risk re-hitting the exact outage that caused the failure.",
+        "height": 240,
+        "width": 620,
+        "color": 4
+      }
+    }
+  ],
+  "connections": {
+    "Start Source Intelligence Run": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "Load Candidate Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Load Candidate Sources": {
+      "main": [
+        [
+          {
+            "node": "Bound Candidate Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Bound Candidate Sources": {
+      "main": [
+        [
+          {
+            "node": "Process Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Choose Fetch Target": {
+      "main": [
+        [
+          {
+            "node": "Has Fetchable URL?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Fetchable URL?": {
+      "main": [
+        [
+          {
+            "node": "Fetch Source Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build No-URL Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Source Page": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Fetch Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Fetch Attempt": {
+      "main": [
+        [
+          {
+            "node": "Fetch Succeeded?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Succeeded?": {
+      "main": [
+        [
+          {
+            "node": "Detect Provider Fingerprint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Blocked Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Detect Provider Fingerprint": {
+      "main": [
+        [
+          {
+            "node": "Finalize Classification Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Process Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Sources": {
+      "main": [
+        [
+          {
+            "node": "Build Run Summary",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Choose Fetch Target",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Blocked Result": {
+      "main": [
+        [
+          {
+            "node": "Finalize Classification Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build No-URL Result": {
+      "main": [
+        [
+          {
+            "node": "Finalize Classification Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Finalize Classification Result": {
+      "main": [
+        [
+          {
+            "node": "Is Write Mode?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Write Mode?": {
+      "main": [
+        [
+          {
+            "node": "Insert Source Intelligence Observation",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert Source Intelligence Observation": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Insert Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Daily Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Insert Attempt": {
+      "main": [
+        [
+          {
+            "node": "Is Auto-Promotable?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Auto-Promotable?": {
+      "main": [
+        [
+          {
+            "node": "Promote Source",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Promote Source": {
+      "main": [
+        [
+          {
+            "node": "Evaluate Promotion Attempt",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Evaluate Promotion Attempt": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

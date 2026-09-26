@@ -1746,34 +1746,43 @@ export type Database = {
       source_intelligence: {
         Row: {
           analyzed_at: string
+          applied_at: string | null
+          applied_result: Json | null
           confidence: string
           created_at: string
           detected_provider: string
           evidence: Json
           id: string
           ingestion_type: string
+          retryable: boolean | null
           run_id: string
           source_id: string
         }
         Insert: {
           analyzed_at?: string
+          applied_at?: string | null
+          applied_result?: Json | null
           confidence: string
           created_at?: string
           detected_provider: string
           evidence?: Json
           id?: string
           ingestion_type: string
+          retryable?: boolean | null
           run_id: string
           source_id: string
         }
         Update: {
           analyzed_at?: string
+          applied_at?: string | null
+          applied_result?: Json | null
           confidence?: string
           created_at?: string
           detected_provider?: string
           evidence?: Json
           id?: string
           ingestion_type?: string
+          retryable?: boolean | null
           run_id?: string
           source_id?: string
         }
@@ -2352,33 +2361,12 @@ export type Database = {
       get_source_intelligence_candidates: {
         Args: { p_limit?: number }
         Returns: {
-          ats_provider: string | null
-          automation_eligibility: string | null
-          company_id: string
-          company_name: string
-          country_code: string | null
-          discovery_channels: string[]
-          discovery_run_id: string | null
-          discovery_source: string | null
-          first_discovered_at: string | null
-          id: string
-          imported_at: string
-          last_seen_at: string | null
-          last_verified_at: string | null
-          normalized_source_key: string | null
-          official_careers_url: string | null
-          official_website_url: string | null
-          researcher_notes: string | null
-          review_status: string
-          target_country: string
-          updated_at: string
+          previous_analyzed_at: string
+          previous_confidence: string
+          previous_ingestion_type: string
+          selection_reason: string
+          source: Database["public"]["Tables"]["company_sources"]["Row"]
         }[]
-        SetofOptions: {
-          from: "*"
-          to: "company_sources"
-          isOneToOne: false
-          isSetofReturn: true
-        }
       }
       is_admin: { Args: never; Returns: boolean }
       is_cv_analysis_matching_eligible: {
@@ -2495,6 +2483,18 @@ export type Database = {
       promote_due_subscription_period: {
         Args: { p_user_id: string }
         Returns: undefined
+      }
+      promote_source_intelligence_observation: {
+        Args: { p_source_id: string }
+        Returns: {
+          ats_provider_applied: boolean
+          automation_eligibility_applied: boolean
+          promoted: boolean
+          reason: string
+          resulting_ats_provider: string
+          resulting_automation_eligibility: string
+          source_id: string
+        }[]
       }
       publish_price_version: {
         Args: { p_label: string; p_prices: Json }
