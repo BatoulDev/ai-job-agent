@@ -597,6 +597,9 @@ export type Database = {
           preference_snapshot: Json
           preferences_version: number | null
           professional_summary: string | null
+          profile_embedding: number[] | null
+          profile_embedding_content_hash: string | null
+          profile_embedding_generated_at: string | null
           profile_level: string | null
           projects: Json
           recommendations_state: string
@@ -635,6 +638,9 @@ export type Database = {
           preference_snapshot: Json
           preferences_version?: number | null
           professional_summary?: string | null
+          profile_embedding?: number[] | null
+          profile_embedding_content_hash?: string | null
+          profile_embedding_generated_at?: string | null
           profile_level?: string | null
           projects?: Json
           recommendations_state?: string
@@ -673,6 +679,9 @@ export type Database = {
           preference_snapshot?: Json
           preferences_version?: number | null
           professional_summary?: string | null
+          profile_embedding?: number[] | null
+          profile_embedding_content_hash?: string | null
+          profile_embedding_generated_at?: string | null
           profile_level?: string | null
           projects?: Json
           recommendations_state?: string
@@ -1023,6 +1032,9 @@ export type Database = {
           dedup_scope: string | null
           description: string
           discovered_at: string
+          embedding: number[] | null
+          embedding_content_hash: string | null
+          embedding_generated_at: string | null
           employment_type: string | null
           expires_at: string | null
           external_id: string | null
@@ -1060,6 +1072,9 @@ export type Database = {
           dedup_scope?: string | null
           description: string
           discovered_at?: string
+          embedding?: number[] | null
+          embedding_content_hash?: string | null
+          embedding_generated_at?: string | null
           employment_type?: string | null
           expires_at?: string | null
           external_id?: string | null
@@ -1097,6 +1112,9 @@ export type Database = {
           dedup_scope?: string | null
           description?: string
           discovered_at?: string
+          embedding?: number[] | null
+          embedding_content_hash?: string | null
+          embedding_generated_at?: string | null
           employment_type?: string | null
           expires_at?: string | null
           external_id?: string | null
@@ -2170,6 +2188,9 @@ export type Database = {
           preference_snapshot: Json
           preferences_version: number | null
           professional_summary: string | null
+          profile_embedding: number[] | null
+          profile_embedding_content_hash: string | null
+          profile_embedding_generated_at: string | null
           profile_level: string | null
           projects: Json
           recommendations_state: string
@@ -2729,6 +2750,9 @@ export type Database = {
           preference_snapshot: Json
           preferences_version: number | null
           professional_summary: string | null
+          profile_embedding: number[] | null
+          profile_embedding_content_hash: string | null
+          profile_embedding_generated_at: string | null
           profile_level: string | null
           projects: Json
           recommendations_state: string

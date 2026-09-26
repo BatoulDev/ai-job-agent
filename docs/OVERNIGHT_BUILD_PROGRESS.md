@@ -124,6 +124,30 @@ Continuing in a local VS Code session (Docker + local Supabase reachable, unlike
 
 ---
 
+## Phase 05 — Matching embeddings (partial: `BLOCKED_ON_CREDENTIAL` for real embedding generation)
+
+- **Branch**: `phase/05-matching-embeddings`, forked from `phase/04-ingestion-providers` @ `357357f`.
+- **Blocker found and documented, not worked around**: no embeddings-provider API key is reachable from the Next.js app (`grep -c OPENAI .env.local`/`.env.example` → 0). The only OpenAI access in this project is an n8n credential used exclusively by `cv-analysis-worker.ts`. Unlike Phases 01–04 (pure logic or free public-API reads), real embedding generation costs money per call — a volume/provider/architecture decision this session will not make unilaterally. Everything **except** the actual provider call was built, tested, and is ready to receive one. Full detail in `docs/OVERNIGHT_CREDENTIALS_REQUIRED.md`.
+- **Schema** (`supabase/migrations/20260927090000_add_matching_embeddings.sql`, applied and typed locally): additive `embedding real[]` / `embedding_content_hash text` / `embedding_generated_at timestamptz` on `jobs`, and `profile_embedding` / `profile_embedding_content_hash` / `profile_embedding_generated_at` on `cv_analyses`. **Deliberately not the pgvector extension** — at this product's real scale (starting from 4 ingestion sources), the shortlist step already bounds its candidate fetch to a size small enough for in-process cosine similarity; adding pgvector today would be an unused dependency (AGENTS.md §24). `ponytail`-flagged in the migration's own comment: upgrade to pgvector + an ANN index only if the active-jobs table ever exceeds ~10k rows or latency becomes a *measured* problem, not a guessed one.
+- **Files added**:
+  - `src/lib/matching/embeddingText.ts` — pure `buildJobEmbeddingText()`/`buildProfileEmbeddingText()` (deterministic field concatenation, never inventing facts not present in the input) and `hashEmbeddingText()` (sha256), the basis for "refresh only when relevant content changes."
+  - `src/lib/matching/cosineSimilarity.ts` — pure vector math, zero-vector-safe, throws on mismatched dimensions rather than silently truncating.
+  - `src/lib/matching/embedJob.ts` / `embedProfile.ts` — DB orchestration built against an **injected** `EmbeddingGenerator` function type, not a hardcoded vendor SDK — exactly the "continue: interfaces, mocks, fixtures, tests" pattern for a `BLOCKED_ON_CREDENTIAL` situation (AGENTS.md's overnight-build guidance). `embedProfileIfEligible()` calls the existing canonical `is_cv_analysis_matching_eligible()` RPC first (`supabase/migrations/20260825100010_add_matching_eligibility_gate.sql`) rather than re-deriving "is this profile current/approved" — reusing the one gate every other matching-adjacent consumer must use, per that migration's own governing comment.
+  - `src/lib/matching/shortlist.ts` — `shortlistJobsForUser()`: bounded fetch of active, embedded jobs (AGENTS.md §26 — never unbounded), Phase 02's already-tested `checkJobEligibility()` reused verbatim (not re-derived a second time), then cosine-similarity ranking over just the eligible subset. Never calls an LLM — that's Phase 06's job, on this function's small output only.
+  - `tests/unit/matching-embedding-text.test.mjs` (14 tests) and `tests/db/matching-embeddings.test.mjs` (7 tests, run against the real local Postgres) — the DB tests use a deterministic fake `EmbeddingGenerator` (content-hash-derived vector) so hash-based refresh-skipping, the eligibility gate, and shortlist ranking/filtering/limiting are all fully exercised without any real API call or cost. One test bug found and fixed during this session: the fake generator's hash-derived vectors have no real semantic-distance property, so a "closest job ranks first" assertion was flaky against leftover fixture jobs from earlier tests in the same file — fixed by hand-crafting exact vectors for that specific test instead of relying on the shared fake-embedding helper for ranking assertions.
+- **Not done in this phase, by design, pending the provider/architecture decision**: no real `EmbeddingGenerator` implementation, no n8n workflow for embedding generation, no wiring into the ingestion batch endpoint or CV-analysis approval flow (both are natural trigger points, deliberately not decided here), no automation_tasks entries.
+- **Validation actually executed, this session**:
+  - `npm run lint` (whole repo) → clean. `npx tsc --noEmit` (whole repo) → clean.
+  - `npm run test:unit` (whole repo) → **421/421** (14 new + all 407 pre-existing, zero regressions).
+  - `node --test tests/db/matching-embeddings.test.mjs` → 7/7 against the real local database (fake generator, zero real API calls/cost).
+  - `npm run test:db` (whole repo) → **488/488, 83 suites**, zero fixture leakage.
+  - `npm run build` → succeeds.
+- **Ending commit**: recorded after commit below.
+
+---
+
 ## Remaining phases (not yet started)
 
-05 matching-embeddings · 06 matching-rerank · 07 match-delivery · 08 cover-letters · 09 application-delivery · 10 application-tracking · 11 e2e-hardening.
+06 matching-rerank · 07 match-delivery · 08 cover-letters · 09 application-delivery · 10 application-tracking · 11 e2e-hardening.
+
+**Phase 06 (LLM rerank) is expected to hit the identical embeddings-provider blocker** — it needs an LLM call, and the same "no key reachable from the Next.js app, only inside n8n's CV Analysis Worker" finding applies. Recommend resolving the Phase 05 provider/architecture decision once (embeddings + rerank likely share the same answer) rather than re-investigating it twice.
