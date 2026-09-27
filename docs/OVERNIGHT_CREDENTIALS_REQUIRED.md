@@ -47,6 +47,13 @@ The user was asked directly (this was a genuine cost-bearing decision, not somet
 
 - Application sending intentionally has no n8n workflow (unlike ingestion/matching/cover-letters). There is no external rate-limited provider being orchestrated — the mock transport lives entirely inside the Next.js server, with no network call to manage retries/rate limits for. `POST /api/internal/applications/send-pending-emails` is callable directly (e.g. via `curl` with the `APPLICATION_WORKER_SECRET` Bearer token) by whoever needs to trigger a send-attempt pass, same as it would be from a future n8n workflow, a cron job, or a real background-job runner once a real provider exists.
 
+## BLOCKED_ON_CREDENTIAL: Gmail API OAuth for automated outcome detection (Phase 10) — not blocking, manual tracking is the real feature tonight
+
+- Env var: none defined yet — no OAuth client has been chosen/created.
+- Needed for: an optional future extension to `public.application_outcomes` (`supabase/migrations/20260928100000_...sql`) that would suggest an outcome (interviewing/rejected/offer) by reading the user's inbox, instead of requiring the user to self-report.
+- Why this is explicitly NOT built tonight, per direct product instruction: "any email/Gmail parsing must be optional and confidence-aware... do not infer application outcomes from weak evidence... keep uncertain events in manual-review/unknown state." `application_outcomes.source` currently only allows `'user_manual'` — there is no code path, credential, or schema value that could produce an inferred outcome. Manual self-reporting (`report_application_outcome()`) is the entire, real feature this phase ships.
+- Where to add it, when this is explicitly approved for a future phase: a Gmail OAuth integration (read-only scope), a classifier producing a `confidence` score, a new allowed `source = 'email_detected'` value plus a `confidence` column on `application_outcomes`, and — critically — a UI that always shows low/medium-confidence detections as a suggestion the user must confirm, never as an assumed fact. Any detection below a deliberately-chosen confidence threshold must land in `'unknown'`, not a guessed status.
+
 This file will gain one entry per credential a later phase is `BLOCKED_ON_CREDENTIAL` for, in this format:
 
 ```

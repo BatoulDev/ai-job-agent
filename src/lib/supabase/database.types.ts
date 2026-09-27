@@ -172,6 +172,47 @@ export type Database = {
           },
         ]
       }
+      application_outcomes: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          outcome_status: string
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          outcome_status?: string
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          outcome_status?: string
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_outcomes_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           application_method: string
@@ -2427,6 +2468,33 @@ export type Database = {
       }
       jsonb_is_object_array: { Args: { v: Json }; Returns: boolean }
       jsonb_is_string_array: { Args: { v: Json }; Returns: boolean }
+      mark_application_sent: {
+        Args: { p_application_id: string }
+        Returns: {
+          application_method: string
+          approved_at: string
+          approved_by: string
+          cover_letter_id: string | null
+          created_at: string
+          id: string
+          idempotency_key: string
+          job_id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          match_id: string
+          provider_message_id: string | null
+          send_attempt_count: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       mark_notification_read: {
         Args: { p_notification_id: string }
         Returns: {
@@ -2625,6 +2693,29 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "cvs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      report_application_outcome: {
+        Args: {
+          p_application_id: string
+          p_notes?: string
+          p_outcome_status: string
+        }
+        Returns: {
+          application_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          outcome_status: string
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "application_outcomes"
           isOneToOne: true
           isSetofReturn: false
         }

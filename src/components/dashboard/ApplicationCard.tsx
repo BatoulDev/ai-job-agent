@@ -22,7 +22,30 @@ const STATUS_STYLES: Record<ApplicationStatus, string> = {
   cancelled: "bg-slate-100 text-muted",
 };
 
-function ExistingApplication({ match, application }: { match: MatchWithJob; application: ApplicationRecord }) {
+function ExistingApplication({
+  match,
+  application,
+  onMarkSent,
+}: {
+  match: MatchWithJob;
+  application: ApplicationRecord;
+  onMarkSent: (applicationId: string) => Promise<void>;
+}) {
+  const [isMarking, setIsMarking] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  const handleMarkSent = async () => {
+    setError(null);
+    setIsMarking(true);
+    try {
+      await onMarkSent(application.id);
+    } catch {
+      setError("Couldn't update this application. Please try again.");
+    } finally {
+      setIsMarking(false);
+    }
+  };
+
   return (
     <div className="mt-4 rounded-2xl border border-slate-200 bg-bg p-4">
       <div className="flex items-center justify-between gap-2">
@@ -32,14 +55,32 @@ function ExistingApplication({ match, application }: { match: MatchWithJob; appl
         </span>
       </div>
 
-      {application.applicationMethod === "external_link" && (
-        <p className="mt-2 text-sm text-muted">
-          Your materials are ready.{" "}
-          <a href={match.job.applicationUrl ?? "#"} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline">
-            Open the application link
-          </a>{" "}
-          to apply on the company&apos;s site.
-        </p>
+      {application.applicationMethod === "external_link" && application.status === "pending_send" && (
+        <>
+          <p className="mt-2 text-sm text-muted">
+            Your materials are ready.{" "}
+            <a href={match.job.applicationUrl ?? "#"} target="_blank" rel="noopener noreferrer" className="font-semibold text-primary underline">
+              Open the application link
+            </a>{" "}
+            to apply on the company&apos;s site.
+          </p>
+          <button
+            type="button"
+            onClick={handleMarkSent}
+            disabled={isMarking}
+            className="mt-3 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-text transition-colors hover:border-slate-300 disabled:cursor-not-allowed disabled:opacity-60"
+          >
+            {isMarking ? "Saving..." : "I've applied — mark as sent"}
+          </button>
+          {error && (
+            <p role="alert" className="mt-2 text-xs text-red-700">
+              {error}
+            </p>
+          )}
+        </>
+      )}
+      {application.applicationMethod === "external_link" && application.status === "sent" && (
+        <p className="mt-2 text-sm text-muted">You marked this as applied. Track what happens next from the Sent tab.</p>
       )}
       {application.applicationMethod === "email" && application.status === "sent" && (
         <p className="mt-2 text-sm text-muted">Sent to {match.job.applicationEmail}.</p>
@@ -112,17 +153,19 @@ export default function ApplicationCard({
   coverLetter,
   application,
   onApproveAndSend,
+  onMarkSent,
 }: {
   match: MatchWithJob;
   coverLetter: CoverLetterRecord | null;
   application: ApplicationRecord | null;
   onApproveAndSend: (matchId: string) => Promise<void>;
+  onMarkSent: (applicationId: string) => Promise<void>;
 }) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (application) {
-    return <ExistingApplication match={match} application={application} />;
+    return <ExistingApplication match={match} application={application} onMarkSent={onMarkSent} />;
   }
 
   let preview: ApplicationPreview;

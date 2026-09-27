@@ -18,6 +18,7 @@ export default function ApprovedSection({
   onApproveCoverLetter,
   applications,
   onApproveAndSendApplication,
+  onMarkApplicationSent,
 }: {
   matches: MatchWithJob[] | null;
   isLoading: boolean;
@@ -27,6 +28,7 @@ export default function ApprovedSection({
   onApproveCoverLetter: (coverLetterId: string) => Promise<void>;
   applications: Record<string, ApplicationRecord>;
   onApproveAndSendApplication: (matchId: string) => Promise<void>;
+  onMarkApplicationSent: (applicationId: string) => Promise<void>;
 }) {
   return (
     <div className="space-y-6">
@@ -54,6 +56,7 @@ export default function ApprovedSection({
               coverLetter={coverLetters[match.id] ?? null}
               application={applications[match.id] ?? null}
               onApproveAndSend={onApproveAndSendApplication}
+              onMarkSent={onMarkApplicationSent}
             />
           </div>
         ))

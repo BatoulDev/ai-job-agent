@@ -35,6 +35,8 @@ import type { CoverLetterRecord } from "@/lib/coverLetters/types";
 import { fetchApplicationsForMatches } from "@/lib/applications/fetchApplications";
 import { mapApplicationRow } from "@/lib/applications/types";
 import type { ApplicationRecord } from "@/lib/applications/types";
+import { fetchOutcomesForApplications } from "@/lib/applications/fetchOutcomes";
+import { mapApplicationOutcomeRow, type ApplicationOutcomeRecord, type ApplicationOutcomeStatus } from "@/lib/applications/outcomeTypes";
 import {
   readAndClearProfileUpdatePending,
   computeEffectiveTaskState,
@@ -85,6 +87,7 @@ function DashboardPageContent() {
   const [matchesError, setMatchesError] = useState<string | null>(null);
   const [coverLetters, setCoverLetters] = useState<Record<string, CoverLetterRecord>>({});
   const [applications, setApplications] = useState<Record<string, ApplicationRecord>>({});
+  const [outcomes, setOutcomes] = useState<Record<string, ApplicationOutcomeRecord>>({});
   // Read and immediately clear the sessionStorage flag on the first render.
   // DashboardPageContent is inside <Suspense> with useSearchParams(), so Next.js
   // only renders it on the client — sessionStorage is always available here.
@@ -419,6 +422,13 @@ function DashboardPageContent() {
         if (!isMounted) return;
         setCoverLetters(letters);
         setApplications(apps);
+
+        const sentApplicationIds = Object.values(apps)
+          .filter((a) => a.status === "sent")
+          .map((a) => a.id);
+        const fetchedOutcomes = await fetchOutcomesForApplications(supabase, sentApplicationIds);
+        if (!isMounted) return;
+        setOutcomes(fetchedOutcomes);
       } catch (err) {
         if (!isMounted) return;
         setMatchesError(err instanceof Error ? err.message : "Couldn't load your matches.");
@@ -483,6 +493,21 @@ function DashboardPageContent() {
     const { data, error } = await supabase.rpc("create_application", { p_match_id: matchId });
     if (error) throw new Error(error.message);
     setApplications((prev) => ({ ...prev, [matchId]: mapApplicationRow(data) }));
+  }
+
+  async function handleMarkApplicationSent(applicationId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("mark_application_sent", { p_application_id: applicationId });
+    if (error) throw new Error(error.message);
+    const updated = mapApplicationRow(data);
+    setApplications((prev) => ({ ...prev, [updated.matchId]: updated }));
+  }
+
+  async function handleReportOutcome(applicationId: string, status: ApplicationOutcomeStatus) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("report_application_outcome", { p_application_id: applicationId, p_outcome_status: status });
+    if (error) throw new Error(error.message);
+    setOutcomes((prev) => ({ ...prev, [applicationId]: mapApplicationOutcomeRow(data) }));
   }
 
   if (isLoading) {
@@ -575,9 +600,19 @@ function DashboardPageContent() {
                 onApproveCoverLetter={handleApproveCoverLetter}
                 applications={applications}
                 onApproveAndSendApplication={handleApproveAndSendApplication}
+                onMarkApplicationSent={handleMarkApplicationSent}
               />
             )}
-            {activeTab === "sent" && <SentSection />}
+            {activeTab === "sent" && (
+              <SentSection
+                matches={approvedMatches}
+                applications={applications}
+                outcomes={outcomes}
+                isLoading={matchesLoading}
+                error={matchesError}
+                onReportOutcome={handleReportOutcome}
+              />
+            )}
             {activeTab === "rejected" && (
               <RejectedSection matches={rejectedMatches} isLoading={matchesLoading} error={matchesError} />
             )}

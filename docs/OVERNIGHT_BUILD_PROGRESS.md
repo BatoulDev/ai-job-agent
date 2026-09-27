@@ -281,6 +281,27 @@ The user was asked directly (AskUserQuestion — a genuine cost-bearing decision
 
 ---
 
+## Phase 10 — Application tracking
+
+- **Branch**: `phase/10-application-tracking`, forked from `phase/09-application-delivery` @ `8889fc0`.
+- **Explicit product instruction for this phase**: implement manual tracking first; preserve clear status transitions; any email/Gmail parsing must be optional and confidence-aware; never infer outcomes from weak evidence; keep uncertain events in manual-review/unknown state. Built exactly that and nothing more — no email/Gmail integration exists in this codebase at all (see `docs/OVERNIGHT_CREDENTIALS_REQUIRED.md`'s new `BLOCKED_ON_CREDENTIAL` entry), so there is zero risk of a weak-evidence inference: the only way an outcome is ever recorded is the user reporting it themselves.
+- **Schema** (`supabase/migrations/20260928100000_add_application_outcomes_and_manual_tracking.sql`): new `public.application_outcomes` table — deliberately **separate** from `applications.status` (which only tracks whether *our system* transmitted the application). Conflating "did we send it" with "what happened afterward in the real world" into one column would have been a schema-design mistake; keeping them apart means Phase 09's send-lifecycle code needed zero changes. One row per application (current outcome, not a history log — `audit_events` already gets one entry per report for the historical trail, so a second history table would have duplicated that). `source` allows exactly one value today, `'user_manual'`— extending it to add an `'email_detected'` value (plus a `confidence` column) is the documented, explicit upgrade path, not built here.
+  - `mark_application_sent(p_application_id)` — the manual "I applied" confirmation for `external_link` applications only (the only method Phase 09 never auto-transitions, since there's nothing for our system to automate — the user clicks through externally). Idempotent; explicitly rejects `email`-method applications (their status is already system-tracked, never user-editable) and rejects any status other than `pending_send`.
+  - `report_application_outcome(p_application_id, p_outcome_status, p_notes)` — requires the application to actually be `status = 'sent'` first (reporting an outcome for something never sent would be a fabricated fact — AGENTS.md §8); validates `p_outcome_status` against the exact five-value allowlist the table itself enforces; upserts the single current-outcome row (never duplicates); writes a new `application_outcome_reported` audit event (added to `audit_events.event_type`'s check constraint, which already anticipated `application_send_attempted`/`application_send_result` from an earlier sprint).
+- **Frontend**: `ApplicationCard.tsx`'s `ExistingApplication` gained an "I've applied — mark as sent" button, shown only for `external_link` + `pending_send`. `SentSection.tsx` — genuinely wired for the first time (was a static empty-state placeholder) — lists every match whose application is `status = 'sent'` (derived from data Phase 07/09 already fetch, no new join/RPC needed for this) with buttons to self-report Interviewing/Offer/Rejected/Withdrawn, and a `TrustNote` making the self-reported nature explicit to the user.
+- **Tests**: `tests/db/application-outcome-tracking.test.mjs` (9, against real local Postgres) — covers both RPCs' happy paths, idempotency, invalid-status rejection, the "must be sent first" gate, cross-user isolation for both RPCs, and RLS on the new table. `tests/unit/application-outcome-row-mapping.test.mjs` (2).
+- **Validation actually executed, this session**:
+  - `npx supabase migration up` → applied cleanly; `npm run db:types` → regenerated, new RPCs/table present.
+  - `npx tsc --noEmit` (whole repo) → clean.
+  - `npm run lint` (whole repo) → clean.
+  - `npm run test:unit` (whole repo) → **529/529** passing.
+  - `npm run test:db` (whole repo) → **533/533, 83 suites** passing, zero fixture leakage.
+  - `npm run build` → succeeds.
+  - Manual browser click-through of the new "mark as sent" / outcome-reporting buttons is **deferred to Phase 11**, per the explicit instruction to test all of Phases 07–09's (and now 10's) interactive flows together there with real browser automation.
+- **Ending commit**: recorded after commit below.
+
+---
+
 ## Remaining phases (not yet started)
 
-10 application-tracking · 11 e2e-hardening.
+11 e2e-hardening.
