@@ -12,6 +12,7 @@
     "test:unit": "node --test tests/unit/*.test.mjs",
     "test:workflow": "node --test tests/workflow/*.test.mjs",
     "test:db": "node scripts/run-db-tests.mjs",
+    "test:e2e": "playwright test",
     "test:db:crash-sweep:report": "node scripts/db-test-crash-recovery-sweep.mjs",
     "seed:local": "node scripts/seed-local-automation-users.mjs",
     "seed:local:dry-run": "node scripts/seed-local-automation-users.mjs --dry-run",
@@ -25,6 +26,7 @@
     "react-dom": "19.2.4"
   },
   "devDependencies": {
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/postcss": "^4",
     "@types/node": "^20",
     "@types/react": "^19",

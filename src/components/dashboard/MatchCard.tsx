@@ -33,7 +33,7 @@ export default function MatchCard({
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-card p-6 shadow-sm sm:p-8">
+    <div data-testid={`match-${match.id}`} className="rounded-3xl border border-slate-200 bg-card p-6 shadow-sm sm:p-8">
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div className="min-w-0">
           <h3 className="font-display text-base font-semibold text-text">{match.job.title}</h3>

@@ -302,6 +302,35 @@ The user was asked directly (AskUserQuestion — a genuine cost-bearing decision
 
 ---
 
-## Remaining phases (not yet started)
+## Phase 11 — E2E hardening
 
-11 e2e-hardening.
+- **Branch**: `phase/11-e2e-hardening`, forked from `phase/10-application-tracking` @ `858364f`.
+- **The top carried-forward risk from Phases 07-10** was explicit: every Approve/Reject/cover-letter/application/outcome interaction had only ever been verified via route/RPC tests, never an actual click, because the Claude-in-Chrome browser extension was disconnected throughout this session. This phase closes that gap for real.
+- **Playwright installed as a real project devDependency** (`@playwright/test` + a locally-installed Chromium binary via `npx playwright install chromium`), not just "confirmed available" — `npm run test:e2e` now runs it. Kept as a **separate** script from `npm test` (which stays `test:unit && test:workflow && test:db`), since e2e requires a live local Supabase instance and a real browser — a different operational shape than the fast unit/workflow/DB suites, consistent with how `test:db` already has its own local-only guard rails.
+- **`tests/e2e/global-setup.ts`** seeds one real fixture user (real CV upload, real `confirm_cv_analysis`, plan bumped to `pro`) with five real jobs/matches covering every stage the spec drives through: a pending match to approve, one to reject, an approved match with an unapproved cover-letter draft, an approved email-method match with an already-approved cover letter (ready for the send gate), and an approved external-link match with a real `pending_send` application already created via the real `create_application()` RPC. Refuses to run against anything but a local Supabase URL, same guard as `tests/db/helpers.mjs`. `global-teardown.ts` deletes everything afterward — verified zero residue after a full run (`auth.users` count for the fixture email is 0, `.fixture.json` removed).
+- **`tests/e2e/dashboard-flows.spec.ts`** (6 tests, all against a real Chromium browser, the real dev server, and the real local Supabase instance) — every one is a genuine click, not a mocked interaction:
+  1. Log in through the real `/login` form and land on `/dashboard`.
+  2. **Approve a match**: click the real Approve button on New Matches, verify optimistic removal, verify it reappears under Approved.
+  3. **Reject a match**: click Reject, verify it reappears under Rejected.
+  4. **Save an edited cover letter + approve it**: fill the real textarea, click Save Draft, click Approve Cover Letter, verify the frozen "Approved" content actually reflects the edit (not the original AI draft).
+  5. **Prepare/preview/approve & send an application**: verify the real recipient/subject/body preview (built from real DB data, no AI call), click Approve & Send Application, verify the application lands in "Pending" — proving `create_application()`'s explicit-approval gate fires from a real click and that nothing auto-sends.
+  6. **Manual apply-link path**: click "I've applied — mark as sent" on an external-link application, verify it becomes "Sent", then on the Sent tab click an outcome button (Interviewing) and verify the self-reported status actually persists and re-renders.
+  - A handful of `data-testid` attributes were added (`MatchCard`, the Approved-tab match wrapper, `SentSection`'s card, `DashboardTabs`' desktop nav buttons) purely to make these selectors robust against duplicate-text ambiguity (e.g. the same cover-letter body appearing in both the draft display and the application preview) — inert in production, no behavior change.
+  - Two real, if narrow, bugs were caught and fixed *in the test*, not the app, during this process: the login page's password-visibility toggle button shares an accessible name fragment with the password field (a `getByLabel` ambiguity, not an app defect), and the once-per-session preferences-reminder modal reappears in every fresh Playwright browser context and needed explicit dismissal — both are pre-existing, unrelated UI behaviors, not something this phase changed.
+- **Branch/process discipline, verified explicitly this session**: `git log --all --graph --oneline` confirms a perfectly linear phase chain (01→02→...→11), each branch forked from the immediately-previous phase's HEAD; `origin/main` sits untouched at `dc8c2c1` throughout, far behind every phase branch; no `git merge` into main was ever run; no `--force` push was ever used; every n8n workflow created this session (`I8WYkMfYCKug5ky4`, `7CEh04hBepZkLCKl`, `OmLtatSxRY4ErAxj`) remains `"active": false` — `publish_workflow`/activation was never called on any of them; no deployment command (`vercel deploy` or similar) was ever run.
+- **Flagged, not fixed (out of scope for this phase, needs deliberate attention)**: `npm audit` reports 5 vulnerabilities in the existing dependency tree, including a **critical** unauthenticated RCE in the installed Next.js version range (16.0.0-16.3.2) on Windows-hosted servers and in AVIF image optimization (`GHSA-p293-qw3h-jr36`, `GHSA-2xp9-vwfh-vxw4`), plus high-severity issues in `js-yaml` and `sharp`. These pre-date this session's changes — installing `@playwright/test` did not introduce them. Per AGENTS.md §24 ("make dependency upgrades separately from unrelated feature work"), upgrading Next.js itself was correctly out of scope for an E2E-testing phase, but this is a **genuine pre-launch blocker** the founder must address deliberately (`npm audit fix --force` would jump to `next@16.3.6`, outside the currently-pinned range — needs its own regression pass, not a drive-by fix).
+- **Validation actually executed, this session**:
+  - `npx tsc --noEmit` (whole repo) → clean.
+  - `npm run lint` (whole repo) → clean.
+  - `npm run test:unit` (whole repo) → **529/529** passing (unchanged by this phase's `data-testid`-only production changes).
+  - `npm run test:db` (whole repo) → **533/533, 83 suites** passing, zero fixture leakage.
+  - `npm run test:workflow` (whole repo) → **340/340** passing.
+  - `npm run build` → succeeds.
+  - `npm run test:e2e` → **6/6 passing**, real Chromium, real dev server, real local Postgres — see above.
+- **Ending commit**: recorded after commit below.
+
+---
+
+## All planned phases complete (01-11)
+
+See `docs/OVERNIGHT_BUILD_FINAL_REPORT.md` for the full summary: what's real vs. mocked, every branch/commit, every credential still needed, and the exact next actions for the founder.

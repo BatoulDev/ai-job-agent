@@ -58,7 +58,7 @@ function SentApplicationCard({
   };
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-card p-6 shadow-sm">
+    <div data-testid={`sent-application-${application.id}`} className="rounded-3xl border border-slate-200 bg-card p-6 shadow-sm">
       <div className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <h3 className="font-display text-base font-semibold text-text">{match.job.title}</h3>

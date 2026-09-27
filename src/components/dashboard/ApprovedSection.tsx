@@ -43,7 +43,7 @@ export default function ApprovedSection({
         />
       ) : (
         matches.map((match) => (
-          <div key={match.id}>
+          <div key={match.id} data-testid={`approved-match-${match.id}`}>
             <MatchCard match={match} />
             <CoverLetterCard
               matchId={match.id}
