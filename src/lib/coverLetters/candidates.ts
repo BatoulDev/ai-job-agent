@@ -7,8 +7,25 @@
 // (OpenAI error, invalid response) simply never writes a row, so the match
 // is naturally re-offered as a candidate on the next run — no separate
 // 'failed' bookkeeping needed.
+//
+// Quota (fixed after initial Phase 08 review): plans.cover_letter_limit
+// exists precisely to cap how many AI-generated drafts a user's plan is
+// entitled to (free: 1, student: 8, pro: 15 — see 20260802090000_create_plans.sql).
+// A cover_letters row is only ever created by a successful generation (a
+// real OpenAI cost already spent — AGENTS.md §30 "use model and cost limits
+// appropriate to the user's active entitlement"), so counting existing rows
+// per user is the entitlement-consuming event, mirroring how
+// surface_new_matches_for_user() counts surfaced_at for job_match_limit.
+// ponytail: a lifetime-total cap per user, not a per-billing-period one —
+// free-plan subscriptions never get a billing period at all in this schema
+// (see 20260928090000_add_match_surfacing_and_quota.sql's identical note for
+// job_match_limit), and a cover letter is tied to a specific job/application
+// rather than a refreshable profile snapshot, so there is no natural period
+// boundary to reset it against yet. Upgrade path: once a real billing-period
+// mechanism exists for every plan, scope this count to the current period.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildCoverLetterPrompt, type CoverLetterJobInput, type CoverLetterMatchInput, type CoverLetterProfileInput } from "./prompt.ts";
+import type { PlanCode } from "@/lib/plans/types";
 
 export interface CoverLetterCandidate {
   matchId: string;
@@ -18,23 +35,29 @@ export interface CoverLetterCandidate {
 export async function findCoverLetterCandidates(supabase: SupabaseClient, limit: number): Promise<CoverLetterCandidate[]> {
   const { data: matches, error: matchesError } = await supabase
     .from("matches")
-    .select("id, job_id, cv_analysis_id, explanation, score_breakdown")
+    .select("id, user_id, job_id, cv_analysis_id, explanation, score_breakdown")
     .eq("status", "user_approved")
+    .order("score", { ascending: false })
     .limit(limit);
   if (matchesError) throw new Error(`findCoverLetterCandidates: matches query failed: ${matchesError.message}`);
   if (!matches || matches.length === 0) return [];
 
   const matchIds = matches.map((m) => m.id);
-  const { data: existingLetters, error: lettersError } = await supabase.from("cover_letters").select("match_id").in("match_id", matchIds);
+  const { data: existingLetters, error: lettersError } = await supabase.from("cover_letters").select("match_id, user_id").in("match_id", matchIds);
   if (lettersError) throw new Error(`findCoverLetterCandidates: cover_letters query failed: ${lettersError.message}`);
 
   const matchIdsWithLetters = new Set((existingLetters ?? []).map((row) => row.match_id));
   const pending = matches.filter((m) => !matchIdsWithLetters.has(m.id));
   if (pending.length === 0) return [];
 
+  const remainingQuotaByUser = await computeRemainingQuotaByUser(supabase, [...new Set(pending.map((m) => m.user_id))]);
+
   const candidates: CoverLetterCandidate[] = [];
 
   for (const match of pending) {
+    const remaining = remainingQuotaByUser.get(match.user_id) ?? 0;
+    if (remaining <= 0) continue;
+
     const { data: analysis, error: analysisError } = await supabase
       .from("cv_analyses")
       .select("professional_summary, skills, strongest_areas, profile_level")
@@ -72,7 +95,39 @@ export async function findCoverLetterCandidates(supabase: SupabaseClient, limit:
       matchId: match.id,
       prompt: buildCoverLetterPrompt(profileInput, jobInput, matchInput),
     });
+    remainingQuotaByUser.set(match.user_id, remaining - 1);
   }
 
   return candidates;
+}
+
+/** Returns, per user, how many more cover letters their plan still allows — never negative. Counts their real total cover_letters row count (every real generation ever performed for them), not just rows among this run's candidate batch. */
+async function computeRemainingQuotaByUser(supabase: SupabaseClient, userIds: string[]): Promise<Map<string, number>> {
+  if (userIds.length === 0) return new Map();
+
+  const { data: subscriptions, error: subsError } = await supabase.from("subscriptions").select("user_id, plan_code").in("user_id", userIds);
+  if (subsError) throw new Error(`computeRemainingQuotaByUser: subscriptions query failed: ${subsError.message}`);
+
+  const planCodeByUser = new Map((subscriptions ?? []).map((s) => [s.user_id, (s.plan_code as PlanCode) ?? "free"]));
+  const planCodes = [...new Set([...planCodeByUser.values(), "free" as PlanCode])];
+
+  const { data: plans, error: plansError } = await supabase.from("plans").select("plan_code, cover_letter_limit").in("plan_code", planCodes);
+  if (plansError) throw new Error(`computeRemainingQuotaByUser: plans query failed: ${plansError.message}`);
+  const limitByPlanCode = new Map((plans ?? []).map((p) => [p.plan_code, p.cover_letter_limit]));
+
+  const { data: existingLetters, error: lettersError } = await supabase.from("cover_letters").select("user_id").in("user_id", userIds);
+  if (lettersError) throw new Error(`computeRemainingQuotaByUser: cover_letters count query failed: ${lettersError.message}`);
+  const alreadyUsedByUser = new Map<string, number>();
+  for (const row of existingLetters ?? []) {
+    alreadyUsedByUser.set(row.user_id, (alreadyUsedByUser.get(row.user_id) ?? 0) + 1);
+  }
+
+  const result = new Map<string, number>();
+  for (const userId of userIds) {
+    const planCode = planCodeByUser.get(userId) ?? "free";
+    const limit = limitByPlanCode.get(planCode) ?? limitByPlanCode.get("free") ?? 0;
+    const used = alreadyUsedByUser.get(userId) ?? 0;
+    result.set(userId, Math.max(0, limit - used));
+  }
+  return result;
 }

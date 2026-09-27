@@ -108,6 +108,78 @@ test("findCoverLetterCandidates: excludes a match that isn't approved", async ()
   assert.ok(!candidates.some((c) => c.matchId === match.id));
 });
 
+test("findCoverLetterCandidates: never exceeds the user's plan cover_letter_limit, and never exceeds a used-up quota", async () => {
+  // Isolated fresh user (not the shared file-level `user`, whose quota is
+  // already exercised by earlier tests in this file) — free plan has
+  // cover_letter_limit 1.
+  const quotaUser = await createTestUser("cover-letter-quota");
+  const quotaJobIds = [];
+  try {
+    const cv = await uploadFakeCv(quotaUser, "cover-letter-quota.pdf");
+    const created = await insertFakeAnalysis(quotaUser, cv.id);
+    const { data: quotaAnalysis, error } = await quotaUser.client.rpc("confirm_cv_analysis", { p_analysis_id: created.id });
+    if (error) throw new Error(`confirm_cv_analysis failed: ${error.message}`);
+
+    async function quotaJob(title) {
+      const { data, error: jobError } = await adminClient
+        .from("jobs")
+        .insert({
+          title,
+          company_name: "Fixture Co",
+          description: "A fake job fixture for automated tests only.",
+          application_method: "external_link",
+          application_url: "https://example.test/apply",
+          source_type: "admin_manual",
+          status: "active",
+        })
+        .select()
+        .single();
+      if (jobError) throw new Error(`fixture job insert failed: ${jobError.message}`);
+      quotaJobIds.push(data.id);
+      return data;
+    }
+    async function quotaMatch(jobId, score) {
+      const { data, error: matchError } = await adminClient
+        .from("matches")
+        .insert({
+          user_id: quotaUser.id,
+          job_id: jobId,
+          cv_analysis_id: quotaAnalysis.id,
+          score,
+          status: "user_approved",
+          matching_model: "test-fixture",
+          surfaced_at: new Date().toISOString(),
+          decided_at: new Date().toISOString(),
+        })
+        .select()
+        .single();
+      if (matchError) throw new Error(`fixture match insert failed: ${matchError.message}`);
+      return data;
+    }
+
+    const jobA = await quotaJob("Quota Job A");
+    const jobB = await quotaJob("Quota Job B");
+    const matchA = await quotaMatch(jobA.id, 90);
+    const matchB = await quotaMatch(jobB.id, 80);
+
+    const candidates = await findCoverLetterCandidates(adminClient, 50);
+    const ours = candidates.filter((c) => c.matchId === matchA.id || c.matchId === matchB.id);
+    assert.equal(ours.length, 1, "free plan must never surface more than its cover_letter_limit as candidates in one run");
+    assert.equal(ours[0].matchId, matchA.id, "the highest-scoring match must be the one prioritized");
+
+    // Now simulate that one letter was actually generated — the quota is
+    // fully used, so no further candidate (including the still-pending
+    // matchB) should ever surface again.
+    await adminClient.from("cover_letters").insert({ user_id: quotaUser.id, match_id: matchA.id, generated_content: "x".repeat(150), generation_status: "completed" });
+    const candidatesAfter = await findCoverLetterCandidates(adminClient, 50);
+    assert.ok(!candidatesAfter.some((c) => c.matchId === matchB.id), "free plan's single cover letter was already used, so no further candidates should surface");
+  } finally {
+    await adminClient.from("matches").delete().eq("user_id", quotaUser.id);
+    await deleteFakeJobs(quotaJobIds);
+    await deleteTestUsers([quotaUser]);
+  }
+});
+
 test("saveCoverLetterDraft: creates a new row for a first-time draft", async () => {
   const job = await insertFixtureJob({ title: "Save Draft Job" });
   const match = await insertFixtureMatch(job.id);
