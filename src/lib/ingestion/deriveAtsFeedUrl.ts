@@ -23,7 +23,7 @@
 import type { JobSourceType } from "./rawProviderJob.ts";
 
 export interface DerivedAtsFeedUrl {
-  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable">;
+  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable" | "ashby">;
   feedUrl: string;
 }
 
@@ -31,6 +31,12 @@ const GREENHOUSE_EU_PATTERN = /job-boards\.eu\.greenhouse\.io\/([a-z0-9-]+)/i;
 const GREENHOUSE_PATTERN = /(?:job-boards|boards)\.greenhouse\.io\/([a-z0-9-]+)/i;
 const LEVER_PATTERN = /jobs\.lever\.co\/([a-z0-9.-]+)/i;
 const WORKABLE_PATTERN = /apply\.workable\.com\/([a-z0-9-]+)/i;
+// Phase 13: confirmed live against a real registry row (The Utopia Studio,
+// sr-qa-the-utopia-studio, official_careers_url
+// https://jobs.ashbyhq.com/the-studio) — GET
+// https://api.ashbyhq.com/posting-api/job-board/the-studio returns real,
+// current job postings.
+const ASHBY_PATTERN = /jobs\.ashbyhq\.com\/([a-z0-9-]+)/i;
 
 /** ats_provider is researcher-entered free text (e.g. "Greenhouse", "Workable", "Oracle Cloud HCM") — normalize before matching. */
 function normalizeAtsProviderLabel(atsProvider: string | null): string {
@@ -65,6 +71,14 @@ export function deriveAtsFeedUrl(atsProvider: string | null, officialCareersUrl:
     const match = officialCareersUrl.match(WORKABLE_PATTERN);
     if (match) {
       return { sourceType: "workable", feedUrl: `https://apply.workable.com/api/v1/widget/accounts/${match[1]}?details=true` };
+    }
+    return null;
+  }
+
+  if (label.includes("ashby")) {
+    const match = officialCareersUrl.match(ASHBY_PATTERN);
+    if (match) {
+      return { sourceType: "ashby", feedUrl: `https://api.ashbyhq.com/posting-api/job-board/${match[1]}` };
     }
     return null;
   }

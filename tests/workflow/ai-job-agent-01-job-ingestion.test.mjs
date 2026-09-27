@@ -1,13 +1,17 @@
 /**
  * Static-analysis tests for the "AI Job Agent / 01 Job Ingestion" workflow
- * (Phase 04). No database or n8n connection required — reads the exported
- * workflow JSON directly, mirroring tests/workflow/job-ingestion-pilot-orchestrator.test.mjs.
- * All validation/mapping/dedup/persistence logic itself is covered by
+ * (Phase 04, extended Phase 12/13). No database or n8n connection required —
+ * reads the exported workflow JSON directly, mirroring
+ * tests/workflow/job-ingestion-pilot-orchestrator.test.mjs. All validation/
+ * mapping/dedup/persistence logic itself is covered by
  * tests/unit/raw-provider-job.test.mjs, tests/unit/ingestion-providers.test.mjs,
- * tests/unit/derive-ats-feed-url.test.mjs, tests/db/find-eligible-company-sources.test.mjs,
- * and tests/db/ingestion-core-batch.test.mjs — this file only checks that the
- * workflow graph wires those into n8n correctly (retry, rate limiting, error
- * handling, and dynamic source discovery, Phase 12).
+ * tests/unit/multi-company-provider-job.test.mjs, tests/unit/provider-config.test.mjs,
+ * tests/unit/extract-career-page-job-postings.test.mjs, tests/unit/derive-ats-feed-url.test.mjs,
+ * tests/db/find-eligible-company-sources.test.mjs, tests/db/find-career-page-extraction-candidates.test.mjs,
+ * tests/db/ingestion-core-batch.test.mjs, and tests/db/ingest-multi-company-batch.test.mjs
+ * — this file only checks that the workflow graph wires those into n8n
+ * correctly across all three tiers (retry, rate limiting, error handling,
+ * dynamic source discovery, and the Phase 13 fan-out to Tier D/Tier B).
  *
  * Run: node --test tests/workflow/ai-job-agent-01-job-ingestion.test.mjs
  */
@@ -71,6 +75,14 @@ test("List Ingestion Sources's error output is wired to Log List Sources Failure
   assert.ok(errorOutput.some((c) => c.node === 'Log List Sources Failure'), 'error output must feed Log List Sources Failure');
 });
 
+test('List Ingestion Sources fans out to all three tiers (Phase 13) from the same success output — a single discovery call drives Tier A, Tier D, and Tier B', () => {
+  const success = wf.connections['List Ingestion Sources']?.main?.[0] ?? [];
+  assert.ok(success.some((c) => c.node === 'Split Out Sources'), 'Tier A branch missing');
+  assert.ok(success.some((c) => c.node === 'Split Out Multi-Company Sources'), 'Tier D branch missing');
+  assert.ok(success.some((c) => c.node === 'Split Out Career Page Candidates'), 'Tier B branch missing');
+  assert.equal(success.length, 3, 'exactly three branches must fan out from List Ingestion Sources, no more, no fewer');
+});
+
 test('Fetch Source Jobs has native retry and continues on error rather than halting the run', () => {
   const node = findNode('Fetch Source Jobs');
   assert.equal(node.retryOnFail, true);
@@ -90,19 +102,29 @@ test('Call Ingestion Batch Endpoint posts to the internal route with Bearer auth
 });
 
 test('every extraction node degrades gracefully instead of halting the whole run on a malformed response', () => {
-  for (const name of ['Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs']) {
+  for (const name of ['Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs']) {
     const node = findNode(name);
     assert.equal(node.onError, 'continueErrorOutput', `${name} must continue to its error output, not stop the workflow`);
   }
 });
 
 test('every fallible node error output is wired to a Build *Result node, never left hanging', () => {
-  const fallible = ['Fetch Source Jobs', 'Call Ingestion Batch Endpoint', 'Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs'];
+  const fallible = ['Fetch Source Jobs', 'Call Ingestion Batch Endpoint', 'Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs'];
   for (const name of fallible) {
     const conns = wf.connections[name]?.main ?? [];
     const errorOutput = conns[1] ?? [];
     assert.ok(errorOutput.length > 0, `${name}'s error output (index 1) must be wired to a failure-result node`);
   }
+});
+
+test('Extract Jobs By ATS Type has an ashby case (Phase 13) routing to Extract Ashby Jobs, alongside greenhouse/lever/workable, with the fallback still catching anything else', () => {
+  const switchNode = findNode('Extract Jobs By ATS Type');
+  const outputKeys = switchNode.parameters.rules.values.map((v) => v.outputKey);
+  assert.deepEqual(outputKeys, ['greenhouse', 'lever', 'workable', 'ashby']);
+  const conns = wf.connections['Extract Jobs By ATS Type']?.main ?? [];
+  assert.equal(conns.length, 5, 'four defined cases plus one fallback output');
+  assert.ok(conns[3]?.some((c) => c.node === 'Extract Ashby Jobs'), 'the ashby case (index 3) must route to Extract Ashby Jobs');
+  assert.ok(conns[4]?.some((c) => c.node === 'Build Unsupported Source Result'), 'the fallback (index 4) must still route to Build Unsupported Source Result');
 });
 
 test('all four per-source result paths converge on Record Source Result', () => {
@@ -123,4 +145,125 @@ test('the loop batches one source at a time', () => {
   const loop = findNode('Loop Sources (Rate Limited)');
   assert.equal(loop.type, 'n8n-nodes-base.splitInBatches');
   assert.equal(loop.parameters.batchSize, 1);
+});
+
+// ── Tier D: multi-company feeds (Phase 13) ─────────────────────────────
+
+test('Fetch Multi-Company Feed has native retry and continues on error', () => {
+  const node = findNode('Fetch Multi-Company Feed');
+  assert.equal(node.retryOnFail, true);
+  assert.ok(node.maxTries >= 2 && node.maxTries <= 5);
+  assert.ok(node.waitBetweenTries <= 5000);
+  assert.equal(node.onError, 'continueErrorOutput');
+});
+
+test('Extract Raw Jobs By Provider Type routes remoteok/jobicy/arbeitnow to their own normalization branch, with a defensive fallback', () => {
+  const switchNode = findNode('Extract Raw Jobs By Provider Type');
+  const outputKeys = switchNode.parameters.rules.values.map((v) => v.outputKey);
+  assert.deepEqual(outputKeys, ['remoteok', 'jobicy', 'arbeitnow']);
+  const conns = wf.connections['Extract Raw Jobs By Provider Type']?.main ?? [];
+  assert.equal(conns.length, 4, 'three defined cases plus one fallback output');
+  assert.ok(conns[0]?.some((c) => c.node === 'Aggregate RemoteOK Jobs'));
+  assert.ok(conns[1]?.some((c) => c.node === 'Split Out Jobicy Jobs'));
+  assert.ok(conns[2]?.some((c) => c.node === 'Split Out Arbeitnow Jobs'));
+  assert.ok(conns[3]?.some((c) => c.node === 'Build Multi-Company Failure Result'), 'fallback must never be left hanging, even though providerConfig.ts never actually emits an unknown provider_type');
+});
+
+test('all three multi-company provider branches normalize to a common {jobs:[...]} shape before converging on Call Multi-Company Batch Endpoint', () => {
+  assert.ok(wf.connections['Aggregate RemoteOK Jobs']?.main?.[0]?.some((c) => c.node === 'Call Multi-Company Batch Endpoint'));
+  assert.ok(wf.connections['Aggregate Jobicy Jobs']?.main?.[0]?.some((c) => c.node === 'Call Multi-Company Batch Endpoint'));
+  assert.ok(wf.connections['Aggregate Arbeitnow Jobs']?.main?.[0]?.some((c) => c.node === 'Call Multi-Company Batch Endpoint'));
+});
+
+test('Arbeitnow branch splits its data array, filters to remote:true only, then aggregates back into one item', () => {
+  const splitNode = findNode('Split Out Arbeitnow Jobs');
+  assert.equal(splitNode.parameters.fieldToSplitOut, 'data');
+  assert.ok(wf.connections['Split Out Arbeitnow Jobs']?.main?.[0]?.some((c) => c.node === 'Filter Arbeitnow Remote Only'));
+  const filterNode = findNode('Filter Arbeitnow Remote Only');
+  assert.equal(filterNode.type, 'n8n-nodes-base.filter');
+  assert.ok(wf.connections['Filter Arbeitnow Remote Only']?.main?.[0]?.some((c) => c.node === 'Aggregate Arbeitnow Jobs'));
+});
+
+test('Call Multi-Company Batch Endpoint posts to the run-multi-company-batch route with Bearer auth, retries, and continues on error', () => {
+  const node = findNode('Call Multi-Company Batch Endpoint');
+  assert.equal(node.parameters.method, 'POST');
+  assert.match(node.parameters.url, /\/api\/internal\/ingestion\/run-multi-company-batch$/);
+  assert.equal(node.parameters.authentication, 'genericCredentialType');
+  assert.equal(node.parameters.genericAuthType, 'httpBearerAuth');
+  assert.equal(node.retryOnFail, true);
+  assert.equal(node.onError, 'continueErrorOutput');
+});
+
+test('every fallible Tier-D node error output is wired to Build Multi-Company Failure Result, never left hanging', () => {
+  for (const name of ['Fetch Multi-Company Feed', 'Call Multi-Company Batch Endpoint']) {
+    const errorOutput = wf.connections[name]?.main?.[1] ?? [];
+    assert.ok(errorOutput.some((c) => c.node === 'Build Multi-Company Failure Result'), `${name}'s error output must be wired`);
+  }
+});
+
+test('both Tier-D result paths converge on Record Multi-Company Source Result, which rate-limits before looping back', () => {
+  for (const name of ['Build Multi-Company Success Result', 'Build Multi-Company Failure Result']) {
+    assert.ok(wf.connections[name]?.main?.[0]?.some((c) => c.node === 'Record Multi-Company Source Result'), `${name} must feed Record Multi-Company Source Result`);
+  }
+  assert.ok(wf.connections['Record Multi-Company Source Result']?.main?.[0]?.some((c) => c.node === 'Multi-Company Rate Limit Delay'));
+  assert.ok(wf.connections['Multi-Company Rate Limit Delay']?.main?.[0]?.some((c) => c.node === 'Loop Multi-Company Sources (Rate Limited)'));
+});
+
+test('the Tier-D loop batches one provider at a time', () => {
+  const loop = findNode('Loop Multi-Company Sources (Rate Limited)');
+  assert.equal(loop.type, 'n8n-nodes-base.splitInBatches');
+  assert.equal(loop.parameters.batchSize, 1);
+});
+
+// ── Tier B: career-page extraction (Phase 13) ──────────────────────────
+
+test('Fetch Career Page HTML fetches as plain text (not JSON) with retry and error handling', () => {
+  const node = findNode('Fetch Career Page HTML');
+  assert.equal(node.parameters.options?.response?.response?.responseFormat, 'text');
+  assert.equal(node.parameters.options?.response?.response?.outputPropertyName, 'html');
+  assert.equal(node.retryOnFail, true);
+  assert.equal(node.onError, 'continueErrorOutput');
+});
+
+test('Call Extract Career Page Jobs Endpoint posts to the extraction route, then Call Career Page Ingestion Batch Endpoint reuses the shared run-batch route with sourceType career_page', () => {
+  const extractNode = findNode('Call Extract Career Page Jobs Endpoint');
+  assert.match(extractNode.parameters.url, /\/api\/internal\/ingestion\/extract-career-page-jobs$/);
+  assert.equal(extractNode.parameters.authentication, 'genericCredentialType');
+
+  const batchNode = findNode('Call Career Page Ingestion Batch Endpoint');
+  assert.match(batchNode.parameters.url, /\/api\/internal\/ingestion\/run-batch$/);
+  assert.match(batchNode.parameters.jsonBody, /sourceType:\s*'career_page'/);
+});
+
+test('the career-page chain is fully wired: fetch -> extract -> ingest, each error output landing on Build Career Page Failure Result', () => {
+  assert.ok(wf.connections['Fetch Career Page HTML']?.main?.[0]?.some((c) => c.node === 'Call Extract Career Page Jobs Endpoint'));
+  assert.ok(wf.connections['Call Extract Career Page Jobs Endpoint']?.main?.[0]?.some((c) => c.node === 'Call Career Page Ingestion Batch Endpoint'));
+  for (const name of ['Fetch Career Page HTML', 'Call Extract Career Page Jobs Endpoint', 'Call Career Page Ingestion Batch Endpoint']) {
+    const errorOutput = wf.connections[name]?.main?.[1] ?? [];
+    assert.ok(errorOutput.some((c) => c.node === 'Build Career Page Failure Result'), `${name}'s error output must be wired`);
+  }
+});
+
+test('Build Career Page Success Result treats no_valid_jobs as success, not a failure — an honest zero is not an error', () => {
+  const node = findNode('Build Career Page Success Result');
+  const succeededField = node.parameters.assignments.assignments.find((a) => a.name === 'succeeded');
+  assert.match(succeededField.value, /no_valid_jobs/);
+});
+
+test('both Tier-B result paths converge on Record Career Page Source Result, which rate-limits before looping back', () => {
+  for (const name of ['Build Career Page Success Result', 'Build Career Page Failure Result']) {
+    assert.ok(wf.connections[name]?.main?.[0]?.some((c) => c.node === 'Record Career Page Source Result'), `${name} must feed Record Career Page Source Result`);
+  }
+  assert.ok(wf.connections['Record Career Page Source Result']?.main?.[0]?.some((c) => c.node === 'Career Page Rate Limit Delay'));
+  assert.ok(wf.connections['Career Page Rate Limit Delay']?.main?.[0]?.some((c) => c.node === 'Loop Career Page Candidates (Rate Limited)'));
+});
+
+test('the Tier-B loop batches one candidate at a time', () => {
+  const loop = findNode('Loop Career Page Candidates (Rate Limited)');
+  assert.equal(loop.type, 'n8n-nodes-base.splitInBatches');
+  assert.equal(loop.parameters.batchSize, 1);
+});
+
+test('exactly 47 nodes total, matching the live, MCP-tested workflow (Phase 13)', () => {
+  assert.equal(wf.nodes.length, 47);
 });

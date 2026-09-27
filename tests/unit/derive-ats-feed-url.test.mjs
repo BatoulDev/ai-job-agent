@@ -37,6 +37,11 @@ describe("deriveAtsFeedUrl", () => {
     assert.equal(result, null);
   });
 
+  test("derives an Ashby feed URL (real registry row: The Utopia Studio — live-verified this phase)", () => {
+    const result = deriveAtsFeedUrl("Ashby", "https://jobs.ashbyhq.com/the-studio");
+    assert.deepEqual(result, { sourceType: "ashby", feedUrl: "https://api.ashbyhq.com/posting-api/job-board/the-studio" });
+  });
+
   test("returns null when official_careers_url is missing entirely", () => {
     assert.equal(deriveAtsFeedUrl("Greenhouse", null), null);
   });

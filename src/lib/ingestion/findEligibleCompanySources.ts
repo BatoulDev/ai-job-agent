@@ -1,7 +1,8 @@
 // Discovery query for the ingestion workflow's dynamic source list (Phase
-// 12): every company_sources row that is (a) human-verified, (b) already
-// classified by a researcher as automatable via a known public ATS, and (c)
-// has a real, derivable Greenhouse/Lever/Workable feed URL. Replaces the
+// 12, Ashby added Phase 13): every company_sources row that is (a)
+// human-verified, (b) already classified by a researcher as automatable
+// via a known public ATS, and (c) has a real, derivable Greenhouse/Lever/
+// Workable/Ashby feed URL. Replaces the
 // n8n workflow's previous 4-item hardcoded "Static Pilot Source List" — see
 // n8n-workflows/ai-job-agent-01-job-ingestion.ts's own "Known limitation"
 // sticky note, which this closes.
@@ -19,7 +20,7 @@ import type { JobSourceType } from "./rawProviderJob.ts";
 
 export interface EligibleIngestionSource {
   sourceId: string;
-  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable">;
+  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable" | "ashby">;
   feedUrl: string;
 }
 

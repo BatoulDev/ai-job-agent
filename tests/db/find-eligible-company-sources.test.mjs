@@ -1,14 +1,14 @@
-// DB test for Phase 12's findEligibleCompanySources against the real local
-// Supabase instance and its real, already-imported company_sources
-// registry (593 rows as of this phase — no fixture rows are inserted here;
-// this asserts against known-real registry data, verified independently via
-// direct SQL during the Phase 12 audit).
+// DB test for Phase 12's findEligibleCompanySources (Ashby added Phase 13)
+// against the real local Supabase instance and its real, already-imported
+// company_sources registry (593 rows as of this phase — no fixture rows
+// are inserted here; this asserts against known-real registry data,
+// verified independently via direct SQL during the Phase 12/13 audits).
 import { test } from "node:test";
 import assert from "node:assert/strict";
 import { adminClient, assertExpectedLocalProject } from "./helpers.mjs";
 import { findEligibleCompanySources } from "../../src/lib/ingestion/findEligibleCompanySources.ts";
 
-test("findEligibleCompanySources: returns only verified, suitable_public_ats, URL-derivable rows for the three supported ATS adapters", async () => {
+test("findEligibleCompanySources: returns only verified, suitable_public_ats, URL-derivable rows for the four supported ATS adapters", async () => {
   await assertExpectedLocalProject();
 
   const sources = await findEligibleCompanySources(adminClient);
@@ -16,7 +16,7 @@ test("findEligibleCompanySources: returns only verified, suitable_public_ats, UR
   assert.ok(sources.length >= 10, `expected at least 10 real derivable sources in the registry, got ${sources.length}`);
 
   for (const source of sources) {
-    assert.ok(["greenhouse", "lever", "workable"].includes(source.sourceType), `unexpected sourceType: ${source.sourceType}`);
+    assert.ok(["greenhouse", "lever", "workable", "ashby"].includes(source.sourceType), `unexpected sourceType: ${source.sourceType}`);
     assert.match(source.feedUrl, /^https:\/\//);
     assert.ok(source.sourceId, "every source must have a sourceId");
   }
@@ -40,5 +40,12 @@ test("findEligibleCompanySources: returns only verified, suitable_public_ats, UR
   const { data: alpaca } = await adminClient.from("company_sources").select("id").eq("company_name", "Alpaca").maybeSingle();
   if (alpaca) {
     assert.ok(sourceIds.includes(alpaca.id), "expected Alpaca (a known real, derivable Greenhouse row) to be included");
+  }
+
+  // A specific, known-real Ashby row confirmed live during Phase 13
+  // (The Utopia Studio, Qatar) must be present.
+  const { data: utopiaStudio } = await adminClient.from("company_sources").select("id").eq("company_name", "The Utopia Studio").maybeSingle();
+  if (utopiaStudio) {
+    assert.ok(sourceIds.includes(utopiaStudio.id), "expected The Utopia Studio (a known real, live-verified Ashby row) to be included");
   }
 });
