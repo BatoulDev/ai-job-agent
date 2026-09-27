@@ -1,0 +1,352 @@
+{
+  "name": "AI Job Agent / 02 Job Matching",
+  "active": false,
+  "nodes": [
+    {
+      "id": "558a2ad1-2d2a-4276-a285-f83836e893c9",
+      "name": "Start Job Matching Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 240],
+      "parameters": {}
+    },
+    {
+      "id": "4cce432f-e718-4943-a306-785865d44b1e",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [224, 240],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"appBaseUrl\":\"http://host.docker.internal:3000\",\"jobLimit\":50,\"profileLimit\":50,\"embeddingModel\":\"text-embedding-3-small\",\"userLimit\":20,\"jobsPerUser\":10,\"candidatePoolSize\":100,\"rerankModel\":\"gpt-4o-mini\"}"
+      }
+    },
+    {
+      "id": "0b59cf83-caf6-456e-9132-b3996c4d888b",
+      "name": "Prepare Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [448, 240],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.appBaseUrl }}/api/internal/matching/prepare-embeddings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { jobLimit: $json.jobLimit, profileLimit: $json.profileLimit } }}",
+        "options": { "timeout": 30000 }
+      },
+      "credentials": { "httpBearerAuth": { "name": "Matching Worker Secret" } }
+    },
+    {
+      "id": "051313f7-4eaf-4459-8586-1977d96157fc",
+      "name": "Build Embeddings Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, 176],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ (() => {\n  const jobs = $json.jobs || [];\n  const profiles = $json.profiles || [];\n  const input = [...jobs.map(j => j.text), ...profiles.map(p => p.text)];\n  return { input, jobs, profiles, itemCount: input.length, model: $('Workflow Configuration').first().json.embeddingModel };\n})() }}"
+      }
+    },
+    {
+      "id": "23f7ee70-5739-4324-af5a-0e8b4e945f68",
+      "name": "Has Anything To Embed?",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.3,
+      "position": [896, 176],
+      "parameters": {
+        "conditions": {
+          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict" },
+          "conditions": [{ "leftValue": "={{ $json.itemCount }}", "operator": { "type": "number", "operation": "gt" }, "rightValue": 0 }],
+          "combinator": "and"
+        }
+      }
+    },
+    {
+      "id": "3c841a34-15ed-4e87-bcae-3f1b4bcaa07e",
+      "name": "Generate Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1120, 80],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/embeddings",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { model: $json.model, input: $json.input } }}",
+        "options": { "timeout": 60000 }
+      },
+      "credentials": { "openAiApi": { "name": "OpenAI account" } }
+    },
+    {
+      "id": "04259d64-6909-41f1-b9e5-b75a0ea536d5",
+      "name": "Build Save Embeddings Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1344, 0],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ (() => {\n  const jobs = $('Build Embeddings Request').item.json.jobs;\n  const profiles = $('Build Embeddings Request').item.json.profiles;\n  const vectors = [];\n  for (const d of $json.data) vectors[d.index] = d.embedding;\n  const jobPayload = jobs.map((j, i) => ({ jobId: j.jobId, embedding: vectors[i], contentHash: j.contentHash }));\n  const profilePayload = profiles.map((p, i) => ({ cvAnalysisId: p.cvAnalysisId, embedding: vectors[jobs.length + i], contentHash: p.contentHash }));\n  return { jobs: jobPayload, profiles: profilePayload };\n})() }}"
+      }
+    },
+    {
+      "id": "c315cf16-9003-473b-83b5-d86c16164e7b",
+      "name": "Save Embeddings",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1568, 0],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/matching/save-embeddings",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { jobs: $json.jobs, profiles: $json.profiles } }}",
+        "options": { "timeout": 30000 }
+      },
+      "credentials": { "httpBearerAuth": { "name": "Matching Worker Secret" } }
+    },
+    {
+      "id": "49752a1e-bc0a-4f5b-94a8-be06c75261a1",
+      "name": "Nothing To Embed",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 272],
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "message", "name": "message", "value": "No jobs or profiles currently need embedding.", "type": "string" }] }
+      }
+    },
+    {
+      "id": "0608ddbb-c73a-4c93-b288-4eba03452c93",
+      "name": "Log Embeddings Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1792, 192],
+      "notes": "Terminal failure node for this manually-triggered maintenance run — a human reviews the n8n execution log directly (no per-source loop/summary needed here, unlike Job Ingestion).",
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'embeddings step failed' }}", "type": "string" }] }
+      }
+    },
+    {
+      "id": "0ba9df76-8a6b-41c0-9b5c-1ca058bf62d8",
+      "name": "Prepare Rerank",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [672, 480],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/matching/prepare-rerank",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { userLimit: $('Workflow Configuration').first().json.userLimit, jobsPerUser: $('Workflow Configuration').first().json.jobsPerUser, candidatePoolSize: $('Workflow Configuration').first().json.candidatePoolSize } }}",
+        "options": { "timeout": 60000 }
+      },
+      "credentials": { "httpBearerAuth": { "name": "Matching Worker Secret" } }
+    },
+    {
+      "id": "b10d6387-8672-4b43-a55e-0cf35deb29c7",
+      "name": "Split Out Candidates",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [896, 480],
+      "parameters": { "fieldToSplitOut": "candidates" }
+    },
+    {
+      "id": "2df7a803-aecf-4ad8-baf9-f9a447dca4b7",
+      "name": "Loop Candidates (Rate Limited)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [1120, 480],
+      "parameters": { "batchSize": 1 }
+    },
+    {
+      "id": "4c61e241-fac8-488f-826c-f01a6959da4a",
+      "name": "Build Chat Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1344, 592],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { model: $('Workflow Configuration').first().json.rerankModel, temperature: 0, max_tokens: 600, response_format: { type: 'json_object' }, messages: [ { role: 'user', content: $json.prompt } ] } }}"
+      }
+    },
+    {
+      "id": "dcf4bd93-db3f-4e38-ace1-d2b928925c0a",
+      "name": "Call OpenAI Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1568, 592],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": { "timeout": 60000 }
+      },
+      "credentials": { "openAiApi": { "name": "OpenAI account" } }
+    },
+    {
+      "id": "a3524887-ecb9-41e8-be9d-a1d5e2bd5805",
+      "name": "Build Save Rerank Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1792, 592],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { matchingModel: $('Workflow Configuration').first().json.rerankModel, results: [ { candidateId: $('Split Out Candidates').item.json.candidateId, response: $json.choices[0].message.content } ] } }}"
+      }
+    },
+    {
+      "id": "c74e5b5a-f70d-416f-89bd-fb1078786b22",
+      "name": "Save Rerank Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [2016, 592],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/matching/save-rerank-results",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": { "timeout": 30000 }
+      },
+      "credentials": { "httpBearerAuth": { "name": "Matching Worker Secret" } }
+    },
+    {
+      "id": "9444d7f0-5335-47c9-b578-55230816818c",
+      "name": "Log Rerank Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2016, 760],
+      "notes": "Terminal failure node for one rerank candidate — a human reviews the n8n execution log; the loop still proceeds to the next candidate after this (see the Wait node it feeds into).",
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'rerank step failed' }}", "type": "string" }] }
+      }
+    },
+    {
+      "id": "98a63d66-07ee-43df-8fd0-a33990a96d5b",
+      "name": "Rerank Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2240, 592],
+      "parameters": { "resume": "timeInterval", "amount": 1, "unit": "seconds" }
+    },
+    {
+      "id": "90372200-28ab-4c1b-8238-b8f84fa52185",
+      "name": "Sticky Note 8d72aba5",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-50, -50],
+      "parameters": {
+        "content": "### AI Job Agent / 02 Job Matching\nManual trigger, stays inactive. Two stages, both delegating validation/dedup/persistence to internal TypeScript endpoints and only ever having n8n own the actual AI provider call, reusing the existing \"OpenAI account\" credential (same one cv-analysis-worker.ts already uses):\n\n1. Embeddings — batches every pending job+profile into a single OpenAI /v1/embeddings request per run.\n2. Rerank — loops one (profile, job) candidate at a time (chat completions has no batch endpoint), scores it, and saves immediately, rather than aggregating all results into one final call — the cross-loop-aggregation pitfall the embedding stage's now-removed \"Build Execution Summary\" node hit is avoided entirely this way.\n\nThe rerank stage runs regardless of the embedding stage's outcome (success, nothing-to-embed, or failure) — it reranks whatever is already embedded, not only what this run just embedded.",
+        "color": 4,
+        "width": 300,
+        "height": 200
+      }
+    }
+  ],
+  "connections": {
+    "Start Job Matching Run": { "main": [[{ "node": "Workflow Configuration", "type": "main", "index": 0 }]] },
+    "Workflow Configuration": { "main": [[{ "node": "Prepare Embeddings", "type": "main", "index": 0 }]] },
+    "Prepare Embeddings": {
+      "main": [
+        [{ "node": "Build Embeddings Request", "type": "main", "index": 0 }],
+        [{ "node": "Log Embeddings Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Embeddings Request": { "main": [[{ "node": "Has Anything To Embed?", "type": "main", "index": 0 }]] },
+    "Has Anything To Embed?": {
+      "main": [
+        [{ "node": "Generate Embeddings", "type": "main", "index": 0 }],
+        [{ "node": "Nothing To Embed", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generate Embeddings": {
+      "main": [
+        [{ "node": "Build Save Embeddings Request", "type": "main", "index": 0 }],
+        [{ "node": "Log Embeddings Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Save Embeddings Request": { "main": [[{ "node": "Save Embeddings", "type": "main", "index": 0 }]] },
+    "Save Embeddings": {
+      "main": [
+        [{ "node": "Prepare Rerank", "type": "main", "index": 0 }],
+        [{ "node": "Log Embeddings Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Nothing To Embed": { "main": [[{ "node": "Prepare Rerank", "type": "main", "index": 0 }]] },
+    "Log Embeddings Failure": { "main": [[{ "node": "Prepare Rerank", "type": "main", "index": 0 }]] },
+    "Prepare Rerank": {
+      "main": [
+        [{ "node": "Split Out Candidates", "type": "main", "index": 0 }],
+        [{ "node": "Log Rerank Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Split Out Candidates": { "main": [[{ "node": "Loop Candidates (Rate Limited)", "type": "main", "index": 0 }]] },
+    "Loop Candidates (Rate Limited)": { "main": [null, [{ "node": "Build Chat Request", "type": "main", "index": 0 }]] },
+    "Build Chat Request": { "main": [[{ "node": "Call OpenAI Chat", "type": "main", "index": 0 }]] },
+    "Call OpenAI Chat": {
+      "main": [
+        [{ "node": "Build Save Rerank Request", "type": "main", "index": 0 }],
+        [{ "node": "Log Rerank Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Save Rerank Request": { "main": [[{ "node": "Save Rerank Result", "type": "main", "index": 0 }]] },
+    "Save Rerank Result": {
+      "main": [
+        [{ "node": "Rerank Rate Limit Delay", "type": "main", "index": 0 }],
+        [{ "node": "Log Rerank Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Log Rerank Failure": { "main": [[{ "node": "Rerank Rate Limit Delay", "type": "main", "index": 0 }]] },
+    "Rerank Rate Limit Delay": { "main": [[{ "node": "Loop Candidates (Rate Limited)", "type": "main", "index": 0 }]] }
+  },
+  "settings": {
+    "executionOrder": "v1"
+  }
+}

@@ -22,12 +22,21 @@ import PreferencesSection, {
 import PreferencesReminderModal from "@/components/dashboard/PreferencesReminderModal";
 import PreferencesReminderBanner from "@/components/dashboard/PreferencesReminderBanner";
 import InternationalPreferencesReminderBanner from "@/components/dashboard/InternationalPreferencesReminderBanner";
-import { DASHBOARD_STATS } from "@/lib/dashboardData";
+import { computeDashboardStats } from "@/lib/dashboardData";
 import { createClient } from "@/lib/supabase/client";
 import type { CvAnalysis } from "@/lib/cvAnalysis/types";
 import type { AnalysisTaskStatus, AnalysisTaskTrigger } from "@/lib/analysisTasks/types";
 import { isPreferencesComplete } from "@/lib/cvAnalysis/profileState";
 import { isProfileMatchingEligible } from "@/lib/cvAnalysis/matchingEligibility";
+import { fetchMatchesByStatus, surfaceAndFetchPendingMatches } from "@/lib/matches/fetchMatches";
+import type { MatchWithJob } from "@/lib/matches/types";
+import { fetchCoverLettersForMatches } from "@/lib/coverLetters/fetchCoverLetters";
+import type { CoverLetterRecord } from "@/lib/coverLetters/types";
+import { fetchApplicationsForMatches } from "@/lib/applications/fetchApplications";
+import { mapApplicationRow } from "@/lib/applications/types";
+import type { ApplicationRecord } from "@/lib/applications/types";
+import { fetchOutcomesForApplications } from "@/lib/applications/fetchOutcomes";
+import { mapApplicationOutcomeRow, type ApplicationOutcomeRecord, type ApplicationOutcomeStatus } from "@/lib/applications/outcomeTypes";
 import {
   readAndClearProfileUpdatePending,
   computeEffectiveTaskState,
@@ -71,6 +80,14 @@ function DashboardPageContent() {
   const [analysis, setAnalysis] = useState<CvAnalysis | null>(null);
   const [cvId, setCvId] = useState<string | null>(null);
   const [latestPreferencesVersion, setLatestPreferencesVersion] = useState<number | null>(null);
+  const [pendingMatches, setPendingMatches] = useState<MatchWithJob[] | null>(null);
+  const [approvedMatches, setApprovedMatches] = useState<MatchWithJob[] | null>(null);
+  const [rejectedMatches, setRejectedMatches] = useState<MatchWithJob[] | null>(null);
+  const [matchesLoading, setMatchesLoading] = useState(true);
+  const [matchesError, setMatchesError] = useState<string | null>(null);
+  const [coverLetters, setCoverLetters] = useState<Record<string, CoverLetterRecord>>({});
+  const [applications, setApplications] = useState<Record<string, ApplicationRecord>>({});
+  const [outcomes, setOutcomes] = useState<Record<string, ApplicationOutcomeRecord>>({});
   // Read and immediately clear the sessionStorage flag on the first render.
   // DashboardPageContent is inside <Suspense> with useSearchParams(), so Next.js
   // only renders it on the client — sessionStorage is always available here.
@@ -375,6 +392,123 @@ function DashboardPageContent() {
     return () => clearTimeout(id);
   }, [optimisticTrigger, showStalledBanner, cvId]);
 
+  // Independent of the profile-loading effect above: matches don't depend on
+  // profile/preferences/CV state, only on the user being authenticated
+  // (confirmed once isLoading flips false — until then the user may still
+  // be getting redirected to /login). Fires once.
+  useEffect(() => {
+    if (isLoading) return;
+    let isMounted = true;
+
+    async function loadMatches() {
+      const supabase = createClient();
+      setMatchesLoading(true);
+      setMatchesError(null);
+      try {
+        const [pending, approved, rejected] = await Promise.all([
+          surfaceAndFetchPendingMatches(supabase),
+          fetchMatchesByStatus(supabase, "user_approved"),
+          fetchMatchesByStatus(supabase, "user_rejected"),
+        ]);
+        if (!isMounted) return;
+        setPendingMatches(pending);
+        setApprovedMatches(approved);
+        setRejectedMatches(rejected);
+
+        const [letters, apps] = await Promise.all([
+          fetchCoverLettersForMatches(supabase, approved.map((m) => m.id)),
+          fetchApplicationsForMatches(supabase, approved.map((m) => m.id)),
+        ]);
+        if (!isMounted) return;
+        setCoverLetters(letters);
+        setApplications(apps);
+
+        const sentApplicationIds = Object.values(apps)
+          .filter((a) => a.status === "sent")
+          .map((a) => a.id);
+        const fetchedOutcomes = await fetchOutcomesForApplications(supabase, sentApplicationIds);
+        if (!isMounted) return;
+        setOutcomes(fetchedOutcomes);
+      } catch (err) {
+        if (!isMounted) return;
+        setMatchesError(err instanceof Error ? err.message : "Couldn't load your matches.");
+      } finally {
+        if (isMounted) setMatchesLoading(false);
+      }
+    }
+
+    loadMatches();
+    return () => {
+      isMounted = false;
+    };
+  }, [isLoading]);
+
+  async function handleApproveMatch(matchId: string) {
+    const supabase = createClient();
+    const { error } = await supabase.rpc("approve_match", { p_match_id: matchId });
+    if (error) throw new Error(error.message);
+    const moved = pendingMatches?.find((m) => m.id === matchId);
+    setPendingMatches((prev) => prev?.filter((m) => m.id !== matchId) ?? prev);
+    if (moved) {
+      setApprovedMatches((prev) => [
+        { ...moved, status: "user_approved", decidedAt: new Date().toISOString() },
+        ...(prev ?? []),
+      ]);
+    }
+  }
+
+  async function handleRejectMatch(matchId: string) {
+    const supabase = createClient();
+    const { error } = await supabase.rpc("reject_match", { p_match_id: matchId });
+    if (error) throw new Error(error.message);
+    const moved = pendingMatches?.find((m) => m.id === matchId);
+    setPendingMatches((prev) => prev?.filter((m) => m.id !== matchId) ?? prev);
+    if (moved) {
+      setRejectedMatches((prev) => [
+        { ...moved, status: "user_rejected", decidedAt: new Date().toISOString() },
+        ...(prev ?? []),
+      ]);
+    }
+  }
+
+  async function handleSaveCoverLetterEdit(coverLetterId: string, content: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("save_cover_letter_edit", { p_cover_letter_id: coverLetterId, p_edited_content: content });
+    if (error) throw new Error(error.message);
+    setCoverLetters((prev) => ({ ...prev, [data.match_id]: { ...prev[data.match_id], editedContent: data.edited_content } }));
+  }
+
+  async function handleApproveCoverLetter(coverLetterId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("approve_cover_letter", { p_cover_letter_id: coverLetterId });
+    if (error) throw new Error(error.message);
+    setCoverLetters((prev) => ({
+      ...prev,
+      [data.match_id]: { ...prev[data.match_id], approvalStatus: "user_approved", approvedContent: data.approved_content },
+    }));
+  }
+
+  async function handleApproveAndSendApplication(matchId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("create_application", { p_match_id: matchId });
+    if (error) throw new Error(error.message);
+    setApplications((prev) => ({ ...prev, [matchId]: mapApplicationRow(data) }));
+  }
+
+  async function handleMarkApplicationSent(applicationId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("mark_application_sent", { p_application_id: applicationId });
+    if (error) throw new Error(error.message);
+    const updated = mapApplicationRow(data);
+    setApplications((prev) => ({ ...prev, [updated.matchId]: updated }));
+  }
+
+  async function handleReportOutcome(applicationId: string, status: ApplicationOutcomeStatus) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("report_application_outcome", { p_application_id: applicationId, p_outcome_status: status });
+    if (error) throw new Error(error.message);
+    setOutcomes((prev) => ({ ...prev, [applicationId]: mapApplicationOutcomeRow(data) }));
+  }
 
   if (isLoading) {
     return (
@@ -426,7 +560,7 @@ function DashboardPageContent() {
           </p>
         </div>
 
-        <StatsGrid stats={DASHBOARD_STATS} />
+        <StatsGrid stats={computeDashboardStats(pendingMatches, coverLetters)} />
 
         {!!cv && !preferencesComplete && (
           <div className="mt-8">
@@ -446,13 +580,42 @@ function DashboardPageContent() {
           <main className="min-w-0 flex-1 space-y-8">
             {activeTab === "new-matches" &&
               (isProfileApproved ? (
-                <NewMatchesSection />
+                <NewMatchesSection
+                  matches={pendingMatches}
+                  isLoading={matchesLoading}
+                  error={matchesError}
+                  onApprove={handleApproveMatch}
+                  onReject={handleRejectMatch}
+                />
               ) : (
                 <LockedMatchesNotice onReviewProfile={() => setActiveTab("cv-profile")} />
               ))}
-            {activeTab === "approved" && <ApprovedSection />}
-            {activeTab === "sent" && <SentSection />}
-            {activeTab === "rejected" && <RejectedSection />}
+            {activeTab === "approved" && (
+              <ApprovedSection
+                matches={approvedMatches}
+                isLoading={matchesLoading}
+                error={matchesError}
+                coverLetters={coverLetters}
+                onSaveCoverLetterEdit={handleSaveCoverLetterEdit}
+                onApproveCoverLetter={handleApproveCoverLetter}
+                applications={applications}
+                onApproveAndSendApplication={handleApproveAndSendApplication}
+                onMarkApplicationSent={handleMarkApplicationSent}
+              />
+            )}
+            {activeTab === "sent" && (
+              <SentSection
+                matches={approvedMatches}
+                applications={applications}
+                outcomes={outcomes}
+                isLoading={matchesLoading}
+                error={matchesError}
+                onReportOutcome={handleReportOutcome}
+              />
+            )}
+            {activeTab === "rejected" && (
+              <RejectedSection matches={rejectedMatches} isLoading={matchesLoading} error={matchesError} />
+            )}
             {activeTab === "cv-profile" && (
               <CvProfileSection
                 cv={cv}

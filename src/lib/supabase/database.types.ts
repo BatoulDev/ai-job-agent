@@ -172,6 +172,47 @@ export type Database = {
           },
         ]
       }
+      application_outcomes: {
+        Row: {
+          application_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          outcome_status: string
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          application_id: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          outcome_status?: string
+          source?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          application_id?: string
+          created_at?: string
+          id?: string
+          notes?: string | null
+          outcome_status?: string
+          source?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "application_outcomes_application_id_fkey"
+            columns: ["application_id"]
+            isOneToOne: false
+            referencedRelation: "applications"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       applications: {
         Row: {
           application_method: string
@@ -597,6 +638,9 @@ export type Database = {
           preference_snapshot: Json
           preferences_version: number | null
           professional_summary: string | null
+          profile_embedding: number[] | null
+          profile_embedding_content_hash: string | null
+          profile_embedding_generated_at: string | null
           profile_level: string | null
           projects: Json
           recommendations_state: string
@@ -635,6 +679,9 @@ export type Database = {
           preference_snapshot: Json
           preferences_version?: number | null
           professional_summary?: string | null
+          profile_embedding?: number[] | null
+          profile_embedding_content_hash?: string | null
+          profile_embedding_generated_at?: string | null
           profile_level?: string | null
           projects?: Json
           recommendations_state?: string
@@ -673,6 +720,9 @@ export type Database = {
           preference_snapshot?: Json
           preferences_version?: number | null
           professional_summary?: string | null
+          profile_embedding?: number[] | null
+          profile_embedding_content_hash?: string | null
+          profile_embedding_generated_at?: string | null
           profile_level?: string | null
           projects?: Json
           recommendations_state?: string
@@ -1023,6 +1073,9 @@ export type Database = {
           dedup_scope: string | null
           description: string
           discovered_at: string
+          embedding: number[] | null
+          embedding_content_hash: string | null
+          embedding_generated_at: string | null
           employment_type: string | null
           expires_at: string | null
           external_id: string | null
@@ -1060,6 +1113,9 @@ export type Database = {
           dedup_scope?: string | null
           description: string
           discovered_at?: string
+          embedding?: number[] | null
+          embedding_content_hash?: string | null
+          embedding_generated_at?: string | null
           employment_type?: string | null
           expires_at?: string | null
           external_id?: string | null
@@ -1097,6 +1153,9 @@ export type Database = {
           dedup_scope?: string | null
           description?: string
           discovered_at?: string
+          embedding?: number[] | null
+          embedding_content_hash?: string | null
+          embedding_generated_at?: string | null
           employment_type?: string | null
           expires_at?: string | null
           external_id?: string | null
@@ -1256,6 +1315,7 @@ export type Database = {
           score: number
           score_breakdown: Json
           status: string
+          surfaced_at: string | null
           updated_at: string
           user_id: string
         }
@@ -1273,6 +1333,7 @@ export type Database = {
           score: number
           score_breakdown?: Json
           status?: string
+          surfaced_at?: string | null
           updated_at?: string
           user_id: string
         }
@@ -1290,6 +1351,7 @@ export type Database = {
           score?: number
           score_breakdown?: Json
           status?: string
+          surfaced_at?: string | null
           updated_at?: string
           user_id?: string
         }
@@ -2036,6 +2098,7 @@ export type Database = {
           score: number
           score_breakdown: Json
           status: string
+          surfaced_at: string | null
           updated_at: string
           user_id: string
         }
@@ -2170,6 +2233,9 @@ export type Database = {
           preference_snapshot: Json
           preferences_version: number | null
           professional_summary: string | null
+          profile_embedding: number[] | null
+          profile_embedding_content_hash: string | null
+          profile_embedding_generated_at: string | null
           profile_level: string | null
           projects: Json
           recommendations_state: string
@@ -2345,6 +2411,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      get_my_matches: {
+        Args: { p_status: string }
+        Returns: {
+          created_at: string
+          decided_at: string
+          explanation: string
+          job_application_email: string
+          job_application_method: string
+          job_application_url: string
+          job_company_name: string
+          job_employment_type: string
+          job_id: string
+          job_location: string
+          job_seniority: string
+          job_source_type: string
+          job_source_url: string
+          job_status: string
+          job_title: string
+          job_work_arrangement: string
+          match_id: string
+          match_status: string
+          matching_model: string
+          missing_skills: Json
+          score: number
+          score_breakdown: Json
+        }[]
+      }
       get_onboarding_readiness: { Args: never; Returns: Json }
       get_public_plan_catalog: {
         Args: never
@@ -2375,6 +2468,33 @@ export type Database = {
       }
       jsonb_is_object_array: { Args: { v: Json }; Returns: boolean }
       jsonb_is_string_array: { Args: { v: Json }; Returns: boolean }
+      mark_application_sent: {
+        Args: { p_application_id: string }
+        Returns: {
+          application_method: string
+          approved_at: string
+          approved_by: string
+          cover_letter_id: string | null
+          created_at: string
+          id: string
+          idempotency_key: string
+          job_id: string
+          last_attempt_at: string | null
+          last_error: string | null
+          match_id: string
+          provider_message_id: string | null
+          send_attempt_count: number
+          status: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "applications"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
       mark_notification_read: {
         Args: { p_notification_id: string }
         Returns: {
@@ -2538,6 +2658,7 @@ export type Database = {
           score: number
           score_breakdown: Json
           status: string
+          surfaced_at: string | null
           updated_at: string
           user_id: string
         }
@@ -2572,6 +2693,29 @@ export type Database = {
         SetofOptions: {
           from: "*"
           to: "cvs"
+          isOneToOne: true
+          isSetofReturn: false
+        }
+      }
+      report_application_outcome: {
+        Args: {
+          p_application_id: string
+          p_notes?: string
+          p_outcome_status: string
+        }
+        Returns: {
+          application_id: string
+          created_at: string
+          id: string
+          notes: string | null
+          outcome_status: string
+          source: string
+          updated_at: string
+          user_id: string
+        }
+        SetofOptions: {
+          from: "*"
+          to: "application_outcomes"
           isOneToOne: true
           isSetofReturn: false
         }
@@ -2705,6 +2849,33 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      surface_new_matches_for_user: {
+        Args: never
+        Returns: {
+          created_at: string
+          cv_analysis_id: string
+          decided_at: string | null
+          explanation: string | null
+          hard_filter_passed: boolean
+          id: string
+          job_id: string
+          matching_model: string | null
+          matching_version: string
+          missing_skills: Json
+          score: number
+          score_breakdown: Json
+          status: string
+          surfaced_at: string | null
+          updated_at: string
+          user_id: string
+        }[]
+        SetofOptions: {
+          from: "*"
+          to: "matches"
+          isOneToOne: false
+          isSetofReturn: true
+        }
+      }
       update_cv_analysis_review: {
         Args: { p_analysis_id: string; p_user_edits: Json }
         Returns: {
@@ -2729,6 +2900,9 @@ export type Database = {
           preference_snapshot: Json
           preferences_version: number | null
           professional_summary: string | null
+          profile_embedding: number[] | null
+          profile_embedding_content_hash: string | null
+          profile_embedding_generated_at: string | null
           profile_level: string | null
           projects: Json
           recommendations_state: string

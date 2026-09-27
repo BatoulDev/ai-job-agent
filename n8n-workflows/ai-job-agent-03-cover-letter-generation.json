@@ -1,0 +1,211 @@
+{
+  "name": "AI Job Agent / 03 Cover Letter Generation",
+  "active": false,
+  "nodes": [
+    {
+      "id": "f3ea5b19-ea34-4ceb-a424-714cb317549a",
+      "name": "Start Cover Letter Generation Run",
+      "type": "n8n-nodes-base.manualTrigger",
+      "typeVersion": 1,
+      "position": [0, 240],
+      "parameters": {}
+    },
+    {
+      "id": "ed8beb75-d7c3-47a1-b7a0-84f8fd30f3b2",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [224, 240],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"appBaseUrl\":\"http://host.docker.internal:3000\",\"limit\":50,\"model\":\"gpt-4o-mini\"}"
+      }
+    },
+    {
+      "id": "294d2881-006b-4983-a0d3-546db2452b0b",
+      "name": "Prepare Generation",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [448, 240],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.appBaseUrl }}/api/internal/cover-letters/prepare-generation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ { limit: $json.limit } }}",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "ba0b0b05-b182-431c-8f17-9a2a318782d7",
+      "name": "Log Prepare Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, 336],
+      "notes": "Terminal failure node for this manually-triggered maintenance run — a human reviews the n8n execution log directly.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'prepare-generation step failed' }}", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "9b336efa-3530-4862-b132-bbd6722e51f8",
+      "name": "Split Out Candidates",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [672, 144],
+      "parameters": { "fieldToSplitOut": "candidates" }
+    },
+    {
+      "id": "91ffc5f7-101b-48c1-a9e5-ae95a387fab2",
+      "name": "Loop Candidates (Rate Limited)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [896, 144],
+      "parameters": { "batchSize": 1 }
+    },
+    {
+      "id": "aa2bfce6-ae67-4a79-ba3a-d319513b9ed0",
+      "name": "Build Chat Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1120, 80],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { model: $('Workflow Configuration').first().json.model, temperature: 0.7, max_tokens: 700, messages: [ { role: 'user', content: $json.prompt } ] } }}"
+      }
+    },
+    {
+      "id": "a214075d-c5ea-4f90-8050-20ee0c9ae699",
+      "name": "Call OpenAI Chat",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1344, 80],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 3,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.openai.com/v1/chat/completions",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "openAiApi",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": { "timeout": 60000 }
+      }
+    },
+    {
+      "id": "ae6f0017-68ad-4965-8bf1-da7e7d292e38",
+      "name": "Build Save Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1568, 0],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={{ { modelProvider: 'openai', modelVersion: $('Workflow Configuration').first().json.model, results: [ { matchId: $('Split Out Candidates').item.json.matchId, response: $json.choices[0].message.content } ] } }}"
+      }
+    },
+    {
+      "id": "f693cf29-9435-4b77-bc95-c94c81f15632",
+      "name": "Save Generation Result",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [1792, 0],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/cover-letters/save-generation",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json }}",
+        "options": { "timeout": 30000 }
+      }
+    },
+    {
+      "id": "bc3018e8-80f1-4499-9d62-1566a29392eb",
+      "name": "Log Generation Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [2016, 144],
+      "notes": "Terminal failure node for one candidate — a human reviews the n8n execution log; the loop still proceeds to the next candidate after this (see the Wait node it feeds into).",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            { "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'cover letter generation step failed' }}", "type": "string" }
+          ]
+        }
+      }
+    },
+    {
+      "id": "90702fee-0d81-4444-80eb-510e9b55a233",
+      "name": "Generation Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [2240, 144],
+      "webhookId": "ff61100f-048b-482b-95ec-8a55e4373b1a",
+      "parameters": { "resume": "timeInterval", "amount": 1, "unit": "seconds" }
+    },
+    {
+      "id": "f9ef129c-0f9e-4e2a-8d1a-e43ece941b14",
+      "name": "Sticky Note d6f26a7b",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-50, -50],
+      "parameters": {
+        "content": "### AI Job Agent / 03 Cover Letter Generation\nManual trigger, stays inactive. POST /api/internal/cover-letters/prepare-generation (TypeScript, Phase 08) decides which approved matches still need a draft and builds the exact grounded prompt; this workflow calls OpenAI chat completions once per candidate (reusing the existing \"OpenAI account\" credential, same one cv-analysis-worker.ts and Phase 06's rerank stage already use) since chat completions has no batch endpoint; POST /api/internal/cover-letters/save-generation persists the result and re-checks the match is still approved before writing. A failed attempt is never recorded — the match is simply re-offered as a candidate on the next run, same retry story as Phase 06's rerank.",
+        "color": 4,
+        "width": 320,
+        "height": 220
+      }
+    }
+  ],
+  "connections": {
+    "Start Cover Letter Generation Run": { "main": [[{ "node": "Workflow Configuration", "type": "main", "index": 0 }]] },
+    "Workflow Configuration": { "main": [[{ "node": "Prepare Generation", "type": "main", "index": 0 }]] },
+    "Prepare Generation": {
+      "main": [
+        [{ "node": "Split Out Candidates", "type": "main", "index": 0 }],
+        [{ "node": "Log Prepare Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Split Out Candidates": { "main": [[{ "node": "Loop Candidates (Rate Limited)", "type": "main", "index": 0 }]] },
+    "Loop Candidates (Rate Limited)": { "main": [[], [{ "node": "Build Chat Request", "type": "main", "index": 0 }]] },
+    "Build Chat Request": { "main": [[{ "node": "Call OpenAI Chat", "type": "main", "index": 0 }]] },
+    "Call OpenAI Chat": {
+      "main": [
+        [{ "node": "Build Save Request", "type": "main", "index": 0 }],
+        [{ "node": "Log Generation Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Build Save Request": { "main": [[{ "node": "Save Generation Result", "type": "main", "index": 0 }]] },
+    "Save Generation Result": {
+      "main": [
+        [{ "node": "Generation Rate Limit Delay", "type": "main", "index": 0 }],
+        [{ "node": "Log Generation Failure", "type": "main", "index": 0 }]
+      ]
+    },
+    "Generation Rate Limit Delay": { "main": [[{ "node": "Loop Candidates (Rate Limited)", "type": "main", "index": 0 }]] },
+    "Log Generation Failure": { "main": [[{ "node": "Generation Rate Limit Delay", "type": "main", "index": 0 }]] }
+  }
+}

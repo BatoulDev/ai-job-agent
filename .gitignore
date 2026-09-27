@@ -45,3 +45,11 @@ next-env.d.ts
 
 # Playwright MCP testing artifacts (snapshots, console logs, fixture files)
 .playwright-mcp/
+
+# Playwright E2E test output and the local-only fixture file its global
+# setup writes and its global teardown removes (survives only if a run
+# crashed mid-suite — never meant to be committed).
+/test-results/
+/playwright-report/
+/blob-report/
+tests/e2e/.fixture.json

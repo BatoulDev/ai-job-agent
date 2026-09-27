@@ -3,17 +3,28 @@
 // REJECTED_JOB) that the dashboard rendered unconditionally — including on
 // the Approved/Sent tabs, which had no gate at all — implying real matches,
 // applications, and a real "Sent Today · Email apply" event that had never
-// happened for any user. No job-ingestion or matching worker exists yet
-// (that is Automation 2's job), so every one of these numbers is genuinely
-// zero for every user today. DASHBOARD_STATS now reflects that truthfully;
-// the four job/application tabs render an honest empty state (see
-// src/components/dashboard/EmptyTabState.tsx) instead of fabricated cards.
-export const DASHBOARD_STATS = [
-  { label: "New matches", value: "0" },
-  { label: "Average match score", value: "—" },
-  { label: "Cover letters ready", value: "0" },
-  { label: "Applications sent", value: "0" },
-];
+// happened for any user.
+//
+// Phase 07 (match delivery) wired "New matches" and "Average match score" to
+// real data. Phase 08 (cover letters) wired "Cover letters ready" to a real
+// count of generated drafts. "Applications sent" stays hardcoded at 0 — no
+// application-delivery worker (Phase 09/10) exists yet, so that number is
+// genuinely zero for every user today.
+import type { MatchWithJob } from "@/lib/matches/types";
+import type { CoverLetterRecord } from "@/lib/coverLetters/types";
+
+export function computeDashboardStats(pendingMatches: MatchWithJob[] | null, coverLetters: Record<string, CoverLetterRecord> = {}) {
+  const scores = pendingMatches?.map((m) => m.score) ?? [];
+  const averageScore = scores.length > 0 ? Math.round(scores.reduce((sum, s) => sum + s, 0) / scores.length) : null;
+  const coverLettersReady = Object.values(coverLetters).filter((c) => c.generationStatus === "completed").length;
+
+  return [
+    { label: "New matches", value: String(pendingMatches?.length ?? 0) },
+    { label: "Average match score", value: averageScore !== null ? `${averageScore}%` : "—" },
+    { label: "Cover letters ready", value: String(coverLettersReady) },
+    { label: "Applications sent", value: "0" },
+  ];
+}
 
 export const CV_PROFILE = {
   name: "Jane Doe",
