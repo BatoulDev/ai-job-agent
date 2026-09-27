@@ -1,6 +1,7 @@
 {
   "name": "AI Job Agent / 01 Job Ingestion",
   "active": false,
+  "description": "Manual trigger, dryRun-default job ingestion. n8n owns provider HTTP fetch/retry/rate-limiting for sources discovered dynamically from company_sources (Phase 12); TypeScript owns validation, dedup, persistence via one internal endpoint.",
   "nodes": [
     {
       "id": "28d0b4de-d306-42c0-8514-9cc716903e2d",
@@ -22,15 +23,39 @@
       }
     },
     {
-      "id": "a523807c-ff69-4c69-8804-ebefd1c34a36",
-      "name": "Static Pilot Source List",
+      "id": "1c8f91ea-3733-4ebf-8b98-a15db4319a4f",
+      "name": "List Ingestion Sources",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [448, 464],
+      "notes": "Discovers verified, automatable company_sources rows dynamically — replaces the old hardcoded 4-source list (Phase 12). See src/lib/ingestion/findEligibleCompanySources.ts.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.appBaseUrl }}/api/internal/ingestion/list-sources",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": { "timeout": 30000 }
+      },
+      "credentials": { "httpBearerAuth": { "name": "Ingestion Worker Secret" } }
+    },
+    {
+      "id": "d2f4f123-d797-4606-b204-654e81ad70af",
+      "name": "Log List Sources Failure",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [448, 464],
-      "notes": "Only the 4 sources already verified live by the job-ingestion pilot (docs/job-ingestion-pilot.md). company_sources has no feed-url/board-token column, so the full 588-row registry cannot be resolved to a real ATS endpoint yet — see the sticky note on this workflow for the follow-up.",
+      "position": [448, 650],
+      "notes": "Terminal failure for this run — nothing to loop over if source discovery itself failed. A human reviews the n8n execution log.",
       "parameters": {
-        "mode": "raw",
-        "jsonOutput": "{\"sources\":[{\"source_id\":\"sr-qa-scale-ai\",\"ats_type\":\"greenhouse\",\"feed_url\":\"https://boards-api.greenhouse.io/v1/boards/scaleai/jobs?content=true\"},{\"source_id\":\"sr-sa-alpaca\",\"ats_type\":\"greenhouse\",\"feed_url\":\"https://boards-api.greenhouse.io/v1/boards/alpaca/jobs?content=true\"},{\"source_id\":\"sr-intl-wahed\",\"ats_type\":\"lever\",\"feed_url\":\"https://api.lever.co/v0/postings/wahed.com?mode=json\"},{\"source_id\":\"sr-sa-salla\",\"ats_type\":\"workable\",\"feed_url\":\"https://apply.workable.com/api/v1/widget/accounts/salla?details=true\"}]}"
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'list-sources call failed' }}", "type": "string" }] }
       }
     },
     {
@@ -299,17 +324,22 @@
       "typeVersion": 1,
       "position": [-50, -50],
       "parameters": {
-        "content": "### Known limitation: only 4 sources, not the full registry\ncompany_sources (588 rows) has no feed-url/board-token column, so this workflow cannot yet resolve an arbitrary approved source to a real ATS endpoint. It reuses the same 4 pre-verified sources as the retired pilot (docs/job-ingestion-pilot.md §2). Scaling further requires either a company_sources.feed_url column or a URL-derivation heuristic — a data/product decision for a follow-up phase, not guessed here.",
+        "content": "### Dynamic source discovery (Phase 12)\nSources are now discovered live from company_sources via POST /api/internal/ingestion/list-sources (src/lib/ingestion/findEligibleCompanySources.ts + deriveAtsFeedUrl.ts), replacing the old hardcoded 4-source list. Eligibility: review_status='verified' AND automation_eligibility='suitable_public_ats' AND a Greenhouse/Lever/Workable feed URL derivable from official_careers_url. Remaining ceiling: many verified ATS-suitable rows embed their board on the company's own domain rather than linking the ATS host directly, so URL derivation can't resolve every row — see docs/SOURCE_COVERAGE_AND_PROVIDER_EXPANSION_AUDIT.md (Phase 12) for the exact count and per-market breakdown. Each returned source's review_status/automation_eligibility is still re-verified live, per source, inside runIngestionBatch() before anything is written.",
         "color": 6,
-        "width": 300,
-        "height": 200
+        "width": 340,
+        "height": 220
       }
     }
   ],
   "connections": {
     "Start Job Ingestion Run": { "main": [[{ "node": "Workflow Configuration", "type": "main", "index": 0 }]] },
-    "Workflow Configuration": { "main": [[{ "node": "Static Pilot Source List", "type": "main", "index": 0 }]] },
-    "Static Pilot Source List": { "main": [[{ "node": "Split Out Sources", "type": "main", "index": 0 }]] },
+    "Workflow Configuration": { "main": [[{ "node": "List Ingestion Sources", "type": "main", "index": 0 }]] },
+    "List Ingestion Sources": {
+      "main": [
+        [{ "node": "Split Out Sources", "type": "main", "index": 0 }],
+        [{ "node": "Log List Sources Failure", "type": "main", "index": 0 }]
+      ]
+    },
     "Split Out Sources": { "main": [[{ "node": "Loop Sources (Rate Limited)", "type": "main", "index": 0 }]] },
     "Loop Sources (Rate Limited)": { "main": [[], [{ "node": "Fetch Source Jobs", "type": "main", "index": 0 }]] },
     "Fetch Source Jobs": {

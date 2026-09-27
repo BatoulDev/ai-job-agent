@@ -54,7 +54,24 @@ The user was asked directly (this was a genuine cost-bearing decision, not somet
 - Why this is explicitly NOT built tonight, per direct product instruction: "any email/Gmail parsing must be optional and confidence-aware... do not infer application outcomes from weak evidence... keep uncertain events in manual-review/unknown state." `application_outcomes.source` currently only allows `'user_manual'` — there is no code path, credential, or schema value that could produce an inferred outcome. Manual self-reporting (`report_application_outcome()`) is the entire, real feature this phase ships.
 - Where to add it, when this is explicitly approved for a future phase: a Gmail OAuth integration (read-only scope), a classifier producing a `confidence` score, a new allowed `source = 'email_detected'` value plus a `confidence` column on `application_outcomes`, and — critically — a UI that always shows low/medium-confidence detections as a suggestion the user must confirm, never as an assumed fact. Any detection below a deliberately-chosen confidence threshold must land in `'unknown'`, not a guessed status.
 
-This file will gain one entry per credential a later phase is `BLOCKED_ON_CREDENTIAL` for, in this format:
+## BLOCKED_ON_CREDENTIAL: JSearch API key (Phase 12 source expansion)
+
+- Env var: none defined yet — no key has been obtained.
+- Needed for: a Tier C aggregator ingestion adapter covering Gulf/international job-board listings beyond direct-ATS coverage. Classified `BLOCKED_ON_CREDENTIAL` in `docs/SOURCE_COVERAGE_AND_PROVIDER_EXPANSION_AUDIT.md` §5/§6 — never invented, no placeholder key was ever added anywhere.
+- Where to add it: obtain a key from RapidAPI's JSearch listing, add `JSEARCH_API_KEY` (server-only) to `.env.local`/`.env.example`, then implement the adapter behind the same evidence-based process (fixture tests, dry-run validation) as every other source.
+- Not blocking: no code depends on this; the pipeline works today with zero JSearch integration.
+
+## BLOCKED_ON_CREDENTIAL: Adzuna API credentials (Phase 12 source expansion)
+
+- Env var: none defined yet — no App ID/key pair has been obtained.
+- Needed for: same Tier C aggregator role as JSearch above, alternative/complementary coverage. Same classification and reasoning.
+- Where to add it: register at Adzuna's developer portal, add `ADZUNA_APP_ID`/`ADZUNA_APP_KEY` (server-only) to `.env.local`/`.env.example`, then implement behind the same evidence-based process.
+- Not blocking: same as JSearch above.
+
+## Apify API token — already configured, currently unused (Phase 12 note, not a new blocker)
+
+- Env var: `APIFY_API_TOKEN` — already present in `.env.local` (real, 46-char value) and now documented (name only, no value) in `.env.example`.
+- Status: **not blocked on a credential** — the token exists. What's missing is an explicit, authorized, bounded benchmark run against the two real actors identified (`blackfalcondata/bayt-scraper`, `blackfalcondata/gulftalent-scraper`, ~$1/1000 results each) to measure cost/quality/freshness before either is wired into production ingestion. Zero Apify credits have been spent to date. See the audit doc §5/§9 for the exact next step.
 
 ```
 ## <PROVIDER_NAME>
@@ -68,8 +85,8 @@ This file will gain one entry per credential a later phase is `BLOCKED_ON_CREDEN
 
 Anticipated (not yet blocking, listed here for visibility only — do not create these until the phase that needs them is actually reached):
 
-- Job-board/provider API keys for Tier B ingestion sources (Phase 04) — exact providers not yet chosen; recorded once the provider research doc names them.
-- Any Apify or structured-scraping provider token, if research recommends one over direct ATS APIs (Phase 04).
 - An email-sending credential for the application-delivery flow (Phase 09) — must remain gated behind explicit per-message user approval regardless of whether it's configured.
+
+(The former "Tier B ingestion source API keys, exact providers TBD" line above was superseded by Phase 12's concrete findings — see the two JSearch/Adzuna entries above and `docs/SOURCE_COVERAGE_AND_PROVIDER_EXPANSION_AUDIT.md`.)
 
 None of the above blocks Phase 01 or the immediately following schema/eligibility work in Phase 02, which is pure logic over already-existing tables.

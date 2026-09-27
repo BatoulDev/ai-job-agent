@@ -4,9 +4,10 @@
  * workflow JSON directly, mirroring tests/workflow/job-ingestion-pilot-orchestrator.test.mjs.
  * All validation/mapping/dedup/persistence logic itself is covered by
  * tests/unit/raw-provider-job.test.mjs, tests/unit/ingestion-providers.test.mjs,
+ * tests/unit/derive-ats-feed-url.test.mjs, tests/db/find-eligible-company-sources.test.mjs,
  * and tests/db/ingestion-core-batch.test.mjs — this file only checks that the
  * workflow graph wires those into n8n correctly (retry, rate limiting, error
- * handling, and the documented 4-source scope limitation).
+ * handling, and dynamic source discovery, Phase 12).
  *
  * Run: node --test tests/workflow/ai-job-agent-01-job-ingestion.test.mjs
  */
@@ -52,16 +53,22 @@ test('no Supabase HTTP calls — persistence is fully delegated to the internal 
   assert.ok(!urls.some((u) => u.includes('supabase')), 'this workflow must never call Supabase REST directly (see overview sticky note)');
 });
 
-test('Static Pilot Source List contains exactly the 4 pilot-verified sources', () => {
-  const node = findNode('Static Pilot Source List');
-  const parsed = JSON.parse(node.parameters.jsonOutput);
-  assert.equal(parsed.sources.length, 4);
-  const ids = parsed.sources.map((s) => s.source_id).sort();
-  assert.deepEqual(ids, ['sr-intl-wahed', 'sr-qa-scale-ai', 'sr-sa-alpaca', 'sr-sa-salla']);
-  for (const source of parsed.sources) {
-    assert.ok(['greenhouse', 'lever', 'workable'].includes(source.ats_type));
-    assert.match(source.feed_url, /^https:\/\//);
-  }
+test('List Ingestion Sources discovers sources dynamically via the internal endpoint, with retry, error handling, and Bearer auth', () => {
+  const node = findNode('List Ingestion Sources');
+  assert.equal(node.parameters.method, 'POST');
+  assert.match(node.parameters.url, /\/api\/internal\/ingestion\/list-sources$/);
+  assert.equal(node.parameters.authentication, 'genericCredentialType');
+  assert.equal(node.parameters.genericAuthType, 'httpBearerAuth');
+  assert.equal(node.retryOnFail, true);
+  assert.equal(node.onError, 'continueErrorOutput');
+});
+
+test("List Ingestion Sources's error output is wired to Log List Sources Failure, never left hanging", () => {
+  const conns = wf.connections['List Ingestion Sources']?.main ?? [];
+  const success = conns[0] ?? [];
+  const errorOutput = conns[1] ?? [];
+  assert.ok(success.some((c) => c.node === 'Split Out Sources'), 'success output must feed Split Out Sources');
+  assert.ok(errorOutput.some((c) => c.node === 'Log List Sources Failure'), 'error output must feed Log List Sources Failure');
 });
 
 test('Fetch Source Jobs has native retry and continues on error rather than halting the run', () => {

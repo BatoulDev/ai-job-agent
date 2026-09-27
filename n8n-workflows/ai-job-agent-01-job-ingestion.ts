@@ -24,28 +24,46 @@ const workflowConfiguration = node({
   output: [{ appBaseUrl: 'http://host.docker.internal:3000', maxJobsPerSource: 5, rateLimitDelaySeconds: 2, dryRun: true }],
 });
 
-const staticPilotSourceList = node({
+const listIngestionSources = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'List Ingestion Sources',
+    notes:
+      'Discovers verified, automatable company_sources rows dynamically — replaces the old hardcoded 4-source list ' +
+      '(Phase 12). See src/lib/ingestion/findEligibleCompanySources.ts.',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+    parameters: {
+      method: 'POST',
+      url: expr('{{ $json.appBaseUrl }}/api/internal/ingestion/list-sources'),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ {} }}'),
+      options: { timeout: 30000 },
+    },
+  },
+  output: [{ sources: [{ source_id: 'sr-sa-alpaca', ats_type: 'greenhouse', feed_url: 'https://boards-api.greenhouse.io/v1/boards/alpaca/jobs?content=true' }] }],
+});
+
+const logListSourcesFailure = node({
   type: 'n8n-nodes-base.set',
   version: 3.4,
   config: {
-    name: 'Static Pilot Source List',
-    notes:
-      'Only the 4 sources already verified live by the job-ingestion pilot (docs/job-ingestion-pilot.md). ' +
-      'company_sources has no feed-url/board-token column, so the full 588-row registry cannot be resolved to a ' +
-      'real ATS endpoint yet — see the sticky note on this workflow for the follow-up.',
+    name: 'Log List Sources Failure',
+    notes: 'Terminal failure for this run — nothing to loop over if source discovery itself failed. A human reviews the n8n execution log.',
     parameters: {
-      mode: 'raw',
-      jsonOutput: {
-        sources: [
-          { source_id: 'sr-qa-scale-ai', ats_type: 'greenhouse', feed_url: 'https://boards-api.greenhouse.io/v1/boards/scaleai/jobs?content=true' },
-          { source_id: 'sr-sa-alpaca', ats_type: 'greenhouse', feed_url: 'https://boards-api.greenhouse.io/v1/boards/alpaca/jobs?content=true' },
-          { source_id: 'sr-intl-wahed', ats_type: 'lever', feed_url: 'https://api.lever.co/v0/postings/wahed.com?mode=json' },
-          { source_id: 'sr-sa-salla', ats_type: 'workable', feed_url: 'https://apply.workable.com/api/v1/widget/accounts/salla?details=true' },
-        ],
-      },
+      mode: 'manual',
+      assignments: { assignments: [{ id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'list-sources call failed' }}"), type: 'string' }] },
     },
   },
-  output: [{ sources: [{ source_id: 'sr-qa-scale-ai', ats_type: 'greenhouse', feed_url: 'https://boards-api.greenhouse.io/v1/boards/scaleai/jobs?content=true' }] }],
+  output: [{ error: 'list-sources call failed' }],
 });
 
 const splitOutSources = node({
@@ -338,19 +356,23 @@ const overviewNote = sticky(
 );
 
 const scopeLimitationNote = sticky(
-  '### Known limitation: only 4 sources, not the full registry\n' +
-    'company_sources (588 rows) has no feed-url/board-token column, so this workflow cannot yet resolve an arbitrary ' +
-    'approved source to a real ATS endpoint. It reuses the same 4 pre-verified sources as the retired pilot ' +
-    '(docs/job-ingestion-pilot.md §2). Scaling further requires either a company_sources.feed_url column or a URL-' +
-    'derivation heuristic — a data/product decision for a follow-up phase, not guessed here.',
-  [staticPilotSourceList],
+  '### Dynamic source discovery (Phase 12)\n' +
+    'Sources are now discovered live from company_sources via POST /api/internal/ingestion/list-sources ' +
+    '(src/lib/ingestion/findEligibleCompanySources.ts + deriveAtsFeedUrl.ts), replacing the old hardcoded 4-source ' +
+    "list. Eligibility: review_status='verified' AND automation_eligibility='suitable_public_ats' AND a " +
+    'Greenhouse/Lever/Workable feed URL derivable from official_careers_url. Remaining ceiling: many verified ' +
+    "ATS-suitable rows embed their board on the company's own domain rather than linking the ATS host directly, so " +
+    'URL derivation cannot resolve every row — see docs/SOURCE_COVERAGE_AND_PROVIDER_EXPANSION_AUDIT.md (Phase 12) ' +
+    "for the exact count and per-market breakdown. Each returned source's review_status/automation_eligibility is " +
+    'still re-verified live, per source, inside runIngestionBatch() before anything is written.',
+  [listIngestionSources],
   { color: 6 }
 );
 
 export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Agent / 01 Job Ingestion')
   .add(startTrigger)
   .to(workflowConfiguration)
-  .to(staticPilotSourceList)
+  .to(listIngestionSources.onError(logListSourcesFailure))
   .to(splitOutSources)
   .to(
     loopSources.onEachBatch(
