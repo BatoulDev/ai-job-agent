@@ -173,16 +173,32 @@ const extractGreenhouseJobs = node({
   output: [{ rawJobs: [] }],
 });
 
+// Lever's postings API returns a bare top-level array — n8n's core
+// JSON-to-items conversion auto-splits it, so items are already individual
+// raw jobs by the time they reach this branch (same behavior as RemoteOK's
+// Tier D branch below). Confirmed live in Phase 14: a real 21-job Wahed
+// response produced 21 separate items, each individually failing
+// downstream, before this Aggregate node was added.
+const aggregateLeverJobs = node({
+  type: 'n8n-nodes-base.aggregate',
+  version: 1,
+  config: {
+    name: 'Aggregate Lever Jobs',
+    parameters: { aggregate: 'aggregateAllItemData', destinationFieldName: 'jobs', include: 'allFields' },
+  },
+  output: [{ jobs: [{ id: 'abc-123', text: 'Fixture Role' }] }],
+});
+
 const extractLeverJobs = node({
   type: 'n8n-nodes-base.set',
   version: 3.4,
   config: {
     name: 'Extract Lever Jobs',
-    notes: "Lever's postings API returns a bare top-level array — the whole response body IS the jobs list (docs/job-ingestion-pilot.md §5).",
+    notes: "Lever's postings API returns a bare top-level array, auto-split by n8n into one item per job — Aggregate Lever Jobs collects them back into a single {jobs:[...]} item before this node runs (Phase 14 fix; docs/job-ingestion-pilot.md §5).",
     onError: 'continueErrorOutput',
     parameters: {
       mode: 'manual',
-      assignments: { assignments: [{ id: 'rawJobs', name: 'rawJobs', value: expr('{{ $json }}'), type: 'array' }] },
+      assignments: { assignments: [{ id: 'rawJobs', name: 'rawJobs', value: expr('{{ $json.jobs }}'), type: 'array' }] },
     },
   },
   output: [{ rawJobs: [] }],
@@ -872,7 +888,7 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Agent / 01 Job 
         .to(
           extractJobsByAtsType
             .onCase(0, extractGreenhouseJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
-            .onCase(1, extractLeverJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
+            .onCase(1, aggregateLeverJobs.to(extractLeverJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint)))
             .onCase(2, extractWorkableJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
             .onCase(3, extractAshbyJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
             .onCase(4, buildUnsupportedSourceResult.to(recordSourceResult))

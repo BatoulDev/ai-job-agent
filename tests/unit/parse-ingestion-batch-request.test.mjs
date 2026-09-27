@@ -22,9 +22,9 @@ describe("parseIngestionBatchRequestBody — valid requests", () => {
     assert.equal(result.ok, true);
   });
 
-  test("accepts each of the four automatable Tier-A source types", () => {
-    for (const sourceType of ["greenhouse", "lever", "workable", "ashby"]) {
-      assert.equal(parseIngestionBatchRequestBody(validBody({ sourceType })).ok, true);
+  test("accepts each of the five automatable company-specific source types (career_page added Phase 14 — real E2E run found it rejected)", () => {
+    for (const sourceType of ["greenhouse", "lever", "workable", "ashby", "career_page"]) {
+      assert.equal(parseIngestionBatchRequestBody(validBody({ sourceType })).ok, true, `${sourceType} should be accepted`);
     }
   });
 });

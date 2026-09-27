@@ -130,6 +130,25 @@ test("invalid raw jobs are rejected and counted, valid ones still succeed", asyn
   await trackJobsForSource(sourceId);
 });
 
+test("a provider batch containing a genuine duplicate external_id (same job listed twice — real Salla/Workable behavior found in Phase 14) is collapsed to one row instead of crashing the upsert", async () => {
+  const sourceId = await createFixtureSource();
+  const result = await runIngestionBatch(
+    adminClient,
+    sourceId,
+    "workable",
+    [rawJob("dup-1", { title: "First copy" }), rawJob("dup-1", { title: "Second copy (identical job, provider listed it twice)" }), rawJob("unique-1")],
+    { maxJobsPerSource: 10, dryRun: false }
+  );
+
+  assert.equal(result.outcome, "succeeded", "must not throw the Postgres 'ON CONFLICT DO UPDATE command cannot affect row a second time' error");
+  assert.equal(result.jobsCreated, 2, "two distinct external_ids after de-duplication: dup-1 (once) + unique-1");
+  await trackJobsForSource(sourceId);
+
+  const { data: rows } = await adminClient.from("jobs").select("external_id, title").eq("source_id", sourceId).eq("external_id", "dup-1");
+  assert.equal(rows.length, 1, "the duplicate must collapse to exactly one row, never two");
+  assert.equal(rows[0].title, "Second copy (identical job, provider listed it twice)", "last occurrence wins deterministically");
+});
+
 test("an idempotent retry updates the same rows instead of duplicating them, and uses the live company name", async () => {
   const sourceId = await createFixtureSource();
   const first = await runIngestionBatch(adminClient, sourceId, "greenhouse", [rawJob("retry-1", { title: "First pass" })], {
