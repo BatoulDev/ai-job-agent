@@ -161,10 +161,15 @@ describe("getProviderAdapter — registry", () => {
     assert.equal(typeof getProviderAdapter("adzuna"), "function");
   });
 
+  test("career_page has an identity adapter (Phase 14 fix — its jobs arrive pre-extracted from extract-career-page-jobs, no further mapping needed)", () => {
+    assert.equal(typeof getProviderAdapter("career_page"), "function");
+    const raw = { externalId: "x", title: "t", description: "d", applicationUrl: "https://example.test" };
+    assert.deepEqual(getProviderAdapter("career_page")(raw), raw);
+  });
+
   test("returns null for a source type with no automated adapter", () => {
     assert.equal(getProviderAdapter("admin_manual"), null);
     assert.equal(getProviderAdapter("linkedin"), null);
-    assert.equal(getProviderAdapter("career_page"), null);
     assert.equal(getProviderAdapter("bayt"), null);
     assert.equal(getProviderAdapter("gulftalent"), null);
   });

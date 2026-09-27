@@ -264,6 +264,24 @@ test('the Tier-B loop batches one candidate at a time', () => {
   assert.equal(loop.parameters.batchSize, 1);
 });
 
-test('exactly 47 nodes total, matching the live, MCP-tested workflow (Phase 13)', () => {
-  assert.equal(wf.nodes.length, 47);
+test('exactly 48 nodes total, matching the live, MCP-tested workflow (Phase 14 adds Aggregate Lever Jobs)', () => {
+  assert.equal(wf.nodes.length, 48);
+});
+
+test('Lever case routes through Aggregate Lever Jobs before Extract Lever Jobs (Phase 14 fix — Lever\'s bare top-level array response gets auto-split into one item per job by n8n, so the raw array must be re-collected before extraction)', () => {
+  const switchConns = wf.connections['Extract Jobs By ATS Type']?.main ?? [];
+  assert.ok(switchConns[1]?.some((c) => c.node === 'Aggregate Lever Jobs'), 'the lever case (index 1) must route to Aggregate Lever Jobs, not directly to Extract Lever Jobs');
+  assert.ok(wf.connections['Aggregate Lever Jobs']?.main?.[0]?.some((c) => c.node === 'Extract Lever Jobs'), 'Aggregate Lever Jobs must feed Extract Lever Jobs');
+
+  const aggregateNode = findNode('Aggregate Lever Jobs');
+  assert.equal(aggregateNode.type, 'n8n-nodes-base.aggregate');
+  assert.equal(aggregateNode.parameters.aggregate, 'aggregateAllItemData');
+  assert.equal(aggregateNode.parameters.destinationFieldName, 'jobs');
+
+  const extractLever = findNode('Extract Lever Jobs');
+  assert.equal(
+    extractLever.parameters.assignments.assignments[0].value,
+    '={{ $json.jobs }}',
+    'must read the aggregated jobs array, not assume $json is still the whole raw response'
+  );
 });

@@ -148,8 +148,21 @@ async function persistValidatedJobs(
     return emptyResult("no_valid_jobs", rawJobsCount, jobsRejected);
   }
 
-  const truncated = validated.length > options.maxJobsPerSource;
-  const bounded = truncated ? validated.slice(0, options.maxJobsPerSource) : validated;
+  // Defensive: a provider's own raw response can genuinely contain
+  // duplicate entries for the same job — confirmed live in Phase 14
+  // (Salla's real Workable feed lists one job twice, identical shortcode/
+  // title/department). A single upsert() call cannot apply "ON CONFLICT
+  // DO UPDATE" twice to the same (dedup_scope, external_id) row in one
+  // statement — Postgres rejects the whole batch with "ON CONFLICT DO
+  // UPDATE command cannot affect row a second time". De-duplicate by
+  // external_id before bounding/upserting (last occurrence wins —
+  // arbitrary but deterministic; observed duplicates are identical
+  // anyway) so a provider's own data quirk can never take down an entire
+  // otherwise-valid batch.
+  const deduped = Array.from(new Map(validated.map((row) => [row.external_id, row])).values());
+
+  const truncated = deduped.length > options.maxJobsPerSource;
+  const bounded = truncated ? deduped.slice(0, options.maxJobsPerSource) : deduped;
 
   if (options.dryRun) {
     return {
