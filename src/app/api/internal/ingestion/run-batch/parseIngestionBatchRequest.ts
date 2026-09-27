@@ -12,10 +12,15 @@
 import { getProviderAdapter } from "../../../../../lib/ingestion/providers/index.ts";
 import type { JobSourceType } from "../../../../../lib/ingestion/rawProviderJob.ts";
 
-// Only the ATS types this endpoint actually has an adapter for — never
-// admin_manual/career_page/ashby/linkedin, which have no automated fetch
-// path (AGENTS.md §7: LinkedIn is never scraped or auto-applied through).
-const AUTOMATABLE_SOURCE_TYPES: readonly JobSourceType[] = ["greenhouse", "lever", "workable"];
+// Only the company-specific ATS types this endpoint accepts a sourceId for
+// — never admin_manual/career_page/linkedin, which have no automated fetch
+// path here (AGENTS.md §7: LinkedIn is never scraped or auto-applied
+// through; career_page goes through extractCareerPageJobPostings.ts, not a
+// PROVIDER_ADAPTERS entry). Multi-company feeds (remoteok/jobicy/
+// arbeitnow/jsearch/adzuna/bayt/gulftalent) are never accepted here either
+// — they have no company_sources row to key a sourceId off; see
+// run-multi-company-batch/route.ts (Phase 13).
+const AUTOMATABLE_SOURCE_TYPES: readonly JobSourceType[] = ["greenhouse", "lever", "workable", "ashby"];
 
 // Defense in depth against a misconfigured or compromised caller sending an
 // unbounded payload (AGENTS.md §27) — well above any real ATS board size

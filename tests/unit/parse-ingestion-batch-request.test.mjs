@@ -22,8 +22,8 @@ describe("parseIngestionBatchRequestBody — valid requests", () => {
     assert.equal(result.ok, true);
   });
 
-  test("accepts each of the three automatable source types", () => {
-    for (const sourceType of ["greenhouse", "lever", "workable"]) {
+  test("accepts each of the four automatable Tier-A source types", () => {
+    for (const sourceType of ["greenhouse", "lever", "workable", "ashby"]) {
       assert.equal(parseIngestionBatchRequestBody(validBody({ sourceType })).ok, true);
     }
   });
@@ -48,6 +48,11 @@ describe("parseIngestionBatchRequestBody — malformed/tampered requests rejecte
   test("rejects a source type with no automated adapter (admin_manual/linkedin/etc.)", () => {
     assert.equal(parseIngestionBatchRequestBody(validBody({ sourceType: "admin_manual" })).ok, false);
     assert.equal(parseIngestionBatchRequestBody(validBody({ sourceType: "linkedin" })).ok, false);
+  });
+
+  test("rejects a multi-company feed source type — those go through run-multi-company-batch instead (Phase 13)", () => {
+    assert.equal(parseIngestionBatchRequestBody(validBody({ sourceType: "remoteok" })).ok, false);
+    assert.equal(parseIngestionBatchRequestBody(validBody({ sourceType: "jobicy" })).ok, false);
   });
 
   test("rejects a non-array rawJobs", () => {

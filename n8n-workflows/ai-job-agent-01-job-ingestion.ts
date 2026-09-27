@@ -30,8 +30,9 @@ const listIngestionSources = node({
   config: {
     name: 'List Ingestion Sources',
     notes:
-      'Discovers verified, automatable company_sources rows dynamically — replaces the old hardcoded 4-source list ' +
-      '(Phase 12). See src/lib/ingestion/findEligibleCompanySources.ts.',
+      'Discovers verified, automatable company_sources rows dynamically (Phase 12), plus enabled multi-company feed ' +
+      'providers and career-page extraction candidates (Phase 13). See src/lib/ingestion/findEligibleCompanySources.ts, ' +
+      'multiCompanyFeedUrls.ts, findCareerPageExtractionCandidates.ts.',
     onError: 'continueErrorOutput',
     retryOnFail: true,
     maxTries: 2,
@@ -49,7 +50,13 @@ const listIngestionSources = node({
       options: { timeout: 30000 },
     },
   },
-  output: [{ sources: [{ source_id: 'sr-sa-alpaca', ats_type: 'greenhouse', feed_url: 'https://boards-api.greenhouse.io/v1/boards/alpaca/jobs?content=true' }] }],
+  output: [
+    {
+      sources: [{ source_id: 'sr-sa-alpaca', ats_type: 'greenhouse', feed_url: 'https://boards-api.greenhouse.io/v1/boards/alpaca/jobs?content=true' }],
+      multi_company_sources: [{ provider_type: 'remoteok', feed_url: 'https://remoteok.com/api', paginated: false }],
+      career_page_candidates: [{ source_id: 'sr-lb-byblos-bank', careers_url: 'https://www.byblosbank.com/bank-careers-lebanon' }],
+    },
+  ],
 });
 
 const logListSourcesFailure = node({
@@ -65,6 +72,10 @@ const logListSourcesFailure = node({
   },
   output: [{ error: 'list-sources call failed' }],
 });
+
+// ─────────────────────────────────────────────────────────────────────────
+// Tier A: company-specific ATS sources (Greenhouse/Lever/Workable/Ashby)
+// ─────────────────────────────────────────────────────────────────────────
 
 const splitOutSources = node({
   type: 'n8n-nodes-base.splitOut',
@@ -132,6 +143,14 @@ const extractJobsByAtsType = switchCase({
               combinator: 'and',
             },
           },
+          {
+            outputKey: 'ashby',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [{ leftValue: expr("{{ $('Split Out Sources').item.json.ats_type }}"), operator: { type: 'string', operation: 'equals' }, rightValue: 'ashby' }],
+              combinator: 'and',
+            },
+          },
         ],
       },
       options: { fallbackOutput: 'extra', renameFallbackOutput: 'Unsupported' },
@@ -174,6 +193,21 @@ const extractWorkableJobs = node({
   version: 3.4,
   config: {
     name: 'Extract Workable Jobs',
+    onError: 'continueErrorOutput',
+    parameters: {
+      mode: 'manual',
+      assignments: { assignments: [{ id: 'rawJobs', name: 'rawJobs', value: expr('{{ $json.jobs }}'), type: 'array' }] },
+    },
+  },
+  output: [{ rawJobs: [] }],
+});
+
+const extractAshbyJobs = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Extract Ashby Jobs',
+    notes: 'Phase 13. Ashby posting-api returns {jobs:[...], apiVersion} — confirmed live against a real registry board (sr-qa-the-utopia-studio).',
     onError: 'continueErrorOutput',
     parameters: {
       mode: 'manual',
@@ -338,17 +372,447 @@ const rateLimitDelay = node({
   output: [{ source_id: 'sr-x' }],
 });
 
+// ─────────────────────────────────────────────────────────────────────────
+// Tier D (Phase 13): multi-company feeds (RemoteOK/Jobicy/Arbeitnow).
+// Every branch normalizes to the same {jobs:[...]} shape before converging
+// on one shared endpoint-call node — mirrors Tier A's
+// extractGreenhouse/Lever/Workable/AshbyJobs -> callIngestionBatchEndpoint
+// convergence pattern above.
+// ─────────────────────────────────────────────────────────────────────────
+
+const splitOutMultiCompanySources = node({
+  type: 'n8n-nodes-base.splitOut',
+  version: 1,
+  config: {
+    name: 'Split Out Multi-Company Sources',
+    parameters: { fieldToSplitOut: 'multi_company_sources' },
+  },
+  output: [{ provider_type: 'remoteok', feed_url: 'https://remoteok.com/api', paginated: false }],
+});
+
+const loopMultiCompanySources = splitInBatches({
+  version: 3,
+  config: { name: 'Loop Multi-Company Sources (Rate Limited)', parameters: { batchSize: 1 } },
+  output: [{ provider_type: 'remoteok', feed_url: 'https://remoteok.com/api', paginated: false }],
+});
+
+const fetchMultiCompanyFeed = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Fetch Multi-Company Feed',
+    notes:
+      'First page only, deliberately — Arbeitnow is the only paginated provider here and its remote:true jobs are a ' +
+      'small subset of page 1; native HTTP pagination was judged not worth the added complexity this phase. See ' +
+      'docs/PROVIDER_EXPANSION_IMPLEMENTATION.md.',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 3,
+    waitBetweenTries: 5000,
+    parameters: {
+      method: 'GET',
+      url: expr('{{ $json.feed_url }}'),
+      authentication: 'none',
+      options: { timeout: 20000 },
+    },
+  },
+  output: [{ id: '1137431', company: 'Fixture Co', position: 'Engineer', description: '<p>desc</p>', apply_url: 'https://remoteok.com/x', url: 'https://remoteok.com/x', date: '2026-09-01T00:00:00Z' }],
+});
+
+const extractRawJobsByProviderType = switchCase({
+  version: 3.4,
+  config: {
+    name: 'Extract Raw Jobs By Provider Type',
+    parameters: {
+      rules: {
+        values: [
+          {
+            outputKey: 'remoteok',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [{ leftValue: expr("{{ $('Split Out Multi-Company Sources').item.json.provider_type }}"), operator: { type: 'string', operation: 'equals' }, rightValue: 'remoteok' }],
+              combinator: 'and',
+            },
+          },
+          {
+            outputKey: 'jobicy',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [{ leftValue: expr("{{ $('Split Out Multi-Company Sources').item.json.provider_type }}"), operator: { type: 'string', operation: 'equals' }, rightValue: 'jobicy' }],
+              combinator: 'and',
+            },
+          },
+          {
+            outputKey: 'arbeitnow',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [{ leftValue: expr("{{ $('Split Out Multi-Company Sources').item.json.provider_type }}"), operator: { type: 'string', operation: 'equals' }, rightValue: 'arbeitnow' }],
+              combinator: 'and',
+            },
+          },
+        ],
+      },
+      options: { fallbackOutput: 'extra', renameFallbackOutput: 'Unsupported' },
+    },
+  },
+  output: [{ id: '1137431' }],
+});
+
+// RemoteOK's top-level response is a raw JSON array — n8n's core JSON-to-
+// items conversion auto-splits it, so items are already individual raw
+// jobs (item 0 is always RemoteOK's own legend/metadata object, which
+// lacks id/company/title — harmlessly rejected downstream as
+// missing_company_name, not filtered here, to keep this branch as simple
+// as the other two).
+const aggregateRemoteOkJobs = node({
+  type: 'n8n-nodes-base.aggregate',
+  version: 1,
+  config: {
+    name: 'Aggregate RemoteOK Jobs',
+    parameters: { aggregate: 'aggregateAllItemData', destinationFieldName: 'jobs', include: 'allFields' },
+  },
+  output: [{ jobs: [{ id: '1137431', company: 'Fixture Co' }] }],
+});
+
+const splitOutJobicyJobs = node({
+  type: 'n8n-nodes-base.splitOut',
+  version: 1,
+  config: { name: 'Split Out Jobicy Jobs', parameters: { fieldToSplitOut: 'jobs' } },
+  output: [{ id: 151756, companyName: 'Fixture Co' }],
+});
+
+const aggregateJobicyJobs = node({
+  type: 'n8n-nodes-base.aggregate',
+  version: 1,
+  config: {
+    name: 'Aggregate Jobicy Jobs',
+    parameters: { aggregate: 'aggregateAllItemData', destinationFieldName: 'jobs', include: 'allFields' },
+  },
+  output: [{ jobs: [{ id: 151756, companyName: 'Fixture Co' }] }],
+});
+
+const splitOutArbeitnowJobs = node({
+  type: 'n8n-nodes-base.splitOut',
+  version: 1,
+  config: { name: 'Split Out Arbeitnow Jobs', parameters: { fieldToSplitOut: 'data' } },
+  output: [{ slug: 'fixture-job', company_name: 'Fixture Co', remote: true }],
+});
+
+const filterArbeitnowRemote = node({
+  type: 'n8n-nodes-base.filter',
+  version: 2.3,
+  config: {
+    name: 'Filter Arbeitnow Remote Only',
+    notes: "Arbeitnow's feed is dominated by DACH-region onsite listings — only remote:true rows are relevant to this project's international-remote lane (see docs/PROVIDER_EXPANSION_IMPLEMENTATION.md).",
+    parameters: {
+      conditions: {
+        options: { caseSensitive: true, leftValue: '', typeValidation: 'strict', version: 2 },
+        conditions: [{ leftValue: expr('{{ $json.remote }}'), operator: { type: 'boolean', operation: 'equals' }, rightValue: true }],
+        combinator: 'and',
+      },
+      options: {},
+    },
+  },
+  output: [{ slug: 'fixture-job', company_name: 'Fixture Co', remote: true }],
+});
+
+const aggregateArbeitnowJobs = node({
+  type: 'n8n-nodes-base.aggregate',
+  version: 1,
+  config: {
+    name: 'Aggregate Arbeitnow Jobs',
+    parameters: { aggregate: 'aggregateAllItemData', destinationFieldName: 'jobs', include: 'allFields' },
+  },
+  output: [{ jobs: [{ slug: 'fixture-job', company_name: 'Fixture Co', remote: true }] }],
+});
+
+const callMultiCompanyBatchEndpoint = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call Multi-Company Batch Endpoint',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr(
+        '{{ {\n' +
+          "  sourceType: $('Split Out Multi-Company Sources').item.json.provider_type,\n" +
+          '  rawJobs: $json.jobs,\n' +
+          "  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n" +
+          "  dryRun: $('Workflow Configuration').first().json.dryRun\n" +
+          '} }}'
+      ),
+      options: { timeout: 30000 },
+    },
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+  },
+  output: [{ outcome: 'succeeded', jobsFetched: 1, jobsValid: 1, jobsRejected: 0, jobsCreated: 1, jobsUpdated: 0, jobsClosed: 0, truncated: false }],
+});
+
+const MULTI_COMPANY_PROVIDER_TYPE_ASSIGNMENT = {
+  id: 'provider_type',
+  name: 'provider_type',
+  value: expr("{{ $('Split Out Multi-Company Sources').item.json.provider_type }}"),
+  type: 'string',
+};
+
+const buildMultiCompanySuccessResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Multi-Company Success Result',
+    parameters: {
+      mode: 'manual',
+      includeOtherFields: true,
+      assignments: {
+        assignments: [MULTI_COMPANY_PROVIDER_TYPE_ASSIGNMENT, { id: 'succeeded', name: 'succeeded', value: expr("{{ $json.outcome === 'succeeded' }}"), type: 'boolean' }, { id: 'error', name: 'error', value: null, type: 'string' }],
+      },
+    },
+  },
+  output: [{ provider_type: 'remoteok', outcome: 'succeeded', succeeded: true, error: null }],
+});
+
+const buildMultiCompanyFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Multi-Company Failure Result',
+    notes: 'Shared failure builder for fetch failures, endpoint-call failures, and an unsupported provider_type (defensive — providerConfig.ts/multiCompanyFeedUrls.ts never actually emit one).',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          MULTI_COMPANY_PROVIDER_TYPE_ASSIGNMENT,
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'multi-company batch failed' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ provider_type: 'remoteok', succeeded: false, error: 'fetch failed after retries' }],
+});
+
+const recordMultiCompanySourceResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Record Multi-Company Source Result',
+    notes: 'Convergence point for the Tier-D loop, same purpose as Record Source Result above — one execution-history entry per provider per run.',
+    parameters: { mode: 'manual', includeOtherFields: true, assignments: { assignments: [] } },
+  },
+  output: [{ provider_type: 'remoteok', succeeded: true }],
+});
+
+const multiCompanyRateLimitDelay = node({
+  type: 'n8n-nodes-base.wait',
+  version: 1.1,
+  config: {
+    name: 'Multi-Company Rate Limit Delay',
+    parameters: {
+      resume: 'timeInterval',
+      amount: expr("{{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"),
+      unit: 'seconds',
+    },
+  },
+  output: [{ provider_type: 'remoteok' }],
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// Tier B (Phase 13): career-page extraction. Company-specific (one
+// company_sources row each), so it reuses the SAME
+// /api/internal/ingestion/run-batch endpoint as Tier A above — the only
+// new step is fetching + extracting HTML before that call.
+// ─────────────────────────────────────────────────────────────────────────
+
+const splitOutCareerPageCandidates = node({
+  type: 'n8n-nodes-base.splitOut',
+  version: 1,
+  config: {
+    name: 'Split Out Career Page Candidates',
+    parameters: { fieldToSplitOut: 'career_page_candidates' },
+  },
+  output: [{ source_id: 'sr-lb-byblos-bank', careers_url: 'https://www.byblosbank.com/bank-careers-lebanon' }],
+});
+
+const loopCareerPageCandidates = splitInBatches({
+  version: 3,
+  config: { name: 'Loop Career Page Candidates (Rate Limited)', parameters: { batchSize: 1 } },
+  output: [{ source_id: 'sr-lb-byblos-bank', careers_url: 'https://www.byblosbank.com/bank-careers-lebanon' }],
+});
+
+const fetchCareerPageHtml = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Fetch Career Page HTML',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 5000,
+    parameters: {
+      method: 'GET',
+      url: expr('{{ $json.careers_url }}'),
+      authentication: 'none',
+      sendHeaders: true,
+      specifyHeaders: 'keypair',
+      headerParameters: { parameters: [{ name: 'User-Agent', value: 'Mozilla/5.0 (compatible; ai-job-agent-ingestion/1.0)' }] },
+      options: { timeout: 20000, response: { response: { responseFormat: 'text', outputPropertyName: 'html' } } },
+    },
+  },
+  output: [{ html: '<html><body>Careers page</body></html>' }],
+});
+
+const callExtractCareerPageJobsEndpoint = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call Extract Career Page Jobs Endpoint',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/extract-career-page-jobs"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ { html: $json.html } }}'),
+      options: { timeout: 30000 },
+    },
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+  },
+  output: [{ jobs: [] }],
+});
+
+const callCareerPageIngestionBatchEndpoint = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call Career Page Ingestion Batch Endpoint',
+    notes: 'Same shared run-batch endpoint Tier A calls — career_page is a company-specific source_type (jobs.source_type check constraint already allowed it before Phase 13).',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-batch"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr(
+        '{{ {\n' +
+          "  sourceId: $('Split Out Career Page Candidates').item.json.source_id,\n" +
+          "  sourceType: 'career_page',\n" +
+          '  rawJobs: $json.jobs,\n' +
+          "  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n" +
+          "  dryRun: $('Workflow Configuration').first().json.dryRun\n" +
+          '} }}'
+      ),
+      options: { timeout: 30000 },
+    },
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+  },
+  output: [{ outcome: 'no_valid_jobs', jobsFetched: 0, jobsValid: 0, jobsRejected: 0, jobsCreated: 0, jobsUpdated: 0, jobsClosed: 0, truncated: false }],
+});
+
+const CAREER_PAGE_SOURCE_ID_ASSIGNMENT = {
+  id: 'source_id',
+  name: 'source_id',
+  value: expr("{{ $('Split Out Career Page Candidates').item.json.source_id }}"),
+  type: 'string',
+};
+
+const buildCareerPageSuccessResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Career Page Success Result',
+    parameters: {
+      mode: 'manual',
+      includeOtherFields: true,
+      assignments: {
+        assignments: [CAREER_PAGE_SOURCE_ID_ASSIGNMENT, { id: 'succeeded', name: 'succeeded', value: expr("{{ $json.outcome === 'succeeded' || $json.outcome === 'no_valid_jobs' }}"), type: 'boolean' }, { id: 'error', name: 'error', value: null, type: 'string' }],
+      },
+    },
+  },
+  output: [{ source_id: 'sr-lb-byblos-bank', outcome: 'no_valid_jobs', succeeded: true, error: null }],
+});
+
+const buildCareerPageFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Career Page Failure Result',
+    notes: 'Shared failure builder for HTML-fetch failures, extraction-endpoint failures, and ingestion-batch-endpoint failures.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          CAREER_PAGE_SOURCE_ID_ASSIGNMENT,
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'career page ingestion failed' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ source_id: 'sr-lb-byblos-bank', succeeded: false, error: 'fetch failed after retries' }],
+});
+
+const recordCareerPageSourceResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Record Career Page Source Result',
+    notes: 'Convergence point for the Tier-B loop, same purpose as Record Source Result above.',
+    parameters: { mode: 'manual', includeOtherFields: true, assignments: { assignments: [] } },
+  },
+  output: [{ source_id: 'sr-lb-byblos-bank', succeeded: true }],
+});
+
+const careerPageRateLimitDelay = node({
+  type: 'n8n-nodes-base.wait',
+  version: 1.1,
+  config: {
+    name: 'Career Page Rate Limit Delay',
+    parameters: {
+      resume: 'timeInterval',
+      amount: expr("{{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"),
+      unit: 'seconds',
+    },
+  },
+  output: [{ source_id: 'sr-lb-byblos-bank' }],
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// Sticky notes
+// ─────────────────────────────────────────────────────────────────────────
+
 const overviewNote = sticky(
   '### AI Job Agent / 01 Job Ingestion\n' +
     'Manual trigger, stays inactive until a human reviews a `local_pilot`-equivalent run (dryRun:false) and decides on a schedule. ' +
     'n8n owns provider HTTP calls + retry/backoff (native `retryOnFail`) + per-source rate limiting; ALL validation, ' +
     'field mapping, dedup identity, idempotent persistence, and stale-close safety live in src/lib/ingestion/* (Phase 03) ' +
-    "behind POST /api/internal/ingestion/run-batch, which also re-verifies each source's company_sources.review_status " +
-    'live on every call — n8n never needs Supabase access for this workflow at all.\n\n' +
+    "behind three internal endpoints (run-batch, run-multi-company-batch, extract-career-page-jobs), which also re-verify " +
+    'authorization live on every call — n8n never needs Supabase access for this workflow at all.\n\n' +
     "No combined execution-summary node: n8n's cross-loop-iteration item linking does not reliably expose every " +
-    "iteration's result to a single downstream node once Loop Sources (Rate Limited)'s done output fires (confirmed " +
-    'by direct testing — `.all()` from that branch only resolved the last iteration). Each source\'s real outcome is ' +
-    "fully visible per-iteration in Record Source Result's own execution history in the n8n UI, sufficient for this " +
+    "iteration's result to a single downstream node once a loop's done output fires (confirmed by direct testing — " +
+    "`.all()` from that branch only resolved the last iteration). Each source/provider's real outcome is fully visible " +
+    "per-iteration in each tier's own Record *Result node execution history in the n8n UI, sufficient for this " +
     'manually-reviewed, inactive workflow. Revisit if this is ever scheduled unattended and a single rollup ' +
     'notification becomes necessary.',
   [startTrigger, workflowConfiguration],
@@ -356,17 +820,44 @@ const overviewNote = sticky(
 );
 
 const scopeLimitationNote = sticky(
-  '### Dynamic source discovery (Phase 12)\n' +
-    'Sources are now discovered live from company_sources via POST /api/internal/ingestion/list-sources ' +
-    '(src/lib/ingestion/findEligibleCompanySources.ts + deriveAtsFeedUrl.ts), replacing the old hardcoded 4-source ' +
-    "list. Eligibility: review_status='verified' AND automation_eligibility='suitable_public_ats' AND a " +
-    'Greenhouse/Lever/Workable feed URL derivable from official_careers_url. Remaining ceiling: many verified ' +
-    "ATS-suitable rows embed their board on the company's own domain rather than linking the ATS host directly, so " +
-    'URL derivation cannot resolve every row — see docs/SOURCE_COVERAGE_AND_PROVIDER_EXPANSION_AUDIT.md (Phase 12) ' +
-    "for the exact count and per-market breakdown. Each returned source's review_status/automation_eligibility is " +
-    'still re-verified live, per source, inside runIngestionBatch() before anything is written.',
+  '### Dynamic source discovery (Phase 12) + three-tier orchestration (Phase 13)\n' +
+    'One POST /api/internal/ingestion/list-sources call now returns three independent arrays this workflow fans out ' +
+    'to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby — ' +
+    'findEligibleCompanySources.ts), (2) Tier-D enabled multi-company feeds (RemoteOK/Jobicy/Arbeitnow — ' +
+    'multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates ' +
+    '(findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on ' +
+    'a shared endpoint per tier — no provider-specific matching/eligibility logic anywhere downstream of ingestion. ' +
+    'See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider, and ' +
+    "why JSearch/Adzuna/Bayt/GulfTalent remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL or " +
+    'BLOCKED_ON_AUTHORIZATION, not implemented as a no-op here.',
   [listIngestionSources],
   { color: 6 }
+);
+
+const multiCompanyNote = sticky(
+  '### Tier D: multi-company feeds (Phase 13)\n' +
+    "RemoteOK/Jobicy/Arbeitnow are live, free, public APIs — no credential required. Each branch normalizes its own " +
+    'raw response shape (RemoteOK: auto-split top-level array; Jobicy/Arbeitnow: Split Out + Aggregate their nested ' +
+    "array field) down to one common {jobs:[...]} shape before converging on Call Multi-Company Batch Endpoint, " +
+    'mirroring how Tier A above converges on Call Ingestion Batch Endpoint. First page only — see Fetch Multi-Company ' +
+    "Feed's own note for why native pagination was skipped this phase.",
+  [splitOutMultiCompanySources],
+  { color: 5 }
+);
+
+const careerPageNote = sticky(
+  '### Tier B: career-page extraction (Phase 13)\n' +
+    'Fetches a real company_sources.official_careers_url and extracts schema.org JobPosting JSON-LD ' +
+    '(extractCareerPageJobPostings.ts) — no headless browser, no Apify, no arbitrary scraping. Honest finding this ' +
+    'phase: 0 of 11 sampled real candidates (Byblos Bank, touch Lebanon, Caritas Lebanon, Lebanese Red Cross, KPMG, ' +
+    'Anghami, Whish Money, Mercy Corps, Deloitte, EY, Bank Audi) emit this markup on their recorded ' +
+    'official_careers_url — that URL is almost always a landing/overview page, while JobPosting markup typically ' +
+    "lives on an individual job's own detail page. The pipeline is real and live-tested end-to-end (fetch + extract " +
+    'against a real page returns an honest 0, not an error) and will start yielding jobs automatically, with zero ' +
+    'code changes, the moment any candidate page — or a future per-job-detail-page discovery step — actually emits ' +
+    'this markup. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md.',
+  [splitOutCareerPageCandidates],
+  { color: 7 }
 );
 
 export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Agent / 01 Job Ingestion')
@@ -383,7 +874,8 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Agent / 01 Job 
             .onCase(0, extractGreenhouseJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
             .onCase(1, extractLeverJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
             .onCase(2, extractWorkableJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
-            .onCase(3, buildUnsupportedSourceResult.to(recordSourceResult))
+            .onCase(3, extractAshbyJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
+            .onCase(4, buildUnsupportedSourceResult.to(recordSourceResult))
         )
     )
   )
@@ -397,5 +889,52 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Agent / 01 Job 
   .add(recordSourceResult)
   .to(rateLimitDelay)
   .to(nextBatch(loopSources))
+
+  // Tier D: multi-company feeds — second independent branch off List Ingestion Sources' success output.
+  .add(listIngestionSources)
+  .to(splitOutMultiCompanySources)
+  .to(
+    loopMultiCompanySources.onEachBatch(
+      fetchMultiCompanyFeed
+        .onError(buildMultiCompanyFailureResult)
+        .to(
+          extractRawJobsByProviderType
+            .onCase(0, aggregateRemoteOkJobs.to(callMultiCompanyBatchEndpoint))
+            .onCase(1, splitOutJobicyJobs.to(aggregateJobicyJobs.to(callMultiCompanyBatchEndpoint)))
+            .onCase(2, splitOutArbeitnowJobs.to(filterArbeitnowRemote.to(aggregateArbeitnowJobs.to(callMultiCompanyBatchEndpoint))))
+            .onCase(3, buildMultiCompanyFailureResult)
+        )
+    )
+  )
+  .add(callMultiCompanyBatchEndpoint.onError(buildMultiCompanyFailureResult))
+  .to(buildMultiCompanySuccessResult)
+  .to(recordMultiCompanySourceResult)
+  .add(buildMultiCompanyFailureResult)
+  .to(recordMultiCompanySourceResult)
+  .add(recordMultiCompanySourceResult)
+  .to(multiCompanyRateLimitDelay)
+  .to(nextBatch(loopMultiCompanySources))
+
+  // Tier B: career-page extraction — third independent branch off List Ingestion Sources' success output.
+  .add(listIngestionSources)
+  .to(splitOutCareerPageCandidates)
+  .to(
+    loopCareerPageCandidates.onEachBatch(
+      fetchCareerPageHtml
+        .onError(buildCareerPageFailureResult)
+        .to(callExtractCareerPageJobsEndpoint.onError(buildCareerPageFailureResult).to(callCareerPageIngestionBatchEndpoint))
+    )
+  )
+  .add(callCareerPageIngestionBatchEndpoint.onError(buildCareerPageFailureResult))
+  .to(buildCareerPageSuccessResult)
+  .to(recordCareerPageSourceResult)
+  .add(buildCareerPageFailureResult)
+  .to(recordCareerPageSourceResult)
+  .add(recordCareerPageSourceResult)
+  .to(careerPageRateLimitDelay)
+  .to(nextBatch(loopCareerPageCandidates))
+
   .add(overviewNote)
-  .add(scopeLimitationNote);
+  .add(scopeLimitationNote)
+  .add(multiCompanyNote)
+  .add(careerPageNote);

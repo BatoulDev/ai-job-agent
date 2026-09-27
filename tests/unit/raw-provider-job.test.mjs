@@ -135,3 +135,41 @@ describe("mapRawProviderJobToJobRow", () => {
     assert.deepEqual(a, b);
   });
 });
+
+describe("mapRawProviderJobToJobRow — multi-company feeds (Phase 13)", () => {
+  const multiCompanyContext = { sourceId: null, sourceType: "remoteok" };
+
+  test("falls back to raw.companyName when context.companyName is omitted", () => {
+    const row = mapRawProviderJobToJobRow(rawJob({ companyName: "Acme Remote Co" }), multiCompanyContext);
+    assert.equal(row.company_name, "Acme Remote Co");
+  });
+
+  test("source_id is null for a multi-company batch, so dedup_scope falls back to type:sourceType", () => {
+    const row = mapRawProviderJobToJobRow(rawJob({ companyName: "Acme Remote Co" }), multiCompanyContext);
+    assert.equal(row.source_id, null);
+    assert.equal(row.source_type, "remoteok");
+  });
+
+  test("context.companyName still wins over raw.companyName when both are somehow present (company-specific adapters never set raw.companyName)", () => {
+    const companySpecificContext = { sourceId: "sr-lb-test-co", sourceType: "greenhouse", companyName: "Test Co (live)" };
+    const row = mapRawProviderJobToJobRow(rawJob({ companyName: "Should be ignored" }), companySpecificContext);
+    assert.equal(row.company_name, "Test Co (live)");
+  });
+
+  test("per-job sourceListingUrl overrides the shared context.sourceUrl — preserves per-job provenance for aggregator feeds", () => {
+    const row = mapRawProviderJobToJobRow(
+      rawJob({ companyName: "Acme Remote Co", sourceListingUrl: "https://remoteok.com/remote-jobs/12345" }),
+      { ...multiCompanyContext, sourceUrl: "https://remoteok.com/api" }
+    );
+    assert.equal(row.source_url, "https://remoteok.com/remote-jobs/12345");
+  });
+
+  test("falls back to context.sourceUrl when no per-job sourceListingUrl is given", () => {
+    const row = mapRawProviderJobToJobRow(rawJob({ companyName: "Acme Remote Co" }), { ...multiCompanyContext, sourceUrl: "https://remoteok.com/api" });
+    assert.equal(row.source_url, "https://remoteok.com/api");
+  });
+
+  test("throws (never silently invents a company) when neither context.companyName nor raw.companyName is present", () => {
+    assert.throws(() => mapRawProviderJobToJobRow(rawJob(), multiCompanyContext), /no company name available/);
+  });
+});

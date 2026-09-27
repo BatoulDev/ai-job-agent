@@ -20,7 +20,19 @@ export type JobSourceType =
   | "lever"
   | "workable"
   | "ashby"
-  | "linkedin";
+  | "linkedin"
+  // Multi-company feeds (Phase 13): one provider call returns many
+  // companies' jobs, so there is no single company_sources row to attach
+  // the batch to — see multiCompanyProviderJob.ts and
+  // ingestMultiCompanyBatch.ts for how these differ from the company-
+  // specific types above.
+  | "remoteok"
+  | "jobicy"
+  | "arbeitnow"
+  | "jsearch"
+  | "adzuna"
+  | "bayt"
+  | "gulftalent";
 
 export type EmploymentType = "full-time" | "part-time" | "internship" | "contract";
 export type Seniority = "internship" | "entry-level" | "junior" | "mid-level" | "senior";
@@ -37,6 +49,23 @@ export interface RawProviderJob {
   title: string | null | undefined;
   /** Plain text — stripping HTML is the adapter's responsibility, not this module's. */
   description: string | null | undefined;
+  /**
+   * Per-job company name — required for multi-company feeds (RemoteOK,
+   * Jobicy, ...), where every job in one provider response is a different
+   * employer. Company-specific adapters (Greenhouse/Lever/Workable/Ashby)
+   * leave this undefined; mapRawProviderJobToJobRow falls back to
+   * context.companyName (the live company_sources.company_name) for those.
+   * See multiCompanyProviderJob.ts, which requires this field.
+   */
+  companyName?: string | null;
+  /**
+   * The provider's own canonical URL for this specific job listing, when
+   * distinct from a shared feed URL (e.g. RemoteOK/Jobicy's own listing
+   * page, not the employer's application URL). Falls back to
+   * context.sourceUrl when absent — this is how per-job provenance is
+   * preserved for multi-company feeds without a schema change.
+   */
+  sourceListingUrl?: string | null;
   rawLocation?: string | null;
   /** Provider-supplied work-arrangement hint (see normalizeLocation.ts). */
   providerWorkArrangement?: string | null;
@@ -58,7 +87,8 @@ export type RawProviderJobRejectReason =
   | "invalid_application_email"
   | "invalid_employment_type"
   | "invalid_seniority"
-  | "linkedin_email_forbidden";
+  | "linkedin_email_forbidden"
+  | "missing_company_name";
 
 export type ValidationResult =
   | { valid: true }
@@ -97,10 +127,16 @@ export function validateRawProviderJob(raw: RawProviderJob, sourceType: JobSourc
 
 /** Everything the caller already knows about the source this job came from — never guessed. */
 export interface JobSourceContext {
-  sourceId: string;
+  /** Null for multi-company feeds (no single company_sources row) — dedup_scope then falls back to 'type:'||source_type. */
+  sourceId: string | null;
   sourceType: JobSourceType;
-  /** Always the live company_sources.company_name — never invented (docs/job-ingestion-pilot.md §5). */
-  companyName: string;
+  /**
+   * Always the live company_sources.company_name for company-specific
+   * sources — never invented (docs/job-ingestion-pilot.md §5). Omitted for
+   * multi-company feeds, where each raw job carries its own companyName
+   * instead (see RawProviderJob.companyName).
+   */
+  companyName?: string;
   sourceUrl?: string | null;
 }
 
@@ -119,7 +155,7 @@ export interface JobUpsertRow {
   source_type: JobSourceType;
   external_id: string;
   source_url: string | null;
-  source_id: string;
+  source_id: string | null;
   country_code: string | null;
   city: string | null;
   remote_scope: string | null;
@@ -133,7 +169,13 @@ export interface JobUpsertRow {
   status: "active" | "pending_review";
 }
 
-/** Maps an already-validated RawProviderJob into a jobs upsert row. Caller must validate first. */
+/**
+ * Maps an already-validated RawProviderJob into a jobs upsert row. Caller
+ * must validate first — for multi-company feeds, via
+ * validateMultiCompanyProviderJob (multiCompanyProviderJob.ts), which
+ * guarantees raw.companyName is present before this function is ever
+ * called with context.companyName omitted.
+ */
 export function mapRawProviderJobToJobRow(raw: RawProviderJob, context: JobSourceContext): JobUpsertRow {
   const location = normalizeLocation({
     rawLocation: raw.rawLocation,
@@ -143,9 +185,14 @@ export function mapRawProviderJobToJobRow(raw: RawProviderJob, context: JobSourc
   const hasUrl = !!raw.applicationUrl?.trim();
   const applicationMethod: "external_link" | "email" = hasUrl ? "external_link" : "email";
 
+  const companyName = context.companyName ?? raw.companyName?.trim();
+  if (!companyName) {
+    throw new Error("mapRawProviderJobToJobRow: no company name available (context.companyName or raw.companyName required)");
+  }
+
   return {
     title: raw.title!.trim(),
-    company_name: context.companyName,
+    company_name: companyName,
     description: raw.description!.trim(),
     location: location.rawLocation,
     work_arrangement: location.workArrangement,
@@ -156,7 +203,7 @@ export function mapRawProviderJobToJobRow(raw: RawProviderJob, context: JobSourc
     application_email: hasUrl ? null : raw.applicationEmail!.trim(),
     source_type: context.sourceType,
     external_id: raw.externalId.trim(),
-    source_url: context.sourceUrl ?? null,
+    source_url: raw.sourceListingUrl?.trim() || context.sourceUrl || null,
     source_id: context.sourceId,
     country_code: location.countryCode,
     city: location.city,
