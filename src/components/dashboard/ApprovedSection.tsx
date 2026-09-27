@@ -1,12 +1,14 @@
 import EmptyTabState from "./EmptyTabState";
 import MatchCard from "./MatchCard";
 import CoverLetterCard from "./CoverLetterCard";
+import ApplicationCard from "./ApplicationCard";
 import TrustNote from "./TrustNote";
 import type { MatchWithJob } from "@/lib/matches/types";
 import type { CoverLetterRecord } from "@/lib/coverLetters/types";
+import type { ApplicationRecord } from "@/lib/applications/types";
 
 // Data fetched once in page.tsx and passed down (get_my_matches('user_approved')
-// plus each match's cover_letters row, Phase 08).
+// plus each match's cover_letters row (Phase 08) and applications row (Phase 09)).
 export default function ApprovedSection({
   matches,
   isLoading,
@@ -14,6 +16,8 @@ export default function ApprovedSection({
   coverLetters,
   onSaveCoverLetterEdit,
   onApproveCoverLetter,
+  applications,
+  onApproveAndSendApplication,
 }: {
   matches: MatchWithJob[] | null;
   isLoading: boolean;
@@ -21,6 +25,8 @@ export default function ApprovedSection({
   coverLetters: Record<string, CoverLetterRecord>;
   onSaveCoverLetterEdit: (coverLetterId: string, content: string) => Promise<void>;
   onApproveCoverLetter: (coverLetterId: string) => Promise<void>;
+  applications: Record<string, ApplicationRecord>;
+  onApproveAndSendApplication: (matchId: string) => Promise<void>;
 }) {
   return (
     <div className="space-y-6">
@@ -42,6 +48,12 @@ export default function ApprovedSection({
               coverLetter={coverLetters[match.id] ?? null}
               onSaveEdit={onSaveCoverLetterEdit}
               onApprove={onApproveCoverLetter}
+            />
+            <ApplicationCard
+              match={match}
+              coverLetter={coverLetters[match.id] ?? null}
+              application={applications[match.id] ?? null}
+              onApproveAndSend={onApproveAndSendApplication}
             />
           </div>
         ))

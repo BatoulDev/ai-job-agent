@@ -35,6 +35,18 @@ The user was asked directly (this was a genuine cost-bearing decision, not somet
 - Validation to run once added: open the workflow (`http://localhost:5678/workflow/OmLtatSxRY4ErAxj`), run the Manual Trigger, confirm the execution succeeds; check `public.cover_letters` for newly-populated `generated_content` rows for previously-approved matches that had none.
 - Not blocking: the workflow is created **inactive** with no schedule, and was fully validated via `test_workflow` with pinned/mocked OpenAI responses (both "has 1 candidate" — verified the candidate-to-response mapping survives the round trip via `get_execution` — and "no candidates", which short-circuits with zero unnecessary node executions) plus a live end-to-end smoke test against the real dev server and real local Postgres (unauthorized call rejected with 401; a real fixture candidate discovered, drafted, and persisted; a completed draft correctly excluded from the next discovery pass). This credential is only needed for a human-initiated real run.
 
+## BLOCKED_ON_CREDENTIAL: real email provider for application sending (Phase 09) — not blocking, sending stays disabled tonight regardless
+
+- Env var: none defined yet — no provider has been chosen.
+- Needed for: `src/lib/applications/emailTransport.ts`'s `EmailTransport` interface has exactly one implementation right now (`MockEmailTransport`), which never makes a network call. `POST /api/internal/applications/send-pending-emails` always uses it.
+- Why this is safe to leave unblocked: per explicit user instruction, real outbound application email sending must stay disabled tonight regardless of what's configured. Rather than build a real transport behind an env flag (which a misconfigured flag could accidentally enable), the real transport code simply does not exist in this codebase yet — a stronger guarantee than "disabled by default."
+- Where to add it, when this is explicitly approved for a future phase: choose a transactional-email provider (e.g. Resend, SendGrid, AWS SES), add `EMAIL_PROVIDER_API_KEY` (server-only) to `.env.local`/`.env.example`, implement a second `EmailTransport` class calling that provider's API, and have the internal route choose it only behind an explicit, human-reviewed decision — never as an incidental side effect of unrelated work. `APPLICATION_WORKER_SECRET` (already generated, see below) does not need to change.
+- Not blocking: `src/lib/applications/sendApplication.ts`'s full claim → build-payload → transport.send() → persist-outcome → audit-trail pipeline is fully built and tested (unit + DB + a live end-to-end smoke test against the real dev server and real local Postgres/Storage) using `MockEmailTransport` — the architecture is real and production-shaped; only the last-mile network call is deliberately absent.
+
+## n8n credential: none needed for Phase 09
+
+- Application sending intentionally has no n8n workflow (unlike ingestion/matching/cover-letters). There is no external rate-limited provider being orchestrated — the mock transport lives entirely inside the Next.js server, with no network call to manage retries/rate limits for. `POST /api/internal/applications/send-pending-emails` is callable directly (e.g. via `curl` with the `APPLICATION_WORKER_SECRET` Bearer token) by whoever needs to trigger a send-attempt pass, same as it would be from a future n8n workflow, a cron job, or a real background-job runner once a real provider exists.
+
 This file will gain one entry per credential a later phase is `BLOCKED_ON_CREDENTIAL` for, in this format:
 
 ```

@@ -32,6 +32,9 @@ import { fetchMatchesByStatus, surfaceAndFetchPendingMatches } from "@/lib/match
 import type { MatchWithJob } from "@/lib/matches/types";
 import { fetchCoverLettersForMatches } from "@/lib/coverLetters/fetchCoverLetters";
 import type { CoverLetterRecord } from "@/lib/coverLetters/types";
+import { fetchApplicationsForMatches } from "@/lib/applications/fetchApplications";
+import { mapApplicationRow } from "@/lib/applications/types";
+import type { ApplicationRecord } from "@/lib/applications/types";
 import {
   readAndClearProfileUpdatePending,
   computeEffectiveTaskState,
@@ -81,6 +84,7 @@ function DashboardPageContent() {
   const [matchesLoading, setMatchesLoading] = useState(true);
   const [matchesError, setMatchesError] = useState<string | null>(null);
   const [coverLetters, setCoverLetters] = useState<Record<string, CoverLetterRecord>>({});
+  const [applications, setApplications] = useState<Record<string, ApplicationRecord>>({});
   // Read and immediately clear the sessionStorage flag on the first render.
   // DashboardPageContent is inside <Suspense> with useSearchParams(), so Next.js
   // only renders it on the client — sessionStorage is always available here.
@@ -408,9 +412,13 @@ function DashboardPageContent() {
         setApprovedMatches(approved);
         setRejectedMatches(rejected);
 
-        const letters = await fetchCoverLettersForMatches(supabase, approved.map((m) => m.id));
+        const [letters, apps] = await Promise.all([
+          fetchCoverLettersForMatches(supabase, approved.map((m) => m.id)),
+          fetchApplicationsForMatches(supabase, approved.map((m) => m.id)),
+        ]);
         if (!isMounted) return;
         setCoverLetters(letters);
+        setApplications(apps);
       } catch (err) {
         if (!isMounted) return;
         setMatchesError(err instanceof Error ? err.message : "Couldn't load your matches.");
@@ -468,6 +476,13 @@ function DashboardPageContent() {
       ...prev,
       [data.match_id]: { ...prev[data.match_id], approvalStatus: "user_approved", approvedContent: data.approved_content },
     }));
+  }
+
+  async function handleApproveAndSendApplication(matchId: string) {
+    const supabase = createClient();
+    const { data, error } = await supabase.rpc("create_application", { p_match_id: matchId });
+    if (error) throw new Error(error.message);
+    setApplications((prev) => ({ ...prev, [matchId]: mapApplicationRow(data) }));
   }
 
   if (isLoading) {
@@ -558,6 +573,8 @@ function DashboardPageContent() {
                 coverLetters={coverLetters}
                 onSaveCoverLetterEdit={handleSaveCoverLetterEdit}
                 onApproveCoverLetter={handleApproveCoverLetter}
+                applications={applications}
+                onApproveAndSendApplication={handleApproveAndSendApplication}
               />
             )}
             {activeTab === "sent" && <SentSection />}
