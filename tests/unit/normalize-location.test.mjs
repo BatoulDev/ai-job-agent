@@ -196,6 +196,29 @@ describe("normalizeLocation — relocation signal", () => {
   });
 });
 
+describe("normalizeLocation — non-English location text (Phase 17 adversarial hardening)", () => {
+  test("pure Arabic-script location text (no English city/country names) fails closed — low confidence, null country/city, never a crash or a guess", () => {
+    const result = normalizeLocation({ rawLocation: "بيروت، لبنان" });
+    assert.equal(result.rawLocation, "بيروت، لبنان");
+    assert.equal(result.countryCode, null);
+    assert.equal(result.city, null);
+    assert.equal(result.locationConfidence, "low");
+  });
+
+  test("pure Arabic-script Riyadh text also fails closed, never silently defaulting to a guessed Gulf country", () => {
+    const result = normalizeLocation({ rawLocation: "الرياض" });
+    assert.equal(result.countryCode, null);
+    assert.equal(result.locationConfidence, "low");
+  });
+
+  test("mixed English + Arabic parenthetical still resolves correctly via the English portion — Arabic text present doesn't break real matches", () => {
+    const result = normalizeLocation({ rawLocation: "Dubai, UAE (دبي)" });
+    assert.equal(result.countryCode, "AE");
+    assert.equal(result.city, "Dubai");
+    assert.equal(result.locationConfidence, "high");
+  });
+});
+
 describe("normalizeLocation — determinism", () => {
   test("same input always returns an equal (deep) result", () => {
     const input = { rawLocation: "Hybrid - Beirut, Lebanon — visa sponsorship available" };
