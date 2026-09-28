@@ -31,6 +31,18 @@ export interface BaytRawJob {
   url?: string;
   applyUrl?: string;
   postedDate?: string;
+  // Present in the actor's own published Store-page output schema
+  // (docs/LEBANON_GULF_SOURCE_RESEARCH.md §5) but NOT yet mapped to
+  // this project's `seniority` enum ("internship"|"entry-level"|
+  // "junior"|"mid-level"|"senior") — the actor's real value vocabulary
+  // for this field (e.g. exact strings like "Mid Career"/"Senior
+  // Management"/"Entry Level") has never been observed live, and
+  // guessing a translation table from the field name alone would be
+  // exactly the kind of invented mapping AGENTS.md §30 prohibits.
+  // Captured here so a real live response can be inspected directly
+  // during Phase 20's benchmark — see docs/BAYT_GULFTALENT_LIVE_PREP.md's
+  // Live Schema Validation Checklist, "seniority mapping" item.
+  careerLevel?: string;
 }
 
 const EMPLOYMENT_TYPE_MAP: Record<string, string> = {

@@ -61,6 +61,40 @@ test("a disabled/unknown provider is rejected before any write (fail-closed)", a
   assert.equal(result.jobsCreated, 0);
 });
 
+// Phase 19: explicit, named persistence-layer guard for the two providers
+// about to be live-validated next phase — proven generically above via
+// jsearch already, but Bayt/GulfTalent get their own named coverage here
+// specifically because a live benchmark run is imminent and this is the
+// real, final backstop even if the discovery layer (providerConfig.ts's
+// enabled flag / multiCompanyFeedUrls.ts's hardcoded provider list — see
+// tests/unit/provider-config.test.mjs) were ever bypassed, e.g. by a
+// hand-crafted POST directly to /api/internal/ingestion/run-multi-company-batch.
+test("Bayt is rejected before any write, even with a perfectly real-shaped job, as long as providerConfig.ts keeps it enabled:false", async () => {
+  await assertExpectedLocalProject();
+  const result = await runMultiCompanyIngestionBatch(
+    adminClient,
+    "bayt",
+    [rawJob(`bayt-guard-${randomUUID()}`, { companyName: "Fixture Bayt Co" })],
+    { maxJobsPerSource: 10, dryRun: false }
+  );
+  assert.equal(result.outcome, "provider_not_enabled");
+  assert.equal(result.jobsCreated, 0);
+  assert.equal(result.jobsUpdated, 0);
+});
+
+test("GulfTalent is rejected before any write, even with a perfectly real-shaped job, as long as providerConfig.ts keeps it enabled:false", async () => {
+  await assertExpectedLocalProject();
+  const result = await runMultiCompanyIngestionBatch(
+    adminClient,
+    "gulftalent",
+    [rawJob(`gulftalent-guard-${randomUUID()}`, { companyName: "Fixture GulfTalent Co" })],
+    { maxJobsPerSource: 10, dryRun: false }
+  );
+  assert.equal(result.outcome, "provider_not_enabled");
+  assert.equal(result.jobsCreated, 0);
+  assert.equal(result.jobsUpdated, 0);
+});
+
 test("dry_run validates and reports but writes nothing", async () => {
   const run = randomUUID().slice(0, 8);
   const result = await runMultiCompanyIngestionBatch(

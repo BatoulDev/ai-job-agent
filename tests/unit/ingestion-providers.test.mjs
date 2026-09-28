@@ -551,4 +551,72 @@ describe("mapBaytJob / mapGulfTalentJob — BLOCKED_ON_AUTHORIZATION, documented
     const job = mapGulfTalentJob({ jobKey: "gt-key-only", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x" });
     assert.equal(job.externalId, "gt-key-only");
   });
+
+  // Phase 19: read-only prep for the next phase's live benchmark — closes
+  // real gaps in edge-case coverage found during this phase's re-audit of
+  // the Phase 16 adapters (missing location/work-arrangement/apply-URL,
+  // malformed payloads — Task F of docs/BAYT_GULFTALENT_LIVE_PREP.md).
+
+  test("mapBaytJob: missing location (no location/city/country at all) maps to null rawLocation, never guessed", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x" });
+    assert.equal(job.rawLocation, null);
+  });
+
+  test("mapBaytJob: city+country present but no combined location field still builds a joined rawLocation", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x", city: "Doha", country: "Qatar" });
+    assert.equal(job.rawLocation, "Doha, Qatar");
+  });
+
+  test("mapBaytJob: isRemote absent (not just false) maps to null providerWorkArrangement, never defaults to onsite", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x" });
+    assert.equal(job.providerWorkArrangement, null);
+  });
+
+  test("mapBaytJob: neither applyUrl nor url present maps to a null applicationUrl, which validation then correctly rejects as missing_application_target — never an invented apply link", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d" });
+    assert.equal(job.applicationUrl, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "bayt"), { valid: false, reason: "missing_application_target" });
+  });
+
+  test("mapBaytJob: a completely empty raw object never throws — produces an all-empty shape that validation then correctly rejects (missing_company_name, checked first by the multi-company validator)", () => {
+    const job = mapBaytJob({});
+    assert.equal(job.externalId, "");
+    assert.equal(job.title, null);
+    assert.equal(job.rawLocation, null);
+    assert.equal(job.applicationUrl, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "bayt"), { valid: false, reason: "missing_company_name" });
+  });
+
+  test("mapGulfTalentJob: missing location maps to null rawLocation, never guessed", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x" });
+    assert.equal(job.rawLocation, null);
+  });
+
+  test("mapGulfTalentJob: providerWorkArrangement is always null — the actor's documented schema (docs/LEBANON_GULF_SOURCE_RESEARCH.md §5) has no work-arrangement/remote field at all, so this must never be inferred from title/description text", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "Remote Software Engineer", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x" });
+    assert.equal(job.providerWorkArrangement, null);
+  });
+
+  test("mapGulfTalentJob: no applyUrl present maps to a null applicationUrl, which validation then correctly rejects — never an invented apply link", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d" });
+    assert.equal(job.applicationUrl, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "gulftalent"), { valid: false, reason: "missing_application_target" });
+  });
+
+  test("mapGulfTalentJob: a completely empty raw object never throws — produces an all-empty shape that validation then correctly rejects (missing_company_name, checked first by the multi-company validator)", () => {
+    const job = mapGulfTalentJob({});
+    assert.equal(job.externalId, "");
+    assert.equal(job.title, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "gulftalent"), { valid: false, reason: "missing_company_name" });
+  });
+
+  test("mapBaytJob / mapGulfTalentJob: a raw job missing companyName is rejected by the multi-company validator specifically (missing_company_name), not the generic Tier-A rule — proves both adapters flow through the correct validator", () => {
+    const baytJob = mapBaytJob({ jobId: "x", title: "t", description: "d", url: "https://www.bayt.com/x" });
+    assert.equal(baytJob.companyName, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(baytJob, "bayt"), { valid: false, reason: "missing_company_name" });
+
+    const gtJob = mapGulfTalentJob({ jobId: "x", title: "t", description: "d", applyUrl: "https://www.gulftalent.com/x" });
+    assert.equal(gtJob.companyName, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(gtJob, "gulftalent"), { valid: false, reason: "missing_company_name" });
+  });
 });
