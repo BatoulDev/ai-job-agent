@@ -24,11 +24,15 @@ import { mapGreenhouseJob, type GreenhouseRawJob } from "./greenhouse.ts";
 import { mapLeverJob, type LeverRawJob } from "./lever.ts";
 import { mapWorkableJob, type WorkableRawJob } from "./workable.ts";
 import { mapAshbyJob, type AshbyRawJob } from "./ashby.ts";
+import { mapOracleHcmJob, type OracleHcmRawJob } from "./oracle-hcm.ts";
+import { mapWorkdayJob, type WorkdayRawJob } from "./workday.ts";
 import { mapRemoteOkJob, type RemoteOkRawJob } from "./remoteok.ts";
 import { mapJobicyJob, type JobicyRawJob } from "./jobicy.ts";
 import { mapArbeitnowJob, type ArbeitnowRawJob } from "./arbeitnow.ts";
 import { mapJSearchJob, type JSearchRawJob } from "./jsearch.ts";
 import { mapAdzunaJob, type AdzunaRawJob } from "./adzuna.ts";
+import { mapBaytJob, type BaytRawJob } from "./bayt.ts";
+import { mapGulfTalentJob, type GulfTalentRawJob } from "./gulftalent.ts";
 
 export type ProviderAdapter = (raw: unknown) => RawProviderJob;
 
@@ -37,6 +41,14 @@ export const PROVIDER_ADAPTERS: Partial<Record<JobSourceType, ProviderAdapter>> 
   lever: (raw) => mapLeverJob(raw as LeverRawJob),
   workable: (raw) => mapWorkableJob(raw as WorkableRawJob),
   ashby: (raw) => mapAshbyJob(raw as AshbyRawJob),
+  oracle_hcm: (raw) => mapOracleHcmJob(raw as OracleHcmRawJob),
+  // workday: registered for testability, same as jsearch/adzuna's
+  // BLOCKED_ON_CREDENTIAL pattern — but NOT in run-batch's
+  // AUTOMATABLE_SOURCE_TYPES allowlist and NOT wired into the n8n workflow
+  // this phase, since the list endpoint carries no description and every
+  // real job would be honestly rejected until a per-job detail fetch
+  // exists. See providers/workday.ts's own header comment.
+  workday: (raw) => mapWorkdayJob(raw as WorkdayRawJob),
   remoteok: (raw) => mapRemoteOkJob(raw as RemoteOkRawJob),
   jobicy: (raw) => mapJobicyJob(raw as JobicyRawJob),
   arbeitnow: (raw) => mapArbeitnowJob(raw as ArbeitnowRawJob),
@@ -45,6 +57,8 @@ export const PROVIDER_ADAPTERS: Partial<Record<JobSourceType, ProviderAdapter>> 
   // of any live run — see each file's own BLOCKED_ON_CREDENTIAL header.
   jsearch: (raw) => mapJSearchJob(raw as JSearchRawJob),
   adzuna: (raw) => mapAdzunaJob(raw as AdzunaRawJob),
+  bayt: (raw) => mapBaytJob(raw as BaytRawJob),
+  gulftalent: (raw) => mapGulfTalentJob(raw as GulfTalentRawJob),
   career_page: (raw) => raw as RawProviderJob,
 };
 

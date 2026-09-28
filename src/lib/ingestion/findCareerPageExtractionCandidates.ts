@@ -13,16 +13,24 @@ export interface CareerPageExtractionCandidate {
   careersUrl: string;
 }
 
-// 358 registry rows currently carry this classification (Phase 12 audit) —
-// fetching every one of them on every ingestion run would be an unbounded,
-// unnecessarily heavy external fetch (AGENTS.md §26/§27) for a path with
-// no live-proven yield yet (see extractCareerPageJobPostings.test.mjs's
-// header: 0 of 11 sampled real candidates emitted JobPosting JSON-LD on
-// their recorded official_careers_url this phase). Bounded and ordered by
-// id for a stable, deterministic subset across runs rather than a random
-// sample — a future phase can add real pagination/rotation once this path
-// has a proven yield worth scaling.
-const DEFAULT_LIMIT = 20;
+// 260 registry rows in the 5 target markets alone carry this classification
+// (Phase 16 count, up from the 358 registry-wide figure Phase 13 first
+// measured) — fetching every one of them on every ingestion run would be an
+// unbounded, unnecessarily heavy external fetch (AGENTS.md §26/§27) for a
+// path whose real yield is still unproven (Phase 13: 0/11 sampled;
+// Phase 14's real run: 14/20 succeeded with an honest 0 jobs found, 6/20
+// failed on real site errors — see docs/INGESTION_REAL_E2E_VALIDATION.md
+// §4). Raised from 20 to 50 this phase (Phase 16) — a real, evidence-based
+// finding explains why more attempts alone won't fix the 0-yield problem:
+// extractCareerPageJobPostings.ts only reads the one URL it's given, and
+// real company career pages almost always put JobPosting JSON-LD on each
+// job's own detail page, not the recorded landing page — see that file's
+// own header and the one-level link-following extension added this phase
+// (extract-career-page-jobs/route.ts) for the real fix. Still bounded and
+// ordered by id for a stable, deterministic subset across runs — a future
+// phase can add real rotation/pagination across the full 260-row pool once
+// this path has a proven yield worth scaling further.
+const DEFAULT_LIMIT = 50;
 
 export async function findCareerPageExtractionCandidates(supabase: SupabaseClient, limit = DEFAULT_LIMIT): Promise<CareerPageExtractionCandidate[]> {
   const { data, error } = await supabase

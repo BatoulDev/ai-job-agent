@@ -15,6 +15,9 @@ import type { JobSourceType } from "../../../../../lib/ingestion/rawProviderJob.
 // Every company-specific source type this endpoint accepts a sourceId for
 // — never admin_manual/linkedin, which have no automated fetch path here
 // (AGENTS.md §7: LinkedIn is never scraped or auto-applied through).
+// oracle_hcm (Phase 16) is company-specific, same shape as
+// greenhouse/lever/workable/ashby — see deriveAtsFeedUrl.ts and
+// providers/oracle-hcm.ts.
 // career_page IS accepted: it is company-specific (one company_sources row
 // per candidate, same as Tier A), its raw jobs just arrive pre-extracted
 // from POST /extract-career-page-jobs rather than a vendor ATS API — see
@@ -23,7 +26,7 @@ import type { JobSourceType } from "../../../../../lib/ingestion/rawProviderJob.
 // (remoteok/jobicy/arbeitnow/jsearch/adzuna/bayt/gulftalent) are never
 // accepted here — they have no company_sources row to key a sourceId off;
 // see run-multi-company-batch/route.ts (Phase 13).
-const AUTOMATABLE_SOURCE_TYPES: readonly JobSourceType[] = ["greenhouse", "lever", "workable", "ashby", "career_page"];
+const AUTOMATABLE_SOURCE_TYPES: readonly JobSourceType[] = ["greenhouse", "lever", "workable", "ashby", "oracle_hcm", "career_page"];
 
 // Defense in depth against a misconfigured or compromised caller sending an
 // unbounded payload (AGENTS.md §27) — well above any real ATS board size

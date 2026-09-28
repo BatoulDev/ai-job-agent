@@ -42,6 +42,19 @@ describe("deriveAtsFeedUrl", () => {
     assert.deepEqual(result, { sourceType: "ashby", feedUrl: "https://api.ashbyhq.com/posting-api/job-board/the-studio" });
   });
 
+  test("derives an Oracle Cloud Recruiting feed URL (real registry row: AUBMC — live-verified this phase, docs/LEBANON_GULF_SOURCE_RESEARCH.md §3)", () => {
+    const result = deriveAtsFeedUrl("Oracle Cloud Recruiting", "https://fa-exxn-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2");
+    assert.deepEqual(result, {
+      sourceType: "oracle_hcm",
+      feedUrl: "https://fa-exxn-saasfaprod1.fa.ocs.oraclecloud.com/hcmRestApi/resources/latest/recruitingCEJobRequisitions?finder=findReqs;siteNumber=CX_2&expand=requisitionList&limit=50",
+    });
+  });
+
+  test("returns null for an Oracle-labeled row whose official_careers_url is a generic company landing page, not the real Oracle tenant URL (real ceiling — most of the 23 registry rows tagged Oracle look like this until researched further)", () => {
+    const result = deriveAtsFeedUrl("Oracle HCM", "https://aubmc.org.lb/pages/main/careers.aspx");
+    assert.equal(result, null);
+  });
+
   test("returns null when official_careers_url is missing entirely", () => {
     assert.equal(deriveAtsFeedUrl("Greenhouse", null), null);
   });

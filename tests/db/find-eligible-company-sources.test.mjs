@@ -8,7 +8,7 @@ import assert from "node:assert/strict";
 import { adminClient, assertExpectedLocalProject } from "./helpers.mjs";
 import { findEligibleCompanySources } from "../../src/lib/ingestion/findEligibleCompanySources.ts";
 
-test("findEligibleCompanySources: returns only verified, suitable_public_ats, URL-derivable rows for the four supported ATS adapters", async () => {
+test("findEligibleCompanySources: returns only verified, suitable_public_ats, URL-derivable rows for the five supported ATS adapters", async () => {
   await assertExpectedLocalProject();
 
   const sources = await findEligibleCompanySources(adminClient);
@@ -16,7 +16,7 @@ test("findEligibleCompanySources: returns only verified, suitable_public_ats, UR
   assert.ok(sources.length >= 10, `expected at least 10 real derivable sources in the registry, got ${sources.length}`);
 
   for (const source of sources) {
-    assert.ok(["greenhouse", "lever", "workable", "ashby"].includes(source.sourceType), `unexpected sourceType: ${source.sourceType}`);
+    assert.ok(["greenhouse", "lever", "workable", "ashby", "oracle_hcm"].includes(source.sourceType), `unexpected sourceType: ${source.sourceType}`);
     assert.match(source.feedUrl, /^https:\/\//);
     assert.ok(source.sourceId, "every source must have a sourceId");
   }
@@ -47,5 +47,13 @@ test("findEligibleCompanySources: returns only verified, suitable_public_ats, UR
   const { data: utopiaStudio } = await adminClient.from("company_sources").select("id").eq("company_name", "The Utopia Studio").maybeSingle();
   if (utopiaStudio) {
     assert.ok(sourceIds.includes(utopiaStudio.id), "expected The Utopia Studio (a known real, live-verified Ashby row) to be included");
+  }
+
+  // A specific, known-real Oracle Cloud Recruiting row confirmed live
+  // during Phase 16 (AUBMC, Lebanon — official_careers_url updated this
+  // phase to the real, confirmed candidate-experience URL) must be present.
+  const { data: aubmc } = await adminClient.from("company_sources").select("id").eq("company_name", "American University of Beirut Medical Center").maybeSingle();
+  if (aubmc) {
+    assert.ok(sourceIds.includes(aubmc.id), "expected AUBMC (a known real, live-verified Oracle Cloud Recruiting row) to be included");
   }
 });
