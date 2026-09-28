@@ -24,6 +24,14 @@ export interface GulfTalentRawJob {
   description?: string;
   applyUrl?: string;
   postedAt?: string;
+  // Present in the actor's own published "enriched fields" description
+  // (docs/LEBANON_GULF_SOURCE_RESEARCH.md §5: "industry, employment type,
+  // nationality/gender/Arabic-fluency requirements, seniority") but NOT
+  // yet mapped to this project's `seniority` enum — same reasoning as
+  // bayt.ts's careerLevel field: the real value vocabulary has never
+  // been observed live, so no translation table is guessed here.
+  // Captured for direct inspection during Phase 20's benchmark.
+  seniority?: string;
 }
 
 const EMPLOYMENT_TYPE_MAP: Record<string, string> = {
