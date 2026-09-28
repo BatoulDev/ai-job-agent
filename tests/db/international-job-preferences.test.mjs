@@ -66,7 +66,6 @@ async function setPlan(userId, planCode, { status = "active", periodEnd = null }
 function baseSaveArgs(overrides = {}) {
   return {
     p_work_arrangement: "remote",
-    p_job_market_coverage: null,
     p_job_type: "full-time",
     p_experience_level: "junior",
     p_additional_notes: null,
@@ -399,6 +398,119 @@ describe("Cross-user RLS: job_preference_relocation_locations / job_preference_a
       .update({ country_code: relocationLocations[0].country_code })
       .eq("job_preference_id", userB.jobPreferenceId);
     assert.ok(authUpdateErr, "no UPDATE grant/policy exists for job_preference_authorized_countries");
+  });
+});
+
+describe("job_market_coverage: server-side derivation (job_market_coverage wiring fix)", () => {
+  let student;
+  let pro;
+
+  before(async () => {
+    student = await createTestUser("jmc-student");
+    pro = await createTestUser("jmc-pro");
+    await setPlan(student.id, "student", { status: "active", periodEnd: new Date(Date.now() + 86400000).toISOString() });
+    await setPlan(pro.id, "pro", { status: "active", periodEnd: new Date(Date.now() + 86400000).toISOString() });
+  });
+  after(async () => {
+    await deleteTestUsers([student, pro]);
+  });
+
+  test("Student: cannot gain any job_market_coverage — international itself is rejected, coverage is never derived", async () => {
+    const { error } = await student.client.rpc(
+      "save_job_preferences",
+      baseSaveArgs({ p_international_search_enabled: true, p_willing_to_relocate: false })
+    );
+    assert.ok(error, "expected rejection");
+
+    const { data: row } = await adminClient
+      .from("job_preferences")
+      .select("job_market_coverage")
+      .eq("user_id", student.id)
+      .maybeSingle();
+    assert.equal(row?.job_market_coverage ?? null, null, "a Student must never end up with a derived coverage value");
+  });
+
+  test("Pro + international disabled: job_market_coverage stays null (scenario 3)", async () => {
+    const { data, error } = await pro.client.rpc("save_job_preferences", baseSaveArgs());
+    assert.equal(error, null, `save failed: ${error?.message}`);
+    assert.equal(data.job_market_coverage, null, "no unintended international coverage when the user hasn't opted in");
+  });
+
+  test("Pro + international enabled + willing_to_relocate=false: derives remote_worldwide, remains remote-only (scenario 4)", async () => {
+    const { data, error } = await pro.client.rpc(
+      "save_job_preferences",
+      baseSaveArgs({ p_international_search_enabled: true, p_willing_to_relocate: false })
+    );
+    assert.equal(error, null, `save failed: ${error?.message}`);
+    assert.equal(data.job_market_coverage, "remote_worldwide");
+  });
+
+  test("Pro + international enabled + willing_to_relocate=true: still derives remote_worldwide, independent of relocation targeting (scenario 5)", async () => {
+    const selected = relocationLocations[0];
+    const { data, error } = await pro.client.rpc(
+      "save_job_preferences",
+      baseSaveArgs({
+        p_international_search_enabled: true,
+        p_willing_to_relocate: true,
+        p_relocation_location_ids: [selected.slug],
+        p_work_authorization_status: "unsure",
+      })
+    );
+    assert.equal(error, null, `save failed: ${error?.message}`);
+    assert.equal(data.job_market_coverage, "remote_worldwide", "job_market_coverage (the remote-scope tier) is orthogonal to willing_to_relocate (the separate onsite/hybrid relocation path)");
+  });
+
+  test("Pro + international enabled + work_arrangement=flexible: derives remote_worldwide (scenario 6 — remote_worldwide reaches matching for any covered arrangement)", async () => {
+    const { data, error } = await pro.client.rpc(
+      "save_job_preferences",
+      baseSaveArgs({
+        p_work_arrangement: "flexible",
+        p_location_ids: [lebanonLocationSlug],
+        p_international_search_enabled: true,
+        p_willing_to_relocate: false,
+      })
+    );
+    assert.equal(error, null, `save failed: ${error?.message}`);
+    assert.equal(data.job_market_coverage, "remote_worldwide");
+  });
+
+  test("Pro + international enabled + work_arrangement=onsite: job_market_coverage stays null — coverage only applies to remote/flexible", async () => {
+    const { data, error } = await pro.client.rpc(
+      "save_job_preferences",
+      baseSaveArgs({
+        p_work_arrangement: "onsite",
+        p_location_ids: [lebanonLocationSlug],
+        p_international_search_enabled: true,
+        p_willing_to_relocate: false,
+      })
+    );
+    assert.equal(error, null, `save failed: ${error?.message}`);
+    assert.equal(data.job_market_coverage, null);
+  });
+
+  test("legacy/null handling: coverage self-corrects to null on the next save once international is disabled again (e.g. after a downgrade)", async () => {
+    const { data: enabled, error: enabledErr } = await pro.client.rpc(
+      "save_job_preferences",
+      baseSaveArgs({ p_international_search_enabled: true, p_willing_to_relocate: false })
+    );
+    assert.equal(enabledErr, null, `save failed: ${enabledErr?.message}`);
+    assert.equal(enabled.job_market_coverage, "remote_worldwide");
+
+    const { data: disabled, error: disabledErr } = await pro.client.rpc("save_job_preferences", baseSaveArgs());
+    assert.equal(disabledErr, null, `save failed: ${disabledErr?.message}`);
+    assert.equal(disabled.job_market_coverage, null, "a subsequent save with international disabled must clear the derived coverage, never leave a stale value behind");
+  });
+
+  test("a client-supplied job_market_coverage-shaped field is simply ignored — the RPC has no such parameter to accept it through", async () => {
+    // save_job_preferences no longer declares p_job_market_coverage at all;
+    // PostgREST would reject an unknown named argument outright, which is
+    // itself the proof the client can no longer inject a raw coverage
+    // value. Confirmed here via a real RPC call carrying the field.
+    const { error } = await pro.client.rpc("save_job_preferences", {
+      ...baseSaveArgs(),
+      p_job_market_coverage: "remote_worldwide",
+    });
+    assert.ok(error, "an unknown p_job_market_coverage argument must be rejected by PostgREST, not silently accepted");
   });
 });
 

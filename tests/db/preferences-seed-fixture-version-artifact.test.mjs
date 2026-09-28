@@ -94,7 +94,6 @@ describe("job_preferences version-bump anomaly: seed-fixture artifact, not a pro
     // experience_level, no custom roles or locations submitted).
     const { error: rpcError } = await seededUser.client.rpc("save_job_preferences", {
       p_work_arrangement: "remote",
-      p_job_market_coverage: null,
       p_job_type: "full-time",
       p_experience_level: "junior",
       p_additional_notes: null,
@@ -121,7 +120,6 @@ describe("job_preferences version-bump anomaly: seed-fixture artifact, not a pro
   test("control: a row created by save_job_preferences itself never exhibits the anomaly — a real user's first save is unaffected", async () => {
     const { error: firstError } = await rpcOnlyUser.client.rpc("save_job_preferences", {
       p_work_arrangement: "remote",
-      p_job_market_coverage: null,
       p_job_type: "full-time",
       p_experience_level: "junior",
       p_additional_notes: null,
@@ -142,7 +140,6 @@ describe("job_preferences version-bump anomaly: seed-fixture artifact, not a pro
     // real-user no-op case the fixture anomaly was mistaken for.
     const { error: secondError } = await rpcOnlyUser.client.rpc("save_job_preferences", {
       p_work_arrangement: "remote",
-      p_job_market_coverage: null,
       p_job_type: "full-time",
       p_experience_level: "junior",
       p_additional_notes: null,

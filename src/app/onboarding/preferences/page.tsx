@@ -537,7 +537,6 @@ export default function PreferencesPage() {
 
     const { error: prefError } = await supabase.rpc("save_job_preferences", {
       p_work_arrangement: workArrangement,
-      p_job_market_coverage: null,
       p_job_type: jobType,
       p_experience_level: experienceLevel,
       p_additional_notes: additionalNotes || null,

@@ -11,8 +11,9 @@ phase's explicit mandate.
 One real, concrete gap was found — `job_market_coverage`'s `remote_mena`/
 `remote_worldwide` tiers are fully built and tested on the backend but
 **unreachable from any UI today** — documented and regression-tested
-below, not fixed (a UI addition is a real feature, outside this audit's
-scope). No false marketing promise was found: the one plan-geography claim
+below, not fixed at the time (a UI addition is a real feature, outside
+this audit's scope; since resolved via server-side derivation — see §4).
+No false marketing promise was found: the one plan-geography claim
 that *could* have been overstated (Pro's "verified international remote
 roles") is not, because what it actually delivers matches what it says.
 
@@ -97,6 +98,28 @@ requested scope without approval"). No marketing copy currently overstates
 this (§2's Lebanon-inclusive promise is delivered correctly); the gap is
 between *built backend capability* and *delivered frontend capability*,
 not between *promised* and *delivered*.
+
+---
+
+## 4. Resolved (job_market_coverage wiring fix)
+
+The gap in §3 is fixed, without the UI-picker approach §3 anticipated. Per
+explicit founder direction, the user never chooses a raw backend coverage
+value — `job_market_coverage` is derived server-side inside
+`save_job_preferences`
+(`supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql`)
+from `international_search_enabled` + `work_arrangement`
+(`remote_worldwide` when international is enabled and the arrangement is
+remote/flexible, else `null`), and existing rows were backfilled using the
+identical derivation. The onboarding page no longer sends
+`p_job_market_coverage` at all — the parameter was removed from the RPC
+signature, not merely stopped being populated. See
+`docs/PRODUCT_MATCHING_RULES.md` ("Geography, plan, and relocation") for
+the current, durable statement of this rule, and
+`tests/db/international-job-preferences.test.mjs` /
+`tests/db/matching-rerank.test.mjs` / `tests/e2e/preferences-job-market-coverage.spec.ts`
+for the regression coverage (RPC-level derivation, real matching-path
+propagation, and a real browser → RPC → DB proof, respectively).
 
 **Regression tests added**
 (`tests/unit/plan-geography-consistency.test.mjs`, 3 tests): pin the real

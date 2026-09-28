@@ -85,15 +85,20 @@ central reference — not modified by the Phase 21 follow-up decision.
   SA, QA, KW, AE).
 - A low-confidence resolved location is never eligible, regardless of
   plan (fails closed).
-- A Pro user who never explicitly set `job_market_coverage` is treated
-  exactly like `remote_lebanon_applicants` — never silently granted wider
-  access than they opted into.
-- **Known, real gap, not addressed by this decision**: the onboarding UI
-  (`src/app/onboarding/preferences/page.tsx`) hardcodes
-  `p_job_market_coverage: null` on every save — no UI path currently sets
-  it to a non-null tier, so a Pro user cannot actually reach the
-  `remote_mena`/`remote_worldwide` tiers today even though the backend
-  fully supports them (documented in Phase 18's
-  `docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md`, re-confirmed still true
-  during this phase's audit, not touched here — out of scope for the
-  work-arrangement decision).
+- A Pro user who never qualifies for a derived `job_market_coverage` is
+  treated exactly like `remote_lebanon_applicants` — never silently
+  granted wider access than they opted into.
+- **Resolved** (job_market_coverage wiring fix,
+  `supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql`):
+  `job_market_coverage` is no longer a client-supplied value —
+  `src/app/onboarding/preferences/page.tsx` never sends it, and
+  `save_job_preferences` derives it server-side: `international_search_enabled
+  = true` and `work_arrangement in ('remote', 'flexible')` derives
+  `remote_worldwide`; otherwise `null`. `willing_to_relocate` is
+  deliberately NOT part of this derivation — it gates the separate
+  onsite/hybrid physical-presence path above, not this field. This closes
+  the gap Phase 18's `docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md`
+  originally found (backend supported the tiers; no UI/RPC path ever set
+  them). `remote_mena` remains a supported column value with no current
+  derivation path — no product requirement distinguishes it from
+  `remote_worldwide` today.

@@ -263,3 +263,83 @@ test("combined matching context: real AI Career Profile (skills/summary) + real 
     await setUserWorkArrangementPreference(user, null);
   }
 });
+
+// job_market_coverage wiring fix: proves a correctly-entitled Pro user's
+// real, RPC-persisted job_market_coverage (never hand-built) reaches real
+// matching via the full persisted preferences -> loadUserContext ->
+// checkJobEligibility -> shortlist/rerank-candidates path. See
+// supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql
+// and tests/db/international-job-preferences.test.mjs for the RPC-level
+// derivation tests this test builds on.
+test("job_market_coverage propagation: a Pro user's real save_job_preferences-derived remote_worldwide coverage reaches a real non-Lebanon remote job via the real matching path", async () => {
+  const coverageUser = await createTestUser("matching-coverage");
+  try {
+    await adminClient
+      .from("subscriptions")
+      .update({ plan_code: "pro", status: "active", provider: "whish", current_period_end: new Date(Date.now() + 86400000).toISOString() })
+      .eq("user_id", coverageUser.id);
+
+    const { data: role } = await adminClient.from("target_roles").select("slug").eq("is_active", true).limit(1).single();
+
+    const usRemoteJob = await insertFixtureJob({
+      title: "Real US-Only Remote Role",
+      embedding: [1, 0, 0, 0],
+      country_code: "US",
+      city: null,
+      work_arrangement: "remote",
+      remote_scope: "country:US",
+    });
+
+    const cv = await uploadFakeCv(coverageUser, "coverage-off.pdf");
+    const offAnalysis = await insertFakeAnalysis(coverageUser, cv.id, {
+      professional_summary: "Backend engineer with API design experience.",
+      skills: ["TypeScript"],
+    });
+    const { data: offApproved, error: offConfirmError } = await coverageUser.client.rpc("confirm_cv_analysis", { p_analysis_id: offAnalysis.id });
+    if (offConfirmError) throw new Error(`confirm_cv_analysis failed: ${offConfirmError.message}`);
+    await adminClient.from("cv_analyses").update({ profile_embedding: [1, 0, 0, 0] }).eq("id", offApproved.id);
+
+    const candidatesBefore = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    assert.equal(
+      candidatesBefore.find((c) => c.cvAnalysisId === offApproved.id && c.jobId === usRemoteJob.id),
+      undefined,
+      "before opting in to international search, this user's derived job_market_coverage is null — the US-only remote job must not reach matching"
+    );
+
+    // Real onboarding save: international search enabled, remote, not
+    // willing to relocate — save_job_preferences derives remote_worldwide
+    // server-side (never supplied by this test).
+    const { error: saveError } = await coverageUser.client.rpc("save_job_preferences", {
+      p_work_arrangement: "remote",
+      p_job_type: "full-time",
+      p_experience_level: "junior",
+      p_additional_notes: null,
+      p_custom_target_roles: [],
+      p_custom_locations: [],
+      p_target_role_ids: [role.slug],
+      p_location_ids: [],
+      p_lebanon_location_scope: "selected_only",
+      p_international_search_enabled: true,
+      p_willing_to_relocate: false,
+    });
+    assert.equal(saveError, null, `save_job_preferences failed: ${saveError?.message}`);
+
+    const { data: persisted } = await adminClient.from("job_preferences").select("job_market_coverage").eq("user_id", coverageUser.id).single();
+    assert.equal(persisted.job_market_coverage, "remote_worldwide", "sanity: the real row must carry the derived value before checking propagation");
+
+    const cv2 = await uploadFakeCv(coverageUser, "coverage-on.pdf", { skipRateLimitReset: true });
+    const onAnalysis = await insertFakeAnalysis(coverageUser, cv2.id, {
+      professional_summary: "Backend engineer with API design experience.",
+      skills: ["TypeScript"],
+    });
+    const { data: onApproved, error: onConfirmError } = await coverageUser.client.rpc("confirm_cv_analysis", { p_analysis_id: onAnalysis.id });
+    if (onConfirmError) throw new Error(`confirm_cv_analysis failed: ${onConfirmError.message}`);
+    await adminClient.from("cv_analyses").update({ profile_embedding: [1, 0, 0, 0] }).eq("id", onApproved.id);
+
+    const candidatesAfter = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    const match = candidatesAfter.find((c) => c.cvAnalysisId === onApproved.id && c.jobId === usRemoteJob.id);
+    assert.ok(match, "after the real RPC-derived remote_worldwide coverage is persisted, the same real non-Lebanon remote job must reach a real matching candidate");
+  } finally {
+    await deleteTestUsers([coverageUser]);
+  }
+});
