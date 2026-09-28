@@ -5,16 +5,18 @@
 // input is the actor's own dataset output, fetched by n8n calling Apify's
 // REST API, never Bayt directly.
 //
-// *** NOT LIVE-VERIFIED — BLOCKED_ON_AUTHORIZATION ***
-// APIFY_API_TOKEN already exists in this project, but no real Apify run
-// against this actor has been made yet (zero credits spent). Field names
-// below follow the actor's own published Store-page output schema
-// (mature actor: 557 total users, 120 monthly active, 100% run success
-// rate at research time), not a verified live call. Before flipping
-// providerConfig.ts's bayt.enabled to true: run one small, explicitly
-// authorized, bounded Apify run and confirm every field name below still
-// matches the actual dataset output — do not trust this file alone as
-// proof the integration works (AGENTS.md §30).
+// LIVE-VERIFIED (Phase 21): two real, bounded runs (10 then 25 Lebanon
+// results, $0.036 total) confirmed every field this adapter reads is
+// present and shaped as expected, with two real drifts fixed below
+// (employmentType casing/wording, title HTML entities) and a
+// previously-unmapped field (careerLevel) now mapped from real observed
+// values only. `jobId` was confirmed stable for the same real job across
+// two independent runs — the idempotency assumption this project's dedup
+// depends on holds. `applyUrl` was present in only 3/25 (12%) real jobs;
+// the other 88% correctly fall back to `url` (the listing page) per the
+// logic below — expected, not a bug, but worth knowing most Bayt jobs
+// send users to a listing page rather than a direct apply link. See
+// docs/LEBANON_LIVE_SOURCE_EXPANSION.md for the full benchmark record.
 import type { RawProviderJob } from "../rawProviderJob.ts";
 import { stripHtml } from "./shared.ts";
 
@@ -31,26 +33,39 @@ export interface BaytRawJob {
   url?: string;
   applyUrl?: string;
   postedDate?: string;
-  // Present in the actor's own published Store-page output schema
-  // (docs/LEBANON_GULF_SOURCE_RESEARCH.md §5) but NOT yet mapped to
-  // this project's `seniority` enum ("internship"|"entry-level"|
-  // "junior"|"mid-level"|"senior") — the actor's real value vocabulary
-  // for this field (e.g. exact strings like "Mid Career"/"Senior
-  // Management"/"Entry Level") has never been observed live, and
-  // guessing a translation table from the field name alone would be
-  // exactly the kind of invented mapping AGENTS.md §30 prohibits.
-  // Captured here so a real live response can be inspected directly
-  // during Phase 20's benchmark — see docs/BAYT_GULFTALENT_LIVE_PREP.md's
-  // Live Schema Validation Checklist, "seniority mapping" item.
+  // Real observed values (Phase 21 live benchmark, 25 Lebanon jobs):
+  // "Unspecified", "Mid career", "Entry level", "Senior executive",
+  // "Management". Mapped to this project's `seniority` enum below only
+  // for the values with an unambiguous match — "Unspecified" and
+  // "Management" are deliberately left unmapped (Management describes a
+  // role level, not an experience band, and guessing would violate
+  // AGENTS.md §30).
   careerLevel?: string;
 }
 
 const EMPLOYMENT_TYPE_MAP: Record<string, string> = {
   "Full Time": "full-time",
+  // Phase 21 live benchmark: the actor's real value is "Full time"
+  // (lowercase "t"), not "Full Time" — confirmed across 24/25 real
+  // Lebanon jobs. Keeping both spellings since the capitalized form is
+  // still the actor's own documented Store-page example.
+  "Full time": "full-time",
   "Part Time": "part-time",
   Contract: "contract",
+  // Phase 21 live benchmark: real value observed as "Contractor", not
+  // "Contract".
+  Contractor: "contract",
   Freelance: "contract",
   Internship: "internship",
+};
+
+// Phase 21 live benchmark: only the unambiguous real-observed values are
+// mapped; everything else (including "Unspecified" and "Management")
+// stays unmapped rather than guessed.
+const CAREER_LEVEL_TO_SENIORITY: Record<string, string> = {
+  "Entry level": "entry-level",
+  "Mid career": "mid-level",
+  "Senior executive": "senior",
 };
 
 function buildRawLocation(raw: BaytRawJob): string | null {
@@ -62,7 +77,10 @@ function buildRawLocation(raw: BaytRawJob): string | null {
 export function mapBaytJob(raw: BaytRawJob): RawProviderJob {
   return {
     externalId: raw.jobId != null ? String(raw.jobId) : "",
-    title: typeof raw.title === "string" ? raw.title : null,
+    // Phase 21 live benchmark: real titles can contain raw HTML entities
+    // (e.g. "Playground &amp; Host Cashier") — stripHtml() decodes them
+    // (it is also a no-op on plain text, safe for titles with no markup).
+    title: typeof raw.title === "string" ? stripHtml(raw.title) : null,
     description: stripHtml(raw.description),
     companyName: typeof raw.company === "string" ? raw.company.trim() : null,
     rawLocation: buildRawLocation(raw),
@@ -70,7 +88,7 @@ export function mapBaytJob(raw: BaytRawJob): RawProviderJob {
     applicationUrl: (typeof raw.applyUrl === "string" ? raw.applyUrl : null) ?? (typeof raw.url === "string" ? raw.url : null),
     applicationEmail: null,
     employmentType: raw.employmentType ? (EMPLOYMENT_TYPE_MAP[raw.employmentType] ?? null) : null,
-    seniority: null,
+    seniority: raw.careerLevel ? (CAREER_LEVEL_TO_SENIORITY[raw.careerLevel] ?? null) : null,
     publishedAt: raw.postedDate ?? null,
     sourceLastModifiedAt: null,
     sourceListingUrl: raw.url ?? null,

@@ -696,6 +696,224 @@ const multiCompanyRateLimitDelay = node({
 });
 
 // ─────────────────────────────────────────────────────────────────────────
+// Apify-sourced multi-company feeds (Phase 21): Bayt, GulfTalent, Indeed.
+// These cannot go through the Tier D loop above — that loop's Fetch
+// Multi-Company Feed node does a plain GET against a feed_url, while each
+// of these needs a POST with a per-provider request body to Apify's
+// run-sync-get-dataset-items endpoint (a fundamentally different HTTP
+// shape) — so this is its own fully isolated branch (provider isolation),
+// not an extra case bolted onto the Tier D switch. A static seed list, not
+// dynamic discovery: these providers cannot be discovered the way
+// getEnabledMultiCompanyFeedSources() discovers RemoteOK/Jobicy/Arbeitnow
+// (it only ever builds GET feed URLs), so their markets are hardcoded here
+// to exactly what Phase 21 live-benchmarked. Real per-provider findings —
+// schema drift, apply-link provenance, GulfTalent needing a location hint
+// for some markets — are documented in providers/bayt.ts, gulftalent.ts,
+// indeed.ts and docs/LEBANON_LIVE_SOURCE_EXPANSION.md, not repeated here.
+// ─────────────────────────────────────────────────────────────────────────
+
+const apifyMultiCompanySourceSeeds = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Apify Multi-Company Source Seeds',
+    notes:
+      'Static seed list — bounded to the real markets live-benchmarked this phase (Bayt: Lebanon; GulfTalent: Saudi ' +
+      'Arabia + UAE/Dubai; Indeed: UAE/Dubai only — Indeed and GulfTalent both real-confirmed to have no Lebanon ' +
+      'country option). Qatar/Kuwait not yet included — add once benchmarked.',
+    parameters: {
+      mode: 'raw',
+      jsonOutput: {
+        apify_sources: [
+          {
+            provider_type: 'bayt',
+            actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items',
+            request_body: { country: 'LB', maxResults: 25 },
+          },
+          {
+            provider_type: 'gulftalent',
+            actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items',
+            request_body: { country: 'SA', maxResults: 15 },
+          },
+          {
+            provider_type: 'gulftalent',
+            actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items',
+            request_body: { country: 'AE', location: 'Dubai', maxResults: 15 },
+          },
+          {
+            provider_type: 'indeed',
+            actor_url: 'https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items',
+            request_body: { country: 'ae', location: 'Dubai', count: 15 },
+          },
+        ],
+      },
+    },
+  },
+  output: [{ apify_sources: [{ provider_type: 'bayt', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items', request_body: { country: 'LB', maxResults: 25 } }] }],
+});
+
+const splitOutApifySources = node({
+  type: 'n8n-nodes-base.splitOut',
+  version: 1,
+  config: {
+    name: 'Split Out Apify Sources',
+    parameters: { fieldToSplitOut: 'apify_sources' },
+  },
+  output: [{ provider_type: 'bayt', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items', request_body: { country: 'LB', maxResults: 25 } }],
+});
+
+const loopApifySources = splitInBatches({
+  version: 3,
+  config: { name: 'Loop Apify Sources (Rate Limited)', parameters: { batchSize: 1 } },
+  output: [{ provider_type: 'bayt', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items', request_body: { country: 'LB', maxResults: 25 } }],
+});
+
+const callApifyActor = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call Apify Actor',
+    notes:
+      "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI — programmatic credential binding for " +
+      'generic-auth types on this node is a confirmed n8n MCP tool limitation (reported separately), not a project issue.',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 5000,
+    parameters: {
+      method: 'POST',
+      url: expr('{{ $json.actor_url }}'),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ $json.request_body }}'),
+      options: { timeout: 60000 },
+    },
+    credentials: { httpHeaderAuth: newCredential('AI Job Guide - Apify') },
+  },
+  output: [{ jobId: 'abc123', title: 'Accountant', company: 'Fixture Co' }],
+});
+
+const aggregateApifyJobs = node({
+  type: 'n8n-nodes-base.aggregate',
+  version: 1,
+  config: {
+    name: 'Aggregate Apify Jobs',
+    notes:
+      "Apify's run-sync-get-dataset-items returns a bare top-level array, same as Lever — n8n auto-splits it into one " +
+      'item per job, so this re-aggregates back into one {jobs:[...]} item before the batch endpoint call (mirrors ' +
+      'Aggregate Lever Jobs / Aggregate RemoteOK Jobs).',
+    parameters: { aggregate: 'aggregateAllItemData', destinationFieldName: 'jobs', include: 'allFields' },
+  },
+  output: [{ jobs: [{ jobId: 'abc123', title: 'Accountant', company: 'Fixture Co' }] }],
+});
+
+const callApifyBatchEndpoint = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call Apify Batch Endpoint',
+    notes:
+      'Same shared batch endpoint the Tier D branch uses — a separate node (not reused directly) because its ' +
+      "sourceType expression must resolve $('Split Out Apify Sources'), a different ancestor than the Tier D branch's " +
+      "$('Split Out Multi-Company Sources'). Credential 'Ingestion Worker Secret' must be bound manually in the n8n " +
+      'UI, same confirmed MCP tool limitation as Call Apify Actor above.',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr(
+        '{{ {\n' +
+          "  sourceType: $('Split Out Apify Sources').item.json.provider_type,\n" +
+          '  rawJobs: $json.jobs,\n' +
+          "  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n" +
+          "  dryRun: $('Workflow Configuration').first().json.dryRun\n" +
+          '} }}'
+      ),
+      options: { timeout: 30000 },
+    },
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+  },
+  output: [{ outcome: 'succeeded', jobsFetched: 25, jobsValid: 25, jobsRejected: 0, jobsCreated: 25, jobsUpdated: 0, jobsClosed: 0, truncated: false }],
+});
+
+const APIFY_PROVIDER_TYPE_ASSIGNMENT = {
+  id: 'provider_type',
+  name: 'provider_type',
+  value: expr("{{ $('Split Out Apify Sources').item.json.provider_type }}"),
+  type: 'string',
+};
+
+const buildApifySuccessResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Apify Success Result',
+    parameters: {
+      mode: 'manual',
+      includeOtherFields: true,
+      assignments: {
+        assignments: [APIFY_PROVIDER_TYPE_ASSIGNMENT, { id: 'succeeded', name: 'succeeded', value: expr("{{ $json.outcome === 'succeeded' }}"), type: 'boolean' }, { id: 'error', name: 'error', value: null, type: 'string' }],
+      },
+    },
+  },
+  output: [{ provider_type: 'bayt', outcome: 'succeeded', succeeded: true, error: null }],
+});
+
+const buildApifyFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Apify Failure Result',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          APIFY_PROVIDER_TYPE_ASSIGNMENT,
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'apify actor or batch call failed' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ provider_type: 'bayt', succeeded: false, error: 'apify actor or batch call failed' }],
+});
+
+const recordApifySourceResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Record Apify Source Result',
+    parameters: { mode: 'manual', includeOtherFields: true, assignments: { assignments: [] } },
+  },
+  output: [{ provider_type: 'bayt', succeeded: true }],
+});
+
+const apifyRateLimitDelay = node({
+  type: 'n8n-nodes-base.wait',
+  version: 1.1,
+  config: {
+    name: 'Apify Rate Limit Delay',
+    parameters: {
+      resume: 'timeInterval',
+      amount: expr("{{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"),
+      unit: 'seconds',
+    },
+  },
+  output: [{ provider_type: 'bayt' }],
+});
+
+// ─────────────────────────────────────────────────────────────────────────
 // Tier B (Phase 13): career-page extraction. Company-specific (one
 // company_sources row each), so it reuses the SAME
 // /api/internal/ingestion/run-batch endpoint as Tier A above — the only
@@ -929,6 +1147,20 @@ const careerPageNote = sticky(
   { color: 7 }
 );
 
+const apifyMultiCompanyNote = sticky(
+  '### Apify-sourced multi-company feeds (Phase 21)\n' +
+    'Bayt, GulfTalent, and Indeed — all three via Apify actor calls (POST run-sync-get-dataset-items), not a plain ' +
+    'GET feed URL, so this branch is fully isolated from the Tier D loop above rather than an extra switch case. ' +
+    'Static seed list, not dynamic discovery — these providers cannot be found the way ' +
+    'getEnabledMultiCompanyFeedSources() finds RemoteOK/Jobicy/Arbeitnow. Real live-benchmark findings (schema drift, ' +
+    'applyUrl provenance, per-market quirks) are in providers/bayt.ts, gulftalent.ts, indeed.ts and ' +
+    'docs/LEBANON_LIVE_SOURCE_EXPANSION.md. Both new HTTP nodes need their credential bound manually in the n8n UI ' +
+    "(a confirmed MCP tool limitation, not a project issue) — Call Apify Actor needs 'AI Job Guide - Apify', Call " +
+    "Apify Batch Endpoint needs 'Ingestion Worker Secret'.",
+  [apifyMultiCompanySourceSeeds],
+  { color: 3 }
+);
+
 export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Agent / 01 Job Ingestion')
   .add(startTrigger)
   .to(workflowConfiguration)
@@ -1004,7 +1236,24 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Agent / 01 Job 
   .to(careerPageRateLimitDelay)
   .to(nextBatch(loopCareerPageCandidates))
 
+  // Apify-sourced multi-company feeds (Phase 21): Bayt/GulfTalent/Indeed —
+  // fourth independent branch, static seeds rather than off List Ingestion
+  // Sources (these providers are not dynamically discoverable).
+  .add(workflowConfiguration)
+  .to(apifyMultiCompanySourceSeeds)
+  .to(splitOutApifySources)
+  .to(loopApifySources.onEachBatch(callApifyActor.onError(buildApifyFailureResult).to(aggregateApifyJobs.to(callApifyBatchEndpoint))))
+  .add(callApifyBatchEndpoint.onError(buildApifyFailureResult))
+  .to(buildApifySuccessResult)
+  .to(recordApifySourceResult)
+  .add(buildApifyFailureResult)
+  .to(recordApifySourceResult)
+  .add(recordApifySourceResult)
+  .to(apifyRateLimitDelay)
+  .to(nextBatch(loopApifySources))
+
   .add(overviewNote)
   .add(scopeLimitationNote)
   .add(multiCompanyNote)
-  .add(careerPageNote);
+  .add(careerPageNote)
+  .add(apifyMultiCompanyNote);

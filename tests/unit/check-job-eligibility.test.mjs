@@ -19,6 +19,7 @@ function baseInput(overrides = {}) {
       ...overrides.job,
     },
     planCode: overrides.planCode ?? "free",
+    preferredWorkArrangement: overrides.preferredWorkArrangement ?? null,
     jobMarketCoverage: overrides.jobMarketCoverage ?? null,
     internationalSearchEnabled: overrides.internationalSearchEnabled ?? false,
     willingToRelocate: overrides.willingToRelocate ?? null,
@@ -34,13 +35,172 @@ describe("checkJobEligibility — fail-closed baseline", () => {
     assert.equal(result.eligible, false);
     assert.equal(result.reason, "location_confidence_too_low");
   });
+});
 
-  test("unknown work arrangement is never eligible", () => {
+// Founder decision (Phase 21 follow-up): missing work-arrangement metadata
+// alone must never be a rejection reason. See
+// docs/PRODUCT_MATCHING_RULES.md "Work arrangement" and
+// docs/LEBANON_LIVE_SOURCE_EXPANSION.md §5 for the real-world evidence
+// (Bayt/GulfTalent/Indeed) that motivated this.
+describe("checkJobEligibility — work arrangement: match / conflict / unknown", () => {
+  test("REGRESSION (the Phase 21 bug): a Lebanon job with unknown work arrangement is eligible, not rejected solely for that reason", () => {
     const result = checkJobEligibility(
       baseInput({ job: { countryCode: "LB", workArrangement: null, remoteScope: null, locationConfidence: "medium" } }),
     );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "unknown");
+  });
+
+  test("unknown arrangement never becomes an implicit match or conflict — status is exactly 'unknown', not folded into eligible/ineligible semantics", () => {
+    const result = checkJobEligibility(
+      baseInput({ job: { countryCode: "LB", workArrangement: null, remoteScope: null, locationConfidence: "medium" } }),
+    );
+    assert.notEqual(result.workArrangementStatus, "match");
+    assert.notEqual(result.workArrangementStatus, "conflict");
+  });
+
+  test("unknown job arrangement outside Lebanon still respects plan/geography — a Student user is NOT made eligible for a Gulf job merely because arrangement is unknown", () => {
+    const result = checkJobEligibility(
+      baseInput({ planCode: "student", job: { countryCode: "AE", workArrangement: null, remoteScope: null, locationConfidence: "high" } }),
+    );
     assert.equal(result.eligible, false);
-    assert.equal(result.reason, "work_arrangement_unknown");
+    assert.equal(result.reason, "work_arrangement_unknown_and_ineligible");
+  });
+
+  test("unknown job arrangement outside Lebanon IS eligible for a Pro user who selected that relocation market (physical-presence interpretation succeeds)", () => {
+    const result = checkJobEligibility(
+      baseInput({
+        planCode: "pro",
+        internationalSearchEnabled: true,
+        willingToRelocate: true,
+        relocationMarketCountryCodes: ["AE"],
+        job: { countryCode: "AE", workArrangement: null, remoteScope: null, locationConfidence: "high" },
+      }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "unknown");
+  });
+
+  test("unknown job arrangement outside Lebanon IS eligible for a Pro user with remote_mena coverage (remote interpretation succeeds), even without relocation selected", () => {
+    const result = checkJobEligibility(
+      baseInput({
+        planCode: "pro",
+        jobMarketCoverage: "remote_mena",
+        job: { countryCode: "AE", workArrangement: null, remoteScope: null, locationConfidence: "high" },
+      }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "unknown");
+  });
+
+  // Regression tests 1-9 from the founder decision, verbatim scenarios.
+  test("Remote preference + Remote job -> match, normal eligibility applies", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "remote", job: { countryCode: "LB", workArrangement: "remote", remoteScope: "country:LB", locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
+  test("Remote preference + On-site job -> explicit conflict, rejected regardless of geography", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "remote", job: { countryCode: "LB", workArrangement: "onsite", remoteScope: null, locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "work_arrangement_conflict");
+    assert.equal(result.workArrangementStatus, "conflict");
+  });
+
+  test("Remote preference + Unknown job -> not rejected solely for arrangement", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "remote", job: { countryCode: "LB", workArrangement: null, remoteScope: null, locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "unknown");
+  });
+
+  test("On-site preference + On-site job -> match", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "onsite", job: { countryCode: "LB", workArrangement: "onsite", remoteScope: null, locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
+  test("On-site preference + Remote job -> conflict", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "onsite", job: { countryCode: "LB", workArrangement: "remote", remoteScope: "country:LB", locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "work_arrangement_conflict");
+  });
+
+  test("On-site preference + Unknown job -> not rejected solely for arrangement", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "onsite", job: { countryCode: "LB", workArrangement: null, remoteScope: null, locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "unknown");
+  });
+
+  test("Hybrid preference + Hybrid job -> match", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "hybrid", job: { countryCode: "LB", workArrangement: "hybrid", remoteScope: null, locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
+  test("Hybrid preference + known conflicting arrangement (remote) -> conflict preserved", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "hybrid", job: { countryCode: "LB", workArrangement: "remote", remoteScope: "country:LB", locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "work_arrangement_conflict");
+  });
+
+  test("Hybrid preference + Unknown job -> not rejected solely for arrangement", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "hybrid", job: { countryCode: "LB", workArrangement: null, remoteScope: null, locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "unknown");
+  });
+
+  test("'flexible' on either side is always compatible, never a conflict — user flexible + job onsite", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "flexible", job: { countryCode: "LB", workArrangement: "onsite", remoteScope: null, locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
+  test("'flexible' on either side is always compatible, never a conflict — user remote + job flexible", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "remote", job: { countryCode: "LB", workArrangement: "flexible", remoteScope: "country:LB", locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
+  test("a known job arrangement with no user preference set is 'unknown' status, not 'match' — nothing to compare against, but geography still uses the real known value", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: null, job: { countryCode: "LB", workArrangement: "onsite", remoteScope: null, locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "unknown");
+  });
+
+  test("REGRESSION (Phase 21 collapse): a batch dominated by unknown work arrangement does not collapse to near-zero eligible jobs for a Lebanon-market job — tests the rule, not a hardcoded historical count", () => {
+    const unknownArrangementLebanonJobs = Array.from({ length: 20 }, () => ({
+      countryCode: "LB",
+      workArrangement: null,
+      remoteScope: null,
+      locationConfidence: "high",
+    }));
+    const results = unknownArrangementLebanonJobs.map((job) => checkJobEligibility(baseInput({ job })));
+    const eligibleCount = results.filter((r) => r.eligible).length;
+    assert.equal(eligibleCount, unknownArrangementLebanonJobs.length, "every unknown-arrangement Lebanon job must remain eligible — none may be rejected solely for missing work_arrangement");
   });
 });
 

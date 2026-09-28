@@ -10,7 +10,7 @@ import { getProviderAdapter } from "../../../../../lib/ingestion/providers/index
 import { getProviderConfig } from "../../../../../lib/ingestion/providerConfig.ts";
 import type { JobSourceType } from "../../../../../lib/ingestion/rawProviderJob.ts";
 
-const MULTI_COMPANY_SOURCE_TYPES: readonly JobSourceType[] = ["remoteok", "jobicy", "arbeitnow", "jsearch", "adzuna", "bayt", "gulftalent"];
+const MULTI_COMPANY_SOURCE_TYPES: readonly JobSourceType[] = ["remoteok", "jobicy", "arbeitnow", "jsearch", "adzuna", "bayt", "gulftalent", "indeed"];
 
 const MAX_RAW_JOBS = 2000;
 const MAX_JOBS_PER_SOURCE_CAP = 500;

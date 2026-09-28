@@ -27,9 +27,20 @@ describe("providerConfig", () => {
     }
   });
 
-  test("credential/authorization-blocked providers (jsearch/adzuna/bayt/gulftalent) are NOT enabled", () => {
-    for (const t of ["jsearch", "adzuna", "bayt", "gulftalent"]) {
+  test("credential/authorization-blocked providers (jsearch/adzuna) are NOT enabled", () => {
+    for (const t of ["jsearch", "adzuna"]) {
       assert.equal(isProviderEnabled(t), false, `${t} should not be enabled this phase`);
+      const config = getProviderConfig(t);
+      assert.ok(config.requiresCredentialEnvVar, `${t} must document which credential it needs`);
+    }
+  });
+
+  // Phase 21: Bayt/GulfTalent/Indeed went live enabled:true after real
+  // bounded benchmarks confirmed their schemas — see providers/bayt.ts,
+  // gulftalent.ts, indeed.ts headers and docs/LEBANON_LIVE_SOURCE_EXPANSION.md.
+  test("live-verified Apify-sourced providers (bayt/gulftalent/indeed) are enabled", () => {
+    for (const t of ["bayt", "gulftalent", "indeed"]) {
+      assert.equal(isProviderEnabled(t), true, `${t} should be enabled this phase`);
       const config = getProviderConfig(t);
       assert.ok(config.requiresCredentialEnvVar, `${t} must document which credential it needs`);
     }
@@ -37,7 +48,7 @@ describe("providerConfig", () => {
 
   test("getEnabledProviders(multi_company_feed) returns only enabled multi-company providers", () => {
     const enabled = getEnabledProviders("multi_company_feed").map((p) => p.sourceType).sort();
-    assert.deepEqual(enabled, ["arbeitnow", "jobicy", "remoteok"]);
+    assert.deepEqual(enabled, ["arbeitnow", "bayt", "gulftalent", "indeed", "jobicy", "remoteok"]);
   });
 
   test("getProvidersForMarket('international-remote') includes every enabled multi-company feed plus every Tier-A ATS", () => {

@@ -20,6 +20,7 @@ import { mapJSearchJob } from "../../src/lib/ingestion/providers/jsearch.ts";
 import { mapAdzunaJob } from "../../src/lib/ingestion/providers/adzuna.ts";
 import { mapBaytJob } from "../../src/lib/ingestion/providers/bayt.ts";
 import { mapGulfTalentJob } from "../../src/lib/ingestion/providers/gulftalent.ts";
+import { mapIndeedJob } from "../../src/lib/ingestion/providers/indeed.ts";
 import { getProviderAdapter } from "../../src/lib/ingestion/providers/index.ts";
 import { validateRawProviderJob } from "../../src/lib/ingestion/rawProviderJob.ts";
 import { validateMultiCompanyProviderJob } from "../../src/lib/ingestion/multiCompanyProviderJob.ts";
@@ -527,6 +528,48 @@ describe("mapBaytJob / mapGulfTalentJob — BLOCKED_ON_AUTHORIZATION, documented
     assert.equal(job.providerWorkArrangement, "remote");
   });
 
+  // Phase 21: real live-benchmark findings (25 real Lebanon jobs, 2 runs,
+  // $0.036 total, docs/LEBANON_LIVE_SOURCE_EXPANSION.md) — real
+  // employmentType/careerLevel string values observed, mapped only where
+  // unambiguous.
+
+  test("mapBaytJob: real employmentType value 'Full time' (lowercase t, not 'Full Time') maps to full-time", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x", employmentType: "Full time" });
+    assert.equal(job.employmentType, "full-time");
+  });
+
+  test("mapBaytJob: real employmentType value 'Contractor' (not 'Contract') maps to contract", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x", employmentType: "Contractor" });
+    assert.equal(job.employmentType, "contract");
+  });
+
+  test("mapBaytJob: real careerLevel 'Entry level' maps to seniority entry-level", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x", careerLevel: "Entry level" });
+    assert.equal(job.seniority, "entry-level");
+  });
+
+  test("mapBaytJob: real careerLevel 'Mid career' maps to seniority mid-level", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x", careerLevel: "Mid career" });
+    assert.equal(job.seniority, "mid-level");
+  });
+
+  test("mapBaytJob: real careerLevel 'Senior executive' maps to seniority senior", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x", careerLevel: "Senior executive" });
+    assert.equal(job.seniority, "senior");
+  });
+
+  test("mapBaytJob: real careerLevel values 'Unspecified' and 'Management' are never guessed, stay null", () => {
+    const unspecified = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x", careerLevel: "Unspecified" });
+    const management = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x", careerLevel: "Management" });
+    assert.equal(unspecified.seniority, null);
+    assert.equal(management.seniority, null);
+  });
+
+  test("mapBaytJob: a real title containing a raw HTML entity is decoded (e.g. 'Playground &amp; Host Cashier')", () => {
+    const job = mapBaytJob({ jobId: "x", title: "Playground &amp; Host Cashier in Rabieh", company: "c", description: "d", url: "https://www.bayt.com/x" });
+    assert.equal(job.title, "Playground & Host Cashier in Rabieh");
+  });
+
   test("mapGulfTalentJob maps the blackfalcondata/gulftalent-scraper documented output schema", () => {
     const job = mapGulfTalentJob({
       jobId: "gt-6789",
@@ -597,6 +640,31 @@ describe("mapBaytJob / mapGulfTalentJob — BLOCKED_ON_AUTHORIZATION, documented
     assert.equal(job.providerWorkArrangement, null);
   });
 
+  // Phase 21: real live-benchmark findings (10 real Saudi Arabia jobs,
+  // ~$0.02, docs/LEBANON_LIVE_SOURCE_EXPANSION.md).
+
+  test("mapGulfTalentJob: real isRemote:true (a field previously assumed not to exist) maps to providerWorkArrangement remote", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x", isRemote: true });
+    assert.equal(job.providerWorkArrangement, "remote");
+  });
+
+  test("mapGulfTalentJob: isRemote absent or false maps to null providerWorkArrangement, never defaults to onsite", () => {
+    const absent = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x" });
+    const explicitFalse = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x", isRemote: false });
+    assert.equal(absent.providerWorkArrangement, null);
+    assert.equal(explicitFalse.providerWorkArrangement, null);
+  });
+
+  test("mapGulfTalentJob: real seniorityId numeric codes (e.g. 1, 2, 4, 6) are never guessed into the seniority enum — no known legend exists", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x", seniorityId: 4 });
+    assert.equal(job.seniority, null);
+  });
+
+  test("mapGulfTalentJob: a title with a raw HTML entity is decoded, consistent with mapBaytJob", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "Sales &amp; Marketing Lead", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x" });
+    assert.equal(job.title, "Sales & Marketing Lead");
+  });
+
   test("mapGulfTalentJob: no applyUrl present maps to a null applicationUrl, which validation then correctly rejects — never an invented apply link", () => {
     const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d" });
     assert.equal(job.applicationUrl, null);
@@ -618,5 +686,69 @@ describe("mapBaytJob / mapGulfTalentJob — BLOCKED_ON_AUTHORIZATION, documented
     const gtJob = mapGulfTalentJob({ jobId: "x", title: "t", description: "d", applyUrl: "https://www.gulftalent.com/x" });
     assert.equal(gtJob.companyName, null);
     assert.deepEqual(validateMultiCompanyProviderJob(gtJob, "gulftalent"), { valid: false, reason: "missing_company_name" });
+  });
+});
+
+// Phase 21: new adapter, built from a real 10-item UAE live benchmark
+// ($0.001, docs/LEBANON_LIVE_SOURCE_EXPANSION.md) — every fixture below
+// mirrors real observed field shapes, not documentation.
+describe("mapIndeedJob — curious_coder/indeed-scraper, live-verified (Phase 21, Gulf only — country:\"lb\" is rejected by the actor's own real input validation)", () => {
+  const realShapedRaw = {
+    id: "39fadc8dee60a535",
+    title: "Real Estate Sales Agent",
+    companyDetails: { name: "Prime Bullions Properties" },
+    location: { countryCode: "AE", countryName: "UAE", city: "Dubai", formatted: { long: "Dubai", short: "Dubai" } },
+    formattedLocation: "Dubai",
+    jobTypes: ["Full-time"],
+    jobDescription: "Sell real estate in Dubai.",
+    originalApplyUrl: "http://ae.indeed.com/job/real-estate-sales-agent-1dde63c87cdb1d45",
+    viewJobLink: "/viewjob?jk=1dde63c87cdb1d45",
+    pubDate: 1790602579992,
+  };
+
+  test("mapIndeedJob maps the real curious_coder/indeed-scraper output schema", () => {
+    const job = mapIndeedJob(realShapedRaw);
+    assert.equal(job.externalId, "39fadc8dee60a535");
+    assert.equal(job.title, "Real Estate Sales Agent");
+    assert.equal(job.companyName, "Prime Bullions Properties");
+    assert.equal(job.rawLocation, "Dubai, UAE");
+    assert.equal(job.applicationUrl, "http://ae.indeed.com/job/real-estate-sales-agent-1dde63c87cdb1d45");
+    assert.equal(job.employmentType, "full-time");
+    assert.equal(job.publishedAt, new Date(1790602579992).toISOString());
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "indeed"), { valid: true });
+  });
+
+  test("mapIndeedJob: a real job with multiple jobTypes picks the first recognized one, skipping unmapped values like 'Temporary'/'Permanent'", () => {
+    const job = mapIndeedJob({ ...realShapedRaw, jobTypes: ["Temporary", "Permanent", "Part-time", "Full-time", "Contract"] });
+    assert.equal(job.employmentType, "part-time");
+  });
+
+  test("mapIndeedJob: jobTypes with no recognized value (e.g. only 'Temporary'/'Permanent') maps to null, never guessed", () => {
+    const job = mapIndeedJob({ ...realShapedRaw, jobTypes: ["Temporary", "Permanent"] });
+    assert.equal(job.employmentType, null);
+  });
+
+  test("mapIndeedJob: real null companyDetails.name (an anonymous/confidential posting, observed in 2/10 real UAE results) maps to null and is rejected by validation", () => {
+    const job = mapIndeedJob({ ...realShapedRaw, companyDetails: { name: null } });
+    assert.equal(job.companyName, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "indeed"), { valid: false, reason: "missing_company_name" });
+  });
+
+  test("mapIndeedJob: rawLocation falls back to formattedLocation when the nested location object is absent", () => {
+    const job = mapIndeedJob({ ...realShapedRaw, location: undefined, formattedLocation: "Riyadh" });
+    assert.equal(job.rawLocation, "Riyadh");
+  });
+
+  test("mapIndeedJob: providerWorkArrangement is always null — the real schema has no remote/work-arrangement field, never inferred from title text", () => {
+    const job = mapIndeedJob({ ...realShapedRaw, title: "Remote Real Estate Sales Agent" });
+    assert.equal(job.providerWorkArrangement, null);
+  });
+
+  test("mapIndeedJob: a completely empty raw object never throws — produces an all-empty shape correctly rejected by validation", () => {
+    const job = mapIndeedJob({});
+    assert.equal(job.externalId, "");
+    assert.equal(job.title, null);
+    assert.equal(job.rawLocation, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "indeed"), { valid: false, reason: "missing_company_name" });
   });
 });

@@ -54,6 +54,22 @@ async function insertFixtureJob(overrides = {}) {
   return data;
 }
 
+// Sets the user's real, persisted job_preferences.work_arrangement before
+// their analysis is created — must happen first, since insertFakeAnalysis
+// snapshots preferences_version at creation time, and changing the row
+// afterwards would bump the version (job_preferences_version_bump_trigger)
+// and make the analysis look stale for is_cv_analysis_matching_eligible().
+async function setUserWorkArrangementPreference(forUser, workArrangement) {
+  const { data: existing } = await adminClient.from("job_preferences").select("id").eq("user_id", forUser.id).maybeSingle();
+  if (existing) {
+    const { error } = await adminClient.from("job_preferences").update({ work_arrangement: workArrangement }).eq("user_id", forUser.id);
+    if (error) throw new Error(`setUserWorkArrangementPreference: update failed: ${error.message}`);
+  } else {
+    const { error } = await adminClient.from("job_preferences").insert({ user_id: forUser.id, work_arrangement: workArrangement });
+    if (error) throw new Error(`setUserWorkArrangementPreference: insert failed: ${error.message}`);
+  }
+}
+
 async function approveAnalysisWithEmbedding(cvSuffix, embedding = [1, 0, 0, 0]) {
   const cv = await uploadFakeCv(user, `rerank-${cvSuffix}.pdf`);
   const analysis = await insertFakeAnalysis(user, cv.id, {
@@ -174,4 +190,76 @@ test("findRerankCandidates: excludes an unapproved analysis entirely", async () 
   const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
   const match = candidates.find((c) => c.cvAnalysisId === pending.id && c.jobId === job.id);
   assert.equal(match, undefined, "an unapproved analysis must never produce a rerank candidate");
+});
+
+// Founder decision (Phase 21 follow-up): work_arrangement preference must
+// reach real matching. These tests prove the REAL production propagation
+// path — a genuinely persisted job_preferences.work_arrangement row, read
+// by the real loadUserContext() inside findRerankCandidates(), not a
+// hand-built ShortlistUserContext/JobEligibilityInput object. See
+// docs/PRODUCT_MATCHING_RULES.md "Work arrangement" and
+// docs/LEBANON_LIVE_SOURCE_EXPANSION.md §5.
+test("work-arrangement propagation: a real persisted 'remote' preference excludes a real explicit-onsite job (conflict), via loadUserContext reading the real row", async () => {
+  await setUserWorkArrangementPreference(user, "remote");
+  try {
+    const analysis = await approveAnalysisWithEmbedding("wa-conflict", [1, 0, 0, 0]);
+    const conflictingJob = await insertFixtureJob({ title: "Real Conflict Onsite Job", embedding: [1, 0, 0, 0], work_arrangement: "onsite" });
+
+    const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    const match = candidates.find((c) => c.cvAnalysisId === analysis.id && c.jobId === conflictingJob.id);
+    assert.equal(match, undefined, "a job whose real, known work_arrangement conflicts with the user's real, persisted preference must never reach rerank");
+  } finally {
+    await setUserWorkArrangementPreference(user, null);
+  }
+});
+
+test("work-arrangement propagation: a real persisted preference does NOT exclude a job with unknown work_arrangement (the Phase 21 fix, proven end-to-end)", async () => {
+  await setUserWorkArrangementPreference(user, "remote");
+  try {
+    const analysis = await approveAnalysisWithEmbedding("wa-unknown", [1, 0, 0, 0]);
+    const unknownArrangementJob = await insertFixtureJob({ title: "Real Unknown Arrangement Job", embedding: [1, 0, 0, 0], work_arrangement: null });
+
+    const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    const match = candidates.find((c) => c.cvAnalysisId === analysis.id && c.jobId === unknownArrangementJob.id);
+    assert.ok(match, "a job with unknown work_arrangement must still reach rerank when the user has a real preference set — never rejected solely for missing arrangement metadata");
+  } finally {
+    await setUserWorkArrangementPreference(user, null);
+  }
+});
+
+test("combined matching context: real AI Career Profile (skills/summary) + real preferences (work_arrangement) + real job all flow into one grounded rerank candidate", async () => {
+  await setUserWorkArrangementPreference(user, "remote");
+  try {
+    const cv = await uploadFakeCv(user, "combined-context.pdf");
+    const analysis = await insertFakeAnalysis(user, cv.id, {
+      professional_summary: "Frontend engineer specializing in React and design systems.",
+      skills: ["React", "TypeScript", "Design Systems"],
+      recommended_roles: ["Frontend Engineer"],
+    });
+    const { data: approved, error } = await user.client.rpc("confirm_cv_analysis", { p_analysis_id: analysis.id });
+    if (error) throw new Error(`confirm_cv_analysis failed: ${error.message}`);
+    await adminClient.from("cv_analyses").update({ profile_embedding: [1, 0, 0, 0] }).eq("id", approved.id);
+
+    const job = await insertFixtureJob({
+      title: "Combined Context Frontend Role",
+      description: "Looking for a React specialist.",
+      embedding: [1, 0, 0, 0],
+      work_arrangement: null, // unknown — must not eliminate the job
+    });
+
+    const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    const match = candidates.find((c) => c.cvAnalysisId === approved.id && c.jobId === job.id);
+    assert.ok(match, "career profile + preferences + an unknown-arrangement job must still produce a real candidate");
+    // Career Profile contributes to the grounded prompt (already proven
+    // generically by the "returns a grounded prompt" test above — this
+    // asserts it specifically alongside a real preference and an unknown
+    // job arrangement, the exact combination this decision is about).
+    assert.match(match.prompt, /React/);
+    assert.match(match.prompt, /Combined Context Frontend Role/);
+    // The prompt must never claim a specific arrangement it doesn't know —
+    // still true after this change, since job.workArrangement stays null.
+    assert.doesNotMatch(match.prompt, /Work arrangement:/);
+  } finally {
+    await setUserWorkArrangementPreference(user, null);
+  }
 });

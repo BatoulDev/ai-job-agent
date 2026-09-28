@@ -276,8 +276,34 @@ test('the Tier-B loop batches one candidate at a time', () => {
   assert.equal(loop.parameters.batchSize, 1);
 });
 
-test('exactly 49 nodes total, matching the live, MCP-tested workflow (Phase 16 adds Extract Oracle HCM Jobs)', () => {
-  assert.equal(wf.nodes.length, 49);
+test('exactly 59 nodes total, matching the live, MCP-tested workflow (Phase 21 adds the isolated Apify multi-company branch: Bayt/GulfTalent/Indeed)', () => {
+  assert.equal(wf.nodes.length, 59);
+});
+
+test('Apify multi-company branch (Phase 21) is fully isolated — its own seed, split, loop, actor call, aggregate, batch endpoint, success/failure builders, and rate limiter', () => {
+  for (const name of [
+    'Apify Multi-Company Source Seeds',
+    'Split Out Apify Sources',
+    'Loop Apify Sources (Rate Limited)',
+    'Call Apify Actor',
+    'Aggregate Apify Jobs',
+    'Call Apify Batch Endpoint',
+    'Build Apify Success Result',
+    'Build Apify Failure Result',
+    'Record Apify Source Result',
+    'Apify Rate Limit Delay',
+  ]) {
+    findNode(name);
+  }
+
+  assert.ok(wf.connections['Workflow Configuration'].main[0].some((c) => c.node === 'Apify Multi-Company Source Seeds'), 'Workflow Configuration must fan out to the Apify seed node');
+  assert.ok(wf.connections['Loop Apify Sources (Rate Limited)'].main[1].some((c) => c.node === 'Call Apify Actor'), 'the loop branch (index 1) must feed Call Apify Actor');
+  assert.ok(wf.connections['Call Apify Actor'].main[0].some((c) => c.node === 'Aggregate Apify Jobs'), 'success output must feed Aggregate Apify Jobs');
+  assert.ok(wf.connections['Call Apify Actor'].main[1].some((c) => c.node === 'Build Apify Failure Result'), 'error output must feed Build Apify Failure Result');
+  assert.ok(wf.connections['Apify Rate Limit Delay'].main[0].some((c) => c.node === 'Loop Apify Sources (Rate Limited)'), 'the delay must loop back to Loop Apify Sources');
+
+  const callApifyBatchEndpoint = findNode('Call Apify Batch Endpoint');
+  assert.match(callApifyBatchEndpoint.parameters.jsonBody, /Split Out Apify Sources/, "Call Apify Batch Endpoint's sourceType expression must resolve its own branch's Split Out node, not the Tier D branch's");
 });
 
 test('Lever case routes through Aggregate Lever Jobs before Extract Lever Jobs (Phase 14 fix — Lever\'s bare top-level array response gets auto-split into one item per job by n8n, so the raw array must be re-collected before extraction)', () => {

@@ -41,12 +41,22 @@ describe("parseMultiCompanyIngestionBatchRequestBody — malformed/tampered/disa
   });
 
   test("rejects an unknown sourceType", () => {
-    assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceType: "indeed" })).ok, false);
+    assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceType: "linkedin" })).ok, false);
   });
 
-  test("rejects a disabled/credential-blocked provider (jsearch/adzuna/bayt/gulftalent) even though it is a known JobSourceType", () => {
-    for (const sourceType of ["jsearch", "adzuna", "bayt", "gulftalent"]) {
+  test("rejects a disabled/credential-blocked provider (jsearch/adzuna) even though it is a known JobSourceType", () => {
+    for (const sourceType of ["jsearch", "adzuna"]) {
       assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceType })).ok, false, `${sourceType} should be rejected while disabled`);
+    }
+  });
+
+  // Phase 21: Bayt/GulfTalent/Indeed went live enabled:true — a real
+  // request for any of them must now be ACCEPTED at this layer (the
+  // route no longer rejects them, though runMultiCompanyIngestionBatch
+  // itself still re-checks enabled live either way).
+  test("accepts live-verified Apify-sourced providers (bayt/gulftalent/indeed)", () => {
+    for (const sourceType of ["bayt", "gulftalent", "indeed"]) {
+      assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceType })).ok, true, `${sourceType} should be accepted now that it is enabled`);
     }
   });
 

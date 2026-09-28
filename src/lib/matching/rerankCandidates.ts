@@ -14,7 +14,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { shortlistJobsForUser, type ShortlistUserContext } from "./shortlist.ts";
 import { buildRerankPrompt, type RerankJobInput, type RerankProfileInput } from "./rerankPrompt.ts";
 import type { PlanCode } from "@/lib/plans/types";
-import type { JobMarketCoverage } from "@/lib/jobPreferences/types";
+import type { JobMarketCoverage, WorkArrangement } from "@/lib/jobPreferences/types";
 
 export interface RerankCandidate {
   /** Stable id for round-tripping through an external caller (n8n) — see save side, which parses this back apart. */
@@ -47,7 +47,7 @@ async function loadUserContext(supabase: SupabaseClient, userId: string): Promis
 
   const { data: preferences } = await supabase
     .from("job_preferences")
-    .select("id, job_market_coverage, international_search_enabled, willing_to_relocate")
+    .select("id, work_arrangement, job_market_coverage, international_search_enabled, willing_to_relocate")
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -67,6 +67,7 @@ async function loadUserContext(supabase: SupabaseClient, userId: string): Promis
 
   return {
     planCode,
+    preferredWorkArrangement: (preferences?.work_arrangement as WorkArrangement | null) ?? null,
     jobMarketCoverage: (preferences?.job_market_coverage as JobMarketCoverage | null) ?? null,
     internationalSearchEnabled: preferences?.international_search_enabled ?? false,
     willingToRelocate: preferences?.willing_to_relocate ?? null,
