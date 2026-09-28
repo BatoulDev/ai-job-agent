@@ -102,14 +102,14 @@ test('Call Ingestion Batch Endpoint posts to the internal route with Bearer auth
 });
 
 test('every extraction node degrades gracefully instead of halting the whole run on a malformed response', () => {
-  for (const name of ['Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs']) {
+  for (const name of ['Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs', 'Extract Oracle HCM Jobs']) {
     const node = findNode(name);
     assert.equal(node.onError, 'continueErrorOutput', `${name} must continue to its error output, not stop the workflow`);
   }
 });
 
 test('every fallible node error output is wired to a Build *Result node, never left hanging', () => {
-  const fallible = ['Fetch Source Jobs', 'Call Ingestion Batch Endpoint', 'Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs'];
+  const fallible = ['Fetch Source Jobs', 'Call Ingestion Batch Endpoint', 'Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs', 'Extract Oracle HCM Jobs'];
   for (const name of fallible) {
     const conns = wf.connections[name]?.main ?? [];
     const errorOutput = conns[1] ?? [];
@@ -117,14 +117,26 @@ test('every fallible node error output is wired to a Build *Result node, never l
   }
 });
 
-test('Extract Jobs By ATS Type has an ashby case (Phase 13) routing to Extract Ashby Jobs, alongside greenhouse/lever/workable, with the fallback still catching anything else', () => {
+test('Extract Jobs By ATS Type has ashby and oracle_hcm cases (Phase 13/16) routing to their own extraction nodes, alongside greenhouse/lever/workable, with the fallback still catching anything else', () => {
   const switchNode = findNode('Extract Jobs By ATS Type');
   const outputKeys = switchNode.parameters.rules.values.map((v) => v.outputKey);
-  assert.deepEqual(outputKeys, ['greenhouse', 'lever', 'workable', 'ashby']);
+  assert.deepEqual(outputKeys, ['greenhouse', 'lever', 'workable', 'ashby', 'oracle_hcm']);
   const conns = wf.connections['Extract Jobs By ATS Type']?.main ?? [];
-  assert.equal(conns.length, 5, 'four defined cases plus one fallback output');
+  assert.equal(conns.length, 6, 'five defined cases plus one fallback output');
   assert.ok(conns[3]?.some((c) => c.node === 'Extract Ashby Jobs'), 'the ashby case (index 3) must route to Extract Ashby Jobs');
-  assert.ok(conns[4]?.some((c) => c.node === 'Build Unsupported Source Result'), 'the fallback (index 4) must still route to Build Unsupported Source Result');
+  assert.ok(conns[4]?.some((c) => c.node === 'Extract Oracle HCM Jobs'), 'the oracle_hcm case (index 4) must route to Extract Oracle HCM Jobs');
+  assert.ok(conns[5]?.some((c) => c.node === 'Build Unsupported Source Result'), 'the fallback (index 5) must still route to Build Unsupported Source Result');
+});
+
+test('Extract Oracle HCM Jobs derives a real candidate-facing apply URL from feed_url and stamps it onto every raw job, then feeds the shared Call Ingestion Batch Endpoint (Phase 16)', () => {
+  const node = findNode('Extract Oracle HCM Jobs');
+  assert.equal(node.type, 'n8n-nodes-base.set');
+  assert.equal(node.onError, 'continueErrorOutput');
+  const value = node.parameters.assignments.assignments[0].value;
+  assert.match(value, /candidateSiteUrl/, 'must derive and stamp candidateSiteUrl onto each raw job — Oracle\'s REST response carries no candidate-facing URL of its own');
+  assert.match(value, /requisitionList/, 'must read the real nested job list shape (items[0].requisitionList), not assume a flat array');
+  assert.ok(wf.connections['Extract Oracle HCM Jobs']?.main?.[0]?.some((c) => c.node === 'Call Ingestion Batch Endpoint'), 'success output must feed the shared Tier-A endpoint');
+  assert.ok(wf.connections['Extract Oracle HCM Jobs']?.main?.[1]?.some((c) => c.node === 'Build Fetch Failure Result'), 'error output must be wired, never left hanging');
 });
 
 test('all four per-source result paths converge on Record Source Result', () => {
@@ -264,8 +276,8 @@ test('the Tier-B loop batches one candidate at a time', () => {
   assert.equal(loop.parameters.batchSize, 1);
 });
 
-test('exactly 48 nodes total, matching the live, MCP-tested workflow (Phase 14 adds Aggregate Lever Jobs)', () => {
-  assert.equal(wf.nodes.length, 48);
+test('exactly 49 nodes total, matching the live, MCP-tested workflow (Phase 16 adds Extract Oracle HCM Jobs)', () => {
+  assert.equal(wf.nodes.length, 49);
 });
 
 test('Lever case routes through Aggregate Lever Jobs before Extract Lever Jobs (Phase 14 fix — Lever\'s bare top-level array response gets auto-split into one item per job by n8n, so the raw array must be re-collected before extraction)', () => {

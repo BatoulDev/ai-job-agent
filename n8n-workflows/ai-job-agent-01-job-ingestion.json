@@ -131,6 +131,14 @@
                 "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "ashby" }],
                 "combinator": "and"
               }
+            },
+            {
+              "outputKey": "oracle_hcm",
+              "conditions": {
+                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
+                "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "oracle_hcm" }],
+                "combinator": "and"
+              }
             }
           ]
         },
@@ -194,6 +202,28 @@
       "parameters": {
         "mode": "manual",
         "assignments": { "assignments": [{ "id": "rawJobs", "name": "rawJobs", "value": "={{ $json.jobs }}", "type": "array" }] }
+      }
+    },
+    {
+      "id": "ac4ae318-c432-457d-87b7-38334e71634f",
+      "name": "Extract Oracle HCM Jobs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [1568, 848],
+      "notes": "Phase 16. Confirmed live against a real registry tenant (AUBMC, Lebanon) — a direct unauthenticated GET to recruitingCEJobRequisitions returned real job data, and the derived candidate-facing URL returned a real 200 job page. See providers/oracle-hcm.ts and deriveAtsFeedUrl.ts.",
+      "onError": "continueErrorOutput",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rawJobs",
+              "name": "rawJobs",
+              "type": "array",
+              "value": "={{ (() => {\n  const feedUrl = $('Split Out Sources').item.json.feed_url;\n  const m = feedUrl.match(/^https:\\/\\/([^/]+)\\/hcmRestApi.*siteNumber=([A-Za-z0-9_]+)/);\n  const candidateSiteUrl = m ? `https://${m[1]}/hcmUI/CandidateExperience/en/sites/${m[2]}` : null;\n  const list = $json.items?.[0]?.requisitionList ?? [];\n  return list.map((job) => ({ ...job, candidateSiteUrl }));\n})() }}"
+            }
+          ]
+        }
       }
     },
     {
@@ -702,7 +732,7 @@
       "typeVersion": 1,
       "position": [-112, -16],
       "parameters": {
-        "content": "### Dynamic source discovery (Phase 12) + three-tier orchestration (Phase 13)\nOne POST /api/internal/ingestion/list-sources call now returns three independent arrays this workflow fans out to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby — findEligibleCompanySources.ts), (2) Tier-D enabled multi-company feeds (RemoteOK/Jobicy/Arbeitnow — multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates (findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on a shared endpoint per tier — no provider-specific matching/eligibility logic anywhere downstream of ingestion. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider, and why JSearch/Adzuna/Bayt/GulfTalent remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL or BLOCKED_ON_AUTHORIZATION, not implemented as a no-op here.",
+        "content": "### Dynamic source discovery (Phase 12) + three-tier orchestration (Phase 13)\nOne POST /api/internal/ingestion/list-sources call now returns three independent arrays this workflow fans out to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby/Oracle Cloud Recruiting — findEligibleCompanySources.ts), (2) Tier-D enabled multi-company feeds (RemoteOK/Jobicy/Arbeitnow — multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates (findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on a shared endpoint per tier — no provider-specific matching/eligibility logic anywhere downstream of ingestion. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider, and why JSearch/Adzuna/Bayt/GulfTalent remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL or BLOCKED_ON_AUTHORIZATION, not implemented as a no-op here.",
         "color": 6,
         "width": 340,
         "height": 220
@@ -762,7 +792,14 @@
         [{ "node": "Aggregate Lever Jobs", "type": "main", "index": 0 }],
         [{ "node": "Extract Workable Jobs", "type": "main", "index": 0 }],
         [{ "node": "Extract Ashby Jobs", "type": "main", "index": 0 }],
+        [{ "node": "Extract Oracle HCM Jobs", "type": "main", "index": 0 }],
         [{ "node": "Build Unsupported Source Result", "type": "main", "index": 0 }]
+      ]
+    },
+    "Extract Oracle HCM Jobs": {
+      "main": [
+        [{ "node": "Call Ingestion Batch Endpoint", "type": "main", "index": 0 }],
+        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
       ]
     },
     "Aggregate Lever Jobs": { "main": [[{ "node": "Extract Lever Jobs", "type": "main", "index": 0 }]] },

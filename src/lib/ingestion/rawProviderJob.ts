@@ -20,6 +20,8 @@ export type JobSourceType =
   | "lever"
   | "workable"
   | "ashby"
+  | "oracle_hcm"
+  | "workday"
   | "linkedin"
   // Multi-company feeds (Phase 13): one provider call returns many
   // companies' jobs, so there is no single company_sources row to attach

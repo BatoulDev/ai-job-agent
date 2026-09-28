@@ -11,11 +11,15 @@ import { mapGreenhouseJob } from "../../src/lib/ingestion/providers/greenhouse.t
 import { mapLeverJob } from "../../src/lib/ingestion/providers/lever.ts";
 import { mapWorkableJob } from "../../src/lib/ingestion/providers/workable.ts";
 import { mapAshbyJob } from "../../src/lib/ingestion/providers/ashby.ts";
+import { mapOracleHcmJob } from "../../src/lib/ingestion/providers/oracle-hcm.ts";
+import { mapWorkdayJob } from "../../src/lib/ingestion/providers/workday.ts";
 import { mapRemoteOkJob } from "../../src/lib/ingestion/providers/remoteok.ts";
 import { mapJobicyJob } from "../../src/lib/ingestion/providers/jobicy.ts";
 import { mapArbeitnowJob } from "../../src/lib/ingestion/providers/arbeitnow.ts";
 import { mapJSearchJob } from "../../src/lib/ingestion/providers/jsearch.ts";
 import { mapAdzunaJob } from "../../src/lib/ingestion/providers/adzuna.ts";
+import { mapBaytJob } from "../../src/lib/ingestion/providers/bayt.ts";
+import { mapGulfTalentJob } from "../../src/lib/ingestion/providers/gulftalent.ts";
 import { getProviderAdapter } from "../../src/lib/ingestion/providers/index.ts";
 import { validateRawProviderJob } from "../../src/lib/ingestion/rawProviderJob.ts";
 import { validateMultiCompanyProviderJob } from "../../src/lib/ingestion/multiCompanyProviderJob.ts";
@@ -151,6 +155,8 @@ describe("getProviderAdapter — registry", () => {
     assert.equal(typeof getProviderAdapter("lever"), "function");
     assert.equal(typeof getProviderAdapter("workable"), "function");
     assert.equal(typeof getProviderAdapter("ashby"), "function");
+    assert.equal(typeof getProviderAdapter("oracle_hcm"), "function");
+    assert.equal(typeof getProviderAdapter("workday"), "function");
   });
 
   test("returns an adapter for each Tier-D/C multi-company feed type (Phase 13)", () => {
@@ -159,6 +165,8 @@ describe("getProviderAdapter — registry", () => {
     assert.equal(typeof getProviderAdapter("arbeitnow"), "function");
     assert.equal(typeof getProviderAdapter("jsearch"), "function");
     assert.equal(typeof getProviderAdapter("adzuna"), "function");
+    assert.equal(typeof getProviderAdapter("bayt"), "function");
+    assert.equal(typeof getProviderAdapter("gulftalent"), "function");
   });
 
   test("career_page has an identity adapter (Phase 14 fix — its jobs arrive pre-extracted from extract-career-page-jobs, no further mapping needed)", () => {
@@ -170,8 +178,6 @@ describe("getProviderAdapter — registry", () => {
   test("returns null for a source type with no automated adapter", () => {
     assert.equal(getProviderAdapter("admin_manual"), null);
     assert.equal(getProviderAdapter("linkedin"), null);
-    assert.equal(getProviderAdapter("bayt"), null);
-    assert.equal(getProviderAdapter("gulftalent"), null);
   });
 });
 
@@ -214,6 +220,60 @@ describe("mapAshbyJob", () => {
   test("passes rawProviderJob validation end-to-end", () => {
     const job = mapAshbyJob(raw);
     assert.deepEqual(validateRawProviderJob(job, "ashby"), { valid: true });
+  });
+});
+
+describe("mapOracleHcmJob", () => {
+  // Real shape confirmed live this phase: GET https://fa-exxn-saasfaprod1
+  // .fa.ocs.oraclecloud.com/hcmRestApi/resources/latest/
+  // recruitingCEJobRequisitions?finder=findReqs;siteNumber=CX_2&expand=
+  // requisitionList returned this exact field set for a real AUBMC posting
+  // (docs/LEBANON_GULF_SOURCE_RESEARCH.md §3). candidateSiteUrl is stamped
+  // onto each raw item by the n8n fetch step (Oracle's own REST response
+  // carries no candidate-facing URL — see the adapter's own header comment).
+  const raw = {
+    Id: "175",
+    Title: "Diabetes Educator",
+    ShortDescriptionStr: "The Nursing Administration has an opening for the position of Diabetes Educator in grade 11.",
+    PostedDate: "2026-09-14",
+    PrimaryLocation: "Lebanon",
+    PrimaryLocationCountry: "LB",
+    WorkplaceType: "",
+    WorkplaceTypeCode: null,
+    ContractType: null,
+    candidateSiteUrl: "https://fa-exxn-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2",
+  };
+
+  test("maps required fields and builds the real candidate-facing apply URL", () => {
+    const job = mapOracleHcmJob(raw);
+    assert.equal(job.externalId, "175");
+    assert.equal(job.title, "Diabetes Educator");
+    assert.match(job.description, /Diabetes Educator/);
+    assert.equal(job.rawLocation, "Lebanon");
+    assert.equal(job.publishedAt, "2026-09-14");
+    assert.equal(job.applicationUrl, "https://fa-exxn-saasfaprod1.fa.ocs.oraclecloud.com/hcmUI/CandidateExperience/en/sites/CX_2/job/175");
+    assert.equal(job.sourceListingUrl, job.applicationUrl);
+  });
+
+  test("a job with no candidateSiteUrl stamped maps to a null applicationUrl (validation then rejects it, never invents a link)", () => {
+    const job = mapOracleHcmJob({ ...raw, candidateSiteUrl: undefined });
+    assert.equal(job.applicationUrl, null);
+    assert.deepEqual(validateRawProviderJob(job, "oracle_hcm"), { valid: false, reason: "missing_application_target" });
+  });
+
+  test("maps WorkplaceTypeCode to this project's work-arrangement enum when present (documented Oracle vocabulary, not observed live — the sampled tenant's jobs were all on-site/null)", () => {
+    const job = mapOracleHcmJob({ ...raw, WorkplaceTypeCode: "REMOTE" });
+    assert.equal(job.providerWorkArrangement, "remote");
+  });
+
+  test("empty/null WorkplaceType produces no work-arrangement hint, never a guess", () => {
+    const job = mapOracleHcmJob(raw);
+    assert.equal(job.providerWorkArrangement, null);
+  });
+
+  test("passes rawProviderJob validation end-to-end", () => {
+    const job = mapOracleHcmJob(raw);
+    assert.deepEqual(validateRawProviderJob(job, "oracle_hcm"), { valid: true });
   });
 });
 
@@ -381,5 +441,114 @@ describe("mapJSearchJob / mapAdzunaJob — BLOCKED_ON_CREDENTIAL, documented-sch
     assert.equal(job.rawLocation, "Doha, Qatar");
     assert.equal(job.employmentType, "full-time");
     assert.deepEqual(validateMultiCompanyProviderJob(job, "adzuna"), { valid: true });
+  });
+});
+
+describe("mapWorkdayJob — mapping logic only, NOT wired into the ingestion workflow this phase (docs/LEBANON_GULF_SOURCE_RESEARCH.md §3)", () => {
+  // Real shape confirmed live this phase: POST https://murex.wd3
+  // .myworkdayjobs.com/wday/cxs/murex/MurexCareerPage1/jobs returned this
+  // exact field set for a real Murex posting.
+  const raw = {
+    title: "Intership 2027 - UI Software Engineer",
+    externalPath: "/job/Paris/Intership-2027---Design-System-Sample-Assembly-Application_JR103210",
+    locationsText: "Paris",
+    postedOn: "Posted 2 Days Ago",
+    bulletFields: ["JR103210", "Intern"],
+    tenantSiteBaseUrl: "https://murex.wd3.myworkdayjobs.com/MurexCareerPage1",
+  };
+
+  test("maps the real requisition ID, title, location, and builds the real confirmed public apply URL", () => {
+    const job = mapWorkdayJob(raw);
+    assert.equal(job.externalId, "JR103210");
+    assert.equal(job.title, "Intership 2027 - UI Software Engineer");
+    assert.equal(job.rawLocation, "Paris");
+    assert.equal(job.applicationUrl, "https://murex.wd3.myworkdayjobs.com/MurexCareerPage1/job/Paris/Intership-2027---Design-System-Sample-Assembly-Application_JR103210");
+    assert.equal(job.sourceListingUrl, job.applicationUrl);
+  });
+
+  test("description is always empty — the real list endpoint carries no description field, and this must never be fabricated", () => {
+    const job = mapWorkdayJob(raw);
+    assert.equal(job.description, "");
+  });
+
+  test("real-shaped Workday jobs are honestly rejected by validation until a per-job detail fetch supplies a description — never silently accepted with an empty one", () => {
+    const job = mapWorkdayJob(raw);
+    assert.deepEqual(validateRawProviderJob(job, "workday"), { valid: false, reason: "missing_description" });
+  });
+
+  test("a job with a description supplied (from a future per-job detail fetch) passes validation", () => {
+    const job = mapWorkdayJob({ ...raw, description: "<p>Real job description text.</p>" });
+    assert.match(job.description, /Real job description text/);
+    assert.deepEqual(validateRawProviderJob(job, "workday"), { valid: true });
+  });
+
+  test("falls back to externalPath as the external ID when bulletFields is absent, never invents one", () => {
+    const job = mapWorkdayJob({ ...raw, bulletFields: undefined });
+    assert.equal(job.externalId, raw.externalPath);
+  });
+
+  test("a job with no tenantSiteBaseUrl stamped maps to a null applicationUrl, never a guessed one", () => {
+    const job = mapWorkdayJob({ ...raw, tenantSiteBaseUrl: undefined });
+    assert.equal(job.applicationUrl, null);
+  });
+});
+
+describe("mapBaytJob / mapGulfTalentJob — BLOCKED_ON_AUTHORIZATION, documented Apify actor schema fixtures only (never live-verified, docs/LEBANON_GULF_SOURCE_RESEARCH.md §5)", () => {
+  test("mapBaytJob maps the blackfalcondata/bayt-scraper documented output schema", () => {
+    const job = mapBaytJob({
+      jobId: "bayt-12345",
+      title: "Accountant",
+      company: "Fixture Bayt Co",
+      location: "Beirut, Lebanon",
+      city: "Beirut",
+      country: "Lebanon",
+      employmentType: "Full Time",
+      description: "Handle accounts.",
+      isRemote: false,
+      url: "https://www.bayt.com/en/lebanon/jobs/fixture-12345/",
+      applyUrl: "https://www.bayt.com/en/lebanon/jobs/fixture-12345/apply/",
+      postedDate: "2026-09-01",
+    });
+    assert.equal(job.externalId, "bayt-12345");
+    assert.equal(job.companyName, "Fixture Bayt Co");
+    assert.equal(job.rawLocation, "Beirut, Lebanon");
+    assert.equal(job.applicationUrl, "https://www.bayt.com/en/lebanon/jobs/fixture-12345/apply/");
+    assert.equal(job.employmentType, "full-time");
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "bayt"), { valid: true });
+  });
+
+  test("mapBaytJob prefers applyUrl over url, and falls back to url when applyUrl is absent", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x" });
+    assert.equal(job.applicationUrl, "https://www.bayt.com/x");
+  });
+
+  test("mapBaytJob isRemote:true maps to providerWorkArrangement remote", () => {
+    const job = mapBaytJob({ jobId: "x", title: "t", company: "c", description: "d", url: "https://www.bayt.com/x", isRemote: true });
+    assert.equal(job.providerWorkArrangement, "remote");
+  });
+
+  test("mapGulfTalentJob maps the blackfalcondata/gulftalent-scraper documented output schema", () => {
+    const job = mapGulfTalentJob({
+      jobId: "gt-6789",
+      jobKey: "gt-key-6789",
+      title: "HR Manager",
+      company: "Fixture GulfTalent Co",
+      location: "Dubai, UAE",
+      employmentType: "Full Time",
+      description: "Manage HR.",
+      applyUrl: "https://www.gulftalent.com/uae/jobs/fixture-6789",
+      postedAt: "2026-09-01",
+    });
+    assert.equal(job.externalId, "gt-6789");
+    assert.equal(job.companyName, "Fixture GulfTalent Co");
+    assert.equal(job.rawLocation, "Dubai, UAE");
+    assert.equal(job.applicationUrl, "https://www.gulftalent.com/uae/jobs/fixture-6789");
+    assert.equal(job.employmentType, "full-time");
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "gulftalent"), { valid: true });
+  });
+
+  test("mapGulfTalentJob falls back to jobKey when jobId is absent, never invents a third identifier", () => {
+    const job = mapGulfTalentJob({ jobKey: "gt-key-only", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x" });
+    assert.equal(job.externalId, "gt-key-only");
   });
 });

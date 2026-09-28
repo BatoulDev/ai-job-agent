@@ -23,7 +23,7 @@
 import type { JobSourceType } from "./rawProviderJob.ts";
 
 export interface DerivedAtsFeedUrl {
-  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable" | "ashby">;
+  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable" | "ashby" | "oracle_hcm">;
   feedUrl: string;
 }
 
@@ -37,6 +37,19 @@ const WORKABLE_PATTERN = /apply\.workable\.com\/([a-z0-9-]+)/i;
 // https://api.ashbyhq.com/posting-api/job-board/the-studio returns real,
 // current job postings.
 const ASHBY_PATTERN = /jobs\.ashbyhq\.com\/([a-z0-9-]+)/i;
+// Phase 16: confirmed live against a real registry row (AUBMC,
+// official_careers_url updated this phase from the generic
+// aubmc.org.lb landing page to this real, confirmed Oracle Cloud
+// Recruiting candidate-experience URL — see
+// docs/LEBANON_GULF_SOURCE_RESEARCH.md §3). A direct GET to
+// {host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?
+// finder=findReqs;siteNumber={site}&expand=requisitionList returns real
+// job data with no auth. The candidate-facing apply URL
+// ({host}/hcmUI/CandidateExperience/en/sites/{site}/job/{id}) is a
+// sibling path on the same host, reconstructed by the n8n extraction step
+// from this same feed URL (see oracle-hcm.ts's own header comment) since
+// Oracle's REST response carries no candidate-facing URL of its own.
+const ORACLE_PATTERN = /https:\/\/([a-z0-9.-]+)\/hcmUI\/CandidateExperience\/[a-z]{2}\/sites\/([A-Za-z0-9_]+)/i;
 
 /** ats_provider is researcher-entered free text (e.g. "Greenhouse", "Workable", "Oracle Cloud HCM") — normalize before matching. */
 function normalizeAtsProviderLabel(atsProvider: string | null): string {
@@ -79,6 +92,18 @@ export function deriveAtsFeedUrl(atsProvider: string | null, officialCareersUrl:
     const match = officialCareersUrl.match(ASHBY_PATTERN);
     if (match) {
       return { sourceType: "ashby", feedUrl: `https://api.ashbyhq.com/posting-api/job-board/${match[1]}` };
+    }
+    return null;
+  }
+
+  if (label.includes("oracle")) {
+    const match = officialCareersUrl.match(ORACLE_PATTERN);
+    if (match) {
+      const [, host, siteNumber] = match;
+      return {
+        sourceType: "oracle_hcm",
+        feedUrl: `https://${host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?finder=findReqs;siteNumber=${siteNumber}&expand=requisitionList&limit=50`,
+      };
     }
     return null;
   }

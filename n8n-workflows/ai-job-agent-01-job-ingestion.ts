@@ -74,7 +74,7 @@ const logListSourcesFailure = node({
 });
 
 // ─────────────────────────────────────────────────────────────────────────
-// Tier A: company-specific ATS sources (Greenhouse/Lever/Workable/Ashby)
+// Tier A: company-specific ATS sources (Greenhouse/Lever/Workable/Ashby/Oracle Cloud Recruiting)
 // ─────────────────────────────────────────────────────────────────────────
 
 const splitOutSources = node({
@@ -148,6 +148,14 @@ const extractJobsByAtsType = switchCase({
             conditions: {
               options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
               conditions: [{ leftValue: expr("{{ $('Split Out Sources').item.json.ats_type }}"), operator: { type: 'string', operation: 'equals' }, rightValue: 'ashby' }],
+              combinator: 'and',
+            },
+          },
+          {
+            outputKey: 'oracle_hcm',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [{ leftValue: expr("{{ $('Split Out Sources').item.json.ats_type }}"), operator: { type: 'string', operation: 'equals' }, rightValue: 'oracle_hcm' }],
               combinator: 'and',
             },
           },
@@ -228,6 +236,51 @@ const extractAshbyJobs = node({
     parameters: {
       mode: 'manual',
       assignments: { assignments: [{ id: 'rawJobs', name: 'rawJobs', value: expr('{{ $json.jobs }}'), type: 'array' }] },
+    },
+  },
+  output: [{ rawJobs: [] }],
+});
+
+// Phase 16. Oracle's recruitingCEJobRequisitions response nests the real job
+// list at items[0].requisitionList and carries no candidate-facing URL of
+// its own (only internal hcmRestApi self-links) — the real, public apply
+// URL lives at a sibling path, {host}/hcmUI/CandidateExperience/en/sites/
+// {site}/job/{id}, confirmed live this phase (docs/LEBANON_GULF_SOURCE_RESEARCH.md
+// §3). This expression derives that host+site from the same feed_url
+// Fetch Source Jobs already used, and stamps it onto every raw job so
+// providers/oracle-hcm.ts (a plain (raw) => RawProviderJob function, no
+// per-batch context parameter) can build a real applicationUrl without
+// inventing one.
+const extractOracleHcmJobs = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Extract Oracle HCM Jobs',
+    notes:
+      'Phase 16. Confirmed live against a real registry tenant (AUBMC, Lebanon) — a direct unauthenticated GET to ' +
+      'recruitingCEJobRequisitions returned real job data, and the derived candidate-facing URL returned a real 200 job page. ' +
+      'See providers/oracle-hcm.ts and deriveAtsFeedUrl.ts.',
+    onError: 'continueErrorOutput',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          {
+            id: 'rawJobs',
+            name: 'rawJobs',
+            value: expr(
+              '={{ (() => {\n' +
+                "  const feedUrl = $('Split Out Sources').item.json.feed_url;\n" +
+                '  const m = feedUrl.match(/^https:\\/\\/([^/]+)\\/hcmRestApi.*siteNumber=([A-Za-z0-9_]+)/);\n' +
+                '  const candidateSiteUrl = m ? `https://${m[1]}/hcmUI/CandidateExperience/en/sites/${m[2]}` : null;\n' +
+                '  const list = $json.items?.[0]?.requisitionList ?? [];\n' +
+                '  return list.map((job) => ({ ...job, candidateSiteUrl }));\n' +
+                '})() }}'
+            ),
+            type: 'array',
+          },
+        ],
+      },
     },
   },
   output: [{ rawJobs: [] }],
@@ -392,7 +445,7 @@ const rateLimitDelay = node({
 // Tier D (Phase 13): multi-company feeds (RemoteOK/Jobicy/Arbeitnow).
 // Every branch normalizes to the same {jobs:[...]} shape before converging
 // on one shared endpoint-call node — mirrors Tier A's
-// extractGreenhouse/Lever/Workable/AshbyJobs -> callIngestionBatchEndpoint
+// extractGreenhouse/Lever/Workable/Ashby/OracleHcmJobs -> callIngestionBatchEndpoint
 // convergence pattern above.
 // ─────────────────────────────────────────────────────────────────────────
 
@@ -838,7 +891,7 @@ const overviewNote = sticky(
 const scopeLimitationNote = sticky(
   '### Dynamic source discovery (Phase 12) + three-tier orchestration (Phase 13)\n' +
     'One POST /api/internal/ingestion/list-sources call now returns three independent arrays this workflow fans out ' +
-    'to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby — ' +
+    'to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby/Oracle Cloud Recruiting — ' +
     'findEligibleCompanySources.ts), (2) Tier-D enabled multi-company feeds (RemoteOK/Jobicy/Arbeitnow — ' +
     'multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates ' +
     '(findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on ' +
@@ -891,7 +944,8 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Agent / 01 Job 
             .onCase(1, aggregateLeverJobs.to(extractLeverJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint)))
             .onCase(2, extractWorkableJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
             .onCase(3, extractAshbyJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
-            .onCase(4, buildUnsupportedSourceResult.to(recordSourceResult))
+            .onCase(4, extractOracleHcmJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
+            .onCase(5, buildUnsupportedSourceResult.to(recordSourceResult))
         )
     )
   )
