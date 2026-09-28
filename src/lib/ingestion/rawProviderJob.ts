@@ -34,7 +34,8 @@ export type JobSourceType =
   | "jsearch"
   | "adzuna"
   | "bayt"
-  | "gulftalent";
+  | "gulftalent"
+  | "indeed";
 
 export type EmploymentType = "full-time" | "part-time" | "internship" | "contract";
 export type Seniority = "internship" | "entry-level" | "junior" | "mid-level" | "senior";

@@ -43,8 +43,8 @@ function prefixed(run, id) {
   return `${run}-${id}`;
 }
 
-async function trackJobs(externalIds) {
-  const { data } = await adminClient.from("jobs").select("id").eq("source_type", "remoteok").in("external_id", externalIds);
+async function trackJobs(externalIds, sourceType = "remoteok") {
+  const { data } = await adminClient.from("jobs").select("id").eq("source_type", sourceType).in("external_id", externalIds);
   for (const row of data ?? []) jobIdsToClean.push(row.id);
 }
 
@@ -61,38 +61,56 @@ test("a disabled/unknown provider is rejected before any write (fail-closed)", a
   assert.equal(result.jobsCreated, 0);
 });
 
-// Phase 19: explicit, named persistence-layer guard for the two providers
-// about to be live-validated next phase — proven generically above via
-// jsearch already, but Bayt/GulfTalent get their own named coverage here
-// specifically because a live benchmark run is imminent and this is the
-// real, final backstop even if the discovery layer (providerConfig.ts's
-// enabled flag / multiCompanyFeedUrls.ts's hardcoded provider list — see
-// tests/unit/provider-config.test.mjs) were ever bypassed, e.g. by a
-// hand-crafted POST directly to /api/internal/ingestion/run-multi-company-batch.
-test("Bayt is rejected before any write, even with a perfectly real-shaped job, as long as providerConfig.ts keeps it enabled:false", async () => {
-  await assertExpectedLocalProject();
+// Phase 19 added named persistence-layer guards for Bayt/GulfTalent here
+// (superseded — both, plus Indeed, went live enabled:true in Phase 21
+// after real benchmark validation; the generic jsearch guard above still
+// proves the same fail-closed mechanism for whichever providers remain
+// disabled). Phase 21 replaces those three with the opposite proof: real
+// writes now succeed for all three once enabled.
+
+test("Bayt writes a real row once enabled:true, keyed by dedup_scope 'type:bayt'", async () => {
+  const run = randomUUID().slice(0, 8);
   const result = await runMultiCompanyIngestionBatch(
     adminClient,
     "bayt",
-    [rawJob(`bayt-guard-${randomUUID()}`, { companyName: "Fixture Bayt Co" })],
+    [rawJob(prefixed(run, "bayt-live"), { companyName: "Fixture Bayt Co" })],
     { maxJobsPerSource: 10, dryRun: false }
   );
-  assert.equal(result.outcome, "provider_not_enabled");
-  assert.equal(result.jobsCreated, 0);
-  assert.equal(result.jobsUpdated, 0);
+  assert.equal(result.outcome, "succeeded");
+  assert.equal(result.jobsCreated, 1);
+  await trackJobs([prefixed(run, "bayt-live")], "bayt");
+  const { data } = await adminClient.from("jobs").select("dedup_scope").eq("source_type", "bayt").eq("external_id", prefixed(run, "bayt-live")).single();
+  assert.equal(data.dedup_scope, "type:bayt");
 });
 
-test("GulfTalent is rejected before any write, even with a perfectly real-shaped job, as long as providerConfig.ts keeps it enabled:false", async () => {
-  await assertExpectedLocalProject();
+test("GulfTalent writes a real row once enabled:true, keyed by dedup_scope 'type:gulftalent'", async () => {
+  const run = randomUUID().slice(0, 8);
   const result = await runMultiCompanyIngestionBatch(
     adminClient,
     "gulftalent",
-    [rawJob(`gulftalent-guard-${randomUUID()}`, { companyName: "Fixture GulfTalent Co" })],
+    [rawJob(prefixed(run, "gulftalent-live"), { companyName: "Fixture GulfTalent Co" })],
     { maxJobsPerSource: 10, dryRun: false }
   );
-  assert.equal(result.outcome, "provider_not_enabled");
-  assert.equal(result.jobsCreated, 0);
-  assert.equal(result.jobsUpdated, 0);
+  assert.equal(result.outcome, "succeeded");
+  assert.equal(result.jobsCreated, 1);
+  await trackJobs([prefixed(run, "gulftalent-live")], "gulftalent");
+  const { data } = await adminClient.from("jobs").select("dedup_scope").eq("source_type", "gulftalent").eq("external_id", prefixed(run, "gulftalent-live")).single();
+  assert.equal(data.dedup_scope, "type:gulftalent");
+});
+
+test("Indeed writes a real row once enabled:true, keyed by dedup_scope 'type:indeed'", async () => {
+  const run = randomUUID().slice(0, 8);
+  const result = await runMultiCompanyIngestionBatch(
+    adminClient,
+    "indeed",
+    [rawJob(prefixed(run, "indeed-live"), { companyName: "Fixture Indeed Co" })],
+    { maxJobsPerSource: 10, dryRun: false }
+  );
+  assert.equal(result.outcome, "succeeded");
+  assert.equal(result.jobsCreated, 1);
+  await trackJobs([prefixed(run, "indeed-live")], "indeed");
+  const { data } = await adminClient.from("jobs").select("dedup_scope").eq("source_type", "indeed").eq("external_id", prefixed(run, "indeed-live")).single();
+  assert.equal(data.dedup_scope, "type:indeed");
 });
 
 test("dry_run validates and reports but writes nothing", async () => {

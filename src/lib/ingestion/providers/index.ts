@@ -33,6 +33,7 @@ import { mapJSearchJob, type JSearchRawJob } from "./jsearch.ts";
 import { mapAdzunaJob, type AdzunaRawJob } from "./adzuna.ts";
 import { mapBaytJob, type BaytRawJob } from "./bayt.ts";
 import { mapGulfTalentJob, type GulfTalentRawJob } from "./gulftalent.ts";
+import { mapIndeedJob, type IndeedRawJob } from "./indeed.ts";
 
 export type ProviderAdapter = (raw: unknown) => RawProviderJob;
 
@@ -59,6 +60,7 @@ export const PROVIDER_ADAPTERS: Partial<Record<JobSourceType, ProviderAdapter>> 
   adzuna: (raw) => mapAdzunaJob(raw as AdzunaRawJob),
   bayt: (raw) => mapBaytJob(raw as BaytRawJob),
   gulftalent: (raw) => mapGulfTalentJob(raw as GulfTalentRawJob),
+  indeed: (raw) => mapIndeedJob(raw as IndeedRawJob),
   career_page: (raw) => raw as RawProviderJob,
 };
 

@@ -8,7 +8,10 @@
       "name": "Start Job Ingestion Run",
       "type": "n8n-nodes-base.manualTrigger",
       "typeVersion": 1,
-      "position": [0, 464],
+      "position": [
+        0,
+        464
+      ],
       "parameters": {}
     },
     {
@@ -16,7 +19,10 @@
       "name": "Workflow Configuration",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [224, 464],
+      "position": [
+        224,
+        464
+      ],
       "parameters": {
         "mode": "raw",
         "jsonOutput": "{\"appBaseUrl\":\"http://host.docker.internal:3000\",\"maxJobsPerSource\":5,\"rateLimitDelaySeconds\":2,\"dryRun\":true}"
@@ -27,7 +33,10 @@
       "name": "List Ingestion Sources",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [448, 464],
+      "position": [
+        448,
+        464
+      ],
       "notes": "Discovers verified, automatable company_sources rows dynamically (Phase 12), plus enabled multi-company feed providers and career-page extraction candidates (Phase 13). See src/lib/ingestion/findEligibleCompanySources.ts, multiCompanyFeedUrls.ts, findCareerPageExtractionCandidates.ts.",
       "onError": "continueErrorOutput",
       "retryOnFail": true,
@@ -42,20 +51,38 @@
         "contentType": "json",
         "specifyBody": "json",
         "jsonBody": "={{ {} }}",
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000
+        }
       },
-      "credentials": { "httpBearerAuth": { "name": "Ingestion Worker Secret" } }
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Ingestion Worker Secret"
+        }
+      }
     },
     {
       "id": "d2f4f123-d797-4606-b204-654e81ad70af",
       "name": "Log List Sources Failure",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [448, 650],
+      "position": [
+        448,
+        650
+      ],
       "notes": "Terminal failure for this run — nothing to loop over if source discovery itself failed. A human reviews the n8n execution log.",
       "parameters": {
         "mode": "manual",
-        "assignments": { "assignments": [{ "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'list-sources call failed' }}", "type": "string" }] }
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'list-sources call failed' }}",
+              "type": "string"
+            }
+          ]
+        }
       }
     },
     {
@@ -63,23 +90,36 @@
       "name": "Split Out Sources",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [672, 464],
-      "parameters": { "fieldToSplitOut": "sources" }
+      "position": [
+        672,
+        464
+      ],
+      "parameters": {
+        "fieldToSplitOut": "sources"
+      }
     },
     {
       "id": "d4fda19b-89d0-4ce7-99d4-6df854e6e147",
       "name": "Loop Sources (Rate Limited)",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [896, 464],
-      "parameters": { "batchSize": 1 }
+      "position": [
+        896,
+        464
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
     },
     {
       "id": "77446e74-48d1-4334-bcb8-912b4f85f219",
       "name": "Fetch Source Jobs",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [1120, 464],
+      "position": [
+        1120,
+        464
+      ],
       "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 4,
@@ -88,7 +128,9 @@
         "method": "GET",
         "url": "={{ $json.feed_url }}",
         "authentication": "none",
-        "options": { "timeout": 15000 }
+        "options": {
+          "timeout": 15000
+        }
       }
     },
     {
@@ -96,53 +138,129 @@
       "name": "Extract Jobs By ATS Type",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
-      "position": [1344, 240],
+      "position": [
+        1344,
+        240
+      ],
       "parameters": {
         "rules": {
           "values": [
             {
               "outputKey": "greenhouse",
               "conditions": {
-                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
-                "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "greenhouse" }],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "greenhouse"
+                  }
+                ],
                 "combinator": "and"
               }
             },
             {
               "outputKey": "lever",
               "conditions": {
-                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
-                "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "lever" }],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "lever"
+                  }
+                ],
                 "combinator": "and"
               }
             },
             {
               "outputKey": "workable",
               "conditions": {
-                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
-                "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "workable" }],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "workable"
+                  }
+                ],
                 "combinator": "and"
               }
             },
             {
               "outputKey": "ashby",
               "conditions": {
-                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
-                "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "ashby" }],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "ashby"
+                  }
+                ],
                 "combinator": "and"
               }
             },
             {
               "outputKey": "oracle_hcm",
               "conditions": {
-                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
-                "conditions": [{ "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "oracle_hcm" }],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Split Out Sources').item.json.ats_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "oracle_hcm"
+                  }
+                ],
                 "combinator": "and"
               }
             }
           ]
         },
-        "options": { "fallbackOutput": "extra", "renameFallbackOutput": "Unsupported" }
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Unsupported"
+        }
       }
     },
     {
@@ -150,11 +268,23 @@
       "name": "Extract Greenhouse Jobs",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1568, 0],
+      "position": [
+        1568,
+        0
+      ],
       "onError": "continueErrorOutput",
       "parameters": {
         "mode": "manual",
-        "assignments": { "assignments": [{ "id": "rawJobs", "name": "rawJobs", "value": "={{ $json.jobs }}", "type": "array" }] }
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rawJobs",
+              "name": "rawJobs",
+              "value": "={{ $json.jobs }}",
+              "type": "array"
+            }
+          ]
+        }
       }
     },
     {
@@ -162,21 +292,40 @@
       "name": "Aggregate Lever Jobs",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
-      "position": [1392, 192],
+      "position": [
+        1392,
+        192
+      ],
       "notes": "Phase 14 fix. Lever's postings API returns a bare top-level JSON array, so n8n's core JSON-to-items conversion auto-splits it into one item per job (confirmed live: a real 21-job response from Wahed's board produced 21 separate items reaching this branch, each individually failing Extract Lever Jobs's old 'rawJobs: $json' assumption that $json was still the whole array). Collects them back into one {jobs:[...]} item first, mirroring the same pattern already used for RemoteOK in the Tier-D branch below.",
-      "parameters": { "aggregate": "aggregateAllItemData", "destinationFieldName": "jobs", "include": "allFields" }
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "include": "allFields"
+      }
     },
     {
       "id": "f469d074-2d67-415a-8db0-16665a0be094",
       "name": "Extract Lever Jobs",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1568, 192],
+      "position": [
+        1568,
+        192
+      ],
       "notes": "Lever's postings API returns a bare top-level array, auto-split by n8n into one item per job — Aggregate Lever Jobs collects them back into a single {jobs:[...]} item before this node runs (Phase 14 fix; docs/job-ingestion-pilot.md §5).",
       "onError": "continueErrorOutput",
       "parameters": {
         "mode": "manual",
-        "assignments": { "assignments": [{ "id": "rawJobs", "name": "rawJobs", "value": "={{ $json.jobs }}", "type": "array" }] }
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rawJobs",
+              "name": "rawJobs",
+              "value": "={{ $json.jobs }}",
+              "type": "array"
+            }
+          ]
+        }
       }
     },
     {
@@ -184,11 +333,23 @@
       "name": "Extract Workable Jobs",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1568, 384],
+      "position": [
+        1568,
+        384
+      ],
       "onError": "continueErrorOutput",
       "parameters": {
         "mode": "manual",
-        "assignments": { "assignments": [{ "id": "rawJobs", "name": "rawJobs", "value": "={{ $json.jobs }}", "type": "array" }] }
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rawJobs",
+              "name": "rawJobs",
+              "value": "={{ $json.jobs }}",
+              "type": "array"
+            }
+          ]
+        }
       }
     },
     {
@@ -196,12 +357,24 @@
       "name": "Extract Ashby Jobs",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1568, 656],
+      "position": [
+        1568,
+        656
+      ],
       "notes": "Phase 13. Ashby posting-api returns {jobs:[...], apiVersion} — confirmed live against a real registry board (sr-qa-the-utopia-studio).",
       "onError": "continueErrorOutput",
       "parameters": {
         "mode": "manual",
-        "assignments": { "assignments": [{ "id": "rawJobs", "name": "rawJobs", "value": "={{ $json.jobs }}", "type": "array" }] }
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rawJobs",
+              "name": "rawJobs",
+              "value": "={{ $json.jobs }}",
+              "type": "array"
+            }
+          ]
+        }
       }
     },
     {
@@ -209,7 +382,10 @@
       "name": "Extract Oracle HCM Jobs",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1568, 848],
+      "position": [
+        1568,
+        848
+      ],
       "notes": "Phase 16. Confirmed live against a real registry tenant (AUBMC, Lebanon) — a direct unauthenticated GET to recruitingCEJobRequisitions returned real job data, and the derived candidate-facing URL returned a real 200 job page. See providers/oracle-hcm.ts and deriveAtsFeedUrl.ts.",
       "onError": "continueErrorOutput",
       "parameters": {
@@ -231,7 +407,10 @@
       "name": "Call Ingestion Batch Endpoint",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [1792, 272],
+      "position": [
+        1792,
+        272
+      ],
       "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 2,
@@ -245,25 +424,54 @@
         "contentType": "json",
         "specifyBody": "json",
         "jsonBody": "={{ {\n  sourceId: $('Split Out Sources').item.json.source_id,\n  sourceType: $('Split Out Sources').item.json.ats_type,\n  rawJobs: $json.rawJobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000
+        }
       },
-      "credentials": { "httpBearerAuth": { "name": "Ingestion Worker Secret" } }
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Ingestion Worker Secret"
+        }
+      }
     },
     {
       "id": "dc6d5184-50ae-451c-a268-0a1a5a442ab1",
       "name": "Build Success Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2016, 80],
+      "position": [
+        2016,
+        80
+      ],
       "parameters": {
         "mode": "manual",
         "includeOtherFields": true,
         "assignments": {
           "assignments": [
-            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Sources').item.json.source_id }}", "type": "string" },
-            { "id": "ats_type", "name": "ats_type", "value": "={{ $('Split Out Sources').item.json.ats_type }}", "type": "string" },
-            { "id": "succeeded", "name": "succeeded", "value": "={{ $json.outcome === 'succeeded' }}", "type": "boolean" },
-            { "id": "error", "name": "error", "value": null, "type": "string" }
+            {
+              "id": "source_id",
+              "name": "source_id",
+              "value": "={{ $('Split Out Sources').item.json.source_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ats_type",
+              "name": "ats_type",
+              "value": "={{ $('Split Out Sources').item.json.ats_type }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": "={{ $json.outcome === 'succeeded' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
           ]
         }
       }
@@ -273,22 +481,80 @@
       "name": "Build Endpoint Failure Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2016, 336],
+      "position": [
+        2016,
+        336
+      ],
       "parameters": {
         "mode": "manual",
         "assignments": {
           "assignments": [
-            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Sources').item.json.source_id }}", "type": "string" },
-            { "id": "ats_type", "name": "ats_type", "value": "={{ $('Split Out Sources').item.json.ats_type }}", "type": "string" },
-            { "id": "outcome", "name": "outcome", "value": "endpoint_call_failed", "type": "string" },
-            { "id": "succeeded", "name": "succeeded", "value": false, "type": "boolean" },
-            { "id": "jobsFetched", "name": "jobsFetched", "value": 0, "type": "number" },
-            { "id": "jobsValid", "name": "jobsValid", "value": 0, "type": "number" },
-            { "id": "jobsRejected", "name": "jobsRejected", "value": 0, "type": "number" },
-            { "id": "jobsCreated", "name": "jobsCreated", "value": 0, "type": "number" },
-            { "id": "jobsUpdated", "name": "jobsUpdated", "value": 0, "type": "number" },
-            { "id": "jobsClosed", "name": "jobsClosed", "value": 0, "type": "number" },
-            { "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'ingestion batch endpoint call failed after retries' }}", "type": "string" }
+            {
+              "id": "source_id",
+              "name": "source_id",
+              "value": "={{ $('Split Out Sources').item.json.source_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ats_type",
+              "name": "ats_type",
+              "value": "={{ $('Split Out Sources').item.json.ats_type }}",
+              "type": "string"
+            },
+            {
+              "id": "outcome",
+              "name": "outcome",
+              "value": "endpoint_call_failed",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "jobsFetched",
+              "name": "jobsFetched",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsValid",
+              "name": "jobsValid",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsRejected",
+              "name": "jobsRejected",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsCreated",
+              "name": "jobsCreated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsUpdated",
+              "name": "jobsUpdated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsClosed",
+              "name": "jobsClosed",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'ingestion batch endpoint call failed after retries' }}",
+              "type": "string"
+            }
           ]
         }
       }
@@ -298,22 +564,80 @@
       "name": "Build Unsupported Source Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2016, 528],
+      "position": [
+        2016,
+        528
+      ],
       "parameters": {
         "mode": "manual",
         "assignments": {
           "assignments": [
-            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Sources').item.json.source_id }}", "type": "string" },
-            { "id": "ats_type", "name": "ats_type", "value": "={{ $('Split Out Sources').item.json.ats_type }}", "type": "string" },
-            { "id": "outcome", "name": "outcome", "value": "unsupported_ats_type", "type": "string" },
-            { "id": "succeeded", "name": "succeeded", "value": false, "type": "boolean" },
-            { "id": "jobsFetched", "name": "jobsFetched", "value": 0, "type": "number" },
-            { "id": "jobsValid", "name": "jobsValid", "value": 0, "type": "number" },
-            { "id": "jobsRejected", "name": "jobsRejected", "value": 0, "type": "number" },
-            { "id": "jobsCreated", "name": "jobsCreated", "value": 0, "type": "number" },
-            { "id": "jobsUpdated", "name": "jobsUpdated", "value": 0, "type": "number" },
-            { "id": "jobsClosed", "name": "jobsClosed", "value": 0, "type": "number" },
-            { "id": "error", "name": "error", "value": "no adapter registered for this ats_type", "type": "string" }
+            {
+              "id": "source_id",
+              "name": "source_id",
+              "value": "={{ $('Split Out Sources').item.json.source_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ats_type",
+              "name": "ats_type",
+              "value": "={{ $('Split Out Sources').item.json.ats_type }}",
+              "type": "string"
+            },
+            {
+              "id": "outcome",
+              "name": "outcome",
+              "value": "unsupported_ats_type",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "jobsFetched",
+              "name": "jobsFetched",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsValid",
+              "name": "jobsValid",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsRejected",
+              "name": "jobsRejected",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsCreated",
+              "name": "jobsCreated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsUpdated",
+              "name": "jobsUpdated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsClosed",
+              "name": "jobsClosed",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "no adapter registered for this ats_type",
+              "type": "string"
+            }
           ]
         }
       }
@@ -323,22 +647,80 @@
       "name": "Build Fetch Failure Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2016, 720],
+      "position": [
+        2016,
+        720
+      ],
       "parameters": {
         "mode": "manual",
         "assignments": {
           "assignments": [
-            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Sources').item.json.source_id }}", "type": "string" },
-            { "id": "ats_type", "name": "ats_type", "value": "={{ $('Split Out Sources').item.json.ats_type }}", "type": "string" },
-            { "id": "outcome", "name": "outcome", "value": "fetch_failed", "type": "string" },
-            { "id": "succeeded", "name": "succeeded", "value": false, "type": "boolean" },
-            { "id": "jobsFetched", "name": "jobsFetched", "value": 0, "type": "number" },
-            { "id": "jobsValid", "name": "jobsValid", "value": 0, "type": "number" },
-            { "id": "jobsRejected", "name": "jobsRejected", "value": 0, "type": "number" },
-            { "id": "jobsCreated", "name": "jobsCreated", "value": 0, "type": "number" },
-            { "id": "jobsUpdated", "name": "jobsUpdated", "value": 0, "type": "number" },
-            { "id": "jobsClosed", "name": "jobsClosed", "value": 0, "type": "number" },
-            { "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'fetch failed after retries' }}", "type": "string" }
+            {
+              "id": "source_id",
+              "name": "source_id",
+              "value": "={{ $('Split Out Sources').item.json.source_id }}",
+              "type": "string"
+            },
+            {
+              "id": "ats_type",
+              "name": "ats_type",
+              "value": "={{ $('Split Out Sources').item.json.ats_type }}",
+              "type": "string"
+            },
+            {
+              "id": "outcome",
+              "name": "outcome",
+              "value": "fetch_failed",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "jobsFetched",
+              "name": "jobsFetched",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsValid",
+              "name": "jobsValid",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsRejected",
+              "name": "jobsRejected",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsCreated",
+              "name": "jobsCreated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsUpdated",
+              "name": "jobsUpdated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobsClosed",
+              "name": "jobsClosed",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'fetch failed after retries' }}",
+              "type": "string"
+            }
           ]
         }
       }
@@ -348,16 +730,28 @@
       "name": "Record Source Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2240, 560],
+      "position": [
+        2240,
+        560
+      ],
       "notes": "Pure convergence point — every per-source path (success, fetch failure, endpoint-call failure, unsupported ats_type) lands here with the same shape. Each iteration's outcome is visible in this node's own execution history in the n8n UI (no combined summary node — see the overview sticky note).",
-      "parameters": { "mode": "manual", "includeOtherFields": true, "assignments": { "assignments": [] } }
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": []
+        }
+      }
     },
     {
       "id": "1a2dc791-515a-4552-be08-54b94e7fca9d",
       "name": "Rate Limit Delay",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [2464, 720],
+      "position": [
+        2464,
+        720
+      ],
       "parameters": {
         "resume": "timeInterval",
         "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}",
@@ -369,23 +763,36 @@
       "name": "Split Out Multi-Company Sources",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [672, 1760],
-      "parameters": { "fieldToSplitOut": "multi_company_sources" }
+      "position": [
+        672,
+        1760
+      ],
+      "parameters": {
+        "fieldToSplitOut": "multi_company_sources"
+      }
     },
     {
       "id": "29d749a7-14c5-4ff1-976f-3705e127f1ef",
       "name": "Loop Multi-Company Sources (Rate Limited)",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [896, 1760],
-      "parameters": { "batchSize": 1 }
+      "position": [
+        896,
+        1760
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
     },
     {
       "id": "d2cd2f19-a0a1-414b-9661-64aa00518503",
       "name": "Fetch Multi-Company Feed",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [1120, 1632],
+      "position": [
+        1120,
+        1632
+      ],
       "notes": "First page only, deliberately — Arbeitnow is the only paginated provider here and its remote:true jobs are a small subset of page 1; native HTTP pagination was judged not worth the added complexity this phase. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md.",
       "onError": "continueErrorOutput",
       "retryOnFail": true,
@@ -395,7 +802,9 @@
         "method": "GET",
         "url": "={{ $json.feed_url }}",
         "authentication": "none",
-        "options": { "timeout": 20000 }
+        "options": {
+          "timeout": 20000
+        }
       }
     },
     {
@@ -403,37 +812,85 @@
       "name": "Extract Raw Jobs By Provider Type",
       "type": "n8n-nodes-base.switch",
       "typeVersion": 3.4,
-      "position": [1344, 1392],
+      "position": [
+        1344,
+        1392
+      ],
       "parameters": {
         "rules": {
           "values": [
             {
               "outputKey": "remoteok",
               "conditions": {
-                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
-                "conditions": [{ "leftValue": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "remoteok" }],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "remoteok"
+                  }
+                ],
                 "combinator": "and"
               }
             },
             {
               "outputKey": "jobicy",
               "conditions": {
-                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
-                "conditions": [{ "leftValue": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "jobicy" }],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "jobicy"
+                  }
+                ],
                 "combinator": "and"
               }
             },
             {
               "outputKey": "arbeitnow",
               "conditions": {
-                "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 3 },
-                "conditions": [{ "leftValue": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}", "operator": { "type": "string", "operation": "equals" }, "rightValue": "arbeitnow" }],
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "arbeitnow"
+                  }
+                ],
                 "combinator": "and"
               }
             }
           ]
         },
-        "options": { "fallbackOutput": "extra", "renameFallbackOutput": "Unsupported" }
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "Unsupported"
+        }
       }
     },
     {
@@ -441,44 +898,85 @@
       "name": "Aggregate RemoteOK Jobs",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
-      "position": [2016, 1200],
-      "parameters": { "aggregate": "aggregateAllItemData", "destinationFieldName": "jobs", "include": "allFields" }
+      "position": [
+        2016,
+        1200
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "include": "allFields"
+      }
     },
     {
       "id": "91995a16-7b5a-43bf-9749-68542aa6deff",
       "name": "Split Out Jobicy Jobs",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [1792, 1392],
-      "parameters": { "fieldToSplitOut": "jobs" }
+      "position": [
+        1792,
+        1392
+      ],
+      "parameters": {
+        "fieldToSplitOut": "jobs"
+      }
     },
     {
       "id": "40a546a6-a5a1-431c-a935-be7f0e3d230e",
       "name": "Aggregate Jobicy Jobs",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
-      "position": [2016, 1392],
-      "parameters": { "aggregate": "aggregateAllItemData", "destinationFieldName": "jobs", "include": "allFields" }
+      "position": [
+        2016,
+        1392
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "include": "allFields"
+      }
     },
     {
       "id": "c8a72873-2762-4a59-a7b1-2e68cd4e1ac2",
       "name": "Split Out Arbeitnow Jobs",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [1568, 1584],
-      "parameters": { "fieldToSplitOut": "data" }
+      "position": [
+        1568,
+        1584
+      ],
+      "parameters": {
+        "fieldToSplitOut": "data"
+      }
     },
     {
       "id": "1f6cdc60-14cd-483d-989e-2a424d182cf7",
       "name": "Filter Arbeitnow Remote Only",
       "type": "n8n-nodes-base.filter",
       "typeVersion": 2.3,
-      "position": [1792, 1584],
+      "position": [
+        1792,
+        1584
+      ],
       "notes": "Arbeitnow's feed is dominated by DACH-region onsite listings — only remote:true rows are relevant to this project's international-remote lane (see docs/PROVIDER_EXPANSION_IMPLEMENTATION.md).",
       "parameters": {
         "conditions": {
-          "options": { "caseSensitive": true, "leftValue": "", "typeValidation": "strict", "version": 2 },
-          "conditions": [{ "leftValue": "={{ $json.remote }}", "operator": { "type": "boolean", "operation": "equals" }, "rightValue": true }],
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "leftValue": "={{ $json.remote }}",
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              },
+              "rightValue": true
+            }
+          ],
           "combinator": "and"
         },
         "options": {}
@@ -489,15 +987,25 @@
       "name": "Aggregate Arbeitnow Jobs",
       "type": "n8n-nodes-base.aggregate",
       "typeVersion": 1,
-      "position": [2016, 1584],
-      "parameters": { "aggregate": "aggregateAllItemData", "destinationFieldName": "jobs", "include": "allFields" }
+      "position": [
+        2016,
+        1584
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "include": "allFields"
+      }
     },
     {
       "id": "737e7914-81dc-45b9-b671-51c9e349eaf4",
       "name": "Call Multi-Company Batch Endpoint",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [2240, 1472],
+      "position": [
+        2240,
+        1472
+      ],
       "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 2,
@@ -511,24 +1019,48 @@
         "contentType": "json",
         "specifyBody": "json",
         "jsonBody": "={{ {\n  sourceType: $('Split Out Multi-Company Sources').item.json.provider_type,\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000
+        }
       },
-      "credentials": { "httpBearerAuth": { "name": "Ingestion Worker Secret" } }
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Ingestion Worker Secret"
+        }
+      }
     },
     {
       "id": "678a88a9-8302-433f-bfca-b4ac4b76f692",
       "name": "Build Multi-Company Success Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2464, 1296],
+      "position": [
+        2464,
+        1296
+      ],
       "parameters": {
         "mode": "manual",
         "includeOtherFields": true,
         "assignments": {
           "assignments": [
-            { "id": "provider_type", "name": "provider_type", "value": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}", "type": "string" },
-            { "id": "succeeded", "name": "succeeded", "value": "={{ $json.outcome === 'succeeded' }}", "type": "boolean" },
-            { "id": "error", "name": "error", "value": null, "type": "string" }
+            {
+              "id": "provider_type",
+              "name": "provider_type",
+              "value": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": "={{ $json.outcome === 'succeeded' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
           ]
         }
       }
@@ -538,15 +1070,33 @@
       "name": "Build Multi-Company Failure Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2464, 1776],
+      "position": [
+        2464,
+        1776
+      ],
       "notes": "Shared failure builder for fetch failures, endpoint-call failures, and an unsupported provider_type (defensive — providerConfig.ts/multiCompanyFeedUrls.ts never actually emit one).",
       "parameters": {
         "mode": "manual",
         "assignments": {
           "assignments": [
-            { "id": "provider_type", "name": "provider_type", "value": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}", "type": "string" },
-            { "id": "succeeded", "name": "succeeded", "value": false, "type": "boolean" },
-            { "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'multi-company batch failed' }}", "type": "string" }
+            {
+              "id": "provider_type",
+              "name": "provider_type",
+              "value": "={{ $('Split Out Multi-Company Sources').item.json.provider_type }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'multi-company batch failed' }}",
+              "type": "string"
+            }
           ]
         }
       }
@@ -556,16 +1106,28 @@
       "name": "Record Multi-Company Source Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2688, 1568],
+      "position": [
+        2688,
+        1568
+      ],
       "notes": "Convergence point for the Tier-D loop, same purpose as Record Source Result above — one execution-history entry per provider per run.",
-      "parameters": { "mode": "manual", "includeOtherFields": true, "assignments": { "assignments": [] } }
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": []
+        }
+      }
     },
     {
       "id": "602f44b9-15cf-4411-a2e6-94322befc2bc",
       "name": "Multi-Company Rate Limit Delay",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [2912, 1680],
+      "position": [
+        2912,
+        1680
+      ],
       "parameters": {
         "resume": "timeInterval",
         "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}",
@@ -577,23 +1139,36 @@
       "name": "Split Out Career Page Candidates",
       "type": "n8n-nodes-base.splitOut",
       "typeVersion": 1,
-      "position": [672, 2432],
-      "parameters": { "fieldToSplitOut": "career_page_candidates" }
+      "position": [
+        672,
+        2432
+      ],
+      "parameters": {
+        "fieldToSplitOut": "career_page_candidates"
+      }
     },
     {
       "id": "ece9a1fd-28ca-4abc-9450-db0c4120bc9e",
       "name": "Loop Career Page Candidates (Rate Limited)",
       "type": "n8n-nodes-base.splitInBatches",
       "typeVersion": 3,
-      "position": [896, 2432],
-      "parameters": { "batchSize": 1 }
+      "position": [
+        896,
+        2432
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
     },
     {
       "id": "76acb9fe-b6d5-4975-960f-c8a04d1b2d9b",
       "name": "Fetch Career Page HTML",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [1120, 2304],
+      "position": [
+        1120,
+        2304
+      ],
       "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 2,
@@ -604,8 +1179,23 @@
         "authentication": "none",
         "sendHeaders": true,
         "specifyHeaders": "keypair",
-        "headerParameters": { "parameters": [{ "name": "User-Agent", "value": "Mozilla/5.0 (compatible; ai-job-agent-ingestion/1.0)" }] },
-        "options": { "timeout": 20000, "response": { "response": { "responseFormat": "text", "outputPropertyName": "html" } } }
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "User-Agent",
+              "value": "Mozilla/5.0 (compatible; ai-job-agent-ingestion/1.0)"
+            }
+          ]
+        },
+        "options": {
+          "timeout": 20000,
+          "response": {
+            "response": {
+              "responseFormat": "text",
+              "outputPropertyName": "html"
+            }
+          }
+        }
       }
     },
     {
@@ -613,7 +1203,10 @@
       "name": "Call Extract Career Page Jobs Endpoint",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [1344, 2208],
+      "position": [
+        1344,
+        2208
+      ],
       "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 2,
@@ -627,16 +1220,25 @@
         "contentType": "json",
         "specifyBody": "json",
         "jsonBody": "={{ { html: $json.html } }}",
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000
+        }
       },
-      "credentials": { "httpBearerAuth": { "name": "Ingestion Worker Secret" } }
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Ingestion Worker Secret"
+        }
+      }
     },
     {
       "id": "486ce5fe-e8bb-419e-afee-61c7d5d5f837",
       "name": "Call Career Page Ingestion Batch Endpoint",
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.4,
-      "position": [1568, 2128],
+      "position": [
+        1568,
+        2128
+      ],
       "notes": "Same shared run-batch endpoint Tier A calls — career_page is a company-specific source_type (jobs.source_type check constraint already allowed it before Phase 13).",
       "onError": "continueErrorOutput",
       "retryOnFail": true,
@@ -651,24 +1253,48 @@
         "contentType": "json",
         "specifyBody": "json",
         "jsonBody": "={{ {\n  sourceId: $('Split Out Career Page Candidates').item.json.source_id,\n  sourceType: 'career_page',\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
-        "options": { "timeout": 30000 }
+        "options": {
+          "timeout": 30000
+        }
       },
-      "credentials": { "httpBearerAuth": { "name": "Ingestion Worker Secret" } }
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Ingestion Worker Secret"
+        }
+      }
     },
     {
       "id": "d4561f32-8221-4b25-b3bb-c23dd789db32",
       "name": "Build Career Page Success Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1792, 2080],
+      "position": [
+        1792,
+        2080
+      ],
       "parameters": {
         "mode": "manual",
         "includeOtherFields": true,
         "assignments": {
           "assignments": [
-            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Career Page Candidates').item.json.source_id }}", "type": "string" },
-            { "id": "succeeded", "name": "succeeded", "value": "={{ $json.outcome === 'succeeded' || $json.outcome === 'no_valid_jobs' }}", "type": "boolean" },
-            { "id": "error", "name": "error", "value": null, "type": "string" }
+            {
+              "id": "source_id",
+              "name": "source_id",
+              "value": "={{ $('Split Out Career Page Candidates').item.json.source_id }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": "={{ $json.outcome === 'succeeded' || $json.outcome === 'no_valid_jobs' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
           ]
         }
       }
@@ -678,15 +1304,33 @@
       "name": "Build Career Page Failure Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [1792, 2368],
+      "position": [
+        1792,
+        2368
+      ],
       "notes": "Shared failure builder for HTML-fetch failures, extraction-endpoint failures, and ingestion-batch-endpoint failures.",
       "parameters": {
         "mode": "manual",
         "assignments": {
           "assignments": [
-            { "id": "source_id", "name": "source_id", "value": "={{ $('Split Out Career Page Candidates').item.json.source_id }}", "type": "string" },
-            { "id": "succeeded", "name": "succeeded", "value": false, "type": "boolean" },
-            { "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'career page ingestion failed' }}", "type": "string" }
+            {
+              "id": "source_id",
+              "name": "source_id",
+              "value": "={{ $('Split Out Career Page Candidates').item.json.source_id }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'career page ingestion failed' }}",
+              "type": "string"
+            }
           ]
         }
       }
@@ -696,16 +1340,28 @@
       "name": "Record Career Page Source Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
-      "position": [2016, 2272],
+      "position": [
+        2016,
+        2272
+      ],
       "notes": "Convergence point for the Tier-B loop, same purpose as Record Source Result above.",
-      "parameters": { "mode": "manual", "includeOtherFields": true, "assignments": { "assignments": [] } }
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": []
+        }
+      }
     },
     {
       "id": "8d438ba7-ec72-4e6c-9103-d8b4b3a863bf",
       "name": "Career Page Rate Limit Delay",
       "type": "n8n-nodes-base.wait",
       "typeVersion": 1.1,
-      "position": [2240, 2432],
+      "position": [
+        2240,
+        2432
+      ],
       "parameters": {
         "resume": "timeInterval",
         "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}",
@@ -717,7 +1373,10 @@
       "name": "Sticky Note 1d6c1cae",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [416, -48],
+      "position": [
+        416,
+        -48
+      ],
       "parameters": {
         "content": "### AI Job Agent / 01 Job Ingestion\nManual trigger, stays inactive until a human reviews a `local_pilot`-equivalent run (dryRun:false) and decides on a schedule. n8n owns provider HTTP calls + retry/backoff (native `retryOnFail`) + per-source rate limiting; ALL validation, field mapping, dedup identity, idempotent persistence, and stale-close safety live in src/lib/ingestion/* (Phase 03) behind three internal endpoints (run-batch, run-multi-company-batch, extract-career-page-jobs), which also re-verify authorization live on every call — n8n never needs Supabase access for this workflow at all.\n\nNo combined execution-summary node: n8n's cross-loop-iteration item linking does not reliably expose every iteration's result to a single downstream node once a loop's done output fires (confirmed by direct testing — `.all()` from that branch only resolved the last iteration). Each source/provider's real outcome is fully visible per-iteration in each tier's own Record *Result node execution history in the n8n UI, sufficient for this manually-reviewed, inactive workflow. Revisit if this is ever scheduled unattended and a single rollup notification becomes necessary.",
         "color": 4,
@@ -730,7 +1389,10 @@
       "name": "Sticky Note 8c4d4722",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [-112, -16],
+      "position": [
+        -112,
+        -16
+      ],
       "parameters": {
         "content": "### Dynamic source discovery (Phase 12) + three-tier orchestration (Phase 13)\nOne POST /api/internal/ingestion/list-sources call now returns three independent arrays this workflow fans out to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby/Oracle Cloud Recruiting — findEligibleCompanySources.ts), (2) Tier-D enabled multi-company feeds (RemoteOK/Jobicy/Arbeitnow — multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates (findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on a shared endpoint per tier — no provider-specific matching/eligibility logic anywhere downstream of ingestion. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider, and why JSearch/Adzuna/Bayt/GulfTalent remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL or BLOCKED_ON_AUTHORIZATION, not implemented as a no-op here.",
         "color": 6,
@@ -743,7 +1405,10 @@
       "name": "Sticky Note Tier D Multi-Company",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [672, 1000],
+      "position": [
+        672,
+        1000
+      ],
       "parameters": {
         "content": "### Tier D: multi-company feeds (Phase 13)\nRemoteOK/Jobicy/Arbeitnow are live, free, public APIs — no credential required. Each branch normalizes its own raw response shape (RemoteOK: auto-split top-level array; Jobicy/Arbeitnow: Split Out + Aggregate their nested array field) down to one common {jobs:[...]} shape before converging on Call Multi-Company Batch Endpoint, mirroring how Tier A above converges on Call Ingestion Batch Endpoint. First page only — see Fetch Multi-Company Feed's own note for why native pagination was skipped this phase.",
         "color": 5,
@@ -756,147 +1421,1018 @@
       "name": "Sticky Note Tier B Career Page",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
-      "position": [672, 2680],
+      "position": [
+        672,
+        2680
+      ],
       "parameters": {
         "content": "### Tier B: career-page extraction (Phase 13)\nFetches a real company_sources.official_careers_url and extracts schema.org JobPosting JSON-LD (extractCareerPageJobPostings.ts) — no headless browser, no Apify, no arbitrary scraping. Honest finding this phase: 0 of 11 sampled real candidates (Byblos Bank, touch Lebanon, Caritas Lebanon, Lebanese Red Cross, KPMG, Anghami, Whish Money, Mercy Corps, Deloitte, EY, Bank Audi) emit this markup on their recorded official_careers_url — that URL is almost always a landing/overview page, while JobPosting markup typically lives on an individual job's own detail page. The pipeline is real and live-tested end-to-end (fetch + extract against a real page returns an honest 0, not an error) and will start yielding jobs automatically, with zero code changes, the moment any candidate page — or a future per-job-detail-page discovery step — actually emits this markup. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md.",
         "color": 7,
         "width": 380,
         "height": 300
       }
+    },
+    {
+      "id": "ab329f9e-453f-485b-b8a6-0d187e6d6f4f",
+      "name": "Apify Multi-Company Source Seeds",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        3200
+      ],
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25}},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15}},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15}},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15}}]}",
+        "options": {}
+      },
+      "notes": "Phase 21. Static seed list — Bayt/GulfTalent/Indeed are Apify actor calls, not simple GET feed URLs, so they cannot go through the dynamic getEnabledMultiCompanyFeedSources() discovery buildFeedUrl() uses for RemoteOK/Jobicy/Arbeitnow. Bounded to the real markets live-benchmarked this phase (Bayt: Lebanon; GulfTalent: Saudi Arabia + UAE/Dubai; Indeed: UAE/Dubai only — Indeed and GulfTalent both real-confirmed to have no Lebanon country option). Qatar/Kuwait not yet included — add once benchmarked."
+    },
+    {
+      "id": "cfb8970f-8a1d-45e2-a4e1-479054ff7028",
+      "name": "Split Out Apify Sources",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        896,
+        3200
+      ],
+      "parameters": {
+        "fieldToSplitOut": "apify_sources",
+        "options": {}
+      }
+    },
+    {
+      "id": "d0094670-257b-4e7e-ac68-ba47982bebc8",
+      "name": "Loop Apify Sources (Rate Limited)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        3200
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "a64e8a85-88c4-4900-9b60-940d43d274db",
+      "name": "Call Apify Actor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        3072
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.actor_url }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.request_body }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "notes": "Phase 21. Credential 'AI Job Guide - Apify' (httpHeaderAuth) must be bound manually in the n8n UI — programmatic credential binding for generic-auth types on this node is a confirmed n8n MCP tool limitation, reported separately.",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "AI Job Guide - Apify"
+        }
+      }
+    },
+    {
+      "id": "b983ed05-f7f4-4739-be96-715cd05d3b4f",
+      "name": "Aggregate Apify Jobs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1568,
+        3072
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "options": {}
+      },
+      "notes": "Apify's run-sync-get-dataset-items returns a bare top-level array, same as Lever — n8n auto-splits it into one item per job, so this re-aggregates back into one {jobs:[...]} item before the batch endpoint call (mirrors Aggregate Lever Jobs / Aggregate RemoteOK Jobs)."
+    },
+    {
+      "id": "d5a5cbb2-7ab2-47a9-850d-93cb511c343d",
+      "name": "Call Apify Batch Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        3072
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  sourceType: $('Split Out Apify Sources').item.json.provider_type,\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "notes": "Same shared batch endpoint the Tier D branch uses — a separate node (not reused directly) because its sourceType expression must resolve $('Split Out Apify Sources'), a different ancestor than the Tier D branch's $('Split Out Multi-Company Sources').",
+      "credentials": {
+        "httpBearerAuth": {
+          "name": "Ingestion Worker Secret"
+        }
+      }
+    },
+    {
+      "id": "ddd8b84a-bd06-4d6e-a1c8-03998e1a3689",
+      "name": "Build Apify Success Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        3008
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "provider_type",
+              "name": "provider_type",
+              "value": "={{ $('Split Out Apify Sources').item.json.provider_type }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": "={{ $json.outcome === 'succeeded' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "479dc358-05a7-403f-9ab6-57b34f955569",
+      "name": "Build Apify Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        3200
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "provider_type",
+              "name": "provider_type",
+              "value": "={{ $('Split Out Apify Sources').item.json.provider_type }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'apify actor or batch call failed' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      }
+    },
+    {
+      "id": "d96d9995-afb7-46f5-b131-d34ea3b75744",
+      "name": "Record Apify Source Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2240,
+        3104
+      ],
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "721884a7-4932-426c-8734-80da3072fb84",
+      "name": "Apify Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2464,
+        3104
+      ],
+      "parameters": {
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
+      }
     }
   ],
   "connections": {
-    "Start Job Ingestion Run": { "main": [[{ "node": "Workflow Configuration", "type": "main", "index": 0 }]] },
-    "Workflow Configuration": { "main": [[{ "node": "List Ingestion Sources", "type": "main", "index": 0 }]] },
+    "Start Job Ingestion Run": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Workflow Configuration": {
+      "main": [
+        [
+          {
+            "node": "List Ingestion Sources",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Apify Multi-Company Source Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "List Ingestion Sources": {
       "main": [
         [
-          { "node": "Split Out Sources", "type": "main", "index": 0 },
-          { "node": "Split Out Multi-Company Sources", "type": "main", "index": 0 },
-          { "node": "Split Out Career Page Candidates", "type": "main", "index": 0 }
+          {
+            "node": "Split Out Sources",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out Multi-Company Sources",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Split Out Career Page Candidates",
+            "type": "main",
+            "index": 0
+          }
         ],
-        [{ "node": "Log List Sources Failure", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Log List Sources Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Split Out Sources": { "main": [[{ "node": "Loop Sources (Rate Limited)", "type": "main", "index": 0 }]] },
-    "Loop Sources (Rate Limited)": { "main": [[], [{ "node": "Fetch Source Jobs", "type": "main", "index": 0 }]] },
+    "Split Out Sources": {
+      "main": [
+        [
+          {
+            "node": "Loop Sources (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Sources (Rate Limited)": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Fetch Source Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Fetch Source Jobs": {
       "main": [
-        [{ "node": "Extract Jobs By ATS Type", "type": "main", "index": 0 }],
-        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Extract Jobs By ATS Type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Fetch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Extract Jobs By ATS Type": {
       "main": [
-        [{ "node": "Extract Greenhouse Jobs", "type": "main", "index": 0 }],
-        [{ "node": "Aggregate Lever Jobs", "type": "main", "index": 0 }],
-        [{ "node": "Extract Workable Jobs", "type": "main", "index": 0 }],
-        [{ "node": "Extract Ashby Jobs", "type": "main", "index": 0 }],
-        [{ "node": "Extract Oracle HCM Jobs", "type": "main", "index": 0 }],
-        [{ "node": "Build Unsupported Source Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Extract Greenhouse Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Aggregate Lever Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Workable Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Ashby Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Extract Oracle HCM Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Unsupported Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Extract Oracle HCM Jobs": {
       "main": [
-        [{ "node": "Call Ingestion Batch Endpoint", "type": "main", "index": 0 }],
-        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Call Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Fetch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Aggregate Lever Jobs": { "main": [[{ "node": "Extract Lever Jobs", "type": "main", "index": 0 }]] },
+    "Aggregate Lever Jobs": {
+      "main": [
+        [
+          {
+            "node": "Extract Lever Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Extract Greenhouse Jobs": {
       "main": [
-        [{ "node": "Call Ingestion Batch Endpoint", "type": "main", "index": 0 }],
-        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Call Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Fetch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Extract Lever Jobs": {
       "main": [
-        [{ "node": "Call Ingestion Batch Endpoint", "type": "main", "index": 0 }],
-        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Call Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Fetch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Extract Workable Jobs": {
       "main": [
-        [{ "node": "Call Ingestion Batch Endpoint", "type": "main", "index": 0 }],
-        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Call Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Fetch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Extract Ashby Jobs": {
       "main": [
-        [{ "node": "Call Ingestion Batch Endpoint", "type": "main", "index": 0 }],
-        [{ "node": "Build Fetch Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Call Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Fetch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Call Ingestion Batch Endpoint": {
       "main": [
-        [{ "node": "Build Success Result", "type": "main", "index": 0 }],
-        [{ "node": "Build Endpoint Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Build Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Endpoint Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Build Success Result": { "main": [[{ "node": "Record Source Result", "type": "main", "index": 0 }]] },
-    "Build Endpoint Failure Result": { "main": [[{ "node": "Record Source Result", "type": "main", "index": 0 }]] },
-    "Build Unsupported Source Result": { "main": [[{ "node": "Record Source Result", "type": "main", "index": 0 }]] },
-    "Build Fetch Failure Result": { "main": [[{ "node": "Record Source Result", "type": "main", "index": 0 }]] },
-    "Record Source Result": { "main": [[{ "node": "Rate Limit Delay", "type": "main", "index": 0 }]] },
-    "Rate Limit Delay": { "main": [[{ "node": "Loop Sources (Rate Limited)", "type": "main", "index": 0 }]] },
-
-    "Split Out Multi-Company Sources": { "main": [[{ "node": "Loop Multi-Company Sources (Rate Limited)", "type": "main", "index": 0 }]] },
-    "Loop Multi-Company Sources (Rate Limited)": { "main": [[], [{ "node": "Fetch Multi-Company Feed", "type": "main", "index": 0 }]] },
+    "Build Success Result": {
+      "main": [
+        [
+          {
+            "node": "Record Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Endpoint Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Unsupported Source Result": {
+      "main": [
+        [
+          {
+            "node": "Record Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Fetch Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Source Result": {
+      "main": [
+        [
+          {
+            "node": "Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Loop Sources (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Multi-Company Sources": {
+      "main": [
+        [
+          {
+            "node": "Loop Multi-Company Sources (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Multi-Company Sources (Rate Limited)": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Fetch Multi-Company Feed",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Fetch Multi-Company Feed": {
       "main": [
-        [{ "node": "Extract Raw Jobs By Provider Type", "type": "main", "index": 0 }],
-        [{ "node": "Build Multi-Company Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Extract Raw Jobs By Provider Type",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Multi-Company Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Extract Raw Jobs By Provider Type": {
       "main": [
-        [{ "node": "Aggregate RemoteOK Jobs", "type": "main", "index": 0 }],
-        [{ "node": "Split Out Jobicy Jobs", "type": "main", "index": 0 }],
-        [{ "node": "Split Out Arbeitnow Jobs", "type": "main", "index": 0 }],
-        [{ "node": "Build Multi-Company Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Aggregate RemoteOK Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out Jobicy Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Split Out Arbeitnow Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Multi-Company Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Aggregate RemoteOK Jobs": { "main": [[{ "node": "Call Multi-Company Batch Endpoint", "type": "main", "index": 0 }]] },
-    "Split Out Jobicy Jobs": { "main": [[{ "node": "Aggregate Jobicy Jobs", "type": "main", "index": 0 }]] },
-    "Aggregate Jobicy Jobs": { "main": [[{ "node": "Call Multi-Company Batch Endpoint", "type": "main", "index": 0 }]] },
-    "Split Out Arbeitnow Jobs": { "main": [[{ "node": "Filter Arbeitnow Remote Only", "type": "main", "index": 0 }]] },
-    "Filter Arbeitnow Remote Only": { "main": [[{ "node": "Aggregate Arbeitnow Jobs", "type": "main", "index": 0 }]] },
-    "Aggregate Arbeitnow Jobs": { "main": [[{ "node": "Call Multi-Company Batch Endpoint", "type": "main", "index": 0 }]] },
+    "Aggregate RemoteOK Jobs": {
+      "main": [
+        [
+          {
+            "node": "Call Multi-Company Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Jobicy Jobs": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Jobicy Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Jobicy Jobs": {
+      "main": [
+        [
+          {
+            "node": "Call Multi-Company Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Arbeitnow Jobs": {
+      "main": [
+        [
+          {
+            "node": "Filter Arbeitnow Remote Only",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Arbeitnow Remote Only": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Arbeitnow Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Arbeitnow Jobs": {
+      "main": [
+        [
+          {
+            "node": "Call Multi-Company Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Call Multi-Company Batch Endpoint": {
       "main": [
-        [{ "node": "Build Multi-Company Success Result", "type": "main", "index": 0 }],
-        [{ "node": "Build Multi-Company Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Build Multi-Company Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Multi-Company Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Build Multi-Company Success Result": { "main": [[{ "node": "Record Multi-Company Source Result", "type": "main", "index": 0 }]] },
-    "Build Multi-Company Failure Result": { "main": [[{ "node": "Record Multi-Company Source Result", "type": "main", "index": 0 }]] },
-    "Record Multi-Company Source Result": { "main": [[{ "node": "Multi-Company Rate Limit Delay", "type": "main", "index": 0 }]] },
-    "Multi-Company Rate Limit Delay": { "main": [[{ "node": "Loop Multi-Company Sources (Rate Limited)", "type": "main", "index": 0 }]] },
-
-    "Split Out Career Page Candidates": { "main": [[{ "node": "Loop Career Page Candidates (Rate Limited)", "type": "main", "index": 0 }]] },
-    "Loop Career Page Candidates (Rate Limited)": { "main": [[], [{ "node": "Fetch Career Page HTML", "type": "main", "index": 0 }]] },
+    "Build Multi-Company Success Result": {
+      "main": [
+        [
+          {
+            "node": "Record Multi-Company Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Multi-Company Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record Multi-Company Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Multi-Company Source Result": {
+      "main": [
+        [
+          {
+            "node": "Multi-Company Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Multi-Company Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Loop Multi-Company Sources (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Career Page Candidates": {
+      "main": [
+        [
+          {
+            "node": "Loop Career Page Candidates (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Career Page Candidates (Rate Limited)": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Fetch Career Page HTML",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
     "Fetch Career Page HTML": {
       "main": [
-        [{ "node": "Call Extract Career Page Jobs Endpoint", "type": "main", "index": 0 }],
-        [{ "node": "Build Career Page Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Call Extract Career Page Jobs Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Career Page Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Call Extract Career Page Jobs Endpoint": {
       "main": [
-        [{ "node": "Call Career Page Ingestion Batch Endpoint", "type": "main", "index": 0 }],
-        [{ "node": "Build Career Page Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Call Career Page Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Career Page Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
     "Call Career Page Ingestion Batch Endpoint": {
       "main": [
-        [{ "node": "Build Career Page Success Result", "type": "main", "index": 0 }],
-        [{ "node": "Build Career Page Failure Result", "type": "main", "index": 0 }]
+        [
+          {
+            "node": "Build Career Page Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Career Page Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
       ]
     },
-    "Build Career Page Success Result": { "main": [[{ "node": "Record Career Page Source Result", "type": "main", "index": 0 }]] },
-    "Build Career Page Failure Result": { "main": [[{ "node": "Record Career Page Source Result", "type": "main", "index": 0 }]] },
-    "Record Career Page Source Result": { "main": [[{ "node": "Career Page Rate Limit Delay", "type": "main", "index": 0 }]] },
-    "Career Page Rate Limit Delay": { "main": [[{ "node": "Loop Career Page Candidates (Rate Limited)", "type": "main", "index": 0 }]] }
+    "Build Career Page Success Result": {
+      "main": [
+        [
+          {
+            "node": "Record Career Page Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Career Page Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record Career Page Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Career Page Source Result": {
+      "main": [
+        [
+          {
+            "node": "Career Page Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Career Page Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Loop Career Page Candidates (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Multi-Company Source Seeds": {
+      "main": [
+        [
+          {
+            "node": "Split Out Apify Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out Apify Sources": {
+      "main": [
+        [
+          {
+            "node": "Loop Apify Sources (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop Apify Sources (Rate Limited)": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Call Apify Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Apify Actor": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Apify Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Apify Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Apify Jobs": {
+      "main": [
+        [
+          {
+            "node": "Call Apify Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Apify Batch Endpoint": {
+      "main": [
+        [
+          {
+            "node": "Build Apify Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Apify Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Apify Success Result": {
+      "main": [
+        [
+          {
+            "node": "Record Apify Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Apify Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record Apify Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record Apify Source Result": {
+      "main": [
+        [
+          {
+            "node": "Apify Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Apify Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Loop Apify Sources (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
   },
   "settings": {
     "executionOrder": "v1"
