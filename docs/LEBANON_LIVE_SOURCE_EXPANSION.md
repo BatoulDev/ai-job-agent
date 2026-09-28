@@ -270,12 +270,14 @@ office/onsite roles that never state "onsite" explicitly** — the
 pipeline correctly refuses to guess rather than silently admitting
 wrong data.
 
-**Recommended for the founder's decision, not implemented here**:
-whether to treat "no remote signal, from a provider whose postings are
-known to be overwhelmingly onsite roles" as a deliberate, documented
-`onsite` default specifically for Bayt/GulfTalent/Indeed — a real
-product/business decision, not a code-correctness question, and
-explicitly out of scope for this phase to decide unilaterally.
+**RESOLVED (Phase 21 follow-up)**: the founder decision was made —
+missing work-arrangement metadata alone must never reject an otherwise
+eligible job. Implemented in `checkJobEligibility.ts` with an explicit
+match/conflict/unknown model (never inferring onsite/hybrid/remote from
+location). Full rule, rationale, and implementation pointers now live in
+`docs/PRODUCT_MATCHING_RULES.md` "Work arrangement" — the durable,
+central reference going forward; this section stays as the original
+evidence record.
 
 ---
 
@@ -410,7 +412,8 @@ the 53 real Bayt/GulfTalent/Indeed jobs ingested this phase.
   real bounding parameter name via a free schema fetch before any paid
   call, not just for the well-established Bayt/GulfTalent/Indeed
   actors. Apply this to every new actor family, not only new providers.
-- **Work-arrangement inference** (§5) — the single most impactful
+- ~~**Work-arrangement inference** (§5)~~ — **RESOLVED**, see the founder decision note in §5 and `docs/PRODUCT_MATCHING_RULES.md`.
+- **Work-arrangement inference** (§5, historical) — the single most impactful
   remaining gap: 50/53 real jobs ineligible for any plan due to
   `work_arrangement_unknown`. Needs a founder decision, not more code.
 - Qatar and Kuwait not yet live-benchmarked for GulfTalent/Indeed (only

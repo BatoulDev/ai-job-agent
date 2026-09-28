@@ -237,9 +237,15 @@ export async function insertFakeAnalysis(user, cvId, overrides = {}) {
     if (prefsRow) {
       preferencesVersion = prefsRow.version;
     } else {
+      // work_arrangement defaults to null (no stated preference), not an
+      // opinionated value — since the Phase 21 follow-up founder decision,
+      // a non-null value here now has a real effect (match/conflict
+      // against fixture jobs' own work_arrangement), so an arbitrary
+      // default would silently make unrelated fixtures conflict. Tests
+      // that specifically want a preference set it explicitly.
       const { data: created, error: createError } = await adminClient
         .from("job_preferences")
-        .insert({ user_id: user.id, work_arrangement: "remote", job_type: "full-time", experience_level: "entry-level" })
+        .insert({ user_id: user.id, work_arrangement: null, job_type: "full-time", experience_level: "entry-level" })
         .select("version")
         .single();
       if (createError) fail(`Failed to create default job_preferences for ${user.email}: ${createError.message}`);

@@ -3,8 +3,13 @@
 import { useState } from "react";
 import type { MatchWithJob } from "@/lib/matches/types";
 
+// A match only ever reaches this card if it passed hard eligibility, so an
+// unknown work arrangement here was never a mismatch — the employer/source
+// just didn't state it. Say so plainly rather than silently omitting it
+// (founder decision, docs/PRODUCT_MATCHING_RULES.md "Work arrangement").
 function formatMeta(job: MatchWithJob["job"]) {
-  return [job.location, job.workArrangement, job.employmentType].filter(Boolean).join(" · ");
+  const workArrangement = job.workArrangement ?? "Work arrangement not specified";
+  return [job.location, workArrangement, job.employmentType].filter(Boolean).join(" · ");
 }
 
 export default function MatchCard({
