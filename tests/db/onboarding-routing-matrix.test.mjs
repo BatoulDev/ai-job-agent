@@ -87,7 +87,6 @@ describe("State C — active CV and complete preferences (every analysis state)"
 
     const { error } = await user.client.rpc("save_job_preferences", {
       p_work_arrangement: "remote",
-      p_job_market_coverage: null,
       p_job_type: "full-time",
       p_experience_level: "junior",
       p_additional_notes: null,

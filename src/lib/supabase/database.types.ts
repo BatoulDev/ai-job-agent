@@ -2784,7 +2784,6 @@ export type Database = {
           p_custom_target_roles: string[]
           p_experience_level: string
           p_international_search_enabled?: boolean
-          p_job_market_coverage: string
           p_job_type: string
           p_lebanon_location_scope?: string
           p_location_ids: string[]

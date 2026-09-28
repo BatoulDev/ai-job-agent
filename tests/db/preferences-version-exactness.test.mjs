@@ -46,7 +46,6 @@ after(async () => {
 async function savePrefs(overrides = {}) {
   const defaults = {
     p_work_arrangement: "remote",
-    p_job_market_coverage: null,
     p_job_type: "full-time",
     p_experience_level: "junior",
     p_additional_notes: null,

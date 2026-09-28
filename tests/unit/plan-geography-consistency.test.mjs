@@ -1,22 +1,21 @@
-// Phase 18: backend/frontend plan-geography consistency audit. Pure
-// source-inspection tests (no component render harness exists in this
-// project's test conventions — mirrors the same static-assertion pattern
-// already used by tests/workflow/*.test.mjs for cross-file consistency
-// checks) plus direct calls into the real, unmodified checkJobEligibility.
+// Phase 18 found (docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md): the backend
+// fully supported job_market_coverage's 'remote_mena'/'remote_worldwide'
+// tiers, but no frontend UI control ever set it to anything but null —
+// src/app/onboarding/preferences/page.tsx hardcoded
+// `p_job_market_coverage: null` on every save, for every plan, making the
+// tiers dead code in production.
 //
-// Real finding this phase, not fixed (audit-only mandate — see
-// docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md): the backend
-// (save_job_preferences RPC, 20260902090010_plan_aware_job_preferences.sql)
-// fully supports job_market_coverage's 'remote_mena'/'remote_worldwide'
-// tiers, and checkJobEligibility.ts's own tests
-// (tests/unit/check-job-eligibility.test.mjs) prove those tiers work
-// correctly in isolation — but NO frontend UI control exists anywhere in
-// this codebase to actually set job_market_coverage to anything but null.
-// src/app/onboarding/preferences/page.tsx hardcodes
-// `p_job_market_coverage: null` on every save, for every plan. This test
-// pins that real, current fact so a future change to it (adding a UI
-// control, or accidentally removing the hardcode) is a deliberate,
-// reviewed diff — not a silent behavior change either way.
+// Resolved (job_market_coverage server-side derivation task,
+// supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql):
+// job_market_coverage is no longer a client parameter at all — the
+// onboarding page never sends it, and save_job_preferences derives it
+// server-side from international_search_enabled + work_arrangement
+// (remote_worldwide when international is enabled and work_arrangement is
+// remote/flexible, else null). See tests/db/international-job-preferences.test.mjs
+// for the real RPC-level derivation tests and
+// tests/e2e/preferences-job-market-coverage.spec.ts for the real browser
+// -> RPC -> DB proof. This file keeps the original audit's static-assertion
+// pattern to pin the resolved state the same way it pinned the bug.
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
 import { readFileSync } from "node:fs";
@@ -27,32 +26,27 @@ import { checkJobEligibility } from "../../src/lib/ingestion/checkJobEligibility
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const repoRoot = join(__dirname, "..", "..");
 
-describe("Phase 18 — job_market_coverage is backend-complete but frontend-unreachable (real, current, not yet fixed)", () => {
-  test("onboarding/preferences page hardcodes p_job_market_coverage: null on every save — no UI control sets it to anything else", () => {
+describe("Phase 18 job_market_coverage gap — resolved by server-side derivation", () => {
+  test("onboarding/preferences page no longer sends a p_job_market_coverage argument — the server derives it, the client only sends intent", () => {
     const source = readFileSync(join(repoRoot, "src/app/onboarding/preferences/page.tsx"), "utf8");
-    assert.match(
+    assert.doesNotMatch(
       source,
-      /p_job_market_coverage:\s*null,/,
-      "if this assertion fails because a real job_market_coverage UI control was added, update docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md's finding and this test together — do not just delete the assertion"
+      /p_job_market_coverage/,
+      "if this assertion fails because job_market_coverage was reintroduced as a client parameter, that reopens the exact client-supplied-entitlement bug this fix closed — derive it server-side instead"
     );
   });
 
-  test("consequence, proven against the real unmodified checkJobEligibility: a Pro user with international search enabled cannot actually reach the remote_mena/remote_worldwide tiers today, because job_market_coverage is always saved as null", () => {
-    // The exact real default the RPC call above always saves + the exact
-    // real default checkJobEligibility documents for a null coverage value
-    // (see checkJobEligibility.ts's own JobEligibilityInput.jobMarketCoverage
-    // doc comment: "treats it the same as remote_lebanon_applicants").
+  test("consequence, proven against the real unmodified checkJobEligibility: a Pro user with international search enabled and the derived remote_worldwide coverage CAN reach a worldwide-scoped remote job outside Lebanon", () => {
     const usOnlyRemoteJob = { countryCode: "US", workArrangement: "remote", remoteScope: "country:US", locationConfidence: "high" };
     const result = checkJobEligibility({
       job: usOnlyRemoteJob,
       planCode: "pro",
-      jobMarketCoverage: null, // what the real onboarding page always sends
-      internationalSearchEnabled: true, // the real Pro-only toggle, ON
+      jobMarketCoverage: "remote_worldwide", // what save_job_preferences now derives for this exact combination
+      internationalSearchEnabled: true,
       willingToRelocate: false,
       relocationMarketCountryCodes: [],
     });
-    assert.equal(result.eligible, false, "a Pro user with international search ON still cannot see a non-Lebanon-scoped remote job today — the remote_mena/remote_worldwide tiers are dead code in production until a UI control exists");
-    assert.equal(result.reason, "remote_scope_excludes_lebanon");
+    assert.equal(result.eligible, true, "a Pro user with international search ON and the now-correctly-derived remote_worldwide coverage can see a non-Lebanon-scoped remote job — the tiers are no longer dead code");
   });
 
   test("what Pro's international-search toggle DOES deliver today: Lebanon-inclusive remote jobs (available to every plan, not actually gated by the toggle) and onsite/hybrid Gulf relocation (genuinely plan-gated and working)", () => {

@@ -507,7 +507,6 @@ describe("CV replacement always results in a scheduled analysis (no silent skip)
 
     const prefsErr = await userA.client.rpc("save_job_preferences", {
       p_work_arrangement: "remote",
-      p_job_market_coverage: null,
       p_job_type: "full-time",
       p_experience_level: "junior",
       p_additional_notes: null,
@@ -568,7 +567,6 @@ describe("CV replacement always results in a scheduled analysis (no silent skip)
 
     const { error: prefsErr } = await userA.client.rpc("save_job_preferences", {
       p_work_arrangement: "remote",
-      p_job_market_coverage: null,
       p_job_type: "full-time",
       p_experience_level: "junior",
       p_additional_notes: "Rapid-sequence test note.",
@@ -1055,7 +1053,6 @@ describe("Feedback-category quota (5 per rolling hour, shared bucket)", () => {
     // is a genuine, detectable change.
     const anchorErr = await userA.client.rpc("save_job_preferences", {
       p_work_arrangement: "remote",
-      p_job_market_coverage: null,
       p_job_type: "full-time",
       p_experience_level: "junior",
       p_additional_notes: null,
@@ -1075,7 +1072,6 @@ describe("Feedback-category quota (5 per rolling hour, shared bucket)", () => {
 
     const { error: prefsErr } = await userA.client.rpc("save_job_preferences", {
       p_work_arrangement: "remote",
-      p_job_market_coverage: null,
       p_job_type: "internship",
       p_experience_level: "junior",
       p_additional_notes: null,

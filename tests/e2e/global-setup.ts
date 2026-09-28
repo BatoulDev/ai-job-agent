@@ -20,9 +20,13 @@ const SUPABASE_URL = process.env.NEXT_PUBLIC_SUPABASE_URL!;
 const ANON_KEY = process.env.NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY!;
 const SERVICE_ROLE_KEY = process.env.SUPABASE_SECRET_KEY!;
 const FIXTURE_PATH = resolve(__dirname, ".fixture.json");
+const JMC_FIXTURE_PATH = resolve(__dirname, ".fixture-job-market-coverage.json");
 
 const EMAIL = "e2e-dashboard-flows@test.local";
 const PASSWORD = "E2eDashboardFlows123!";
+
+const JMC_EMAIL = "e2e-job-market-coverage@test.local";
+const JMC_PASSWORD = "E2eJobMarketCoverage123!";
 
 export default async function globalSetup() {
   if (!SUPABASE_URL || !ANON_KEY || !SERVICE_ROLE_KEY) {
@@ -195,4 +199,47 @@ export default async function globalSetup() {
     jobReadyForEmailAppTitle: jobReadyForEmailApp.title,
   };
   writeFileSync(FIXTURE_PATH, JSON.stringify(fixture, null, 2));
+
+  await seedJobMarketCoverageFixture();
+}
+
+// Seeds one Pro fixture user for the job_market_coverage E2E spec. Profile
+// (university/major) is pre-seeded so /onboarding/preferences loads past
+// its combobox-gated fields; job_preferences is deliberately NOT
+// pre-seeded — the spec drives the real onboarding form to prove the real
+// UI -> RPC -> DB path for job_market_coverage. Creates its own admin
+// client rather than taking globalSetup's as a parameter — ReturnType<typeof
+// createClient> loses the call-site-inferred schema typing and produces
+// spurious `never`-typed table-argument errors under tsc.
+async function seedJobMarketCoverageFixture() {
+  const admin = createClient(SUPABASE_URL, SERVICE_ROLE_KEY, { auth: { persistSession: false } });
+
+  const { data: list } = await admin.auth.admin.listUsers();
+  const existing = list.users.find((u) => u.email === JMC_EMAIL);
+  if (existing) await admin.auth.admin.deleteUser(existing.id);
+
+  const { data: created, error: createError } = await admin.auth.admin.createUser({
+    email: JMC_EMAIL,
+    password: JMC_PASSWORD,
+    email_confirm: true,
+  });
+  if (createError) throw new Error(`create JMC user: ${createError.message}`);
+  const userId = created.user.id;
+
+  const { error: planError } = await admin
+    .from("subscriptions")
+    .update({ plan_code: "pro", status: "active", provider: "whish", current_period_end: new Date(Date.now() + 86400000).toISOString() })
+    .eq("user_id", userId);
+  if (planError) throw new Error(`JMC subscriptions: ${planError.message}`);
+
+  const { data: uni, error: uniError } = await admin.from("universities").select("slug").eq("is_active", true).limit(1).single();
+  if (uniError) throw new Error(`JMC universities: ${uniError.message}`);
+  const { data: major, error: majorError } = await admin.from("majors").select("slug").eq("is_active", true).limit(1).single();
+  if (majorError) throw new Error(`JMC majors: ${majorError.message}`);
+
+  const { error: profileError } = await admin.from("profiles").update({ university_id: uni.slug, major_id: major.slug }).eq("id", userId);
+  if (profileError) throw new Error(`JMC profiles: ${profileError.message}`);
+
+  const fixture = { email: JMC_EMAIL, password: JMC_PASSWORD, userId };
+  writeFileSync(JMC_FIXTURE_PATH, JSON.stringify(fixture, null, 2));
 }
