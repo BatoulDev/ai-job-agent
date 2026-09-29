@@ -65,3 +65,65 @@ describe("Phase 18 job_market_coverage gap — resolved by server-side derivatio
     assert.equal(proRelocation.eligible, true, "Gulf relocation (onsite/hybrid) IS a real, working, Pro-exclusive differentiator — unaffected by the job_market_coverage gap above");
   });
 });
+
+// Legacy market-coverage cleanup (docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md
+// §9): a real, once-live onboarding UI picker (git history, commits
+// b54b342..a28b586) let a user directly choose ANY of the four raw
+// job_market_coverage values, including 'lebanon_only' and
+// 'remote_lebanon_applicants' — not just 'remote_mena'. All three are now
+// retired (supabase/migrations/20260930120000, 20260930130000): no write
+// path can create them anymore (tests/db/international-job-preferences.test.mjs),
+// and 20260930130000 normalizes any row a database currently holds for
+// one of them. This suite pins the two facts a live DB test can't easily
+// cover: (1) the migration's own mapping logic, manually verified this
+// session via psql against synthetic legacy rows (see that migration's
+// header comment) — pinned here so an accidental edit to the CASE
+// mapping is a reviewed diff, not silent; (2) that checkJobEligibility.ts
+// really does treat 'lebanon_only'/'remote_lebanon_applicants' identically
+// to a null coverage, which is *why* null is the correct migration target
+// for those two values (not e.g. 'remote_lebanon_applicants' itself).
+describe("Legacy market-coverage cleanup — retired-value mapping is correct and pinned", () => {
+  test("the normalization migration maps remote_mena -> remote_worldwide, lebanon_only -> null, remote_lebanon_applicants -> null", () => {
+    const source = readFileSync(
+      join(repoRoot, "supabase/migrations/20260930130000_normalize_legacy_market_coverage_values.sql"),
+      "utf8"
+    );
+    assert.match(
+      source,
+      /when 'remote_mena' then 'remote_worldwide'/,
+      "remote_mena must map to remote_worldwide — a strict superset, per evaluateRemoteEligibility()"
+    );
+    assert.match(
+      source,
+      /when 'lebanon_only' then null/,
+      "lebanon_only must map to null — checkJobEligibility.ts treats them identically (see the test below)"
+    );
+    assert.match(
+      source,
+      /when 'remote_lebanon_applicants' then null/,
+      "remote_lebanon_applicants must map to null — checkJobEligibility.ts treats them identically (see the test below)"
+    );
+  });
+
+  test("checkJobEligibility treats null, lebanon_only, and remote_lebanon_applicants as exactly identical — proving null is a safe, behavior-preserving migration target for both retired values", () => {
+    const gccRemote = { countryCode: null, workArrangement: "remote", remoteScope: "region:gcc", locationConfidence: "high" };
+    const usRemote = { countryCode: "US", workArrangement: "remote", remoteScope: "country:US", locationConfidence: "high" };
+
+    for (const job of [gccRemote, usRemote]) {
+      const results = ["lebanon_only", "remote_lebanon_applicants", null].map((jobMarketCoverage) =>
+        checkJobEligibility({
+          job,
+          planCode: "pro",
+          jobMarketCoverage,
+          preferredWorkArrangement: null,
+          internationalSearchEnabled: true,
+          willingToRelocate: false,
+          relocationMarketCountryCodes: [],
+        })
+      );
+      assert.equal(results[0].eligible, results[1].eligible, "lebanon_only and remote_lebanon_applicants must be behaviorally identical");
+      assert.equal(results[0].eligible, results[2].eligible, "lebanon_only and null must be behaviorally identical");
+      assert.equal(results[0].eligible, false, "none of the three should ever grant non-Lebanon remote eligibility");
+    }
+  });
+});
