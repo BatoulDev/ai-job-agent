@@ -226,8 +226,8 @@ const FIXTURES = [
       work_arrangement: "remote",
       // Student is never eligible for job_market_coverage regardless of
       // work arrangement (enforce_job_preferences_eligibility_trigger
-      // rejects it) — deliberately null here, not "remote_mena", even
-      // though his own notes below mention MENA interest.
+      // rejects it) — deliberately null here, even though his own notes
+      // below mention MENA interest.
       job_market_coverage: null,
       job_type: "full-time",
       experience_level: "entry-level",
@@ -260,10 +260,9 @@ const FIXTURES = [
       // Pro + Flexible combination: both job-market coverage AND
       // preferred physical locations apply at once.
       work_arrangement: "flexible",
-      // remote_mena is a retired legacy tier (20260930120000) — the
-      // canonical Pro remote entitlement is remote_worldwide, which
-      // already covers her original "also open to Remote MENA" note (a
-      // strict superset, per checkJobEligibility.ts's
+      // remote_worldwide is the sole active job_market_coverage tier —
+      // it already covers her original "also open to Remote MENA" note
+      // (a strict superset, per checkJobEligibility.ts's
       // evaluateRemoteEligibility).
       job_market_coverage: "remote_worldwide",
       job_type: "full-time",

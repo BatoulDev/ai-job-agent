@@ -13,28 +13,22 @@ export type JobType = "internship" | "part-time" | "full-time" | "freelance" | "
 // "flexible" — they meant the same thing (open to remote/hybrid/on-site).
 export type WorkArrangement = "remote" | "onsite" | "hybrid" | "flexible";
 
-// Matches job_preferences_job_market_coverage_check exactly. Only ever
+// Matches job_preferences_job_market_coverage_check exactly (see
+// supabase/migrations/20260930140000_remove_legacy_market_coverage_compatibility.sql).
+// The sole active tier — the column itself is null otherwise, which this
+// type does not repeat; callers use `JobMarketCoverage | null`, matching
+// this file's existing WorkArrangement/JobType convention. Only ever
 // non-null for a Lebanon-resident Pro user with work_arrangement in
-// (remote, flexible) — enforced server-side by
-// enforce_job_preferences_eligibility_trigger, never trust a client value
-// for this field beyond what that trigger allows. Never client-supplied:
-// save_job_preferences derives it server-side (see
-// supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql)
-// and only ever produces 'remote_worldwide' or null — the canonical Pro
-// entitlement is one coherent tier, not a user-facing choice between
-// competing sub-tiers. 'lebanon_only' and 'remote_lebanon_applicants' are
-// legacy values with no active derivation path (null already behaves
-// identically to 'remote_lebanon_applicants' — see
-// checkJobEligibility.ts's evaluateRemoteEligibility). 'remote_mena' is
-// additionally retired: it can no longer be written at all (see
-// supabase/migrations/20260930120000_retire_remote_mena_coverage_tier.sql)
-// and is kept in this union only so a pre-existing legacy row still types
-// safely — never derive or write it for a new row.
-export type JobMarketCoverage =
-  | "lebanon_only"
-  | "remote_lebanon_applicants"
-  | "remote_mena"
-  | "remote_worldwide";
+// (remote, flexible) who opted into international search — enforced
+// server-side by enforce_job_preferences_eligibility_trigger, never a
+// client-supplied value: save_job_preferences derives it server-side
+// (supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql).
+// Never a user-facing choice — market entitlement is plan-derived (see
+// docs/PRODUCT_MATCHING_RULES.md "Market coverage"). 'lebanon_only',
+// 'remote_lebanon_applicants', and 'remote_mena' were development-era
+// states, fully retired — the CHECK constraint makes them impossible
+// column values, so this type no longer needs to represent them.
+export type JobMarketCoverage = "remote_worldwide";
 
 // Matches job_preferences_lebanon_location_scope_check exactly (see
 // supabase/migrations/20260902090010_plan_aware_job_preferences.sql).

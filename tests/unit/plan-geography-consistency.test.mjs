@@ -66,64 +66,62 @@ describe("Phase 18 job_market_coverage gap — resolved by server-side derivatio
   });
 });
 
-// Legacy market-coverage cleanup (docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md
-// §9): a real, once-live onboarding UI picker (git history, commits
-// b54b342..a28b586) let a user directly choose ANY of the four raw
-// job_market_coverage values, including 'lebanon_only' and
-// 'remote_lebanon_applicants' — not just 'remote_mena'. All three are now
-// retired (supabase/migrations/20260930120000, 20260930130000): no write
-// path can create them anymore (tests/db/international-job-preferences.test.mjs),
-// and 20260930130000 normalizes any row a database currently holds for
-// one of them. This suite pins the two facts a live DB test can't easily
-// cover: (1) the migration's own mapping logic, manually verified this
-// session via psql against synthetic legacy rows (see that migration's
-// header comment) — pinned here so an accidental edit to the CASE
-// mapping is a reviewed diff, not silent; (2) that checkJobEligibility.ts
-// really does treat 'lebanon_only'/'remote_lebanon_applicants' identically
-// to a null coverage, which is *why* null is the correct migration target
-// for those two values (not e.g. 'remote_lebanon_applicants' itself).
-describe("Legacy market-coverage cleanup — retired-value mapping is correct and pinned", () => {
-  test("the normalization migration maps remote_mena -> remote_worldwide, lebanon_only -> null, remote_lebanon_applicants -> null", () => {
+// Legacy market-coverage cleanup, final phase
+// (docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md §9-§10): 'remote_mena',
+// 'lebanon_only', and 'remote_lebanon_applicants' are fully retired —
+// this project has no production database or users, so the previous
+// task's stop condition (an unverified historical onboarding UI picker
+// that could have written any of the four raw values to a real
+// production row) no longer applies. 20260930140000 removed all three
+// from the job_preferences_job_market_coverage_check CHECK constraint
+// entirely (impossible column values, not just unreachable ones) and
+// simplified checkJobEligibility.ts to drop its legacy-tier branches.
+// This suite pins that final, permanent state via static source
+// inspection — the DB-level proof (CHECK constraint rejection) lives in
+// tests/db/international-job-preferences.test.mjs.
+describe("Legacy market-coverage cleanup — retired values are structurally impossible, not just unused", () => {
+  test("the CHECK constraint permits only 'remote_worldwide' (and, implicitly, null) — no retired value remains a legal column value", () => {
     const source = readFileSync(
-      join(repoRoot, "supabase/migrations/20260930130000_normalize_legacy_market_coverage_values.sql"),
+      join(repoRoot, "supabase/migrations/20260930140000_remove_legacy_market_coverage_compatibility.sql"),
       "utf8"
     );
     assert.match(
       source,
-      /when 'remote_mena' then 'remote_worldwide'/,
-      "remote_mena must map to remote_worldwide — a strict superset, per evaluateRemoteEligibility()"
-    );
-    assert.match(
-      source,
-      /when 'lebanon_only' then null/,
-      "lebanon_only must map to null — checkJobEligibility.ts treats them identically (see the test below)"
-    );
-    assert.match(
-      source,
-      /when 'remote_lebanon_applicants' then null/,
-      "remote_lebanon_applicants must map to null — checkJobEligibility.ts treats them identically (see the test below)"
+      /check \(job_market_coverage in \('remote_worldwide'\)\)/,
+      "if this assertion fails because the constraint was widened again to include a retired value, that reopens exactly the legacy-value surface this migration closed"
     );
   });
 
-  test("checkJobEligibility treats null, lebanon_only, and remote_lebanon_applicants as exactly identical — proving null is a safe, behavior-preserving migration target for both retired values", () => {
-    const gccRemote = { countryCode: null, workArrangement: "remote", remoteScope: "region:gcc", locationConfidence: "high" };
-    const usRemote = { countryCode: "US", workArrangement: "remote", remoteScope: "country:US", locationConfidence: "high" };
-
-    for (const job of [gccRemote, usRemote]) {
-      const results = ["lebanon_only", "remote_lebanon_applicants", null].map((jobMarketCoverage) =>
-        checkJobEligibility({
-          job,
-          planCode: "pro",
-          jobMarketCoverage,
-          preferredWorkArrangement: null,
-          internationalSearchEnabled: true,
-          willingToRelocate: false,
-          relocationMarketCountryCodes: [],
-        })
+  test("checkJobEligibility.ts no longer contains any remote_mena/lebanon_only/remote_lebanon_applicants branch", () => {
+    const source = readFileSync(join(repoRoot, "src/lib/ingestion/checkJobEligibility.ts"), "utf8");
+    for (const retired of ["remote_mena", "lebanon_only", "remote_lebanon_applicants"]) {
+      assert.doesNotMatch(
+        source,
+        new RegExp(`===\\s*"${retired}"|===\\s*'${retired}'`),
+        `checkJobEligibility.ts must not branch on ${retired} — that is exactly the dead legacy logic this cleanup removed`
       );
-      assert.equal(results[0].eligible, results[1].eligible, "lebanon_only and remote_lebanon_applicants must be behaviorally identical");
-      assert.equal(results[0].eligible, results[2].eligible, "lebanon_only and null must be behaviorally identical");
-      assert.equal(results[0].eligible, false, "none of the three should ever grant non-Lebanon remote eligibility");
+    }
+  });
+
+  test("JobMarketCoverage is now a single-value type ('remote_worldwide'), not a union of legacy tiers", () => {
+    const source = readFileSync(join(repoRoot, "src/lib/jobPreferences/types.ts"), "utf8");
+    assert.match(source, /export type JobMarketCoverage = "remote_worldwide";/);
+  });
+
+  test("a retired value passed to checkJobEligibility at runtime behaves identically to null — no special-case interpretation survives in application code", () => {
+    const gccRemote = { countryCode: null, workArrangement: "remote", remoteScope: "region:gcc", locationConfidence: "high" };
+    const baseArgs = {
+      job: gccRemote,
+      planCode: "pro",
+      preferredWorkArrangement: null,
+      internationalSearchEnabled: true,
+      willingToRelocate: false,
+      relocationMarketCountryCodes: [],
+    };
+    const nullResult = checkJobEligibility({ ...baseArgs, jobMarketCoverage: null });
+    for (const retired of ["remote_mena", "lebanon_only", "remote_lebanon_applicants"]) {
+      const retiredResult = checkJobEligibility({ ...baseArgs, jobMarketCoverage: retired });
+      assert.deepEqual(retiredResult, nullResult, `${retired} must produce an identical result to null — proves no legacy branch remains reachable`);
     }
   });
 });

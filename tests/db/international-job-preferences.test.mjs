@@ -514,21 +514,19 @@ describe("job_market_coverage: server-side derivation (job_market_coverage wirin
   });
 });
 
-// Pro market-coverage model simplification + legacy market-coverage
-// cleanup: remote_mena, lebanon_only, and remote_lebanon_applicants are
-// all retired — save_job_preferences already never derived any of them
-// (proven above; only remote_worldwide/null are ever derived), and
-// 20260930120000/20260930130000 additionally reject all three as a value
-// for ANY new write, including a crafted direct table update or a
-// service-role write, closing every remaining path a Pro user could have
-// used to self-select an unsupported raw market-coverage value. See
-// docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md §9 for why lebanon_only and
-// remote_lebanon_applicants are retired the same way as remote_mena (a
-// real, once-live onboarding UI picker could have written any of the
-// four raw values historically — see that section for the full
-// git-archaeology finding and the resulting stop-before-destructive-
-// cleanup decision).
-describe("job_market_coverage: all legacy values are retired (legacy market-coverage cleanup)", () => {
+// Legacy market-coverage cleanup, final phase
+// (supabase/migrations/20260930140000_remove_legacy_market_coverage_compatibility.sql,
+// docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md §9-§10): remote_mena,
+// lebanon_only, and remote_lebanon_applicants are structurally
+// impossible column values now, not just unreachable-via-application-
+// code ones. job_preferences_job_market_coverage_check was tightened to
+// `check (job_market_coverage in ('remote_worldwide'))` — Postgres's own
+// CHECK-constraint machinery rejects any of the three (error code 23514)
+// for every write path, before enforce_job_preferences_eligibility_trigger
+// even runs its own business-logic checks. This project has no
+// production database or users, so (unlike the previous task) there is
+// no unverified-production-data reason to keep the constraint wider.
+describe("job_market_coverage: retired values are structurally impossible (legacy market-coverage cleanup)", () => {
   let pro;
   let student;
 
@@ -545,7 +543,7 @@ describe("job_market_coverage: all legacy values are retired (legacy market-cove
   const RETIRED_VALUES = ["remote_mena", "lebanon_only", "remote_lebanon_applicants"];
 
   for (const retiredValue of RETIRED_VALUES) {
-    test(`a crafted direct update setting job_market_coverage='${retiredValue}' is rejected even for an otherwise-eligible Pro user`, async () => {
+    test(`a crafted direct update setting job_market_coverage='${retiredValue}' is rejected by the CHECK constraint even for an otherwise-eligible Pro user`, async () => {
       const { error: setupErr } = await pro.client.rpc("save_job_preferences", baseSaveArgs());
       assert.equal(setupErr, null, `setup save failed: ${setupErr?.message}`);
 
@@ -553,14 +551,15 @@ describe("job_market_coverage: all legacy values are retired (legacy market-cove
         .from("job_preferences")
         .update({ job_market_coverage: retiredValue })
         .eq("user_id", pro.id);
-      assert.ok(error, `a direct client update setting ${retiredValue} must be rejected by the eligibility trigger`);
-      assert.match(error.message, /retired legacy job_market_coverage value/i);
+      assert.ok(error, `a direct client update setting ${retiredValue} must be rejected`);
+      assert.equal(error.code, "23514", "must be a Postgres check_violation, not some other error");
+      assert.match(error.message, /job_market_coverage_check/i);
 
       const { data: row } = await adminClient.from("job_preferences").select("job_market_coverage").eq("user_id", pro.id).single();
       assert.equal(row.job_market_coverage, null, "the crafted update must never have taken effect");
     });
 
-    test(`a crafted direct update setting job_market_coverage='${retiredValue}' is rejected for a Student too (double-blocked: plan gate and retirement gate)`, async () => {
+    test(`a crafted direct update setting job_market_coverage='${retiredValue}' is rejected for a Student too (caught by the pre-existing Pro-plan gate before the CHECK constraint is even reached — any non-null value is rejected for a non-Pro user)`, async () => {
       const { error: setupErr } = await student.client.rpc("save_job_preferences", baseSaveArgs());
       assert.equal(setupErr, null, `setup save failed: ${setupErr?.message}`);
 
@@ -569,14 +568,26 @@ describe("job_market_coverage: all legacy values are retired (legacy market-cove
         .update({ job_market_coverage: retiredValue })
         .eq("user_id", student.id);
       assert.ok(error, `a direct client update setting ${retiredValue} must be rejected`);
+      assert.match(error.message, /Pro plan/i);
     });
 
-    test(`even an admin/service-role write cannot set job_market_coverage='${retiredValue}' — the trigger fires for every role, not just RLS-scoped ones`, async () => {
+    test(`even an admin/service-role write cannot set job_market_coverage='${retiredValue}' — a CHECK constraint applies to every role, not just RLS-scoped ones`, async () => {
       const { error } = await adminClient.from("job_preferences").update({ job_market_coverage: retiredValue }).eq("user_id", pro.id);
-      assert.ok(error, "the eligibility trigger is not an RLS policy — it must reject this value regardless of the writing role");
-      assert.match(error.message, /retired legacy job_market_coverage value/i);
+      assert.ok(error, "no role, including service_role, can bypass a table CHECK constraint");
+      assert.equal(error.code, "23514");
+      assert.match(error.message, /job_market_coverage_check/i);
     });
   }
+
+  test("remote_worldwide remains a valid value", async () => {
+    const { error } = await adminClient.from("job_preferences").update({ job_market_coverage: "remote_worldwide" }).eq("user_id", pro.id);
+    assert.equal(error, null, `remote_worldwide must still be accepted: ${error?.message}`);
+  });
+
+  test("null remains a valid value", async () => {
+    const { error } = await adminClient.from("job_preferences").update({ job_market_coverage: null }).eq("user_id", pro.id);
+    assert.equal(error, null, `null must still be accepted: ${error?.message}`);
+  });
 });
 
 // Student-to-Pro upgrade pricing, price versioning, and the mid-period

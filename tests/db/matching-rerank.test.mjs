@@ -344,18 +344,16 @@ test("job_market_coverage propagation: a Pro user's real save_job_preferences-de
   }
 });
 
-// Pro market-coverage model simplification: remote_mena is retired for
-// every NEW write, including a service-role write (proven at the DB
-// level in tests/db/international-job-preferences.test.mjs). That same
-// fact means there is no sanctioned way left, from this test suite, to
-// construct a fresh "legacy remote_mena row" — doing so would require
-// either a new raw-SQL client dependency or a new admin-only test-support
-// RPC, neither justified for this one scenario. Legacy behavior itself
-// (a pre-existing row's narrower GCC/MENA-only semantics, unchanged by
-// this migration) is already proven at the unit level in
-// tests/unit/check-job-eligibility.test.mjs ("pro + remote_mena: GCC-
-// scoped remote is eligible" / "... US-only remote is still not
-// eligible") — checkJobEligibility.ts itself is untouched by this
-// migration, so those tests remain the authoritative, real proof that any
-// such row (should one already exist in production) keeps behaving
-// predictably.
+// Legacy market-coverage cleanup, final phase: remote_mena (and
+// lebanon_only/remote_lebanon_applicants) are now structurally
+// impossible column values — the job_preferences_job_market_coverage_check
+// CHECK constraint rejects them for every write, including a service-role
+// write (proven at the DB level in tests/db/international-job-preferences.test.mjs).
+// checkJobEligibility.ts no longer has any special-case branch for them
+// either (this project has no production database or users, so unlike
+// the earlier stop-before-destructive-cleanup task, there was no reason
+// left to keep read compatibility for a legacy row — see
+// docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md §9-§10). See
+// tests/unit/plan-geography-consistency.test.mjs's "Legacy market-
+// coverage cleanup" suite and tests/unit/check-job-eligibility.test.mjs
+// for the unit-level proof that no legacy branch remains reachable.

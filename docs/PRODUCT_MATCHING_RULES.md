@@ -72,14 +72,14 @@ arrangement from location, without a new, explicit founder decision.
 
 ---
 
-## Market coverage (added/finalized: Pro market-coverage model task)
+## Market coverage (finalized: legacy market-coverage cleanup)
 
 **Rule**: market coverage (which markets the system is even allowed to
 search/match against) is entirely **plan-derived**. The user never
-chooses between MENA, Gulf, Worldwide, `remote_mena`, or
-`remote_worldwide` — those are not user-facing product choices, and no
-UI in this codebase exposes them (verified: `src/app/onboarding/preferences/page.tsx`
-and `tests/e2e/preferences-job-market-coverage.spec.ts`'s "no raw market
+chooses between MENA, Gulf, Worldwide, or any raw coverage tier — those
+are not user-facing product choices, and no UI in this codebase exposes
+them (verified: `src/app/onboarding/preferences/page.tsx` and
+`tests/e2e/preferences-job-market-coverage.spec.ts`'s "no raw market
 tier is exposed" assertion).
 
 **Canonical Pro entitlement — one coherent tier, not competing sub-tiers**:
@@ -89,64 +89,64 @@ tier is exposed" assertion).
 | Student / Free | Lebanon only |
 | Pro | Lebanon + Gulf + worldwide international remote |
 
-There is no Pro sub-tier that grants MENA-only remote access as a
-distinct product offering. `job_market_coverage`'s canonical, only-ever-
-derived non-null value for a new save is `remote_worldwide`, which is a
-**strict superset** of what a `remote_mena` tier would grant —
-`evaluateRemoteEligibility()` in `checkJobEligibility.ts` accepts any job
-with a determinable remote scope under `remote_worldwide`, which already
-includes every GCC/MENA-scoped remote job `remote_mena` would have
-covered, plus everything else. So "Gulf remote" and "worldwide remote"
-are not two separate entitlements to reconcile — a Pro user with
-international search on gets both through the single `remote_worldwide`
-tier.
+`job_market_coverage` has exactly two possible states: `null` (no
+international remote coverage — the Free/Student/not-yet-opted-in state)
+or `'remote_worldwide'` (Pro, opted in). There is no Pro sub-tier that
+grants MENA-only remote access as a distinct product offering — Gulf
+remote and worldwide remote are not two entitlements to reconcile, they
+are both delivered through the single `remote_worldwide` tier
+(`evaluateRemoteEligibility()` in `checkJobEligibility.ts` accepts any
+job with a determinable remote scope once this tier is active, GCC/MENA
+included).
 
-**Derivation** (`save_job_preferences`, unchanged from the job_market_coverage
-wiring fix): `international_search_enabled = true` AND `work_arrangement
-in ('remote', 'flexible')` → `remote_worldwide`; otherwise `null`. Never
-client-supplied — the RPC has no parameter for it at all.
+**Derivation** (`save_job_preferences`): `international_search_enabled =
+true` AND `work_arrangement in ('remote', 'flexible')` → `remote_worldwide`;
+otherwise `null`. Never client-supplied — the RPC has no parameter for
+it at all.
 
-**All three legacy tiers — `remote_mena`, `lebanon_only`,
-`remote_lebanon_applicants` — are retired from every write path**
-(`supabase/migrations/20260930120000_retire_remote_mena_coverage_tier.sql`,
-`20260930130000_normalize_legacy_market_coverage_values.sql`): none can
-be set anymore — not the RPC (already true before these migrations), not
-a crafted direct table update, not even a service-role write (the
-eligibility trigger fires for every role, since triggers are not RLS
-policies). Any row this database held for one of the three was also
-normalized to its canonical target
-(`remote_mena` → `remote_worldwide`; `lebanon_only`/`remote_lebanon_applicants`
-→ `null` — see the migration's own header for the full mapping
-reasoning), verified with a hard zero-remaining-rows check inside the
-migration itself.
+**Legacy tiers are fully retired, not merely unused**
+(`supabase/migrations/20260930140000_remove_legacy_market_coverage_compatibility.sql`):
+`remote_mena`, `lebanon_only`, and `remote_lebanon_applicants` were
+development-era states from before the product's market model was
+finalized. They are now structurally impossible, not just unreachable:
 
-**Deliberately NOT removed — read compatibility is kept, on purpose**:
-the `job_preferences_job_market_coverage_check` CHECK constraint still
-lists all four historical values as legal, and `checkJobEligibility.ts`'s
-`remote_mena`/`lebanon_only`/`remote_lebanon_applicants` branches are
-still present, unchanged. This is a deliberate stop-before-destructive-
-cleanup decision, not an oversight: git history (commits `b54b342` through
-`a28b586`, live on `main` 2026-08-03 to 2026-09-03) proves a real
-onboarding UI picker once let a Lebanon-resident Pro user with a
-remote/flexible arrangement directly choose **any** of the four raw
-values, including `lebanon_only` and `remote_lebanon_applicants` — not
-just `remote_mena`. That means a real production row could still hold
-any of the three retired values today, and this project's local/dev
-database cannot verify production's actual state. See
-`docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md` §9 for the full finding.
-Until an operator with real production access confirms (via the same
-zero-remaining-rows query the normalization migration runs) that
-production has actually been normalized, removing this compatibility
-code would risk a real row silently falling through to the wrong branch
-the moment new code deploys ahead of the migration that fixes it.
+- The `job_preferences_job_market_coverage_check` CHECK constraint was
+  tightened to `check (job_market_coverage in ('remote_worldwide'))` —
+  Postgres rejects any other non-null value at the schema level, for
+  every write path (RPC, direct authenticated write, service-role —
+  a CHECK constraint is not an RLS policy).
+- `checkJobEligibility.ts` no longer has any branch that interprets these
+  values — `evaluateRemoteEligibility()` is a simple `jobMarketCoverage
+  !== "remote_worldwide"` check, nothing more.
+- The `JobMarketCoverage` TypeScript type is a single literal
+  (`"remote_worldwide"`), not a union — a legacy value is now a compile-
+  time type error anywhere it would be constructed, not just a runtime
+  rejection.
+- No seed script, fixture, or doc constructs one.
+
+This is a deliberate, final decision, not the earlier stop-before-
+destructive-cleanup posture: an earlier task found a real, once-live
+onboarding UI picker (git commits `b54b342`..`a28b586`, live on `main`
+2026-08-03 to 2026-09-03) that could have written any of the four raw
+values to a real production row, and stopped short of removing read
+compatibility because production state couldn't be verified. **That
+concern does not apply to this project** — there is no production
+database and no real production users. Any row this project's only
+database held for a retired value was normalized to its canonical
+target (`remote_mena` → `remote_worldwide`; `lebanon_only`/
+`remote_lebanon_applicants` → `null`) before the constraint was
+tightened, verified with a hard zero-remaining-rows check inside the
+same migration. See `docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md` §9-§10
+for the full history.
 
 **Server-authoritative, never trust the client**: market entitlement is
 derived from `subscriptions.plan_code` (read server-side inside
 `save_job_preferences` and inside `enforce_job_preferences_eligibility_trigger`),
 never from anything the frontend sends. A Student cannot gain Pro market
-coverage, and no user (Student or Pro) can self-select any of the three
-retired tiers, through any payload manipulation — both are enforced at
-the trigger level, which covers every write path.
+coverage, and no user (Student or Pro) can set any retired tier, through
+any payload manipulation — enforced at both the trigger level (business
+rules: plan/country/work-arrangement validation) and the schema level
+(the CHECK constraint itself).
 
 ---
 
