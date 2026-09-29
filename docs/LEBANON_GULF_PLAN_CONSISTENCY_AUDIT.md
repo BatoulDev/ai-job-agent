@@ -13,7 +13,9 @@ One real, concrete gap was found — `job_market_coverage`'s `remote_mena`/
 **unreachable from any UI today** — documented and regression-tested
 below, not fixed at the time (a UI addition is a real feature, outside
 this audit's scope; since resolved via server-side derivation — see §7,
-and further simplified into one coherent Pro tier — see §8). No false
+further simplified into one coherent Pro tier — see §8, and legacy-value
+cleanup attempted but deliberately stopped short of destructive changes
+after a real historical write path was discovered — see §9). No false
 marketing promise was found: the one plan-geography claim
 that *could* have been overstated (Pro's "verified international remote
 roles") is not, because what it actually delivers matches what it says.
@@ -224,6 +226,13 @@ and unreachable via the RPC too, but not flagged as a competing-
 derivation-path problem the way `remote_mena` was, and out of this task's
 explicit scope.
 
+**Correction (see §9): "unreachable via the RPC too" was true only of
+the RPC as it existed by the time this task ran — it was not true
+historically.** §9's git-archaeology finding shows all three values,
+including these two, had a real, once-live write path via an onboarding
+UI picker. Treat this paragraph as describing 20260930120000's own scope
+at the time, not a claim these two values were never reachable at all.
+
 One dev-only fixture (`scripts/seed-local-automation-users.mjs`'s Lina
 Mansour) directly inserted a `remote_mena` row (bypassing the RPC,
 mirroring what a legacy production row would have looked like) — updated
@@ -242,3 +251,95 @@ user). Legacy-row behavior itself remains proven at the unit level by
 `remote_mena` tests — no DB-level synthetic legacy row was constructed,
 since doing so now requires bypassing the very trigger this fix adds
 (not justified for one test scenario; see that test file's own comment).
+
+---
+
+## 9. Legacy market-coverage cleanup — stop condition hit, cleanup partial by design
+
+Follow-up task, after §8 merged: audit whether `remote_mena`'s read
+compatibility (and the other two never-actively-derived values,
+`lebanon_only`/`remote_lebanon_applicants`) can be removed entirely —
+CHECK constraint, `checkJobEligibility.ts` branches, and TypeScript
+union — now that no write path can create any of them.
+
+**Central finding — a real historical write path was discovered for ALL
+FOUR raw values, not just `remote_mena`.** Git archaeology
+(`git log --all -S "p_job_market_coverage" -- src/app/onboarding/preferences/page.tsx`)
+surfaced two commits neither §3 nor §7/§8 had inspected:
+
+- `b54b342` ("feat: streamline job preferences onboarding UI",
+  2026-08-03) introduced a real, complete onboarding UI radio picker —
+  `JOB_MARKET_COVERAGE_OPTIONS`: "Lebanon only" (`lebanon_only`),
+  "Remote roles open to applicants based in Lebanon"
+  (`remote_lebanon_applicants`), "Remote within MENA" (`remote_mena`),
+  "Worldwide remote" (`remote_worldwide`) — shown whenever
+  `showCoveragePicker` was true (`isLebanon && planCode === 'pro' &&
+  workArrangement in ('remote', 'flexible')`, the same gate
+  `enforce_job_preferences_eligibility_trigger` still enforces today).
+  The user's raw selection was sent directly as `p_job_market_coverage`.
+- `a28b586` ("feat: add plan-aware preferences and versioned billing",
+  2026-09-03) removed the picker entirely and hardcoded
+  `p_job_market_coverage: null` — the state §3's original Phase 18 audit
+  found and treated as "no UI ever set this."
+
+Both commits are on `main`'s real history. The picker was live for
+exactly one month (2026-08-03 to 2026-09-03) across several intermediate
+feature commits. This session has no way to confirm whether real
+(non-test) users interacted with it during that window — this project
+was in active pre-launch iteration at the time, but that is not proof
+nobody used it, and this environment has no production database access
+to check.
+
+**Consequence**: any of the three retired values — not just `remote_mena`
+— could be sitting in a real, currently-unknown row in whatever database
+this application has run against since 2026-08-03. This session's
+local/dev database (queried directly: 1 `job_preferences` row total,
+`NULL`) is empty and not representative of production, and must not be
+treated as evidence production is clean.
+
+**Decision: stop before destructive cleanup, for all three values, per
+this task's own explicit stop condition.** Concretely:
+
+| Action | Done this task? | Why |
+|---|---|---|
+| Block `lebanon_only`/`remote_lebanon_applicants` as a value for any NEW write (extending §8's `remote_mena`-only block) | **Yes** — `supabase/migrations/20260930130000_normalize_legacy_market_coverage_values.sql` | Safe regardless of unknown data state — only affects future writes, and both values are already proven behaviorally identical to `null` (see below), so no supported product behavior changes. |
+| Normalize any row *this* database currently holds for any of the three values (`remote_mena`→`remote_worldwide`; `lebanon_only`/`remote_lebanon_applicants`→`null`), with a hard zero-remaining-rows verification | **Yes** — same migration | Idempotent and correct regardless of whether the count is 0 or many; ships now so whichever database this eventually runs against (including production, whenever the migration is applied there) gets normalized automatically. |
+| Remove the three values from `job_preferences_job_market_coverage_check` | **No — stopped** | Cannot confirm production is normalized from this environment. This is a plain `text` CHECK constraint (not a native Postgres enum), so removal itself is a low-risk DDL operation — the risk is entirely about unverified data, not constraint-removal mechanics. |
+| Remove `checkJobEligibility.ts`'s `remote_mena`/`lebanon_only`/`remote_lebanon_applicants` branches | **No — stopped** | Same reason. Removing this now risks a real, currently-unverifiable production row silently falling through to the `remote_worldwide` branch (widening its access) the moment new code deploys ahead of a migration that hasn't reached that database yet. |
+| Remove the three values from the `JobMarketCoverage` TypeScript union | **No — stopped** | Same reason — the type must keep describing every value the column (and any pre-existing row) can actually hold. |
+
+**Manual verification performed this session** (documented, not committed
+as an automated test — see `tests/unit/plan-geography-consistency.test.mjs`
+"Legacy market-coverage cleanup" describe block and
+`tests/db/international-job-preferences.test.mjs` for what *is*
+automated): using `psql` directly against the local database, a synthetic
+Pro/Lebanon/remote user's `job_preferences` row was set to each of the
+three retired values in turn (via a temporary trigger bypass, simulating
+what a real pre-migration row would look like), then the migration's
+exact normalization `UPDATE` was re-run against it and confirmed to
+produce the correct canonical value each time
+(`remote_mena` → `remote_worldwide`, `lebanon_only` → `null`,
+`remote_lebanon_applicants` → `null`), followed by confirming a live,
+non-bypassed write attempt of `remote_mena` was correctly rejected by the
+now-stricter trigger. The synthetic test user was deleted afterward.
+
+**Recommended path to completing the destructive phases (Phases 5-6 of
+the task spec)**: an operator with real production database access
+should run the same query this migration's own verification block runs —
+
+```sql
+select job_market_coverage, count(*)
+from public.job_preferences
+where job_market_coverage in ('remote_mena', 'lebanon_only', 'remote_lebanon_applicants')
+group by job_market_coverage;
+```
+
+— against production, both *before* deploying this migration (to learn
+the real historical exposure) and *after* (to confirm the migration
+actually normalized everything there, not just locally). Once that
+returns zero rows on production, removing the CHECK constraint values,
+the `checkJobEligibility.ts` branches, and the TypeScript union members
+becomes safe, and can be done as a small, purely mechanical follow-up.
+
+See `docs/PRODUCT_MATCHING_RULES.md` ("Market coverage") for the current,
+durable statement of what was and wasn't removed and why.

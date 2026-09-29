@@ -514,19 +514,27 @@ describe("job_market_coverage: server-side derivation (job_market_coverage wirin
   });
 });
 
-// Pro market-coverage model simplification: remote_mena is retired —
-// save_job_preferences already never derived it (proven above), and this
-// migration additionally rejects it as a value for ANY new write,
-// including a crafted direct table update that bypasses the RPC
-// entirely, closing the only remaining path a Pro user could have used to
-// self-select the unsupported two-tier distinction.
-describe("job_market_coverage: remote_mena is retired (Pro market-coverage model simplification)", () => {
+// Pro market-coverage model simplification + legacy market-coverage
+// cleanup: remote_mena, lebanon_only, and remote_lebanon_applicants are
+// all retired — save_job_preferences already never derived any of them
+// (proven above; only remote_worldwide/null are ever derived), and
+// 20260930120000/20260930130000 additionally reject all three as a value
+// for ANY new write, including a crafted direct table update or a
+// service-role write, closing every remaining path a Pro user could have
+// used to self-select an unsupported raw market-coverage value. See
+// docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md §9 for why lebanon_only and
+// remote_lebanon_applicants are retired the same way as remote_mena (a
+// real, once-live onboarding UI picker could have written any of the
+// four raw values historically — see that section for the full
+// git-archaeology finding and the resulting stop-before-destructive-
+// cleanup decision).
+describe("job_market_coverage: all legacy values are retired (legacy market-coverage cleanup)", () => {
   let pro;
   let student;
 
   before(async () => {
-    pro = await createTestUser("jmc-mena-pro");
-    student = await createTestUser("jmc-mena-student");
+    pro = await createTestUser("jmc-legacy-pro");
+    student = await createTestUser("jmc-legacy-student");
     await setPlan(pro.id, "pro", { status: "active", periodEnd: new Date(Date.now() + 86400000).toISOString() });
     await setPlan(student.id, "student", { status: "active", periodEnd: new Date(Date.now() + 86400000).toISOString() });
   });
@@ -534,37 +542,41 @@ describe("job_market_coverage: remote_mena is retired (Pro market-coverage model
     await deleteTestUsers([pro, student]);
   });
 
-  test("a crafted direct update setting job_market_coverage='remote_mena' is rejected even for an otherwise-eligible Pro user", async () => {
-    const { error: setupErr } = await pro.client.rpc("save_job_preferences", baseSaveArgs());
-    assert.equal(setupErr, null, `setup save failed: ${setupErr?.message}`);
+  const RETIRED_VALUES = ["remote_mena", "lebanon_only", "remote_lebanon_applicants"];
 
-    const { error } = await pro.client
-      .from("job_preferences")
-      .update({ job_market_coverage: "remote_mena" })
-      .eq("user_id", pro.id);
-    assert.ok(error, "a direct client update setting remote_mena must be rejected by the eligibility trigger");
-    assert.match(error.message, /retired legacy value/i);
+  for (const retiredValue of RETIRED_VALUES) {
+    test(`a crafted direct update setting job_market_coverage='${retiredValue}' is rejected even for an otherwise-eligible Pro user`, async () => {
+      const { error: setupErr } = await pro.client.rpc("save_job_preferences", baseSaveArgs());
+      assert.equal(setupErr, null, `setup save failed: ${setupErr?.message}`);
 
-    const { data: row } = await adminClient.from("job_preferences").select("job_market_coverage").eq("user_id", pro.id).single();
-    assert.equal(row.job_market_coverage, null, "the crafted update must never have taken effect");
-  });
+      const { error } = await pro.client
+        .from("job_preferences")
+        .update({ job_market_coverage: retiredValue })
+        .eq("user_id", pro.id);
+      assert.ok(error, `a direct client update setting ${retiredValue} must be rejected by the eligibility trigger`);
+      assert.match(error.message, /retired legacy job_market_coverage value/i);
 
-  test("a crafted direct update setting job_market_coverage='remote_mena' is rejected for a Student too (double-blocked: plan gate and retirement gate)", async () => {
-    const { error: setupErr } = await student.client.rpc("save_job_preferences", baseSaveArgs());
-    assert.equal(setupErr, null, `setup save failed: ${setupErr?.message}`);
+      const { data: row } = await adminClient.from("job_preferences").select("job_market_coverage").eq("user_id", pro.id).single();
+      assert.equal(row.job_market_coverage, null, "the crafted update must never have taken effect");
+    });
 
-    const { error } = await student.client
-      .from("job_preferences")
-      .update({ job_market_coverage: "remote_mena" })
-      .eq("user_id", student.id);
-    assert.ok(error, "a direct client update setting remote_mena must be rejected");
-  });
+    test(`a crafted direct update setting job_market_coverage='${retiredValue}' is rejected for a Student too (double-blocked: plan gate and retirement gate)`, async () => {
+      const { error: setupErr } = await student.client.rpc("save_job_preferences", baseSaveArgs());
+      assert.equal(setupErr, null, `setup save failed: ${setupErr?.message}`);
 
-  test("even an admin/service-role write cannot set job_market_coverage='remote_mena' — the trigger fires for every role, not just RLS-scoped ones", async () => {
-    const { error } = await adminClient.from("job_preferences").update({ job_market_coverage: "remote_mena" }).eq("user_id", pro.id);
-    assert.ok(error, "the eligibility trigger is not an RLS policy — it must reject this value regardless of the writing role");
-    assert.match(error.message, /retired legacy value/i);
-  });
+      const { error } = await student.client
+        .from("job_preferences")
+        .update({ job_market_coverage: retiredValue })
+        .eq("user_id", student.id);
+      assert.ok(error, `a direct client update setting ${retiredValue} must be rejected`);
+    });
+
+    test(`even an admin/service-role write cannot set job_market_coverage='${retiredValue}' — the trigger fires for every role, not just RLS-scoped ones`, async () => {
+      const { error } = await adminClient.from("job_preferences").update({ job_market_coverage: retiredValue }).eq("user_id", pro.id);
+      assert.ok(error, "the eligibility trigger is not an RLS policy — it must reject this value regardless of the writing role");
+      assert.match(error.message, /retired legacy job_market_coverage value/i);
+    });
+  }
 });
 
 // Student-to-Pro upgrade pricing, price versioning, and the mid-period

@@ -106,33 +106,47 @@ wiring fix): `international_search_enabled = true` AND `work_arrangement
 in ('remote', 'flexible')` → `remote_worldwide`; otherwise `null`. Never
 client-supplied — the RPC has no parameter for it at all.
 
-**`remote_mena` is retired** (`supabase/migrations/20260930120000_retire_remote_mena_coverage_tier.sql`):
-no write path can set it anymore — not the RPC (already true before this
-task), not a crafted direct table update, not even a service-role write
-(the eligibility trigger fires for every role, since triggers are not RLS
-policies). The `job_preferences_job_market_coverage_check` CHECK
-constraint still lists it as a legal column value — **not removed** —
-solely so any pre-existing row that already holds it stays valid and
-readable; `checkJobEligibility.ts`'s `remote_mena` branches are likewise
-kept, unchanged, so such a row keeps behaving under its original,
-narrower (GCC/MENA-only) semantics rather than being silently widened.
-That row self-corrects to `remote_worldwide` (or `null`) the next time
-its owner saves preferences through the real product path, the same
-self-correction pattern established for a Pro-to-Free downgrade.
-`lebanon_only` and `remote_lebanon_applicants` are also legacy/unreachable
-via the RPC (a `null` coverage already behaves identically to
-`remote_lebanon_applicants` — the documented conservative default) but
-are out of this task's scope: no product requirement distinguishes them
-from `null`, and they were not flagged as a competing-derivation-path
-problem the way `remote_mena` was.
+**All three legacy tiers — `remote_mena`, `lebanon_only`,
+`remote_lebanon_applicants` — are retired from every write path**
+(`supabase/migrations/20260930120000_retire_remote_mena_coverage_tier.sql`,
+`20260930130000_normalize_legacy_market_coverage_values.sql`): none can
+be set anymore — not the RPC (already true before these migrations), not
+a crafted direct table update, not even a service-role write (the
+eligibility trigger fires for every role, since triggers are not RLS
+policies). Any row this database held for one of the three was also
+normalized to its canonical target
+(`remote_mena` → `remote_worldwide`; `lebanon_only`/`remote_lebanon_applicants`
+→ `null` — see the migration's own header for the full mapping
+reasoning), verified with a hard zero-remaining-rows check inside the
+migration itself.
+
+**Deliberately NOT removed — read compatibility is kept, on purpose**:
+the `job_preferences_job_market_coverage_check` CHECK constraint still
+lists all four historical values as legal, and `checkJobEligibility.ts`'s
+`remote_mena`/`lebanon_only`/`remote_lebanon_applicants` branches are
+still present, unchanged. This is a deliberate stop-before-destructive-
+cleanup decision, not an oversight: git history (commits `b54b342` through
+`a28b586`, live on `main` 2026-08-03 to 2026-09-03) proves a real
+onboarding UI picker once let a Lebanon-resident Pro user with a
+remote/flexible arrangement directly choose **any** of the four raw
+values, including `lebanon_only` and `remote_lebanon_applicants` — not
+just `remote_mena`. That means a real production row could still hold
+any of the three retired values today, and this project's local/dev
+database cannot verify production's actual state. See
+`docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md` §9 for the full finding.
+Until an operator with real production access confirms (via the same
+zero-remaining-rows query the normalization migration runs) that
+production has actually been normalized, removing this compatibility
+code would risk a real row silently falling through to the wrong branch
+the moment new code deploys ahead of the migration that fixes it.
 
 **Server-authoritative, never trust the client**: market entitlement is
 derived from `subscriptions.plan_code` (read server-side inside
 `save_job_preferences` and inside `enforce_job_preferences_eligibility_trigger`),
 never from anything the frontend sends. A Student cannot gain Pro market
-coverage, and a Pro user cannot self-select `remote_mena`, through any
-payload manipulation — both are enforced at the trigger level, which
-covers every write path.
+coverage, and no user (Student or Pro) can self-select any of the three
+retired tiers, through any payload manipulation — both are enforced at
+the trigger level, which covers every write path.
 
 ---
 
