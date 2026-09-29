@@ -72,33 +72,110 @@ arrangement from location, without a new, explicit founder decision.
 
 ---
 
-## Geography, plan, and relocation (pre-existing, unchanged by the above)
+## Market coverage (added/finalized: Pro market-coverage model task)
 
-Recorded here for completeness since this doc is now the intended
-central reference — not modified by the Phase 21 follow-up decision.
+**Rule**: market coverage (which markets the system is even allowed to
+search/match against) is entirely **plan-derived**. The user never
+chooses between MENA, Gulf, Worldwide, `remote_mena`, or
+`remote_worldwide` — those are not user-facing product choices, and no
+UI in this codebase exposes them (verified: `src/app/onboarding/preferences/page.tsx`
+and `tests/e2e/preferences-job-market-coverage.spec.ts`'s "no raw market
+tier is exposed" assertion).
+
+**Canonical Pro entitlement — one coherent tier, not competing sub-tiers**:
+
+| Plan | Effective market entitlement |
+|---|---|
+| Student / Free | Lebanon only |
+| Pro | Lebanon + Gulf + worldwide international remote |
+
+There is no Pro sub-tier that grants MENA-only remote access as a
+distinct product offering. `job_market_coverage`'s canonical, only-ever-
+derived non-null value for a new save is `remote_worldwide`, which is a
+**strict superset** of what a `remote_mena` tier would grant —
+`evaluateRemoteEligibility()` in `checkJobEligibility.ts` accepts any job
+with a determinable remote scope under `remote_worldwide`, which already
+includes every GCC/MENA-scoped remote job `remote_mena` would have
+covered, plus everything else. So "Gulf remote" and "worldwide remote"
+are not two separate entitlements to reconcile — a Pro user with
+international search on gets both through the single `remote_worldwide`
+tier.
+
+**Derivation** (`save_job_preferences`, unchanged from the job_market_coverage
+wiring fix): `international_search_enabled = true` AND `work_arrangement
+in ('remote', 'flexible')` → `remote_worldwide`; otherwise `null`. Never
+client-supplied — the RPC has no parameter for it at all.
+
+**`remote_mena` is retired** (`supabase/migrations/20260930120000_retire_remote_mena_coverage_tier.sql`):
+no write path can set it anymore — not the RPC (already true before this
+task), not a crafted direct table update, not even a service-role write
+(the eligibility trigger fires for every role, since triggers are not RLS
+policies). The `job_preferences_job_market_coverage_check` CHECK
+constraint still lists it as a legal column value — **not removed** —
+solely so any pre-existing row that already holds it stays valid and
+readable; `checkJobEligibility.ts`'s `remote_mena` branches are likewise
+kept, unchanged, so such a row keeps behaving under its original,
+narrower (GCC/MENA-only) semantics rather than being silently widened.
+That row self-corrects to `remote_worldwide` (or `null`) the next time
+its owner saves preferences through the real product path, the same
+self-correction pattern established for a Pro-to-Free downgrade.
+`lebanon_only` and `remote_lebanon_applicants` are also legacy/unreachable
+via the RPC (a `null` coverage already behaves identically to
+`remote_lebanon_applicants` — the documented conservative default) but
+are out of this task's scope: no product requirement distinguishes them
+from `null`, and they were not flagged as a competing-derivation-path
+problem the way `remote_mena` was.
+
+**Server-authoritative, never trust the client**: market entitlement is
+derived from `subscriptions.plan_code` (read server-side inside
+`save_job_preferences` and inside `enforce_job_preferences_eligibility_trigger`),
+never from anything the frontend sends. A Student cannot gain Pro market
+coverage, and a Pro user cannot self-select `remote_mena`, through any
+payload manipulation — both are enforced at the trigger level, which
+covers every write path.
+
+---
+
+## Market coverage vs. work arrangement vs. relocation — kept separate, never mixed
+
+Three distinct concepts, each with its own field(s) and its own rule
+above — a change to one must never implicitly change another:
+
+- **Market coverage** (`job_market_coverage`, this section): *where the
+  plan allows the system to search/match at all.* Plan-derived, not a
+  user choice.
+- **Work arrangement** (`work_arrangement`; see "Work arrangement"
+  section above): remote / hybrid / onsite / flexible — a normal user
+  preference, compared against each job's own stated arrangement via the
+  match/conflict/unknown model.
+- **Relocation** (`willing_to_relocate` + `job_preference_relocation_locations`):
+  whether the user is willing to relocate for a non-Lebanon **physical-
+  presence** (onsite/hybrid) role. Gates `evaluatePhysicalPresenceEligibility()`
+  only — entirely independent of `job_market_coverage`, which gates the
+  separate **remote** path (`evaluateRemoteEligibility()`). A Pro user
+  with international search on and `willing_to_relocate = false` still
+  gets full `remote_worldwide` coverage (Lebanon + Gulf + worldwide
+  remote); they just can't be matched to a Gulf onsite/hybrid role, which
+  requires physical relocation regardless of remote coverage.
+
+**`international_search_enabled`**: still meaningful, unchanged semantics
+— it is the user's own on/off switch for whether they want international
+opportunities included at all. The Pro plan determines *what markets are
+allowed* (the ceiling); `international_search_enabled` determines
+*whether the user actually wants them* (on/off within that ceiling). Off
+is a complete, intentional, valid state (see "Work arrangement" section's
+sibling rule for the analogous `unknown` case) — never treated as
+incomplete onboarding.
+
+---
+
+## Geography, plan, and relocation — remaining pre-existing rules
 
 - MVP market is Lebanon-only for Free/Student plans.
-- Pro-only structured international preferences: `job_market_coverage`
-  (`lebanon_only` | `remote_lebanon_applicants` | `remote_mena` |
-  `remote_worldwide`), `international_search_enabled`,
-  `willing_to_relocate`, and a relocation market catalog (Gulf markets:
-  SA, QA, KW, AE).
 - A low-confidence resolved location is never eligible, regardless of
   plan (fails closed).
 - A Pro user who never qualifies for a derived `job_market_coverage` is
   treated exactly like `remote_lebanon_applicants` — never silently
   granted wider access than they opted into.
-- **Resolved** (job_market_coverage wiring fix,
-  `supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql`):
-  `job_market_coverage` is no longer a client-supplied value —
-  `src/app/onboarding/preferences/page.tsx` never sends it, and
-  `save_job_preferences` derives it server-side: `international_search_enabled
-  = true` and `work_arrangement in ('remote', 'flexible')` derives
-  `remote_worldwide`; otherwise `null`. `willing_to_relocate` is
-  deliberately NOT part of this derivation — it gates the separate
-  onsite/hybrid physical-presence path above, not this field. This closes
-  the gap Phase 18's `docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md`
-  originally found (backend supported the tiers; no UI/RPC path ever set
-  them). `remote_mena` remains a supported column value with no current
-  derivation path — no product requirement distinguishes it from
-  `remote_worldwide` today.
+- Gulf relocation markets (onsite/hybrid): SA, QA, KW, AE — see
+  `job_preference_relocation_locations` and the "Relocation" bullet above.

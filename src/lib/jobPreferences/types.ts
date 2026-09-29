@@ -17,7 +17,19 @@ export type WorkArrangement = "remote" | "onsite" | "hybrid" | "flexible";
 // non-null for a Lebanon-resident Pro user with work_arrangement in
 // (remote, flexible) — enforced server-side by
 // enforce_job_preferences_eligibility_trigger, never trust a client value
-// for this field beyond what that trigger allows.
+// for this field beyond what that trigger allows. Never client-supplied:
+// save_job_preferences derives it server-side (see
+// supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql)
+// and only ever produces 'remote_worldwide' or null — the canonical Pro
+// entitlement is one coherent tier, not a user-facing choice between
+// competing sub-tiers. 'lebanon_only' and 'remote_lebanon_applicants' are
+// legacy values with no active derivation path (null already behaves
+// identically to 'remote_lebanon_applicants' — see
+// checkJobEligibility.ts's evaluateRemoteEligibility). 'remote_mena' is
+// additionally retired: it can no longer be written at all (see
+// supabase/migrations/20260930120000_retire_remote_mena_coverage_tier.sql)
+// and is kept in this union only so a pre-existing legacy row still types
+// safely — never derive or write it for a new row.
 export type JobMarketCoverage =
   | "lebanon_only"
   | "remote_lebanon_applicants"

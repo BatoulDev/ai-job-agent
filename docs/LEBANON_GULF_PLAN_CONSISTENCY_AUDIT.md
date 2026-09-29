@@ -12,8 +12,9 @@ One real, concrete gap was found — `job_market_coverage`'s `remote_mena`/
 `remote_worldwide` tiers are fully built and tested on the backend but
 **unreachable from any UI today** — documented and regression-tested
 below, not fixed at the time (a UI addition is a real feature, outside
-this audit's scope; since resolved via server-side derivation — see §4).
-No false marketing promise was found: the one plan-geography claim
+this audit's scope; since resolved via server-side derivation — see §7,
+and further simplified into one coherent Pro tier — see §8). No false
+marketing promise was found: the one plan-geography claim
 that *could* have been overstated (Pro's "verified international remote
 roles") is not, because what it actually delivers matches what it says.
 
@@ -101,36 +102,6 @@ not between *promised* and *delivered*.
 
 ---
 
-## 4. Resolved (job_market_coverage wiring fix)
-
-The gap in §3 is fixed, without the UI-picker approach §3 anticipated. Per
-explicit founder direction, the user never chooses a raw backend coverage
-value — `job_market_coverage` is derived server-side inside
-`save_job_preferences`
-(`supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql`)
-from `international_search_enabled` + `work_arrangement`
-(`remote_worldwide` when international is enabled and the arrangement is
-remote/flexible, else `null`), and existing rows were backfilled using the
-identical derivation. The onboarding page no longer sends
-`p_job_market_coverage` at all — the parameter was removed from the RPC
-signature, not merely stopped being populated. See
-`docs/PRODUCT_MATCHING_RULES.md` ("Geography, plan, and relocation") for
-the current, durable statement of this rule, and
-`tests/db/international-job-preferences.test.mjs` /
-`tests/db/matching-rerank.test.mjs` / `tests/e2e/preferences-job-market-coverage.spec.ts`
-for the regression coverage (RPC-level derivation, real matching-path
-propagation, and a real browser → RPC → DB proof, respectively).
-
-**Regression tests added**
-(`tests/unit/plan-geography-consistency.test.mjs`, 3 tests): pin the real
-current hardcoded-null behavior via a source-text assertion (so an
-intentional future change is a deliberate, reviewed diff, not silent),
-prove the real consequence against the unmodified `checkJobEligibility()`,
-and prove what the toggle *does* still deliver (Lebanon-inclusive remote
-+ Gulf relocation) so the working parts stay protected too.
-
----
-
 ## 4. Verified consistent — no change needed
 
 - **Relocation market catalog**: `public.locations` (queried live)
@@ -180,6 +151,11 @@ confirmed by `git diff` containing only a new test file and this document.
 
 ## 6. Recommendation for a future phase (not this one)
 
+**Superseded — see §7 and §8.** The UI-picker approach recommended below
+was explicitly overridden by founder direction: market coverage is
+plan-derived, never a user-facing picker. Kept verbatim for historical
+record of what was considered.
+
 If Pro's "expand your search outside Lebanon" toggle is meant to unlock
 genuinely broader remote coverage (not just Gulf relocation), a real UI
 addition is needed: a `job_market_coverage` selector in the international-
@@ -188,3 +164,81 @@ preferences section (e.g. "Lebanon-friendly remote only" /
 backend parameter. Until then, the toggle's real, delivered value is
 entirely the Gulf-relocation path — worth being explicit about internally,
 even though current marketing copy does not overstate it.
+
+---
+
+## 7. Resolved (job_market_coverage wiring fix)
+
+The gap in §3 is fixed, without the UI-picker approach §6 anticipated. Per
+explicit founder direction, the user never chooses a raw backend coverage
+value — `job_market_coverage` is derived server-side inside
+`save_job_preferences`
+(`supabase/migrations/20260930110000_derive_job_market_coverage_server_side.sql`)
+from `international_search_enabled` + `work_arrangement`
+(`remote_worldwide` when international is enabled and the arrangement is
+remote/flexible, else `null`), and existing rows were backfilled using the
+identical derivation. The onboarding page no longer sends
+`p_job_market_coverage` at all — the parameter was removed from the RPC
+signature, not merely stopped being populated. See
+`docs/PRODUCT_MATCHING_RULES.md` ("Market coverage") for the current,
+durable statement of this rule, and
+`tests/db/international-job-preferences.test.mjs` /
+`tests/db/matching-rerank.test.mjs` / `tests/e2e/preferences-job-market-coverage.spec.ts`
+for the regression coverage (RPC-level derivation, real matching-path
+propagation, and a real browser → RPC → DB proof, respectively).
+
+Regression tests: `tests/unit/plan-geography-consistency.test.mjs` (3
+tests, rewritten when this landed to prove the resolved state instead of
+pinning the bug), `tests/unit/check-job-eligibility.test.mjs` (isolated
+tier logic), and the DB/E2E tests above.
+
+---
+
+## 8. Resolved (Pro market-coverage model simplification)
+
+Follow-up task, after §7 merged: eliminate the remaining competing
+`remote_mena` vs `remote_worldwide` derivation path so Pro has one
+coherent entitlement model (Lebanon + Gulf + worldwide remote), per
+explicit product decision that the user never chooses between these —
+not even indirectly.
+
+**Audit finding**: §7's RPC-level fix already only ever derived
+`remote_worldwide` — no product-facing path produced `remote_mena`. The
+one remaining gap was a crafted direct write (or a service-role write)
+bypassing the RPC, which the eligibility trigger did not block, since it
+only validated plan/country/arrangement, not which specific tier value
+was used.
+
+**Fix** (`supabase/migrations/20260930120000_retire_remote_mena_coverage_tier.sql`,
+non-destructive): `enforce_job_preferences_eligibility_trigger` now
+rejects `job_market_coverage = 'remote_mena'` for any new write, from
+every write path (trigger, not an RLS policy — fires for service-role
+too). The `job_preferences_job_market_coverage_check` CHECK constraint
+and `checkJobEligibility.ts`'s `remote_mena` branches are **unchanged** —
+any pre-existing row that already holds this value stays valid, readable,
+and keeps behaving under its original, narrower (GCC/MENA-only)
+semantics, never silently widened. It self-corrects to `remote_worldwide`
+(or `null`) the next time its owner saves through the real product path.
+`lebanon_only`/`remote_lebanon_applicants` were left untouched — legacy
+and unreachable via the RPC too, but not flagged as a competing-
+derivation-path problem the way `remote_mena` was, and out of this task's
+explicit scope.
+
+One dev-only fixture (`scripts/seed-local-automation-users.mjs`'s Lina
+Mansour) directly inserted a `remote_mena` row (bypassing the RPC,
+mirroring what a legacy production row would have looked like) — updated
+to `remote_worldwide`, which already covers her original "also open to
+Remote MENA" note as a strict superset.
+
+See `docs/PRODUCT_MATCHING_RULES.md` ("Market coverage" and "Market
+coverage vs. work arrangement vs. relocation") for the current, durable
+statement of the final model. Regression tests:
+`tests/db/international-job-preferences.test.mjs` (new-write rejection,
+including a Student and a service-role write) and
+`tests/e2e/preferences-job-market-coverage.spec.ts` (confirms no
+MENA/Gulf/Worldwide vocabulary or raw enum value is ever shown to the
+user). Legacy-row behavior itself remains proven at the unit level by
+`tests/unit/check-job-eligibility.test.mjs`'s existing, unmodified
+`remote_mena` tests — no DB-level synthetic legacy row was constructed,
+since doing so now requires bypassing the very trigger this fix adds
+(not justified for one test scenario; see that test file's own comment).
