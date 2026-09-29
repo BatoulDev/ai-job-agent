@@ -1,11 +1,15 @@
-// Task: job_market_coverage wiring fix. Real-browser proof (not just static
-// code reading) of the UI -> save_job_preferences RPC -> DB path for a Pro
-// user choosing work_arrangement=remote + international search enabled +
-// willing_to_relocate=false. Uses the .fixture-job-market-coverage.json
-// user seeded by global-setup.ts (Pro plan, profile pre-filled, no
-// job_preferences row yet) so this test drives the real onboarding form
-// end to end, including the target-role combobox, rather than relying on
-// pre-seeded preference data.
+// job_market_coverage wiring fix + Pro market-coverage model
+// simplification. Real-browser proof (not just static code reading) of
+// the UI -> save_job_preferences RPC -> DB path for a Pro user choosing
+// work_arrangement=remote + international search enabled + willing_to_
+// relocate=false, and that no raw backend market-tier value/vocabulary
+// (MENA/Gulf/Worldwide/remote_mena/remote_worldwide/...) is ever exposed
+// to the user — market entitlement is plan-derived, not a user choice.
+// Uses the .fixture-job-market-coverage.json user seeded by
+// global-setup.ts (Pro plan, profile pre-filled, no job_preferences row
+// yet) so this test drives the real onboarding form end to end, including
+// the target-role combobox, rather than relying on pre-seeded preference
+// data.
 import { test, expect } from "@playwright/test";
 import { readFileSync } from "node:fs";
 import { resolve } from "node:path";
@@ -40,6 +44,16 @@ test("Pro user selecting Remote + international search Yes + willing to relocate
 
   await page.goto("/onboarding/preferences");
   await expect(page.getByRole("heading", { name: /preferences/i })).toBeVisible({ timeout: 10_000 });
+
+  // Pro market-coverage model: the user chooses plain preferences
+  // (work arrangement, international search on/off, willing to relocate)
+  // — never a raw backend market tier. Confirm no such vocabulary ever
+  // appears in the onboarding page's own visible text.
+  const pageText = await page.locator("body").innerText();
+  expect(pageText).not.toMatch(/\bMENA\b/i);
+  expect(pageText).not.toMatch(/\bGulf\b/i);
+  expect(pageText).not.toMatch(/\bWorldwide\b/i);
+  expect(pageText).not.toMatch(/remote_mena|remote_worldwide|lebanon_only|remote_lebanon_applicants/i);
 
   // Target roles (required, no default) — drive the real combobox.
   await page.getByPlaceholder("Search roles...").click();

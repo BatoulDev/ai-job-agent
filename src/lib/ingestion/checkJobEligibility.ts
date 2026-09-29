@@ -16,6 +16,15 @@
 //   'remote_worldwide'), international_search_enabled, willing_to_relocate,
 //   and job_preference_relocation_locations (Gulf relocation markets:
 //   SA, QA, KW, AE — supabase/migrations/20260902090000_add_relocation_market_catalog.sql).
+//   Pro market-coverage model (see docs/PRODUCT_MATCHING_RULES.md
+//   "Market coverage"): the canonical, only-ever-derived Pro remote tier
+//   is 'remote_worldwide' — save_job_preferences never derives
+//   'remote_mena' or 'lebanon_only', and 'remote_mena' can no longer be
+//   written at all (20260930120000_retire_remote_mena_coverage_tier.sql).
+//   The remote_mena branches below exist solely to evaluate any
+//   pre-existing legacy row under its original (narrower, GCC/MENA-only)
+//   semantics — never remove them without a migration proving no such row
+//   remains.
 //
 // Fails closed: a low-confidence or otherwise unresolved location never
 // falls through to "eligible" by default.
@@ -157,10 +166,13 @@ function evaluateRemoteEligibility(job: JobEligibilityLocationInput, input: JobE
   const coverage = input.jobMarketCoverage ?? "remote_lebanon_applicants";
   if (coverage === "lebanon_only" || coverage === "remote_lebanon_applicants") return false;
   if (coverage === "remote_mena") {
+    // Legacy tier — never derived for a new row (see this file's header).
+    // Kept so any pre-existing row still behaves per its original, narrower
+    // (GCC/MENA-only) semantics, not silently widened to remote_worldwide.
     return job.remoteScope === "region:gcc" || (job.countryCode !== null && isMenaCountryCode(job.countryCode));
   }
-  // remote_worldwide — see the original inline comment preserved below on
-  // the real code path; a genuinely unknown scope still fails closed.
+  // remote_worldwide — the canonical, only-ever-derived Pro remote tier.
+  // A genuinely unknown scope still fails closed.
   return job.remoteScope !== null;
 }
 
@@ -230,6 +242,7 @@ export function checkJobEligibility(input: JobEligibilityInput): JobEligibilityR
   }
 
   if (coverage === "remote_mena") {
+    // Legacy tier — see evaluateRemoteEligibility's identical branch above.
     const menaEligible = job.remoteScope === "region:gcc" || (job.countryCode !== null && isMenaCountryCode(job.countryCode));
     return menaEligible ? eligible(arrangementStatus) : ineligible("remote_scope_excludes_lebanon", arrangementStatus);
   }

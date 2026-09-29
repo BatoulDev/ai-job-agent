@@ -129,7 +129,7 @@ function DashboardPageContent() {
         supabase
           .from("job_preferences")
           .select(
-            "id, version, work_arrangement, job_type, experience_level, additional_notes, job_market_coverage, custom_target_roles, custom_locations, lebanon_location_scope, international_search_enabled"
+            "id, version, work_arrangement, job_type, experience_level, additional_notes, custom_target_roles, custom_locations, lebanon_location_scope, international_search_enabled"
           )
           .eq("user_id", user.id)
           .maybeSingle(),

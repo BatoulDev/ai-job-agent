@@ -343,3 +343,19 @@ test("job_market_coverage propagation: a Pro user's real save_job_preferences-de
     await deleteTestUsers([coverageUser]);
   }
 });
+
+// Pro market-coverage model simplification: remote_mena is retired for
+// every NEW write, including a service-role write (proven at the DB
+// level in tests/db/international-job-preferences.test.mjs). That same
+// fact means there is no sanctioned way left, from this test suite, to
+// construct a fresh "legacy remote_mena row" — doing so would require
+// either a new raw-SQL client dependency or a new admin-only test-support
+// RPC, neither justified for this one scenario. Legacy behavior itself
+// (a pre-existing row's narrower GCC/MENA-only semantics, unchanged by
+// this migration) is already proven at the unit level in
+// tests/unit/check-job-eligibility.test.mjs ("pro + remote_mena: GCC-
+// scoped remote is eligible" / "... US-only remote is still not
+// eligible") — checkJobEligibility.ts itself is untouched by this
+// migration, so those tests remain the authoritative, real proof that any
+// such row (should one already exist in production) keeps behaving
+// predictably.

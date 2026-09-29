@@ -260,7 +260,12 @@ const FIXTURES = [
       // Pro + Flexible combination: both job-market coverage AND
       // preferred physical locations apply at once.
       work_arrangement: "flexible",
-      job_market_coverage: "remote_mena", // matches her original "also open to Remote MENA" note.
+      // remote_mena is a retired legacy tier (20260930120000) — the
+      // canonical Pro remote entitlement is remote_worldwide, which
+      // already covers her original "also open to Remote MENA" note (a
+      // strict superset, per checkJobEligibility.ts's
+      // evaluateRemoteEligibility).
+      job_market_coverage: "remote_worldwide",
       job_type: "full-time",
       experience_level: "entry-level",
       additional_notes:

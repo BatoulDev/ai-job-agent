@@ -514,6 +514,59 @@ describe("job_market_coverage: server-side derivation (job_market_coverage wirin
   });
 });
 
+// Pro market-coverage model simplification: remote_mena is retired —
+// save_job_preferences already never derived it (proven above), and this
+// migration additionally rejects it as a value for ANY new write,
+// including a crafted direct table update that bypasses the RPC
+// entirely, closing the only remaining path a Pro user could have used to
+// self-select the unsupported two-tier distinction.
+describe("job_market_coverage: remote_mena is retired (Pro market-coverage model simplification)", () => {
+  let pro;
+  let student;
+
+  before(async () => {
+    pro = await createTestUser("jmc-mena-pro");
+    student = await createTestUser("jmc-mena-student");
+    await setPlan(pro.id, "pro", { status: "active", periodEnd: new Date(Date.now() + 86400000).toISOString() });
+    await setPlan(student.id, "student", { status: "active", periodEnd: new Date(Date.now() + 86400000).toISOString() });
+  });
+  after(async () => {
+    await deleteTestUsers([pro, student]);
+  });
+
+  test("a crafted direct update setting job_market_coverage='remote_mena' is rejected even for an otherwise-eligible Pro user", async () => {
+    const { error: setupErr } = await pro.client.rpc("save_job_preferences", baseSaveArgs());
+    assert.equal(setupErr, null, `setup save failed: ${setupErr?.message}`);
+
+    const { error } = await pro.client
+      .from("job_preferences")
+      .update({ job_market_coverage: "remote_mena" })
+      .eq("user_id", pro.id);
+    assert.ok(error, "a direct client update setting remote_mena must be rejected by the eligibility trigger");
+    assert.match(error.message, /retired legacy value/i);
+
+    const { data: row } = await adminClient.from("job_preferences").select("job_market_coverage").eq("user_id", pro.id).single();
+    assert.equal(row.job_market_coverage, null, "the crafted update must never have taken effect");
+  });
+
+  test("a crafted direct update setting job_market_coverage='remote_mena' is rejected for a Student too (double-blocked: plan gate and retirement gate)", async () => {
+    const { error: setupErr } = await student.client.rpc("save_job_preferences", baseSaveArgs());
+    assert.equal(setupErr, null, `setup save failed: ${setupErr?.message}`);
+
+    const { error } = await student.client
+      .from("job_preferences")
+      .update({ job_market_coverage: "remote_mena" })
+      .eq("user_id", student.id);
+    assert.ok(error, "a direct client update setting remote_mena must be rejected");
+  });
+
+  test("even an admin/service-role write cannot set job_market_coverage='remote_mena' — the trigger fires for every role, not just RLS-scoped ones", async () => {
+    const { error } = await adminClient.from("job_preferences").update({ job_market_coverage: "remote_mena" }).eq("user_id", pro.id);
+    assert.ok(error, "the eligibility trigger is not an RLS policy — it must reject this value regardless of the writing role");
+    assert.match(error.message, /retired legacy value/i);
+  });
+});
+
 // Student-to-Pro upgrade pricing, price versioning, and the mid-period
 // price-change guarantees now live in
 // tests/db/price-versioning-and-upgrade.test.mjs (moved out of this file
