@@ -13,10 +13,11 @@ One real, concrete gap was found — `job_market_coverage`'s `remote_mena`/
 **unreachable from any UI today** — documented and regression-tested
 below, not fixed at the time (a UI addition is a real feature, outside
 this audit's scope; since resolved via server-side derivation — see §7,
-further simplified into one coherent Pro tier — see §8, and legacy-value
-cleanup attempted but deliberately stopped short of destructive changes
-after a real historical write path was discovered — see §9). No false
-marketing promise was found: the one plan-geography claim
+further simplified into one coherent Pro tier — see §8, legacy-value
+cleanup initially stopped short of destructive changes after a real
+historical write path was discovered — see §9 — and finally fully
+removed once confirmed this project has no production database or users
+— see §10). No false marketing promise was found: the one plan-geography claim
 that *could* have been overstated (Pro's "verified international remote
 roles") is not, because what it actually delivers matches what it says.
 
@@ -343,3 +344,89 @@ becomes safe, and can be done as a small, purely mechanical follow-up.
 
 See `docs/PRODUCT_MATCHING_RULES.md` ("Market coverage") for the current,
 durable statement of what was and wasn't removed and why.
+
+---
+
+## 10. Legacy market-coverage cleanup — final removal (§9's stop condition resolved)
+
+Follow-up task, after §9 merged: confirmed explicitly by the user that
+this project has no production database and no real production users —
+§9's stop condition (an unverified historical onboarding UI picker that
+could have written a legacy value to a real production row) does not
+apply here. Local/dev `job_preferences` held zero rows using any legacy
+value at the start of this task (re-confirmed directly against the
+database).
+
+**What changed** (`supabase/migrations/20260930140000_remove_legacy_market_coverage_compatibility.sql`):
+
+1. Defensively re-ran the same normalization `§9`'s migration already
+   applied (idempotent no-op — zero rows matched), then hard-verified
+   zero rows remained before proceeding.
+2. Tightened `job_preferences_job_market_coverage_check` from four legal
+   values to exactly one: `check (job_market_coverage in ('remote_worldwide'))`
+   (Postgres CHECK-constraint semantics: a `NULL` column value always
+   satisfies an `IN` check regardless of the list, so this correctly
+   still permits `null` too). `remote_mena`, `lebanon_only`, and
+   `remote_lebanon_applicants` are no longer legal column values, for
+   any write path — verified live via `psql` (each rejected with
+   Postgres error code `23514`, `check_violation`) and via automated DB
+   tests (`tests/db/international-job-preferences.test.mjs`).
+3. Simplified `enforce_job_preferences_eligibility_trigger`: removed the
+   `if new.job_market_coverage in ('remote_mena', 'lebanon_only',
+   'remote_lebanon_applicants') then raise exception` branch §9 added —
+   now fully redundant, since the CHECK constraint itself rejects those
+   values as a matter of column type, before the trigger's own logic
+   would even need to. The remaining checks (Pro-plan/Lebanon-country/
+   work-arrangement validation for a non-null value, and the
+   `international_search_enabled` Pro gate) stay — a CHECK constraint
+   cannot reference other tables (`subscriptions.plan_code`,
+   `profiles.country_of_residence`), so cross-table validation remains
+   the trigger's job.
+4. Simplified `checkJobEligibility.ts`: removed both `if (coverage ===
+   "remote_mena")` branches and the `isMenaCountryCode` import they were
+   the only consumer of in this file (the function itself,
+   `normalizeLocation.ts`'s `isMenaCountryCode`, is untouched — it's a
+   general-purpose helper with its own independent test coverage, not
+   exclusive to this retired tier). `evaluateRemoteEligibility()` and the
+   main function's remote/flexible branch collapsed from a 3-way
+   `lebanon_only`/`remote_lebanon_applicants`/`remote_mena` dispatch to a
+   single `jobMarketCoverage !== "remote_worldwide"` check.
+5. `JobMarketCoverage` (`src/lib/jobPreferences/types.ts`) is now
+   `export type JobMarketCoverage = "remote_worldwide";` — a single
+   literal, not a 4-member union. Combined with the existing `|
+   null` convention at every usage site, this makes constructing a
+   legacy value a **compile-time** type error anywhere in TypeScript
+   code, not merely a runtime rejection.
+6. Tests rewritten, not just extended, per this task's explicit
+   instruction to replace legacy-behavior tests with impossible-state
+   tests: `tests/unit/check-job-eligibility.test.mjs`'s
+   `remote_mena`/`lebanon_only` tier tests were replaced with tests
+   proving a legacy value now behaves identically to `null` (no special
+   case survives); `tests/unit/plan-geography-consistency.test.mjs`'s
+   migration-mapping-pin tests were replaced with static-source-
+   inspection tests proving the CHECK constraint, `checkJobEligibility.ts`,
+   and the `JobMarketCoverage` type all reflect the final, single-tier
+   state; `tests/db/international-job-preferences.test.mjs`'s rejection
+   tests were updated from asserting a custom trigger-raised message to
+   asserting the real Postgres `23514` check-violation code and message,
+   plus two new tests confirming `remote_worldwide` and `null` both
+   remain valid.
+7. `scripts/seed-local-automation-users.mjs`'s comments were updated to
+   drop references to the now-fully-retired migration numbers; its data
+   was already correct (`null` / `'remote_worldwide'` only) since §8.
+   Re-ran the script this session — succeeds cleanly against the
+   tightened constraint.
+
+**Not touched, correctly out of scope**: `lebanon_only`'s and
+`remote_lebanon_applicants`' historical presence in older, dated
+build/audit logs (`docs/OVERNIGHT_BUILD_PROGRESS.md`,
+`docs/SOURCE_COVERAGE_AND_PROVIDER_EXPANSION_AUDIT.md`,
+`docs/OVERNIGHT_SOURCE_EXPANSION_FINAL_REPORT.md`,
+`docs/job-ingestion-database-readiness-audit.md`) — these are dated,
+point-in-time reports describing what was true when they were written,
+not living reference docs; retroactively editing them would misrepresent
+project history. Only `docs/PRODUCT_MATCHING_RULES.md` and this file are
+treated as current, continuously-updated references.
+
+Full DB reset, validation, and Playwright results are in this task's
+final report (delivered directly to the user, not duplicated here).

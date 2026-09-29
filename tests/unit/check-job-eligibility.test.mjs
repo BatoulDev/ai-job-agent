@@ -81,12 +81,12 @@ describe("checkJobEligibility — work arrangement: match / conflict / unknown",
     assert.equal(result.workArrangementStatus, "unknown");
   });
 
-  test("unknown job arrangement outside Lebanon IS eligible for a Pro user with remote_mena coverage (remote interpretation succeeds), even without relocation selected", () => {
+  test("unknown job arrangement outside Lebanon IS eligible for a Pro user with remote_worldwide coverage (remote interpretation succeeds), even without relocation selected", () => {
     const result = checkJobEligibility(
       baseInput({
         planCode: "pro",
-        jobMarketCoverage: "remote_mena",
-        job: { countryCode: "AE", workArrangement: null, remoteScope: null, locationConfidence: "high" },
+        jobMarketCoverage: "remote_worldwide",
+        job: { countryCode: "AE", workArrangement: null, remoteScope: "region:gcc", locationConfidence: "high" },
       }),
     );
     assert.equal(result.eligible, true);
@@ -316,25 +316,32 @@ describe("checkJobEligibility — remote jobs, Lebanon-inclusive scopes are free
   });
 });
 
-describe("checkJobEligibility — Pro job_market_coverage tiers", () => {
+// job_market_coverage has exactly one active tier — remote_worldwide —
+// per the Pro market-coverage model (docs/PRODUCT_MATCHING_RULES.md
+// "Market coverage"). 'remote_mena'/'lebanon_only'/'remote_lebanon_
+// applicants' were development-era states, fully retired
+// (supabase/migrations/20260930140000_remove_legacy_market_coverage_compatibility.sql):
+// impossible at the DB layer (CHECK constraint — see
+// tests/db/international-job-preferences.test.mjs) and impossible at the
+// type layer (JobMarketCoverage = "remote_worldwide", not a union
+// anymore). checkJobEligibility() itself has no special-case branch for
+// them either — this describe block proves that directly: any
+// non-"remote_worldwide" value (including a legacy string, if one somehow
+// reached this pure function) is treated identically to no coverage at
+// all, fail-closed, never a separate interpretation.
+describe("checkJobEligibility — Pro job_market_coverage: remote_worldwide is the sole active tier", () => {
   const gccRemote = { countryCode: null, workArrangement: "remote", remoteScope: "region:gcc", locationConfidence: "high" };
   const usRemote = { countryCode: "US", workArrangement: "remote", remoteScope: "country:US", locationConfidence: "high" };
 
-  test("pro with no job_market_coverage set behaves exactly like remote_lebanon_applicants (documented default)", () => {
+  test("pro with no job_market_coverage set (null) is not eligible for a non-Lebanon-inclusive remote scope", () => {
     const result = checkJobEligibility(baseInput({ planCode: "pro", jobMarketCoverage: null, job: gccRemote }));
     assert.equal(result.eligible, false);
     assert.equal(result.reason, "remote_scope_excludes_lebanon");
   });
 
-  test("pro + remote_mena: GCC-scoped remote is eligible", () => {
-    const result = checkJobEligibility(baseInput({ planCode: "pro", jobMarketCoverage: "remote_mena", job: gccRemote }));
+  test("pro + remote_worldwide: GCC-scoped remote is eligible (remote_worldwide covers every determinable scope, GCC included)", () => {
+    const result = checkJobEligibility(baseInput({ planCode: "pro", jobMarketCoverage: "remote_worldwide", job: gccRemote }));
     assert.equal(result.eligible, true);
-  });
-
-  test("pro + remote_mena: US-only remote is still not eligible", () => {
-    const result = checkJobEligibility(baseInput({ planCode: "pro", jobMarketCoverage: "remote_mena", job: usRemote }));
-    assert.equal(result.eligible, false);
-    assert.equal(result.reason, "remote_scope_excludes_lebanon");
   });
 
   test("pro + remote_worldwide: US-only remote is eligible (documented assumption)", () => {
@@ -354,9 +361,11 @@ describe("checkJobEligibility — Pro job_market_coverage tiers", () => {
     assert.equal(result.reason, "remote_scope_unknown");
   });
 
-  test("pro + lebanon_only: GCC-scoped remote is not eligible", () => {
-    const result = checkJobEligibility(baseInput({ planCode: "pro", jobMarketCoverage: "lebanon_only", job: gccRemote }));
-    assert.equal(result.eligible, false);
+  test("a retired legacy value, if it somehow reached this function, is treated exactly like null — no special-case interpretation remains", () => {
+    const withLegacyValue = checkJobEligibility(baseInput({ planCode: "pro", jobMarketCoverage: "remote_mena", job: gccRemote }));
+    const withNull = checkJobEligibility(baseInput({ planCode: "pro", jobMarketCoverage: null, job: gccRemote }));
+    assert.equal(withLegacyValue.eligible, false, "remote_mena must no longer grant GCC-scoped eligibility — that special case is gone");
+    assert.deepEqual(withLegacyValue, withNull, "any non-remote_worldwide value produces an identical result to null");
   });
 });
 

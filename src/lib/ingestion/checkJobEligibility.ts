@@ -12,19 +12,18 @@
 // - MVP market is Lebanon-only for Free/Student
 //   (supabase/migrations/20260902090010_plan_aware_job_preferences.sql).
 // - Pro-only structured international preferences: job_market_coverage
-//   ('lebanon_only' | 'remote_lebanon_applicants' | 'remote_mena' |
-//   'remote_worldwide'), international_search_enabled, willing_to_relocate,
-//   and job_preference_relocation_locations (Gulf relocation markets:
-//   SA, QA, KW, AE — supabase/migrations/20260902090000_add_relocation_market_catalog.sql).
+//   (null | 'remote_worldwide'), international_search_enabled,
+//   willing_to_relocate, and job_preference_relocation_locations (Gulf
+//   relocation markets: SA, QA, KW, AE —
+//   supabase/migrations/20260902090000_add_relocation_market_catalog.sql).
 //   Pro market-coverage model (see docs/PRODUCT_MATCHING_RULES.md
-//   "Market coverage"): the canonical, only-ever-derived Pro remote tier
-//   is 'remote_worldwide' — save_job_preferences never derives
-//   'remote_mena' or 'lebanon_only', and 'remote_mena' can no longer be
-//   written at all (20260930120000_retire_remote_mena_coverage_tier.sql).
-//   The remote_mena branches below exist solely to evaluate any
-//   pre-existing legacy row under its original (narrower, GCC/MENA-only)
-//   semantics — never remove them without a migration proving no such row
-//   remains.
+//   "Market coverage"): 'remote_worldwide' is the sole active remote
+//   tier — Lebanon + Gulf + worldwide remote — never a user-facing
+//   choice. 'remote_mena'/'lebanon_only'/'remote_lebanon_applicants' were
+//   development-era states, fully retired
+//   (20260930140000_remove_legacy_market_coverage_compatibility.sql):
+//   the CHECK constraint makes them impossible column values, so this
+//   function no longer needs to interpret them.
 //
 // Fails closed: a low-confidence or otherwise unresolved location never
 // falls through to "eligible" by default.
@@ -56,7 +55,7 @@
 //     geographic/plan rule, it only stops being an independent rejection
 //     reason on its own.
 
-import { isMenaCountryCode, type LocationConfidence, type WorkArrangement } from "./normalizeLocation.ts";
+import type { LocationConfidence, WorkArrangement } from "./normalizeLocation.ts";
 import type { PlanCode } from "@/lib/plans/types";
 import type { JobMarketCoverage } from "@/lib/jobPreferences/types";
 
@@ -98,13 +97,12 @@ export interface JobEligibilityInput {
    */
   preferredWorkArrangement: WorkArrangement | null;
   /**
-   * Only ever non-null for a Lebanon-resident Pro user with a remote/
-   * flexible work_arrangement preference (server-enforced —
-   * enforce_job_preferences_eligibility_trigger). When a Pro user has this
-   * null (never explicitly set), this function treats it the same as
-   * "remote_lebanon_applicants" — the documented, conservative default:
-   * a Pro user who never opted into wider remote coverage sees exactly
-   * what a Free/Student user would see, never more.
+   * The sole active tier is 'remote_worldwide' — only ever non-null for a
+   * Lebanon-resident Pro user with a remote/flexible work_arrangement
+   * preference who opted into international search (server-enforced —
+   * enforce_job_preferences_eligibility_trigger). null (never opted in,
+   * or not Pro) is the conservative default: sees exactly what a Free/
+   * Student user would see, never more.
    */
   jobMarketCoverage: JobMarketCoverage | null;
   internationalSearchEnabled: boolean;
@@ -158,20 +156,11 @@ function evaluatePhysicalPresenceEligibility(job: JobEligibilityLocationInput, i
   return true;
 }
 
-/** Remote/flexible geographic rule, unchanged from before this decision — extracted so the "unknown" branch can evaluate it hypothetically. */
+/** Remote/flexible geographic rule, extracted so the "unknown" branch can evaluate it hypothetically. */
 function evaluateRemoteEligibility(job: JobEligibilityLocationInput, input: JobEligibilityInput): boolean {
   if (remoteScopeIncludesLebanon(job)) return true;
   if (input.planCode !== "pro") return false;
-
-  const coverage = input.jobMarketCoverage ?? "remote_lebanon_applicants";
-  if (coverage === "lebanon_only" || coverage === "remote_lebanon_applicants") return false;
-  if (coverage === "remote_mena") {
-    // Legacy tier — never derived for a new row (see this file's header).
-    // Kept so any pre-existing row still behaves per its original, narrower
-    // (GCC/MENA-only) semantics, not silently widened to remote_worldwide.
-    return job.remoteScope === "region:gcc" || (job.countryCode !== null && isMenaCountryCode(job.countryCode));
-  }
-  // remote_worldwide — the canonical, only-ever-derived Pro remote tier.
+  if (input.jobMarketCoverage !== "remote_worldwide") return false;
   // A genuinely unknown scope still fails closed.
   return job.remoteScope !== null;
 }
@@ -235,16 +224,8 @@ export function checkJobEligibility(input: JobEligibilityInput): JobEligibilityR
     return ineligible(job.remoteScope === null ? "remote_scope_unknown" : "remote_scope_excludes_lebanon", arrangementStatus);
   }
 
-  const coverage = input.jobMarketCoverage ?? "remote_lebanon_applicants";
-
-  if (coverage === "lebanon_only" || coverage === "remote_lebanon_applicants") {
+  if (input.jobMarketCoverage !== "remote_worldwide") {
     return ineligible("remote_scope_excludes_lebanon", arrangementStatus);
-  }
-
-  if (coverage === "remote_mena") {
-    // Legacy tier — see evaluateRemoteEligibility's identical branch above.
-    const menaEligible = job.remoteScope === "region:gcc" || (job.countryCode !== null && isMenaCountryCode(job.countryCode));
-    return menaEligible ? eligible(arrangementStatus) : ineligible("remote_scope_excludes_lebanon", arrangementStatus);
   }
 
   // remote_worldwide. Documented assumption (AGENTS.md §17/"conservative
