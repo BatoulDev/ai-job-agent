@@ -149,24 +149,44 @@ explicit, later authorization.
 
 **Plan limits — authoritative, not invented**: `plans.cover_letter_limit`
 (`supabase/migrations/20260802090000_create_plans.sql`) is Free = 1,
-Student = 8, Pro = 15, counted as a **lifetime total per user**, not a
-per-billing-period count (`src/lib/coverLetters/candidates.ts`'s own
-`ponytail:` comment — free-plan subscriptions have no billing period in
-this schema at all, so there is no period boundary to reset against yet;
-upgrade path noted inline once one exists). The count is the number of
-real `cover_letters` rows a user has (a row is only ever created by a
-successful, cost-incurring generation), so **editing an existing draft
-before approval never consumes additional quota** — `saveCoverLetterDraft`
-updates the same row rather than inserting a new one. The limit is read
-from the user's real `subscriptions.plan_code` joined against the real
-`plans` table inside `findCoverLetterCandidates` — never a client-supplied
-plan or count. Proven per-plan (not just Free) in
-`tests/db/cover-letter-generation.test.mjs`'s "a real 'student'/'pro'
-subscription gets its own real, higher plans.cover_letter_limit" tests.
-Known stale reference: the migration file's own seed comment says "per
-month" — that predates the lifetime-total decision above and describes
-the original pricing-page intent, not current enforcement; the code
-comment and this doc are authoritative.
+Student = 8, Pro = 15. Student and Pro are monthly subscriptions
+(`plans.billing_period = 'monthly'`) and the allowance is **per paid
+billing period, not lifetime** (founder decision, 2026-09-30) —
+`computeRemainingQuotaByUser` in `src/lib/coverLetters/candidates.ts`
+counts only `cover_letters` rows whose `created_at` falls within the
+user's real `subscriptions.current_period_start`/`current_period_end`
+window (the same period fields `activate_subscription` and
+`mark_payment_verified` already maintain for every activated paid
+subscription — see `20260802090010_create_subscriptions.sql` and
+`20260903090000_add_price_versioning_and_upgrade_locking.sql`; no new
+period concept was introduced). A new billing period (renewal) makes the
+allowance available again automatically, because the count is derived
+from the period window each time rather than from a mutated counter —
+no cron/reset job is needed or exists. The Free plan (`billing_period =
+'forever'`) has no period fields at all, so it keeps its original
+lifetime-total-of-1 behavior; that is unchanged. The count is the number
+of real `cover_letters` rows in the relevant window (a row is only ever
+created by a successful, cost-incurring generation), so **editing an
+existing draft before approval never consumes additional quota** —
+`saveCoverLetterDraft` updates the same row rather than inserting a new
+one. The limit and period are read from the user's real `subscriptions`
+row joined against the real `plans` table inside
+`findCoverLetterCandidates` — never a client-supplied plan, period, or
+count. Proven per-plan (not just Free), including period-reset and
+Student-to-Pro upgrade-within-period behavior, in
+`tests/db/cover-letter-generation.test.mjs`.
+
+**Upgrade within a billing period**: `mark_payment_verified`'s existing
+`purchase_type = 'upgrade'` branch already preserves
+`current_period_start`/`current_period_end` exactly — an upgrade never
+moves the period (AGENTS.md-documented rule, not new). Because the
+cover-letter quota is derived from that same period window, a Student who
+upgrades to Pro mid-period keeps the letters they already generated as
+Student counted against their new, larger Pro limit for the remainder of
+that period (e.g. 5 of 8 Student letters used -> upgrade to Pro -> 10
+remaining, not a fresh 15 and not 0) — a direct, non-invented consequence
+of period-scoped counting plus the pre-existing period-preservation rule,
+not a new business rule.
 
 **Idempotency**: `cover_letters.match_id` carries a real unique index
 (`cover_letters_match_id_key`), so at most one cover-letters row can ever
@@ -190,6 +210,142 @@ cover-letter approval — see the existing `applications`/`automation_tasks`
 tests in `tests/db/matches-cover-letters-applications.test.mjs`. Manual
 LinkedIn application behavior (link + prepared materials only, no
 automated submission) is unchanged by any of this.
+
+---
+
+## Job-match active capacity and daily delivery (Model C, founder decision 2026-09-30)
+
+**What changed**: `plans.job_match_limit` used to mean "total matches ever
+surfaced for one user + their current CV analysis, never decrementing" —
+once a user hit 45 (Student) or 95 (Pro), no further match would ever
+surface again for that analysis, even after rejecting matches or a job
+closing. The founder explicitly redefined this: `job_match_limit` is now
+**active/current opportunity capacity** — how many genuinely-current
+opportunities may occupy a user's pool *at one time*, not a running total.
+Historical matches are never deleted or hidden; a match simply stops being
+counted once it is no longer current.
+
+**Values**: Student = 45, Pro = 95 active-capacity slots; Free = 1
+(unchanged). A second, new column, `plans.daily_new_match_limit`, caps how
+many *new* matches may be surfaced in one UTC calendar day: Student = 5,
+Pro = 10, Free = `NULL` (no daily gate — Free's capacity of 1 already
+bounds delivery at least as tightly, so no new Free product decision was
+needed or made).
+
+**Authoritative source — one place, two columns**: both values live only
+in `public.plans` (`job_match_limit`, `daily_new_match_limit`). To change
+either later: update that row via a new forward migration (never edit an
+already-applied one) — no application, matching, or workflow code needs to
+change, ever. `tests/unit/job-match-limit-centralization.test.mjs` proves
+this by statically scanning every matching-pipeline file for a stray
+literal `45`/`95`/`5`/`10` and by asserting `surface_new_matches_for_user()`
+reads both values from `public.plans` in one query.
+
+**The active-capacity predicate — one authoritative place**:
+`count_active_matches_for_user()` (`supabase/migrations/20260930160000_
+add_model_c_active_capacity_and_daily_limits.sql`) is the only place this
+logic is ever evaluated; nothing else re-derives it. A match occupies a
+slot when: it has been surfaced (`surfaced_at is not null`); its status is
+`pending_review` or `user_approved` (`user_rejected` never counts); its
+job's `status = 'active'` (expired/closed/unavailable/rejected/source_error
+never count); and it has no `applications` row with `status = 'sent'` (a
+completed send is "conceptually finished" — the founder's own words — and
+moves to history; every other application state, including
+`pending_send`/`sending`/`failed`/`cancelled`, is conservatively still
+active, since only `sent` was explicitly named as terminal —
+AGENTS.md "do not invent application statuses").
+
+**Combined surfacing rule**: on every call,
+`to_surface = min(job_match_limit − active_count, daily_new_match_limit − surfaced_today)`,
+then the current analysis's highest-scoring not-yet-surfaced
+`pending_review` matches fill up to that many slots — **never padded**
+with weaker candidates to reach either ceiling. Both ceilings are hard
+maximums, never targets: a day with only 2 genuinely strong candidates
+surfaces 2, not 5.
+
+**"Today" = the current UTC calendar day**, derived directly from
+`surfaced_at` timestamps (`date_trunc('day', now() at time zone 'utc')`)
+— never a rolling 24-hour window, never a mutable counter table, so no
+reset job exists or is needed: the moment UTC midnight passes, "surfaced
+today" naturally recomputes to 0 for every user. Running the surfacing
+call multiple times in one day (e.g. a morning and an afternoon matching
+run) shares one combined daily allowance, never resets per call.
+
+**Concurrency**: `surface_new_matches_for_user()` takes a
+`pg_advisory_xact_lock` scoped to the calling user before computing either
+ceiling, so two overlapping calls (two tabs, a retried request, two
+matching runs landing close together) can never both read the same
+pre-update snapshot and jointly overshoot the active-capacity or daily
+ceiling — same pattern already used by `create_payment_attempt`/
+`mark_payment_verified`. Proven directly with concurrent calls in
+`tests/db/daily-match-delivery.test.mjs`.
+
+**Job lifecycle — three ways a job stops being active**:
+1. **Source refresh (unchanged, pre-existing)**: `ingestSourceBatch.ts`
+   marks a previously-active job `unavailable` when a *successful,
+   non-truncated* ingestion run for that same source no longer lists it.
+   A failed, partial, or truncated run never closes anything (`tests/db/
+   ingestion-core-batch.test.mjs`'s existing "truncated run never closes
+   stale jobs" / "complete run closes stale jobs" tests already prove
+   both halves of this).
+2. **Deadline expiry (new)**: `expire_due_jobs()` (same migration as
+   above) flips `active` jobs whose `expires_at` or `closing_date` has
+   passed to `expired` — idempotent, set-based, never deletes, never
+   touches any other status. Not scheduled by anything yet; see
+   `n8n-workflows/job-expiry-sweep.ts` (prepared, `active: false`) for the
+   intended hourly trigger. `tests/db/job-expiry-sweep.test.mjs` proves
+   the transition, idempotency, and that every other status is left alone.
+3. **Explicit provider-closed status — DEFERRED, not missing by accident**
+   (reviewed and explicitly postponed 2026-09-30, pending the upcoming
+   real ingestion pilot): the remaining gap after mechanisms 1-2 is a job
+   whose URL still returns 200 and is still listed, but whose page content
+   itself says the role is closed/filled/no-longer-accepting-applications
+   (e.g. "no longer accepting applications", "position filled", "this
+   vacancy is closed"). For sources where ingestion itself is authoritative
+   (every Tier A ATS — Greenhouse/Lever/Workable/Ashby/Oracle HCM — whose
+   public list endpoints never include a closed posting in the first
+   place, confirmed by inspecting the real raw adapter types), mechanism 1
+   already fully covers this; no gap exists there. A generic "check every
+   job URL for closure text" crawler was deliberately **not** built now —
+   unsafe cost/ToS/false-positive tradeoffs to design against zero real
+   samples, for a pre-launch product with zero ingested job rows today.
+   **Target architecture, already agreed conceptually, to build once real
+   ingested career-page samples exist from the upcoming pilot**:
+   1. trust structured ATS/provider data first (already true — no gap).
+   2. map `schema.org/JobPosting`'s existing `validThrough` property (the
+      career-page extractor already parses this object, just not this one
+      field yet) into `jobs.closing_date`, feeding the already-built
+      `expire_due_jobs()` sweep — smallest, safest first increment.
+   3. plain HTTP GET for server-rendered custom pages (the same
+      `fetch`-via-n8n-HTTP-Request-node pattern already used everywhere in
+      this pipeline) — never a new browser dependency by default.
+   4. require a high-confidence **structural** signal (HTTP status
+      transition, the job's own JSON-LD posting disappearing, or a
+      curated phrase match scoped to the former CTA/apply-button region
+      only) before ever auto-closing a job — a body-text phrase match with
+      no structural corroboration must route to review, never auto-close,
+      mirroring this codebase's existing "never guess, park for review"
+      convention (`WorkArrangementStatus.unknown`, `retryable: null` in
+      the source-intelligence-analyzer workflow).
+   5. managed rendering/scraping (the existing Apify precedent — Tier C)
+      only for a specific source proven, with evidence, to need
+      JS-rendering — never an in-repo headless browser.
+   6. never auto-close from ambiguous full-page text alone.
+
+Once any of the three above fires, the job's `status` no longer reads
+`'active'`, which alone is sufficient to remove it from candidate
+selection (`shortlistJobsForUser`'s existing `.eq("status","active")`
+query, unchanged) and from active capacity
+(`count_active_matches_for_user()`'s `j.status = 'active'` condition) —
+the same single field change achieves both "stop showing it as fresh" and
+"free the capacity slot," with no separate bookkeeping.
+
+**Do not** re-scope `job_match_limit`/`daily_new_match_limit` counting to
+a specific `cv_analysis_id` (the OLD model's mistake) — active capacity is
+counted per user across all of their surfaced matches, since that is what
+`get_my_matches()` already shows them regardless of which analysis
+produced each match. Only *which new pending_review rows are eligible to
+fill a freed slot* is scoped to the current analysis (never a stale one).
 
 ---
 

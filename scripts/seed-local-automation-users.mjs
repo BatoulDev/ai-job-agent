@@ -136,8 +136,8 @@ async function assertExpectedLocalProject() {
   const byCode = Object.fromEntries((data ?? []).map((p) => [p.plan_code, p]));
   const expected = {
     free: { job_match_limit: 1, cover_letter_limit: 1 },
-    student: { job_match_limit: 25, cover_letter_limit: 8 },
-    pro: { job_match_limit: 45, cover_letter_limit: 15 },
+    student: { job_match_limit: 45, cover_letter_limit: 8 },
+    pro: { job_match_limit: 95, cover_letter_limit: 15 },
   };
 
   for (const [code, limits] of Object.entries(expected)) {
