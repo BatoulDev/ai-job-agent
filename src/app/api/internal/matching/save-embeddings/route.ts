@@ -5,7 +5,7 @@ import { saveProfileEmbedding } from "@/lib/matching/embedProfile";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAuthorizedInternalRequest } from "@/lib/internalAuth";
 
-// Internal, service-to-service endpoint: the n8n "AI Job Agent / 02 Job
+// Internal, service-to-service endpoint: the n8n "AI Job Guide / 02 Job
 // Matching" workflow POSTs here after computing embeddings itself (via its
 // own OpenAI credential) for whatever /api/internal/matching/prepare-embeddings
 // told it needed one. Each profile is re-verified against

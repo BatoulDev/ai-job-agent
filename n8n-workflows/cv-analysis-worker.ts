@@ -871,7 +871,7 @@ if (isLightweight) {
   const priorFacts = normCtx.priorFacts || {};
 
   systemPrompt =
-    'You are refreshing an AI Job Agent career profile\\'s RECOMMENDATIONS ONLY. ' +
+    'You are refreshing an AI Job Guide career profile\\'s RECOMMENDATIONS ONLY. ' +
     'The candidate\\'s CV facts below are already extracted and verified — they are ' +
     'fixed context, not something for you to extract, change, or repeat. Base your ' +
     'recommendations strictly on the CV FACTS and JOB PREFERENCES provided.\\n\\n' +

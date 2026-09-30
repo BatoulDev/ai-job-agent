@@ -26,7 +26,7 @@ export default function AuthLayout({
 
           <div className="relative">
             <h2 className="font-display text-3xl font-semibold leading-tight tracking-tight">
-              Apply smarter with your AI Job Agent
+              Apply smarter with your AI Job Guide
             </h2>
 
             <ul className="mt-8 space-y-4">

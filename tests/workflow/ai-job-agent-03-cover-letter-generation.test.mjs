@@ -1,5 +1,5 @@
 /**
- * Static-analysis tests for the "AI Job Agent / 03 Cover Letter Generation"
+ * Static-analysis tests for the "AI Job Guide / 03 Cover Letter Generation"
  * workflow (Phase 08). No database or n8n connection required — reads the
  * exported workflow JSON directly. All discovery/persistence logic itself is
  * covered by tests/db/cover-letter-generation.test.mjs; this file only

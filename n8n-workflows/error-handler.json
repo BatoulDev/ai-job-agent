@@ -1,5 +1,5 @@
 {
-  "name": "AI Job Agent - Error Handler",
+  "name": "AI Job Guide - Error Handler",
   "active": false,
   "nodes": [
     {
@@ -36,7 +36,7 @@
               "id": "alert-text-field",
               "name": "alertText",
               "type": "string",
-              "value": "={{ 'AI Job Agent — Workflow Failure\\n\\n' + 'Workflow: ' + $json.workflowName + '\\n' + 'Time: ' + $json.timestamp + '\\n' + 'Execution: ' + ($json.executionUrl || $json.executionId || 'unknown') + '\\n' + 'Failed node: ' + ($json.failedNodeName || 'unknown') + '\\n' + 'Error: ' + $json.errorMessage }}"
+              "value": "={{ 'AI Job Guide — Workflow Failure\\n\\n' + 'Workflow: ' + $json.workflowName + '\\n' + 'Time: ' + $json.timestamp + '\\n' + 'Execution: ' + ($json.executionUrl || $json.executionId || 'unknown') + '\\n' + 'Failed node: ' + ($json.failedNodeName || 'unknown') + '\\n' + 'Error: ' + $json.errorMessage }}"
             }
           ]
         }
@@ -57,7 +57,7 @@
       "typeVersion": 1,
       "position": [-250, -50],
       "parameters": {
-        "content": "### AI Job Agent — Error Handler\nReusable execution-level failure handler — attach any AI Job Agent scheduled/unattended workflow to this one via its own Settings → Error Workflow (a manual, per-workflow n8n UI step; the SDK/MCP cannot set it — see this file's own header). Fires once per genuinely FAILED execution (a crashed node), never for expected per-source data outcomes (429/403/5xx/no-URL/etc. are handled as data inside the source workflows themselves and never reach here). Does NOT detect a schedule that never fired at all — no execution exists for this trigger to catch in that case; that is a separate, later, always-on-hosting-phase concern. Normalize Error Event → Build Alert Message → Notification Boundary (a placeholder — no channel wired yet, pending an explicit, approved credential).",
+        "content": "### AI Job Guide — Error Handler\nReusable execution-level failure handler — attach any AI Job Guide scheduled/unattended workflow to this one via its own Settings → Error Workflow (a manual, per-workflow n8n UI step; the SDK/MCP cannot set it — see this file's own header). Fires once per genuinely FAILED execution (a crashed node), never for expected per-source data outcomes (429/403/5xx/no-URL/etc. are handled as data inside the source workflows themselves and never reach here). Does NOT detect a schedule that never fired at all — no execution exists for this trigger to catch in that case; that is a separate, later, always-on-hosting-phase concern. Normalize Error Event → Build Alert Message → Notification Boundary (a placeholder — no channel wired yet, pending an explicit, approved credential).",
         "color": 3,
         "width": 300,
         "height": 200

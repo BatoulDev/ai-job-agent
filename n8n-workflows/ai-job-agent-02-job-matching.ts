@@ -352,7 +352,7 @@ const rerankRateLimitDelay = node({
 });
 
 const overviewNote = sticky(
-  '### AI Job Agent / 02 Job Matching\n' +
+  '### AI Job Guide / 02 Job Matching\n' +
     'Manual trigger, stays inactive. Two stages, both delegating validation/dedup/persistence to internal TypeScript ' +
     'endpoints and only ever having n8n own the actual AI provider call, reusing the existing "OpenAI account" ' +
     'credential (same one cv-analysis-worker.ts already uses):\n\n' +
@@ -366,7 +366,7 @@ const overviewNote = sticky(
   { color: 4 }
 );
 
-export default workflow('ai-job-agent-02-job-matching', 'AI Job Agent / 02 Job Matching')
+export default workflow('ai-job-agent-02-job-matching', 'AI Job Guide / 02 Job Matching')
   .add(startTrigger)
   .to(workflowConfiguration)
   .to(prepareEmbeddings.onError(logEmbeddingsFailure))

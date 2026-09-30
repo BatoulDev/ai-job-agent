@@ -4,7 +4,7 @@ import { findRerankCandidates } from "@/lib/matching/rerankCandidates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAuthorizedInternalRequest } from "@/lib/internalAuth";
 
-// Internal, service-to-service endpoint: the n8n "AI Job Agent / 02 Job
+// Internal, service-to-service endpoint: the n8n "AI Job Guide / 02 Job
 // Matching" workflow's rerank stage calls this to discover which (profile,
 // job) pairs need an LLM score and get their exact grounded prompt, then
 // calls its own OpenAI credential once per candidate (chat completions has

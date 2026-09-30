@@ -12,7 +12,7 @@ export default function Footer() {
                 <span className="h-2 w-2 rounded-full bg-white" />
               </span>
               <span className="font-display text-base font-semibold text-text">
-                AI Job Agent
+                AI Job Guide
               </span>
             </div>
             <p className="mt-3 text-sm leading-relaxed text-muted">
@@ -44,7 +44,7 @@ export default function Footer() {
         </div>
 
         <div className="mt-10 border-t border-slate-200/70 pt-6 text-sm text-muted">
-          © {new Date().getFullYear()} AI Job Agent. All rights reserved.
+          © {new Date().getFullYear()} AI Job Guide. All rights reserved.
         </div>
       </div>
     </footer>

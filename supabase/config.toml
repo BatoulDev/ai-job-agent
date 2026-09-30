@@ -262,7 +262,7 @@ otp_expiry = 3600
 # content_path = "./supabase/templates/invite.html"
 
 [auth.email.template.recovery]
-subject = "Reset your AI Job Agent password"
+subject = "Reset your AI Job Guide password"
 content_path = "./supabase/templates/recovery.html"
 
 # Uncomment to customize notification email template

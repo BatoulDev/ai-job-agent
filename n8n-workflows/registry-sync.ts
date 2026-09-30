@@ -11,7 +11,12 @@
  * successfully in that instance — node set, connections, and shared
  * candidate-processing pipeline confirmed structurally identical via
  * n8n-mcp get_workflow_details. See the PR/commit notes for exactly what
- * was and wasn't verified.
+ * was and wasn't verified. (Historical note, left as-is: that
+ * reconciliation matched against the live instance's name at the time,
+ * "AI Job Agent - ...". This file's own workflow() display name below was
+ * renamed to "AI Job Guide - ..." for the product rename — the live n8n
+ * instance has not been touched and will show the old name until
+ * re-imported.)
  *
  * CREDENTIALS (configure in n8n → Settings → Credentials before running)
  * ──────────────────────────────────────────────────────────────────────
@@ -957,7 +962,7 @@ const inputRouting = isManualMode
 
 const mainFlow = workflowConfiguration.to(generateDiscoveryRunId.to(manualCandidatesInput.to(inputRouting)));
 
-export default workflow('registry-sync', 'AI Job Agent - Registry Sync - step 1 (manual)')
+export default workflow('registry-sync', 'AI Job Guide - Registry Sync - step 1 (manual)')
   .add(startTrigger)
   .to(mainFlow)
   .add(quickGuideNote);

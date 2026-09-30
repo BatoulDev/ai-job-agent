@@ -1,5 +1,5 @@
 /**
- * Static-analysis + pure-logic tests for the AI Job Agent — Error Handler
+ * Static-analysis + pure-logic tests for the AI Job Guide — Error Handler
  * workflow. Mirrors tests/workflow/registry-sync.test.mjs's own pattern:
  * reads the workflow JSON and exercises Code node jsCode directly via
  * `new Function`. No database or network connection required.
@@ -124,11 +124,11 @@ test('Normalize Error Event: a normal node-level failure preserves workflow/exec
         lastNodeExecuted: 'Load Candidate Sources',
         mode: 'trigger',
       },
-      workflow: { id: 'yM78i3aqFy8DDkPf', name: 'AI Job Agent - Source Intelligence Analyzer' },
+      workflow: { id: 'yM78i3aqFy8DDkPf', name: 'AI Job Guide - Source Intelligence Analyzer' },
     },
   ]);
   const j = out[0].json;
-  assert.equal(j.workflowName, 'AI Job Agent - Source Intelligence Analyzer');
+  assert.equal(j.workflowName, 'AI Job Guide - Source Intelligence Analyzer');
   assert.equal(j.workflowId, 'yM78i3aqFy8DDkPf');
   assert.equal(j.executionId, '999');
   assert.equal(j.executionUrl, 'http://localhost:5678/workflow/yM78i3aqFy8DDkPf/executions/999');
@@ -182,7 +182,7 @@ test('Build Alert Message: produces the exact concise, actionable format require
   // and execute the equivalent JS to prove the concatenation logic without
   // re-implementing an n8n expression evaluator.
   const json = {
-    workflowName: 'AI Job Agent - Source Intelligence Analyzer',
+    workflowName: 'AI Job Guide - Source Intelligence Analyzer',
     timestamp: '2026-09-24T17:47:52.202Z',
     executionUrl: 'http://localhost:5678/workflow/yM78i3aqFy8DDkPf/executions/999',
     executionId: '999',
@@ -190,18 +190,18 @@ test('Build Alert Message: produces the exact concise, actionable format require
     errorMessage: 'ETIMEDOUT: connect ETIMEDOUT 127.0.0.1:55321',
   };
   const alertText =
-    'AI Job Agent — Workflow Failure\n\n' +
+    'AI Job Guide — Workflow Failure\n\n' +
     'Workflow: ' + json.workflowName + '\n' +
     'Time: ' + json.timestamp + '\n' +
     'Execution: ' + (json.executionUrl || json.executionId || 'unknown') + '\n' +
     'Failed node: ' + (json.failedNodeName || 'unknown') + '\n' +
     'Error: ' + json.errorMessage;
 
-  assert.match(code, /AI Job Agent — Workflow Failure/, 'the node parameter itself must contain this exact header');
+  assert.match(code, /AI Job Guide — Workflow Failure/, 'the node parameter itself must contain this exact header');
   assert.equal(
     alertText,
-    'AI Job Agent — Workflow Failure\n\n' +
-      'Workflow: AI Job Agent - Source Intelligence Analyzer\n' +
+    'AI Job Guide — Workflow Failure\n\n' +
+      'Workflow: AI Job Guide - Source Intelligence Analyzer\n' +
       'Time: 2026-09-24T17:47:52.202Z\n' +
       'Execution: http://localhost:5678/workflow/yM78i3aqFy8DDkPf/executions/999\n' +
       'Failed node: Load Candidate Sources\n' +

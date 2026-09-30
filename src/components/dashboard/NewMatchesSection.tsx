@@ -35,7 +35,7 @@ export default function NewMatchesSection({
     return (
       <EmptyTabState
         title="No matches yet"
-        message="Your AI Job Agent hasn't found any job matches yet. Check back soon — new opportunities appear here as they're found."
+        message="Your AI Job Guide hasn't found any job matches yet. Check back soon — new opportunities appear here as they're found."
       />
     );
   }

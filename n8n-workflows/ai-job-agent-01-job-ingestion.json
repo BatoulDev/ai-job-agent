@@ -1,5 +1,5 @@
 {
-  "name": "AI Job Agent / 01 Job Ingestion",
+  "name": "AI Job Guide / 01 Job Ingestion",
   "active": false,
   "description": "Manual trigger, dryRun-default job ingestion. n8n owns provider HTTP fetch/retry/rate-limiting for sources discovered dynamically from company_sources (Phase 12) across three tiers (Phase 13): company-specific ATS, multi-company feeds, career-page extraction. TypeScript owns validation, dedup, persistence via three internal endpoints.",
   "nodes": [
@@ -1378,7 +1378,7 @@
         -48
       ],
       "parameters": {
-        "content": "### AI Job Agent / 01 Job Ingestion\nManual trigger, stays inactive until a human reviews a `local_pilot`-equivalent run (dryRun:false) and decides on a schedule. n8n owns provider HTTP calls + retry/backoff (native `retryOnFail`) + per-source rate limiting; ALL validation, field mapping, dedup identity, idempotent persistence, and stale-close safety live in src/lib/ingestion/* (Phase 03) behind three internal endpoints (run-batch, run-multi-company-batch, extract-career-page-jobs), which also re-verify authorization live on every call — n8n never needs Supabase access for this workflow at all.\n\nNo combined execution-summary node: n8n's cross-loop-iteration item linking does not reliably expose every iteration's result to a single downstream node once a loop's done output fires (confirmed by direct testing — `.all()` from that branch only resolved the last iteration). Each source/provider's real outcome is fully visible per-iteration in each tier's own Record *Result node execution history in the n8n UI, sufficient for this manually-reviewed, inactive workflow. Revisit if this is ever scheduled unattended and a single rollup notification becomes necessary.",
+        "content": "### AI Job Guide / 01 Job Ingestion\nManual trigger, stays inactive until a human reviews a `local_pilot`-equivalent run (dryRun:false) and decides on a schedule. n8n owns provider HTTP calls + retry/backoff (native `retryOnFail`) + per-source rate limiting; ALL validation, field mapping, dedup identity, idempotent persistence, and stale-close safety live in src/lib/ingestion/* (Phase 03) behind three internal endpoints (run-batch, run-multi-company-batch, extract-career-page-jobs), which also re-verify authorization live on every call — n8n never needs Supabase access for this workflow at all.\n\nNo combined execution-summary node: n8n's cross-loop-iteration item linking does not reliably expose every iteration's result to a single downstream node once a loop's done output fires (confirmed by direct testing — `.all()` from that branch only resolved the last iteration). Each source/provider's real outcome is fully visible per-iteration in each tier's own Record *Result node execution history in the n8n UI, sufficient for this manually-reviewed, inactive workflow. Revisit if this is ever scheduled unattended and a single rollup notification becomes necessary.",
         "color": 4,
         "width": 300,
         "height": 200

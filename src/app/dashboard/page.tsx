@@ -555,7 +555,7 @@ function DashboardPageContent() {
             Your job matches
           </h1>
           <p className="mt-2 max-w-2xl text-sm leading-relaxed text-muted sm:text-base">
-            Here are the best opportunities your AI Job Agent found based on
+            Here are the best opportunities your AI Job Guide found based on
             your CV and preferences.
           </p>
         </div>
@@ -640,7 +640,7 @@ function DashboardPageContent() {
             )}
 
             <TrustNote emphasized>
-              Your AI Job Agent prepares matches and cover letters, but
+              Your AI Job Guide prepares matches and cover letters, but
               nothing is sent without your approval. LinkedIn jobs are always
               manual apply.
             </TrustNote>

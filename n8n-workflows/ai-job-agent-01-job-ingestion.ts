@@ -1090,7 +1090,7 @@ const careerPageRateLimitDelay = node({
 // ─────────────────────────────────────────────────────────────────────────
 
 const overviewNote = sticky(
-  '### AI Job Agent / 01 Job Ingestion\n' +
+  '### AI Job Guide / 01 Job Ingestion\n' +
     'Manual trigger, stays inactive until a human reviews a `local_pilot`-equivalent run (dryRun:false) and decides on a schedule. ' +
     'n8n owns provider HTTP calls + retry/backoff (native `retryOnFail`) + per-source rate limiting; ALL validation, ' +
     'field mapping, dedup identity, idempotent persistence, and stale-close safety live in src/lib/ingestion/* (Phase 03) ' +
@@ -1161,7 +1161,7 @@ const apifyMultiCompanyNote = sticky(
   { color: 3 }
 );
 
-export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Agent / 01 Job Ingestion')
+export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job Ingestion')
   .add(startTrigger)
   .to(workflowConfiguration)
   .to(listIngestionSources.onError(logListSourcesFailure))

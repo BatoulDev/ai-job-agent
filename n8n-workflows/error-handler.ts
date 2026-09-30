@@ -1,5 +1,5 @@
 /**
- * AI Job Agent — Error Handler — n8n Workflow SDK source
+ * AI Job Guide — Error Handler — n8n Workflow SDK source
  *
  * IMPORT INSTRUCTIONS
  * ───────────────────
@@ -10,7 +10,7 @@
  * PURPOSE
  * ───────
  * A single, reusable execution-level failure handler for every scheduled/
- * unattended AI Job Agent n8n workflow (Source Intelligence Analyzer today;
+ * unattended AI Job Guide n8n workflow (Source Intelligence Analyzer today;
  * Registry Sync, Job Ingestion, and any future scheduled workflow can
  * attach to this SAME workflow later — nothing here is Source-Intelligence-
  * specific). Handles exactly one failure class: "an execution started, then
@@ -36,7 +36,7 @@
  * attachment from the repo or via MCP tooling — it must be set once, by
  * hand, in the n8n UI, for every workflow that should use this handler:
  * open the workflow → Settings (three-dot menu, top right) → Error
- * Workflow → select "AI Job Agent - Error Handler". This file's own
+ * Workflow → select "AI Job Guide - Error Handler". This file's own
  * existence and this comment ARE the repo's representation of that
  * intent — the setting itself lives only in n8n's own workflow metadata.
  *
@@ -78,7 +78,7 @@
  * NOTIFICATION BOUNDARY — DELIBERATELY STOPS HERE
  * ─────────────────────────────────────────────────
  * No notification channel is wired yet. This project has no established,
- * clearly-AI-Job-Agent-owned notification credential today (checked: no
+ * clearly-AI-Job-Guide-owned notification credential today (checked: no
  * Slack/email/webhook config in .env*, no operator-notification code or
  * docs in the repo; the existing `notifications` table is strictly an
  * end-user in-app/email feature, unrelated to ops alerting; an ambient
@@ -115,7 +115,7 @@ const errorTrigger = trigger({
         lastNodeExecuted: 'Load Candidate Sources',
         mode: 'trigger',
       },
-      workflow: { id: 'abc123', name: 'AI Job Agent - Source Intelligence Analyzer' },
+      workflow: { id: 'abc123', name: 'AI Job Guide - Source Intelligence Analyzer' },
     },
   ],
 });
@@ -175,7 +175,7 @@ const normalizeErrorEvent = node({
   },
   output: [
     {
-      workflowName: 'AI Job Agent - Source Intelligence Analyzer',
+      workflowName: 'AI Job Guide - Source Intelligence Analyzer',
       workflowId: 'abc123',
       executionId: 'exec-example',
       executionUrl: 'http://localhost:5678/workflow/abc123/executions/exec-example',
@@ -207,14 +207,14 @@ const buildAlertMessage = node({
             name: 'alertText',
             type: 'string',
             value: expr(
-              "={{ 'AI Job Agent — Workflow Failure\\n\\n' + 'Workflow: ' + $json.workflowName + '\\n' + 'Time: ' + $json.timestamp + '\\n' + 'Execution: ' + ($json.executionUrl || $json.executionId || 'unknown') + '\\n' + 'Failed node: ' + ($json.failedNodeName || 'unknown') + '\\n' + 'Error: ' + $json.errorMessage }}"
+              "={{ 'AI Job Guide — Workflow Failure\\n\\n' + 'Workflow: ' + $json.workflowName + '\\n' + 'Time: ' + $json.timestamp + '\\n' + 'Execution: ' + ($json.executionUrl || $json.executionId || 'unknown') + '\\n' + 'Failed node: ' + ($json.failedNodeName || 'unknown') + '\\n' + 'Error: ' + $json.errorMessage }}"
             ),
           },
         ],
       },
     },
   },
-  output: [{ alertText: 'AI Job Agent — Workflow Failure\n\nWorkflow: AI Job Agent - Source Intelligence Analyzer\nTime: 2026-09-24T00:00:00.000Z\nExecution: http://localhost:5678/workflow/abc123/executions/exec-example\nFailed node: Load Candidate Sources\nError: Example error message' }],
+  output: [{ alertText: 'AI Job Guide — Workflow Failure\n\nWorkflow: AI Job Guide - Source Intelligence Analyzer\nTime: 2026-09-24T00:00:00.000Z\nExecution: http://localhost:5678/workflow/abc123/executions/exec-example\nFailed node: Load Candidate Sources\nError: Example error message' }],
 });
 
 // Deliberately a No-Op, not a real notification node yet — see this
@@ -229,8 +229,8 @@ const notificationBoundary = node({
 });
 
 const overviewNote = sticky(
-  '### AI Job Agent — Error Handler\n' +
-    'Reusable execution-level failure handler — attach any AI Job Agent scheduled/unattended workflow to this ' +
+  '### AI Job Guide — Error Handler\n' +
+    'Reusable execution-level failure handler — attach any AI Job Guide scheduled/unattended workflow to this ' +
     'one via its own Settings → Error Workflow (a manual, per-workflow n8n UI step; the SDK/MCP cannot set it — ' +
     'see this file\'s own header). Fires once per genuinely FAILED execution (a crashed node), never for expected ' +
     'per-source data outcomes (429/403/5xx/no-URL/etc. are handled as data inside the source workflows ' +
@@ -242,7 +242,7 @@ const overviewNote = sticky(
   { color: 3 }
 );
 
-export default workflow('error-handler', 'AI Job Agent - Error Handler')
+export default workflow('error-handler', 'AI Job Guide - Error Handler')
   .add(errorTrigger)
   .to(normalizeErrorEvent.to(buildAlertMessage.to(notificationBoundary)))
   .add(overviewNote);

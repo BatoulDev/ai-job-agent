@@ -14,7 +14,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "AI Job Agent — Your AI Job Agent for Smarter Applications",
+  title: "AI Job Guide — Your AI Job Guide for Smarter Applications",
   description:
     "Upload your CV once. Get matched with relevant jobs every day. Review, approve, and apply with confidence.",
 };

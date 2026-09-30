@@ -5,7 +5,7 @@ import { getEnabledMultiCompanyFeedSources } from "@/lib/ingestion/multiCompanyF
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAuthorizedInternalRequest } from "@/lib/internalAuth";
 
-// Internal, service-to-service endpoint: the "AI Job Agent / 01 Job
+// Internal, service-to-service endpoint: the "AI Job Guide / 01 Job
 // Ingestion" n8n workflow calls this once per run to discover both (a) the
 // current verified, automatable company_sources rows (Tier A/B — see
 // findEligibleCompanySources.ts) and (b) the currently-enabled
@@ -28,7 +28,7 @@ export async function POST(request: Request) {
     const [sources, careerPageCandidates] = await Promise.all([findEligibleCompanySources(supabase), findCareerPageExtractionCandidates(supabase)]);
     const multiCompanySources = getEnabledMultiCompanyFeedSources();
     // snake_case on the wire deliberately: this response is consumed only by
-    // "AI Job Agent / 01 Job Ingestion", whose downstream nodes (Split Out
+    // "AI Job Guide / 01 Job Ingestion", whose downstream nodes (Split Out
     // Sources, Extract Jobs By ATS Type, ...) already read source_id/ats_type/
     // feed_url — the exact shape the static source list this replaces used.
     // Matching it means minimal downstream node changes, not a new API

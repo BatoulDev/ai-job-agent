@@ -13,7 +13,7 @@ export default function Hero() {
           </span>
 
           <h1 className="mt-6 font-display text-4xl font-semibold leading-[1.1] tracking-tight text-text sm:text-5xl lg:text-6xl">
-            Your AI Job Agent for{" "}
+            Your AI Job Guide for{" "}
             <span className="bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
               Smarter Applications
             </span>

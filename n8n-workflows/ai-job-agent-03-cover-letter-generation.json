@@ -1,5 +1,5 @@
 {
-  "name": "AI Job Agent / 03 Cover Letter Generation",
+  "name": "AI Job Guide / 03 Cover Letter Generation",
   "active": false,
   "nodes": [
     {
@@ -173,7 +173,7 @@
       "typeVersion": 1,
       "position": [-50, -50],
       "parameters": {
-        "content": "### AI Job Agent / 03 Cover Letter Generation\nManual trigger, stays inactive. POST /api/internal/cover-letters/prepare-generation (TypeScript, Phase 08) decides which approved matches still need a draft and builds the exact grounded prompt; this workflow calls OpenAI chat completions once per candidate (reusing the existing \"OpenAI account\" credential, same one cv-analysis-worker.ts and Phase 06's rerank stage already use) since chat completions has no batch endpoint; POST /api/internal/cover-letters/save-generation persists the result and re-checks the match is still approved before writing. A failed attempt is never recorded — the match is simply re-offered as a candidate on the next run, same retry story as Phase 06's rerank.",
+        "content": "### AI Job Guide / 03 Cover Letter Generation\nManual trigger, stays inactive. POST /api/internal/cover-letters/prepare-generation (TypeScript, Phase 08) decides which approved matches still need a draft and builds the exact grounded prompt; this workflow calls OpenAI chat completions once per candidate (reusing the existing \"OpenAI account\" credential, same one cv-analysis-worker.ts and Phase 06's rerank stage already use) since chat completions has no batch endpoint; POST /api/internal/cover-letters/save-generation persists the result and re-checks the match is still approved before writing. A failed attempt is never recorded — the match is simply re-offered as a candidate on the next run, same retry story as Phase 06's rerank.",
         "color": 4,
         "width": 320,
         "height": 220
