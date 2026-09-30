@@ -6,7 +6,7 @@
 // jsCode (extracted from the canonical JSON, never re-typed) through a real
 // upsert against public.jobs, so the exact code the n8n workflow runs is
 // what gets verified — not a hand-written stand-in payload.
-import { test, after } from "node:test";
+import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
 import { readFileSync } from "node:fs";
@@ -44,19 +44,66 @@ function runComputeDiffPlan(prepared, existingRows) {
   return new Function("$", "$input", code)(mockDollar, { all: () => existingRows.map((r) => ({ json: r })) })[0].json;
 }
 
+// jobs.source_id has a foreign key into company_sources, so fixtures must
+// reference a row that actually exists. Two dedicated, self-contained
+// company_sources fixtures (one Greenhouse, one Lever) are created below
+// rather than depending on real registry rows (sr-sa-alpaca/sr-intl-wahed)
+// — this file's own job-dedup/identity behavior has nothing to do with
+// the real registry's content, so it must not depend on it being imported
+// (the DB test reproducibility gap this task closes; see
+// tests/db/find-eligible-company-sources.test.mjs for the sibling case
+// where a test genuinely does need the real registry).
+const fixtureCompanyIds = [];
+const fixtureSourceIds = [];
+let greenhouseSourceId;
+let leverSourceId;
+
+before(async () => {
+  await assertExpectedLocalProject();
+
+  async function createFixtureSource(label, atsProvider) {
+    const suffix = randomUUID().slice(0, 8);
+    const companyId = `cc-pilot-${label}-${suffix}`;
+    const sourceId = `sr-pilot-${label}-${suffix}`;
+    const { error: companyError } = await adminClient.from("companies").insert({ id: companyId, display_name: `Pilot Test Co ${label} ${suffix}` });
+    if (companyError) throw new Error(`fixture company insert failed: ${companyError.message}`);
+    fixtureCompanyIds.push(companyId);
+
+    const { error: sourceError } = await adminClient.from("company_sources").insert({
+      id: sourceId,
+      company_id: companyId,
+      company_name: `Pilot Test Co ${label} ${suffix}`,
+      target_country: "Lebanon",
+      country_code: "LB",
+      review_status: "verified",
+      ats_provider: atsProvider,
+      automation_eligibility: "suitable_public_ats",
+    });
+    if (sourceError) throw new Error(`fixture company_sources insert failed: ${sourceError.message}`);
+    fixtureSourceIds.push(sourceId);
+    return sourceId;
+  }
+
+  greenhouseSourceId = await createFixtureSource("greenhouse", "Greenhouse");
+  leverSourceId = await createFixtureSource("lever", "Lever");
+});
+
 const jobIdsToClean = [];
 after(async () => {
   await deleteFakeJobs(jobIdsToClean);
+  if (fixtureSourceIds.length > 0) {
+    const { error } = await adminClient.from("company_sources").delete().in("id", fixtureSourceIds);
+    if (error) throw new Error(`cleanup: failed to delete fixture company_sources: ${error.message}`);
+  }
+  if (fixtureCompanyIds.length > 0) {
+    const { error } = await adminClient.from("companies").delete().in("id", fixtureCompanyIds);
+    if (error) throw new Error(`cleanup: failed to delete fixture companies: ${error.message}`);
+  }
 });
 
-// sr-sa-alpaca is a real, existing company_sources row (Alpaca, Greenhouse,
-// Saudi Arabia — see docs/job-source-discovery). jobs.source_id has a
-// foreign key into company_sources, so fixtures must reference a row that
-// actually exists rather than an invented id; this test file never writes
-// to company_sources itself.
 function fixtureSource(externalId, overrides = {}) {
   return runClassifyGreenhouse(
-    { source_id: "sr-sa-alpaca", ats_type: "greenhouse", company_name: "Pilot Test Co" },
+    { source_id: greenhouseSourceId, ats_type: "greenhouse", company_name: "Pilot Test Co" },
     {
       success: true,
       attempt: 1,
@@ -135,7 +182,7 @@ test("a Lever fixture and a Greenhouse fixture may reuse the same external_id wi
     leverCode
   )(
     (name) => {
-      if (name === "Attach Provenance & Guard") return { item: { json: { source_id: "sr-intl-wahed", ats_type: "lever", company_name: "Pilot Test Co 2" } } };
+      if (name === "Attach Provenance & Guard") return { item: { json: { source_id: leverSourceId, ats_type: "lever", company_name: "Pilot Test Co 2" } } };
       throw new Error("unexpected");
     },
     {

@@ -220,6 +220,66 @@ export function buildCompanySources(rows) {
   return out;
 }
 
+// The actual DB-writing step, factored out so tests/db/helpers.mjs's
+// ensureCompanyRegistryImported() can call it directly against the
+// already-guarded, already-validated adminClient those tests already
+// use — deterministic, in-process registry setup instead of requiring a
+// developer to remember to run this script manually before certain DB
+// tests (see tests/db/find-eligible-company-sources.test.mjs,
+// find-career-page-extraction-candidates.test.mjs, registry-sync.test.mjs).
+// Never inlines URL/env/localhost validation itself — the caller (this
+// file's own main(), or a test's own assertExpectedLocalProject() guard)
+// is responsible for only ever handing this a local Supabase client.
+export async function importCompanyRegistry(supabase, { companies, companySources }) {
+  const { error: probeError } = await supabase.from("company_sources").select("id").limit(1);
+  if (probeError) {
+    throw new Error(`importCompanyRegistry: could not read public.company_sources (${probeError.message}). Have migrations been applied?`);
+  }
+
+  // Provenance (supabase/migrations/20260920090010_add_registry_discovery_
+  // provenance.sql): stamp discovery_source='csv'/discovery_channels=['csv']/
+  // first_discovered_at/last_seen_at ONLY for a row this run is inserting
+  // for the very first time — never for a row that already exists. A row
+  // already on file may since have been rediscovered by Registry Sync
+  // (manual/apify), growing discovery_channels beyond ['csv']; blindly
+  // including these fields on every upsert would silently overwrite that
+  // real history back down to ['csv'] on the next routine CSV re-import.
+  // Omitting the fields entirely for an already-present id leaves them
+  // completely untouched by this upsert, exactly like imported_at's own
+  // established set-once-on-insert-only behavior.
+  const { data: existingCompanies } = await supabase.from("companies").select("id").in("id", companies.map((c) => c.id));
+  const { data: existingSources } = await supabase.from("company_sources").select("id").in("id", companySources.map((s) => s.id));
+  const existingCompanyIds = new Set((existingCompanies ?? []).map((r) => r.id));
+  const existingSourceIds = new Set((existingSources ?? []).map((r) => r.id));
+  const nowIso = new Date().toISOString();
+
+  const companiesWithProvenance = companies.map((c) =>
+    existingCompanyIds.has(c.id)
+      ? c
+      : { ...c, discovery_source: "csv", discovery_channels: ["csv"], first_discovered_at: nowIso, last_seen_at: nowIso }
+  );
+  const companySourcesWithProvenance = companySources.map((s) =>
+    existingSourceIds.has(s.id)
+      ? s
+      : { ...s, discovery_source: "csv", discovery_channels: ["csv"], first_discovered_at: nowIso, last_seen_at: nowIso }
+  );
+
+  const { error: companiesError } = await supabase.from("companies").upsert(companiesWithProvenance, { onConflict: "id" });
+  if (companiesError) throw new Error(`importCompanyRegistry: companies upsert failed: ${companiesError.message}`);
+
+  const { error: sourcesError } = await supabase.from("company_sources").upsert(companySourcesWithProvenance, { onConflict: "id" });
+  if (sourcesError) {
+    throw new Error(
+      `importCompanyRegistry: company_sources upsert failed: ${sourcesError.message}` +
+        (sourcesError.message?.includes("company_sources.company_id cannot be changed")
+          ? " — this means a source's canonical-company mapping actually changed since the last import; that is a real identity decision, not something this script will apply silently. Review the conflicting row manually before proceeding."
+          : "")
+    );
+  }
+
+  return { companiesCount: companies.length, companySourcesCount: companySources.length };
+}
+
 async function main() {
   const rows = loadAllRows();
   const companies = buildCompanies(rows);
@@ -258,53 +318,14 @@ async function main() {
 
   const supabase = createClient(supabaseUrl, supabaseSecretKey, { auth: { persistSession: false, autoRefreshToken: false } });
 
-  const { error: probeError } = await supabase.from("company_sources").select("id").limit(1);
-  if (probeError) {
-    fail(`Could not read public.company_sources (${probeError.message}). Have migrations been applied (npx supabase migration up --local)?`);
+  let result;
+  try {
+    result = await importCompanyRegistry(supabase, { companies, companySources });
+  } catch (err) {
+    fail(err.message);
   }
-
-  // Provenance (supabase/migrations/20260920090010_add_registry_discovery_
-  // provenance.sql): stamp discovery_source='csv'/discovery_channels=['csv']/
-  // first_discovered_at/last_seen_at ONLY for a row this run is inserting
-  // for the very first time — never for a row that already exists. A row
-  // already on file may since have been rediscovered by Registry Sync
-  // (manual/apify), growing discovery_channels beyond ['csv']; blindly
-  // including these fields on every upsert would silently overwrite that
-  // real history back down to ['csv'] on the next routine CSV re-import.
-  // Omitting the fields entirely for an already-present id leaves them
-  // completely untouched by this upsert, exactly like imported_at's own
-  // established set-once-on-insert-only behavior.
-  const { data: existingCompanies } = await supabase.from("companies").select("id").in("id", companies.map((c) => c.id));
-  const { data: existingSources } = await supabase.from("company_sources").select("id").in("id", companySources.map((s) => s.id));
-  const existingCompanyIds = new Set((existingCompanies ?? []).map((r) => r.id));
-  const existingSourceIds = new Set((existingSources ?? []).map((r) => r.id));
-  const nowIso = new Date().toISOString();
-
-  const companiesWithProvenance = companies.map((c) =>
-    existingCompanyIds.has(c.id)
-      ? c
-      : { ...c, discovery_source: "csv", discovery_channels: ["csv"], first_discovered_at: nowIso, last_seen_at: nowIso }
-  );
-  const companySourcesWithProvenance = companySources.map((s) =>
-    existingSourceIds.has(s.id)
-      ? s
-      : { ...s, discovery_source: "csv", discovery_channels: ["csv"], first_discovered_at: nowIso, last_seen_at: nowIso }
-  );
-
-  const { error: companiesError } = await supabase.from("companies").upsert(companiesWithProvenance, { onConflict: "id" });
-  if (companiesError) fail(`companies upsert failed: ${companiesError.message}`);
-  console.log(`[import-company-registry] Upserted ${companies.length} companies rows.`);
-
-  const { error: sourcesError } = await supabase.from("company_sources").upsert(companySourcesWithProvenance, { onConflict: "id" });
-  if (sourcesError) {
-    fail(
-      `company_sources upsert failed: ${sourcesError.message}\n` +
-        (sourcesError.message?.includes("company_sources.company_id cannot be changed")
-          ? "This means a source's canonical-company mapping actually changed since the last import — that is a real identity decision, not something this script will apply silently. Review the conflicting row manually before proceeding."
-          : "")
-    );
-  }
-  console.log(`[import-company-registry] Upserted ${companySources.length} company_sources rows.`);
+  console.log(`[import-company-registry] Upserted ${result.companiesCount} companies rows.`);
+  console.log(`[import-company-registry] Upserted ${result.companySourcesCount} company_sources rows.`);
   console.log("[import-company-registry] Done.");
 }
 

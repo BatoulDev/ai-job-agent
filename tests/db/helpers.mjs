@@ -301,3 +301,40 @@ export async function deleteFakeJobs(ids) {
   await deleteFixtureJobs(ids);
   for (const id of ids) trackedJobIds.delete(id);
 }
+
+// Deterministic, automatic replacement for "the developer already ran
+// `node scripts/import-company-registry.mjs` manually" — the real gap
+// that left tests/db/find-eligible-company-sources.test.mjs,
+// find-career-page-extraction-candidates.test.mjs, and one test in
+// registry-sync.test.mjs unreproducible from a bare `supabase db reset`
+// (see this task's own report). Those files explicitly validate
+// registry-derived behavior (not isolated unit logic), so they legitimately
+// need the real, repository-tracked CSV data — this makes that setup
+// in-process and idempotent instead of a manual prerequisite step.
+//
+// Cheap existence check first (real registry size is ~550+ companies)
+// rather than always re-upserting 588 rows: skips the work entirely when
+// another file already imported it earlier in this same `node --test`
+// invocation, or when a developer's local DB already has it from a prior
+// manual run. Each test file's own process (Node's test runner isolates
+// files into separate processes by default — see this file's own header
+// comment) still pays this cost once per file that calls it, not once per
+// test — call it from a file-level `before()`, never per-test.
+let registryImportChecked = false;
+
+export async function ensureCompanyRegistryImported() {
+  if (registryImportChecked) return;
+
+  const { count, error: countError } = await adminClient.from("company_sources").select("id", { count: "exact", head: true });
+  if (countError) fail(`ensureCompanyRegistryImported: could not read company_sources: ${countError.message}`);
+
+  if ((count ?? 0) < 500) {
+    const { loadAllRows, buildCompanies, buildCompanySources, importCompanyRegistry } = await import("../../scripts/import-company-registry.mjs");
+    const rows = loadAllRows();
+    const companies = buildCompanies(rows);
+    const companySources = buildCompanySources(rows);
+    await importCompanyRegistry(adminClient, { companies, companySources });
+  }
+
+  registryImportChecked = true;
+}

@@ -1,11 +1,15 @@
 // DB test for Phase 12's findEligibleCompanySources (Ashby added Phase 13,
 // Oracle HCM added Phase 16) against the real local Supabase instance and
-// its real, repository-tracked company_sources registry (588 rows as of
-// this task, restored via scripts/import-company-registry.mjs — see that
-// script's own header). The base assertions (>=10 derivable sources, the
-// Greenhouse/Ashby spot-checks) intentionally assert against this real,
-// reproducible registry data, since this test's own purpose is validating
-// registry-derived behavior, not isolated unit logic.
+// its real, repository-tracked company_sources registry (588 rows,
+// docs/job-source-discovery/*.csv). The base assertions (>=10 derivable
+// sources, the Greenhouse/Ashby spot-checks) intentionally assert against
+// this real, reproducible registry data, since this test's own purpose is
+// validating registry-derived behavior, not isolated unit logic — so
+// ensureCompanyRegistryImported() (tests/db/helpers.mjs) imports it
+// automatically and deterministically in this file's own before(), rather
+// than requiring a developer to have already run
+// scripts/import-company-registry.mjs manually (the actual
+// reproducibility gap this task closes — see this task's own report).
 //
 // FIXTURE REPRODUCIBILITY FIX (tests/db reproducibility gap, see
 // docs/LEBANON_GULF_PLAN_CONSISTENCY_AUDIT.md and this task's own report):
@@ -25,14 +29,19 @@
 // shape already used by tests/unit/derive-ats-feed-url.test.mjs, so the
 // Oracle HCM adapter path no longer depends on any one historical row's
 // state.
-import { test, after } from "node:test";
+import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { adminClient, assertExpectedLocalProject } from "./helpers.mjs";
+import { adminClient, assertExpectedLocalProject, ensureCompanyRegistryImported } from "./helpers.mjs";
 import { findEligibleCompanySources } from "../../src/lib/ingestion/findEligibleCompanySources.ts";
 
 let fixtureCompanyId;
 let fixtureSourceId;
+
+before(async () => {
+  await assertExpectedLocalProject();
+  await ensureCompanyRegistryImported();
+});
 
 after(async () => {
   if (fixtureSourceId) {
@@ -46,8 +55,6 @@ after(async () => {
 });
 
 test("findEligibleCompanySources: returns only verified, suitable_public_ats, URL-derivable rows for the five supported ATS adapters", async () => {
-  await assertExpectedLocalProject();
-
   // Dedicated, self-contained Oracle HCM fixture — see header comment.
   const suffix = randomUUID().slice(0, 8);
   fixtureCompanyId = `cc-oraclehcm-fixture-${suffix}`;
