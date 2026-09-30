@@ -44,6 +44,18 @@ describe("buildRerankPrompt", () => {
     assert.match(prompt, /untrusted/);
   });
 
+  test("instructs the model not to flag a skill the profile already has (or an obvious equivalent) as missing", () => {
+    const prompt = buildRerankPrompt(profile, job);
+    assert.match(prompt, /missing_skills rules/);
+    assert.match(prompt, /genuinely absent/);
+    assert.match(prompt, /equivalent/);
+  });
+
+  test("instructs the model to return an empty missing_skills array rather than guessing when the job listing is sparse", () => {
+    const prompt = buildRerankPrompt(profile, job);
+    assert.match(prompt, /does not clearly state required skills.*empty missing_skills array/s);
+  });
+
   test("instructs a strict JSON response shape naming every required field", () => {
     const prompt = buildRerankPrompt(profile, job);
     for (const field of ["score", "reason", "strengths", "missing_skills", "preference_alignment"]) {

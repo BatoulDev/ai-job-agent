@@ -227,6 +227,29 @@ test("work-arrangement propagation: a real persisted preference does NOT exclude
   }
 });
 
+// Section A (product-completion phase): Flexible is a real, explicit user
+// preference ("open to remote, hybrid, and on-site"), never to be confused
+// with a job's unknown/unspecified arrangement (proven separately above).
+// This is the first real DB-level propagation proof for a persisted
+// work_arrangement='flexible' row — only 'remote' had one before.
+test("work-arrangement propagation: a real persisted 'flexible' preference matches real remote, hybrid, and onsite jobs alike", async () => {
+  await setUserWorkArrangementPreference(user, "flexible");
+  try {
+    const analysis = await approveAnalysisWithEmbedding("wa-flexible", [1, 0, 0, 0]);
+    const remoteJob = await insertFixtureJob({ title: "Real Flexible-Match Remote Job", embedding: [1, 0, 0, 0], work_arrangement: "remote", country_code: "LB", city: "Beirut" });
+    const hybridJob = await insertFixtureJob({ title: "Real Flexible-Match Hybrid Job", embedding: [1, 0, 0, 0], work_arrangement: "hybrid" });
+    const onsiteJob = await insertFixtureJob({ title: "Real Flexible-Match Onsite Job", embedding: [1, 0, 0, 0], work_arrangement: "onsite" });
+
+    const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    for (const job of [remoteJob, hybridJob, onsiteJob]) {
+      const match = candidates.find((c) => c.cvAnalysisId === analysis.id && c.jobId === job.id);
+      assert.ok(match, `a real 'flexible' preference must reach a real ${job.work_arrangement ?? "(unspecified)"} job (${job.title}) — Flexible means open to all three, not a rejection`);
+    }
+  } finally {
+    await setUserWorkArrangementPreference(user, null);
+  }
+});
+
 test("combined matching context: real AI Career Profile (skills/summary) + real preferences (work_arrangement) + real job all flow into one grounded rerank candidate", async () => {
   await setUserWorkArrangementPreference(user, "remote");
   try {
@@ -357,3 +380,68 @@ test("job_market_coverage propagation: a Pro user's real save_job_preferences-de
 // tests/unit/plan-geography-consistency.test.mjs's "Legacy market-
 // coverage cleanup" suite and tests/unit/check-job-eligibility.test.mjs
 // for the unit-level proof that no legacy branch remains reachable.
+
+// Section B (product-completion phase): missing-skills persistence gaps
+// identified by the read-only audit — proven here through the real
+// saveMatchResult upsert path against the real matches table (the LLM call
+// itself is mocked with a hand-built RerankResult, per this file's own
+// header note and AGENTS.md §12 "mock external services ... when real
+// calls are unsafe or unreliable").
+test("missing_skills: two different jobs for the same user/analysis get independent, non-cross-contaminated missing_skills arrays", async () => {
+  const analysis = await approveAnalysisWithEmbedding("missing-independent");
+  const jobA = await insertFixtureJob({ title: "Missing Skills Job A" });
+  const jobB = await insertFixtureJob({ title: "Missing Skills Job B" });
+
+  await saveMatchResult(adminClient, {
+    userId: user.id,
+    jobId: jobA.id,
+    cvAnalysisId: analysis.id,
+    result: { score: 70, reason: "Job A fit.", strengths: [], missingSkills: ["AWS"], preferenceAlignment: "ok" },
+    matchingModel: "gpt-4o-mini",
+  });
+  await saveMatchResult(adminClient, {
+    userId: user.id,
+    jobId: jobB.id,
+    cvAnalysisId: analysis.id,
+    result: { score: 80, reason: "Job B fit.", strengths: [], missingSkills: ["Docker", "GraphQL"], preferenceAlignment: "ok" },
+    matchingModel: "gpt-4o-mini",
+  });
+
+  const { data: rowA } = await adminClient.from("matches").select("missing_skills").eq("user_id", user.id).eq("job_id", jobA.id).eq("cv_analysis_id", analysis.id).single();
+  const { data: rowB } = await adminClient.from("matches").select("missing_skills").eq("user_id", user.id).eq("job_id", jobB.id).eq("cv_analysis_id", analysis.id).single();
+  assert.deepEqual(rowA.missing_skills, ["AWS"]);
+  assert.deepEqual(rowB.missing_skills, ["Docker", "GraphQL"], "a second job's missing_skills must never inherit or merge with a different job's result");
+});
+
+test("missing_skills: a newer analysis's match is an independent row — an older/stale analysis's missing_skills never leak into it", async () => {
+  const job = await insertFixtureJob({ title: "Stale Analysis Missing Skills Job" });
+
+  const oldAnalysis = await approveAnalysisWithEmbedding("missing-stale-old");
+  await saveMatchResult(adminClient, {
+    userId: user.id,
+    jobId: job.id,
+    cvAnalysisId: oldAnalysis.id,
+    result: { score: 50, reason: "Old analysis fit.", strengths: [], missingSkills: ["Kubernetes", "AWS"], preferenceAlignment: "ok" },
+    matchingModel: "gpt-4o-mini",
+  });
+
+  // A new CV analysis (e.g. the user re-uploaded/re-approved) is a distinct
+  // cv_analysis_id — saveMatchResult's onConflict is (user_id, job_id,
+  // cv_analysis_id), so this must insert a second, independent row rather
+  // than touching the old one.
+  const newAnalysis = await approveAnalysisWithEmbedding("missing-stale-new");
+  await saveMatchResult(adminClient, {
+    userId: user.id,
+    jobId: job.id,
+    cvAnalysisId: newAnalysis.id,
+    result: { score: 90, reason: "New analysis fit — skills gap closed.", strengths: [], missingSkills: [], preferenceAlignment: "ok" },
+    matchingModel: "gpt-4o-mini",
+  });
+
+  const { data: rows } = await adminClient.from("matches").select("cv_analysis_id, missing_skills").eq("user_id", user.id).eq("job_id", job.id);
+  assert.equal(rows.length, 2, "the old and new analyses must each keep their own match row for this job");
+  const oldRow = rows.find((r) => r.cv_analysis_id === oldAnalysis.id);
+  const newRow = rows.find((r) => r.cv_analysis_id === newAnalysis.id);
+  assert.deepEqual(oldRow.missing_skills, ["Kubernetes", "AWS"], "the stale analysis's own row must be untouched");
+  assert.deepEqual(newRow.missing_skills, [], "the newer analysis's row must reflect only its own result, never the older analysis's missing_skills");
+});
