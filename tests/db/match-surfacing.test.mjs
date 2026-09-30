@@ -81,8 +81,10 @@ test("surface_new_matches_for_user: surfaces up to the plan's job_match_limit, h
   const { data, error } = await user.client.rpc("surface_new_matches_for_user");
   assert.equal(error, null);
 
-  // Pro's job_match_limit is 45 (AGENTS.md §6) — comfortably above our 3
-  // fixture matches, so all three should surface, ordered by score desc.
+  // Pro's job_match_limit is 95 (public.plans — see
+  // 20260930150000_update_student_pro_job_match_limits.sql) — comfortably
+  // above our 3 fixture matches, so all three should surface, ordered by
+  // score desc.
   assert.equal(data.length, 3);
   assert.deepEqual(data.map((m) => m.score), [90, 65, 40]);
   assert.ok(data.every((m) => m.surfaced_at !== null));

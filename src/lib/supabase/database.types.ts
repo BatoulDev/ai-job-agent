@@ -1568,6 +1568,7 @@ export type Database = {
           cover_letter_limit: number
           created_at: string
           currency: string
+          daily_new_match_limit: number | null
           display_name: string
           is_active: boolean
           job_match_limit: number
@@ -1580,6 +1581,7 @@ export type Database = {
           cover_letter_limit: number
           created_at?: string
           currency?: string
+          daily_new_match_limit?: number | null
           display_name: string
           is_active?: boolean
           job_match_limit: number
@@ -1592,6 +1594,7 @@ export type Database = {
           cover_letter_limit?: number
           created_at?: string
           currency?: string
+          daily_new_match_limit?: number | null
           display_name?: string
           is_active?: boolean
           job_match_limit?: number
@@ -2259,6 +2262,10 @@ export type Database = {
           isSetofReturn: false
         }
       }
+      count_active_matches_for_user: {
+        Args: { p_user_id: string }
+        Returns: number
+      }
       create_analysis_task: {
         Args: {
           p_charge_feedback_quota?: boolean
@@ -2358,6 +2365,12 @@ export type Database = {
         }
       }
       enqueue_preferences_analysis_task: { Args: never; Returns: undefined }
+      expire_due_jobs: {
+        Args: never
+        Returns: {
+          job_id: string
+        }[]
+      }
       expire_subscription: {
         Args: { p_user_id: string }
         Returns: {
