@@ -5,7 +5,7 @@ import UpdateNameForm from "./UpdateNameForm";
 import { createClient } from "@/lib/supabase/server";
 
 export const metadata: Metadata = {
-  title: "Update account name — AI Job Agent",
+  title: "Update account name — AI Job Guide",
 };
 
 export default async function SettingsProfilePage() {

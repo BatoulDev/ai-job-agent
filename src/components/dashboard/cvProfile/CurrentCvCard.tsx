@@ -133,7 +133,7 @@ export default function CurrentCvCard({
       ) : (
         <div className="mt-4 rounded-2xl border border-dashed border-slate-300 bg-bg px-6 py-8 text-center">
           <p className="text-sm text-muted">
-            Upload your CV so your AI Job Agent can build your career
+            Upload your CV so your AI Job Guide can build your career
             profile and start matching you with roles.
           </p>
           <Link

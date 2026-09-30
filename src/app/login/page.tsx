@@ -183,11 +183,11 @@ function LoginPageContent() {
   return (
     <AuthLayout>
       <AuthCard
-        title="Log in to AI Job Agent"
+        title="Log in to AI Job Guide"
         description="Pick up your matches, cover letters, and applications right where you left off."
         footer={
           <p className="text-center text-sm text-muted">
-            New to AI Job Agent?{" "}
+            New to AI Job Guide?{" "}
             <Link
               href="/signup"
               className="font-semibold text-primary hover:text-primary-dark"

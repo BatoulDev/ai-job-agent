@@ -238,7 +238,7 @@ function UploadCvPageContent() {
           Upload your CV
         </h1>
         <p className="mt-3 text-base leading-relaxed text-muted">
-          Your AI Job Agent uses your CV to understand your skills,
+          Your AI Job Guide uses your CV to understand your skills,
           experience, education, and target roles.
         </p>
       </div>

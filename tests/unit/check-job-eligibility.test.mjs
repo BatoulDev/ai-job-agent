@@ -183,6 +183,52 @@ describe("checkJobEligibility — work arrangement: match / conflict / unknown",
     assert.equal(result.workArrangementStatus, "match");
   });
 
+  // Full combinatorial coverage of Flexible — Section A audit (product
+  // completion phase): Flexible means "the user is open to remote, hybrid,
+  // and on-site" — a real, explicit preference, never to be confused with
+  // an unknown/unspecified job arrangement (a separate branch entirely,
+  // covered above). Every pairing below must resolve to "match", never
+  // "conflict" or "unknown".
+  test("user flexible + job remote -> match", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "flexible", job: { countryCode: "LB", workArrangement: "remote", remoteScope: "country:LB", locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
+  test("user flexible + job hybrid -> match", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "flexible", job: { countryCode: "LB", workArrangement: "hybrid", remoteScope: null, locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
+  test("job flexible + user onsite -> match", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "onsite", job: { countryCode: "LB", workArrangement: "flexible", remoteScope: "country:LB", locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
+  test("job flexible + user hybrid -> match", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "hybrid", job: { countryCode: "LB", workArrangement: "flexible", remoteScope: "country:LB", locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
+  test("user flexible + job flexible -> match (both sides open)", () => {
+    const result = checkJobEligibility(
+      baseInput({ preferredWorkArrangement: "flexible", job: { countryCode: "LB", workArrangement: "flexible", remoteScope: "country:LB", locationConfidence: "high" } }),
+    );
+    assert.equal(result.eligible, true);
+    assert.equal(result.workArrangementStatus, "match");
+  });
+
   test("a known job arrangement with no user preference set is 'unknown' status, not 'match' — nothing to compare against, but geography still uses the real known value", () => {
     const result = checkJobEligibility(
       baseInput({ preferredWorkArrangement: null, job: { countryCode: "LB", workArrangement: "onsite", remoteScope: null, locationConfidence: "high" } }),

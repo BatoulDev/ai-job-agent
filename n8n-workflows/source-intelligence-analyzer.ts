@@ -20,7 +20,7 @@
  *   not-yet-wired notification boundary — see its own header for the
  *   full design and why a notification channel isn't connected yet).
  *   Attach this workflow to it via Settings (three-dot menu) → Error
- *   Workflow → "AI Job Agent - Error Handler". This is a one-time manual
+ *   Workflow → "AI Job Guide - Error Handler". This is a one-time manual
  *   step in the n8n UI — confirmed this session that neither the n8n
  *   Workflow SDK nor n8n-mcp's update_workflow can set a workflow-level
  *   setting like this, so it cannot be represented in this repo file or
@@ -1213,7 +1213,7 @@ const mainFlow = workflowConfiguration.to(
   )
 );
 
-export default workflow('source-intelligence-analyzer', 'AI Job Agent - Source Intelligence Analyzer')
+export default workflow('source-intelligence-analyzer', 'AI Job Guide - Source Intelligence Analyzer')
   .add(startTrigger)
   .to(mainFlow)
   .add(scheduleTrigger)

@@ -56,7 +56,7 @@ const PLAN_PRESENTATION: Record<
     offer: "Launch offer",
     features: [
       "Daily curated job search for Lebanon-focused opportunities",
-      "Up to 25 curated matches per month, depending on fit and availability",
+      "Up to 45 curated matches per month, depending on fit and availability",
       "Match score + missing skills explanation",
       "8 AI-tailored cover letters per month",
       "1 free cover letter revision per cover letter",
@@ -76,7 +76,7 @@ const PLAN_PRESENTATION: Record<
       "Optional: expand your search outside Lebanon",
       "Verified international remote roles that accept Lebanon-based applicants",
       "Optional relocation to Saudi Arabia, Qatar, Kuwait, or the UAE",
-      "Up to 45 curated matches per month",
+      "Up to 95 curated matches per month",
       "Match score + missing skills explanation",
       "15 AI-tailored cover letters per month",
       "Up to 3 cover letter revisions per cover letter",

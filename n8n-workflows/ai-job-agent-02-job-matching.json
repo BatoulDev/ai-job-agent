@@ -1,5 +1,5 @@
 {
-  "name": "AI Job Agent / 02 Job Matching",
+  "name": "AI Job Guide / 02 Job Matching",
   "active": false,
   "nodes": [
     {
@@ -283,7 +283,7 @@
       "typeVersion": 1,
       "position": [-50, -50],
       "parameters": {
-        "content": "### AI Job Agent / 02 Job Matching\nManual trigger, stays inactive. Two stages, both delegating validation/dedup/persistence to internal TypeScript endpoints and only ever having n8n own the actual AI provider call, reusing the existing \"OpenAI account\" credential (same one cv-analysis-worker.ts already uses):\n\n1. Embeddings — batches every pending job+profile into a single OpenAI /v1/embeddings request per run.\n2. Rerank — loops one (profile, job) candidate at a time (chat completions has no batch endpoint), scores it, and saves immediately, rather than aggregating all results into one final call — the cross-loop-aggregation pitfall the embedding stage's now-removed \"Build Execution Summary\" node hit is avoided entirely this way.\n\nThe rerank stage runs regardless of the embedding stage's outcome (success, nothing-to-embed, or failure) — it reranks whatever is already embedded, not only what this run just embedded.",
+        "content": "### AI Job Guide / 02 Job Matching\nManual trigger, stays inactive. Two stages, both delegating validation/dedup/persistence to internal TypeScript endpoints and only ever having n8n own the actual AI provider call, reusing the existing \"OpenAI account\" credential (same one cv-analysis-worker.ts already uses):\n\n1. Embeddings — batches every pending job+profile into a single OpenAI /v1/embeddings request per run.\n2. Rerank — loops one (profile, job) candidate at a time (chat completions has no batch endpoint), scores it, and saves immediately, rather than aggregating all results into one final call — the cross-loop-aggregation pitfall the embedding stage's now-removed \"Build Execution Summary\" node hit is avoided entirely this way.\n\nThe rerank stage runs regardless of the embedding stage's outcome (success, nothing-to-embed, or failure) — it reranks whatever is already embedded, not only what this run just embedded.",
         "color": 4,
         "width": 300,
         "height": 200

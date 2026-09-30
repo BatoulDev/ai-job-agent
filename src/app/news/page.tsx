@@ -37,7 +37,7 @@ export default async function NewsPage() {
                 Want job matches too?
               </h2>
               <p className="mt-1 text-sm leading-relaxed text-muted">
-                Upload your CV when you&apos;re ready, and your AI Job Agent
+                Upload your CV when you&apos;re ready, and your AI Job Guide
                 will start finding relevant opportunities.
               </p>
             </div>

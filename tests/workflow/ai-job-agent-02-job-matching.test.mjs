@@ -1,5 +1,5 @@
 /**
- * Static-analysis tests for the "AI Job Agent / 02 Job Matching" workflow —
+ * Static-analysis tests for the "AI Job Guide / 02 Job Matching" workflow —
  * both the embedding step (Phase 05) and the rerank step (Phase 06). No
  * database or n8n connection required — reads the exported workflow JSON
  * directly. All discovery/persistence logic itself is covered by

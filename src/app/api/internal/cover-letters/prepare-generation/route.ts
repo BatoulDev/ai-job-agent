@@ -4,7 +4,7 @@ import { findCoverLetterCandidates } from "@/lib/coverLetters/candidates";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { isAuthorizedInternalRequest } from "@/lib/internalAuth";
 
-// Internal, service-to-service endpoint: the n8n "AI Job Agent / 03 Cover
+// Internal, service-to-service endpoint: the n8n "AI Job Guide / 03 Cover
 // Letter Generation" workflow calls this to discover which approved matches
 // still need a cover-letter draft (or need a retry after a previous
 // failure), and gets each one's exact grounded prompt. It then calls its own

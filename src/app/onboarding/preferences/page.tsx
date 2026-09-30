@@ -44,7 +44,8 @@ const WORK_ARRANGEMENT_OPTIONS: { value: WorkArrangement; label: string; descrip
   {
     value: "flexible",
     label: "Flexible",
-    description: "Open to remote, hybrid, and on-site opportunities.",
+    description:
+      "Open to remote, hybrid, and on-site opportunities — choosing Flexible can help you discover more relevant matches.",
   },
 ];
 
@@ -627,7 +628,7 @@ export default function PreferencesPage() {
           Set your job preferences
         </h1>
         <p className="mt-3 text-base leading-relaxed text-muted">
-          Tell your AI Job Agent what kind of opportunities you want, so we
+          Tell your AI Job Guide what kind of opportunities you want, so we
           can match your CV with better jobs.
         </p>
       </div>
@@ -808,7 +809,7 @@ export default function PreferencesPage() {
             type="textarea"
             placeholder="e.g. I prefer startups, I am open to internships, I do not want sales roles, I am looking for remote jobs only..."
             required={false}
-            helperText="Optional — add any extra details that can help your AI Job Agent find better matches."
+            helperText="Optional — add any extra details that can help your AI Job Guide find better matches."
             defaultValue={initialAdditionalNotes}
           />
 
@@ -992,7 +993,7 @@ export default function PreferencesPage() {
           )}
 
           <p className="text-xs leading-relaxed text-muted">
-            These preferences help your AI Job Agent avoid irrelevant jobs.
+            These preferences help your AI Job Guide avoid irrelevant jobs.
             You can edit them later from your dashboard.
           </p>
 

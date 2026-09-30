@@ -1,0 +1,80 @@
+{
+  "name": "AI Job Guide - Job Expiry Sweep",
+  "active": false,
+  "nodes": [
+    {
+      "id": "b1b6e6b0-6a1b-4c3a-9d1e-7f4a2c9e10a1",
+      "name": "Hourly Schedule Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [-200, 0],
+      "parameters": {
+        "rule": {
+          "interval": [{ "field": "hours", "hoursInterval": 1 }]
+        }
+      }
+    },
+    {
+      "id": "c2c7f7c1-7b2c-4d4b-8e2f-8a5b3d0f21b2",
+      "name": "Workflow Configuration",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [100, 0],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "supabase-base-url",
+              "name": "supabaseBaseUrl",
+              "value": "http://host.docker.internal:55321",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "d3d8a8d2-8c3d-4e5c-9f3a-9b6c4e1032c3",
+      "name": "Expire Due Jobs",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [400, 0],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/rpc/expire_due_jobs",
+        "authentication": "predefinedCredentialType",
+        "nodeCredentialType": "supabaseApi",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            { "name": "Content-Type", "value": "application/json" },
+            { "name": "Accept", "value": "application/json" }
+          ]
+        },
+        "sendBody": true,
+        "contentType": "json",
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}"
+      }
+    },
+    {
+      "id": "e4e9b9e3-9d4e-4f6d-a04b-ac7d5f2143d4",
+      "name": "Sticky Note 1a2b3c4d",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [-250, -180],
+      "parameters": {
+        "content": "### AI Job Guide — Job Expiry Sweep\nHourly Schedule Trigger → Workflow Configuration → Expire Due Jobs (calls public.expire_due_jobs(), see supabase/migrations/20260930160000_add_model_c_active_capacity_and_daily_limits.sql). Idempotent, set-based, never deletes rows, only ever transitions active -> expired for jobs whose expires_at/closing_date has passed (tests/db/job-expiry-sweep.test.mjs). PREPARED ONLY — stays `active: false` until an explicit, separate production authorization (see job-expiry-sweep.ts header for the exact activation steps). Requires the same 'Supabase Service Role' credential as cv-analysis-worker.ts.",
+        "color": 4,
+        "width": 340,
+        "height": 220
+      }
+    }
+  ],
+  "connections": {
+    "Hourly Schedule Trigger": { "main": [[{ "node": "Workflow Configuration", "type": "main", "index": 0 }]] },
+    "Workflow Configuration": { "main": [[{ "node": "Expire Due Jobs", "type": "main", "index": 0 }]] }
+  },
+  "settings": { "executionOrder": "v1" }
+}

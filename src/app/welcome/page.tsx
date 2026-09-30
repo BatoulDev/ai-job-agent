@@ -11,7 +11,7 @@ export default function WelcomePage() {
       <main className="mx-auto max-w-4xl px-6 pb-20 pt-4 lg:px-8">
         <div className="text-center">
           <h1 className="font-display text-3xl font-semibold tracking-tight text-text sm:text-4xl">
-            Welcome to AI Job Agent
+            Welcome to AI Job Guide
           </h1>
           <p className="mt-3 text-base leading-relaxed text-muted">
             Choose what you want to do first.
@@ -40,7 +40,7 @@ export default function WelcomePage() {
               Start job matching
             </h2>
             <p className="mt-3 flex-1 text-sm leading-relaxed text-muted">
-              Upload your CV so your AI Job Agent can analyze your profile,
+              Upload your CV so your AI Job Guide can analyze your profile,
               find relevant jobs, and prepare application materials.
             </p>
             <Link

@@ -496,11 +496,11 @@ test('Build Run Summary: counts newSources/retriedSources and retryable/structur
 // via n8n-mcp's update_workflow (no workflow-level-settings operation
 // exists). The repo JSON therefore cannot and does not represent this
 // attachment — it requires one manual step in the n8n UI (Settings →
-// Error Workflow → "AI Job Agent - Error Handler"), documented in both
+// Error Workflow → "AI Job Guide - Error Handler"), documented in both
 // this workflow's own .ts header and error-handler.ts's header. This test
 // pins that fact down so a future reader sees it as a known, intentional
 // gap rather than rediscovering it.
 
-test('repo JSON has no errorWorkflow setting — attachment to AI Job Agent - Error Handler is a documented manual n8n UI step, not repo-representable', () => {
+test('repo JSON has no errorWorkflow setting — attachment to AI Job Guide - Error Handler is a documented manual n8n UI step, not repo-representable', () => {
   assert.equal(wf.settings.errorWorkflow, undefined, 'confirms the repo cannot represent this n8n-only setting; see this workflow\'s own header comment for the required manual step');
 });

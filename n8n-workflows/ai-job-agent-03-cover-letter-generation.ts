@@ -1,7 +1,7 @@
 import { workflow, node, trigger, sticky, splitInBatches, nextBatch, newCredential, expr } from "@n8n/workflow-sdk";
 
-// AI Job Agent / 03 Cover Letter Generation (Phase 08). Manual trigger,
-// stays inactive. Same architecture as Phase 05/06's "AI Job Agent / 02 Job
+// AI Job Guide / 03 Cover Letter Generation (Phase 08). Manual trigger,
+// stays inactive. Same architecture as Phase 05/06's "AI Job Guide / 02 Job
 // Matching": TypeScript (via internal endpoints) owns discovery/validation/
 // persistence; n8n owns the actual OpenAI call, reusing the existing
 // "OpenAI account" credential. POST /api/internal/cover-letters/prepare-generation
@@ -189,12 +189,12 @@ const rateLimitDelay = node({
 logGenerationFailure.to(rateLimitDelay);
 
 const introNote = sticky(
-  "### AI Job Agent / 03 Cover Letter Generation\nManual trigger, stays inactive. POST /api/internal/cover-letters/prepare-generation (TypeScript, Phase 08) decides which approved matches still need a draft and builds the exact grounded prompt; this workflow calls OpenAI chat completions once per candidate (reusing the existing \"OpenAI account\" credential, same one cv-analysis-worker.ts and Phase 06's rerank stage already use) since chat completions has no batch endpoint; POST /api/internal/cover-letters/save-generation persists the result and re-checks the match is still approved before writing. A failed attempt is never recorded — the match is simply re-offered as a candidate on the next run, same retry story as Phase 06's rerank.",
+  "### AI Job Guide / 03 Cover Letter Generation\nManual trigger, stays inactive. POST /api/internal/cover-letters/prepare-generation (TypeScript, Phase 08) decides which approved matches still need a draft and builds the exact grounded prompt; this workflow calls OpenAI chat completions once per candidate (reusing the existing \"OpenAI account\" credential, same one cv-analysis-worker.ts and Phase 06's rerank stage already use) since chat completions has no batch endpoint; POST /api/internal/cover-letters/save-generation persists the result and re-checks the match is still approved before writing. A failed attempt is never recorded — the match is simply re-offered as a candidate on the next run, same retry story as Phase 06's rerank.",
   [startTrigger, workflowConfig, prepareGeneration],
   { color: 4, width: 320, height: 220 }
 );
 
-export default workflow("ai-job-agent-03-cover-letter-generation", "AI Job Agent / 03 Cover Letter Generation")
+export default workflow("ai-job-agent-03-cover-letter-generation", "AI Job Guide / 03 Cover Letter Generation")
   .add(startTrigger)
   .to(workflowConfig)
   .to(

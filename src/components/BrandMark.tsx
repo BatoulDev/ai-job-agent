@@ -7,7 +7,7 @@ export default function BrandMark() {
         <span className="h-2.5 w-2.5 rounded-full bg-white" />
       </span>
       <span className="font-display text-lg font-semibold tracking-tight text-text">
-        AI Job Agent
+        AI Job Guide
       </span>
     </Link>
   );

@@ -135,7 +135,7 @@ export default function GiftModal({
           </h2>
           <p className="relative mt-2 text-sm leading-relaxed text-white/85">
             Get a simple daily AI and tech brief curated for students and
-            young builders — free with your AI Job Agent account.
+            young builders — free with your AI Job Guide account.
           </p>
         </div>
 

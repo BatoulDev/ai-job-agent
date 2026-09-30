@@ -1,5 +1,5 @@
 /**
- * Static-analysis tests for the "AI Job Agent / 01 Job Ingestion" workflow
+ * Static-analysis tests for the "AI Job Guide / 01 Job Ingestion" workflow
  * (Phase 04, extended Phase 12/13). No database or n8n connection required —
  * reads the exported workflow JSON directly, mirroring
  * tests/workflow/job-ingestion-pilot-orchestrator.test.mjs. All validation/

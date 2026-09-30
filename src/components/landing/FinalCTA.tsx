@@ -11,7 +11,7 @@ export default function FinalCTA() {
             Start applying smarter, not harder.
           </h2>
           <p className="relative mx-auto mt-4 max-w-xl text-lg text-white/70">
-            Join the beta and let your AI Job Agent find the matches worth
+            Join the beta and let your AI Job Guide find the matches worth
             your time.
           </p>
           <div className="relative mt-9">

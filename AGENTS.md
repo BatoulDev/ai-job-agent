@@ -8,7 +8,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 <!-- END:nextjs-agent-rules -->
 
-# AI Job Agent — Project Engineering Rules
+# AI Job Guide — Project Engineering Rules
 
 These rules apply to every code change in this repository.
 
@@ -96,7 +96,7 @@ These rules apply to every code change in this repository.
 - Verify that users can only access and modify their own private data.
 - Do not expose internal error details to end users.
 
-## 7. AI Job Agent product rules
+## 7. AI Job Guide product rules
 
 - Never scrape LinkedIn.
 - Never automatically apply through LinkedIn.
