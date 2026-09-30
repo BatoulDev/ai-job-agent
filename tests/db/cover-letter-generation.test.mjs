@@ -180,6 +180,80 @@ test("findCoverLetterCandidates: never exceeds the user's plan cover_letter_limi
   }
 });
 
+for (const planCode of ["student", "pro"]) {
+  test(`findCoverLetterCandidates: a real '${planCode}' subscription gets its own real, higher plans.cover_letter_limit — never the Free plan's limit`, async () => {
+    // Reads the real catalog limit rather than hardcoding it, so this test
+    // proves the code follows plans.cover_letter_limit (server-authoritative,
+    // AGENTS.md §6/§27 "never trust a client-supplied plan or usage count")
+    // instead of re-asserting an invented number.
+    const { data: plan, error: planError } = await adminClient.from("plans").select("cover_letter_limit").eq("plan_code", planCode).single();
+    if (planError) throw new Error(`plan lookup failed: ${planError.message}`);
+    const limit = plan.cover_letter_limit;
+    assert.ok(limit > 1, `${planCode}'s cover_letter_limit must exceed the free plan's (1) for this test to be meaningful — got ${limit}`);
+
+    const planUser = await createTestUser(`cover-letter-${planCode}`);
+    const planJobIds = [];
+    try {
+      await adminClient.from("subscriptions").update({ plan_code: planCode, status: "active", provider: "whish", current_period_end: new Date(Date.now() + 86400000).toISOString() }).eq("user_id", planUser.id);
+
+      const cv = await uploadFakeCv(planUser, `cover-letter-${planCode}.pdf`);
+      const created = await insertFakeAnalysis(planUser, cv.id);
+      const { data: planAnalysis, error } = await planUser.client.rpc("confirm_cv_analysis", { p_analysis_id: created.id });
+      if (error) throw new Error(`confirm_cv_analysis failed: ${error.message}`);
+
+      const matchIds = [];
+      for (let i = 0; i < limit + 1; i++) {
+        const { data: job, error: jobError } = await adminClient
+          .from("jobs")
+          .insert({ title: `${planCode} Quota Job ${i}`, company_name: "Fixture Co", description: "Fixture.", application_method: "external_link", application_url: "https://example.test/apply", source_type: "admin_manual", status: "active" })
+          .select()
+          .single();
+        if (jobError) throw new Error(`fixture job insert failed: ${jobError.message}`);
+        planJobIds.push(job.id);
+
+        const { data: match, error: matchError } = await adminClient
+          .from("matches")
+          .insert({ user_id: planUser.id, job_id: job.id, cv_analysis_id: planAnalysis.id, score: 90 - i, status: "user_approved", matching_model: "test-fixture", surfaced_at: new Date().toISOString(), decided_at: new Date().toISOString() })
+          .select()
+          .single();
+        if (matchError) throw new Error(`fixture match insert failed: ${matchError.message}`);
+        matchIds.push(match.id);
+      }
+
+      // Use up exactly `limit - 1` of the quota directly (cheap — mirrors a
+      // real generation's end state without paying for real LLM calls),
+      // leaving exactly 1 slot of real remaining quota across the 2
+      // still-unused matches.
+      for (let i = 0; i < limit - 1; i++) {
+        const { error: letterError } = await adminClient.from("cover_letters").insert({ user_id: planUser.id, match_id: matchIds[i], generated_content: "x".repeat(150), generation_status: "completed" });
+        if (letterError) throw new Error(`fixture cover_letters insert failed: ${letterError.message}`);
+      }
+
+      const candidates = await findCoverLetterCandidates(adminClient, 50);
+      const ours = candidates.filter((c) => matchIds.includes(c.matchId));
+      assert.equal(ours.length, 1, `${planCode}'s real limit (${limit}) minus ${limit - 1} already-used must leave exactly 1 remaining candidate slot — this fails if the code fell back to Free's limit of 1, since ${limit - 1} already-used would already read as exhausted`);
+      assert.equal(ours[0].matchId, matchIds[limit - 1], "of the 2 still-unused matches, the higher-scoring one must be the candidate that fills the 1 remaining slot");
+    } finally {
+      await adminClient.from("cover_letters").delete().eq("user_id", planUser.id);
+      await adminClient.from("matches").delete().eq("user_id", planUser.id);
+      await deleteFakeJobs(planJobIds);
+      await deleteTestUsers([planUser]);
+    }
+  });
+}
+
+test("cover_letters.match_id has a real DB uniqueness constraint — the final defense against a duplicate row from a concurrent generation race", async () => {
+  const job = await insertFixtureJob({ title: "Duplicate Race Job" });
+  const match = await insertFixtureMatch(job.id);
+
+  await adminClient.from("cover_letters").insert({ user_id: user.id, match_id: match.id, generated_content: "x".repeat(150), generation_status: "completed" });
+  const { error } = await adminClient.from("cover_letters").insert({ user_id: user.id, match_id: match.id, generated_content: "y".repeat(150), generation_status: "completed" });
+  assert.notEqual(error, null, "a second cover_letters row for the same match must be rejected by the DB, not merely relied on application-level check-then-act logic");
+
+  const { data: rows } = await adminClient.from("cover_letters").select("id").eq("match_id", match.id);
+  assert.equal(rows.length, 1, "exactly one cover_letters row must exist per match, even after a concurrent duplicate-write attempt");
+});
+
 test("saveCoverLetterDraft: creates a new row for a first-time draft", async () => {
   const job = await insertFixtureJob({ title: "Save Draft Job" });
   const match = await insertFixtureMatch(job.id);
