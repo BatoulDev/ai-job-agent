@@ -194,7 +194,16 @@ for (const planCode of ["student", "pro"]) {
     const planUser = await createTestUser(`cover-letter-${planCode}`);
     const planJobIds = [];
     try {
-      await adminClient.from("subscriptions").update({ plan_code: planCode, status: "active", provider: "whish", current_period_end: new Date(Date.now() + 86400000).toISOString() }).eq("user_id", planUser.id);
+      await adminClient
+        .from("subscriptions")
+        .update({
+          plan_code: planCode,
+          status: "active",
+          provider: "whish",
+          current_period_start: new Date(Date.now() - 86400000).toISOString(),
+          current_period_end: new Date(Date.now() + 86400000).toISOString(),
+        })
+        .eq("user_id", planUser.id);
 
       const cv = await uploadFakeCv(planUser, `cover-letter-${planCode}.pdf`);
       const created = await insertFakeAnalysis(planUser, cv.id);
@@ -241,6 +250,178 @@ for (const planCode of ["student", "pro"]) {
     }
   });
 }
+
+for (const planCode of ["student", "pro"]) {
+  test(`findCoverLetterCandidates: a '${planCode}' subscription's cover-letter allowance is scoped to the current billing period and resets on a new period — never a lifetime cap`, async () => {
+    const { data: plan, error: planError } = await adminClient.from("plans").select("cover_letter_limit").eq("plan_code", planCode).single();
+    if (planError) throw new Error(`plan lookup failed: ${planError.message}`);
+    const limit = plan.cover_letter_limit;
+
+    const periodUser = await createTestUser(`cover-letter-period-${planCode}`);
+    const periodJobIds = [];
+    try {
+      const periodAStart = new Date(Date.now() - 20 * 86400000).toISOString(); // 20 days ago
+      const periodAEnd = new Date(Date.now() - 5 * 86400000).toISOString(); // 5 days ago — already elapsed, but current_period_* has not been rolled forward yet (mirrors a real subscription right up until renewal is verified)
+      await adminClient
+        .from("subscriptions")
+        .update({ plan_code: planCode, status: "active", provider: "whish", current_period_start: periodAStart, current_period_end: periodAEnd })
+        .eq("user_id", periodUser.id);
+
+      const cv = await uploadFakeCv(periodUser, `cover-letter-period-${planCode}.pdf`);
+      const created = await insertFakeAnalysis(periodUser, cv.id);
+      const { data: periodAnalysis, error } = await periodUser.client.rpc("confirm_cv_analysis", { p_analysis_id: created.id });
+      if (error) throw new Error(`confirm_cv_analysis failed: ${error.message}`);
+
+      async function fixtureMatchWithLetter(index, createdAtIso) {
+        const { data: job, error: jobError } = await adminClient
+          .from("jobs")
+          .insert({ title: `${planCode} Period Job ${index}`, company_name: "Fixture Co", description: "Fixture.", application_method: "external_link", application_url: "https://example.test/apply", source_type: "admin_manual", status: "active" })
+          .select()
+          .single();
+        if (jobError) throw new Error(`fixture job insert failed: ${jobError.message}`);
+        periodJobIds.push(job.id);
+
+        const { data: match, error: matchError } = await adminClient
+          .from("matches")
+          .insert({ user_id: periodUser.id, job_id: job.id, cv_analysis_id: periodAnalysis.id, score: 90 - index, status: "user_approved", matching_model: "test-fixture", surfaced_at: new Date().toISOString(), decided_at: new Date().toISOString() })
+          .select()
+          .single();
+        if (matchError) throw new Error(`fixture match insert failed: ${matchError.message}`);
+
+        const { error: letterError } = await adminClient
+          .from("cover_letters")
+          .insert({ user_id: periodUser.id, match_id: match.id, generated_content: "x".repeat(150), generation_status: "completed", created_at: createdAtIso });
+        if (letterError) throw new Error(`fixture cover_letters insert failed: ${letterError.message}`);
+        return match;
+      }
+
+      // Fully use up period A's allowance — `limit` real cover_letters rows,
+      // all created inside [periodAStart, periodAEnd).
+      const midPeriodA = new Date(Date.parse(periodAStart) + 1000).toISOString();
+      for (let i = 0; i < limit; i++) {
+        await fixtureMatchWithLetter(i, midPeriodA);
+      }
+
+      // One more approved match, still within period A conceptually (quota
+      // exhausted) — must be blocked (the "limit + 1"th generation of the period).
+      const { data: blockedJob, error: blockedJobError } = await adminClient
+        .from("jobs")
+        .insert({ title: `${planCode} Period Blocked Job`, company_name: "Fixture Co", description: "Fixture.", application_method: "external_link", application_url: "https://example.test/apply", source_type: "admin_manual", status: "active" })
+        .select()
+        .single();
+      if (blockedJobError) throw new Error(`fixture job insert failed: ${blockedJobError.message}`);
+      periodJobIds.push(blockedJob.id);
+      const { data: blockedMatch, error: blockedMatchError } = await adminClient
+        .from("matches")
+        .insert({ user_id: periodUser.id, job_id: blockedJob.id, cv_analysis_id: periodAnalysis.id, score: 99, status: "user_approved", matching_model: "test-fixture", surfaced_at: new Date().toISOString(), decided_at: new Date().toISOString() })
+        .select()
+        .single();
+      if (blockedMatchError) throw new Error(`fixture match insert failed: ${blockedMatchError.message}`);
+
+      const candidatesStillInPeriodA = await findCoverLetterCandidates(adminClient, 50);
+      assert.ok(
+        !candidatesStillInPeriodA.some((c) => c.matchId === blockedMatch.id),
+        `${planCode}'s period-A allowance (${limit}) is fully used — the next generation must be blocked, not silently allowed past the limit`
+      );
+
+      // A real renewal has happened: roll the subscription's billing period
+      // forward (exactly what mark_payment_verified/activate_subscription do
+      // on a real renewal — see 20260903090000_add_price_versioning_and_
+      // upgrade_locking.sql). No cron/reset job is involved: the quota is
+      // derived from the period window, so simply having a new period is
+      // sufficient for it to read as fully available again.
+      const periodBStart = new Date(Date.now() - 1000).toISOString();
+      const periodBEnd = new Date(Date.now() + 25 * 86400000).toISOString();
+      await adminClient.from("subscriptions").update({ current_period_start: periodBStart, current_period_end: periodBEnd }).eq("user_id", periodUser.id);
+
+      const candidatesInPeriodB = await findCoverLetterCandidates(adminClient, 50);
+      assert.ok(
+        candidatesInPeriodB.some((c) => c.matchId === blockedMatch.id),
+        `${planCode}'s allowance must be fully available again in a new billing period, even though ${limit} letters were generated in the previous period (not reset by a cron job — derived from the period window)`
+      );
+    } finally {
+      await adminClient.from("cover_letters").delete().eq("user_id", periodUser.id);
+      await adminClient.from("matches").delete().eq("user_id", periodUser.id);
+      await deleteFakeJobs(periodJobIds);
+      await deleteTestUsers([periodUser]);
+    }
+  });
+}
+
+test("findCoverLetterCandidates: a Student-to-Pro upgrade that preserves the billing period (the existing mark_payment_verified 'upgrade never moves the period' rule) counts already-consumed Student letters against the new Pro limit in that same period", async () => {
+  const { data: studentPlan } = await adminClient.from("plans").select("cover_letter_limit").eq("plan_code", "student").single();
+  const { data: proPlan } = await adminClient.from("plans").select("cover_letter_limit").eq("plan_code", "pro").single();
+  const studentLimit = studentPlan.cover_letter_limit;
+  const proLimit = proPlan.cover_letter_limit;
+  assert.ok(proLimit > studentLimit, "this test assumes Pro's limit exceeds Student's");
+
+  const upgradeUser = await createTestUser("cover-letter-upgrade");
+  const upgradeJobIds = [];
+  try {
+    const periodStart = new Date(Date.now() - 86400000).toISOString();
+    const periodEnd = new Date(Date.now() + 25 * 86400000).toISOString();
+    await adminClient
+      .from("subscriptions")
+      .update({ plan_code: "student", status: "active", provider: "whish", current_period_start: periodStart, current_period_end: periodEnd })
+      .eq("user_id", upgradeUser.id);
+
+    const cv = await uploadFakeCv(upgradeUser, "cover-letter-upgrade.pdf");
+    const created = await insertFakeAnalysis(upgradeUser, cv.id);
+    const { data: analysisRow, error } = await upgradeUser.client.rpc("confirm_cv_analysis", { p_analysis_id: created.id });
+    if (error) throw new Error(`confirm_cv_analysis failed: ${error.message}`);
+
+    // Consume the full Student allowance within the current period.
+    for (let i = 0; i < studentLimit; i++) {
+      const { data: job } = await adminClient
+        .from("jobs")
+        .insert({ title: `Upgrade Job ${i}`, company_name: "Fixture Co", description: "Fixture.", application_method: "external_link", application_url: "https://example.test/apply", source_type: "admin_manual", status: "active" })
+        .select()
+        .single();
+      upgradeJobIds.push(job.id);
+      const { data: match } = await adminClient
+        .from("matches")
+        .insert({ user_id: upgradeUser.id, job_id: job.id, cv_analysis_id: analysisRow.id, score: 90 - i, status: "user_approved", matching_model: "test-fixture", surfaced_at: new Date().toISOString(), decided_at: new Date().toISOString() })
+        .select()
+        .single();
+      await adminClient.from("cover_letters").insert({ user_id: upgradeUser.id, match_id: match.id, generated_content: "x".repeat(150), generation_status: "completed" });
+    }
+
+    // Upgrade to Pro WITHOUT changing the billing period — this is exactly
+    // what activate_subscription does for a real upgrade (period preserved,
+    // only plan_code/status change; see mark_payment_verified's 'upgrade'
+    // branch, which explicitly never touches current_period_start/end).
+    await adminClient.from("subscriptions").update({ plan_code: "pro" }).eq("user_id", upgradeUser.id);
+
+    const remainingQuotaMatches = [];
+    for (let i = 0; i < proLimit - studentLimit + 1; i++) {
+      const { data: job } = await adminClient
+        .from("jobs")
+        .insert({ title: `Upgrade Extra Job ${i}`, company_name: "Fixture Co", description: "Fixture.", application_method: "external_link", application_url: "https://example.test/apply", source_type: "admin_manual", status: "active" })
+        .select()
+        .single();
+      upgradeJobIds.push(job.id);
+      const { data: match } = await adminClient
+        .from("matches")
+        .insert({ user_id: upgradeUser.id, job_id: job.id, cv_analysis_id: analysisRow.id, score: 50 - i, status: "user_approved", matching_model: "test-fixture", surfaced_at: new Date().toISOString(), decided_at: new Date().toISOString() })
+        .select()
+        .single();
+      remainingQuotaMatches.push(match.id);
+    }
+
+    const candidates = await findCoverLetterCandidates(adminClient, 50);
+    const ours = candidates.filter((c) => remainingQuotaMatches.includes(c.matchId));
+    assert.equal(
+      ours.length,
+      proLimit - studentLimit,
+      `after upgrading mid-period, remaining allowance must be Pro's limit (${proLimit}) minus the ${studentLimit} already consumed as Student in this SAME period — not a fresh Pro allowance and not zero`
+    );
+  } finally {
+    await adminClient.from("cover_letters").delete().eq("user_id", upgradeUser.id);
+    await adminClient.from("matches").delete().eq("user_id", upgradeUser.id);
+    await deleteFakeJobs(upgradeJobIds);
+    await deleteTestUsers([upgradeUser]);
+  }
+});
 
 test("cover_letters.match_id has a real DB uniqueness constraint — the final defense against a duplicate row from a concurrent generation race", async () => {
   const job = await insertFixtureJob({ title: "Duplicate Race Job" });
