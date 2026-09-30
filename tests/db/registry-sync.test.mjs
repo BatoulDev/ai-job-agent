@@ -5,16 +5,25 @@
 //
 // Every fixture in this file uses a uniquely-suffixed company/source name
 // (randomUUID) so its deterministic ids can never collide with the real
-// 553/588-row hand-curated registry already imported locally. Cleanup order
-// matters: registry_sync_staging rows reference companies/company_sources
-// with no ON DELETE clause (defaults to RESTRICT, same pattern already
-// documented in tests/db/jobs-ingestion-identity.test.mjs for
-// jobs.source_id), so staging rows must be deleted before the
-// companies/company_sources rows they reference.
+// 553/588-row hand-curated registry (docs/job-source-discovery/*.csv).
+// Only the two tests marked "── 1/2." below genuinely validate the real
+// registry's own state — they call ensureCompanyRegistryImported()
+// (tests/db/helpers.mjs) themselves, deterministically importing it if
+// not already present, rather than requiring a developer to have run
+// scripts/import-company-registry.mjs manually first (the DB test
+// reproducibility gap this task closes). Deliberately NOT a file-level
+// before(): every other test in this file only needs its own randomUUID
+// fixtures and must not pay the registry-import cost too.
+// Cleanup order matters: registry_sync_staging rows reference
+// companies/company_sources with no ON DELETE clause (defaults to
+// RESTRICT, same pattern already documented in
+// tests/db/jobs-ingestion-identity.test.mjs for jobs.source_id), so
+// staging rows must be deleted before the companies/company_sources rows
+// they reference.
 import { test, after } from "node:test";
 import assert from "node:assert/strict";
 import { randomUUID } from "node:crypto";
-import { adminClient, assertExpectedLocalProject, createAnonClient } from "./helpers.mjs";
+import { adminClient, assertExpectedLocalProject, createAnonClient, ensureCompanyRegistryImported } from "./helpers.mjs";
 
 const fixtureCompanyIds = new Set();
 const fixtureSourceIds = new Set();
@@ -76,6 +85,7 @@ async function trackResult(result) {
 
 test("every pre-existing company_sources row has a normalized_source_key or is one of the 3 known unresolvable rows", async () => {
   await assertExpectedLocalProject();
+  await ensureCompanyRegistryImported();
   const { data, error } = await adminClient
     .from("company_sources")
     .select("id, normalized_source_key, official_careers_url, official_website_url")
@@ -87,6 +97,7 @@ test("every pre-existing company_sources row has a normalized_source_key or is o
 });
 
 test("every pre-existing companies and company_sources row was backfilled with discovery_source='csv'", async () => {
+  await ensureCompanyRegistryImported();
   const { count: companiesMissing } = await adminClient
     .from("companies")
     .select("id", { count: "exact", head: true })
@@ -450,6 +461,7 @@ test("when company resolution succeeds but source resolution stages, the company
 // ── 17. Existing human-curated rows remain valid ──────────────────────────
 
 test("a spot-checked pre-existing, human-curated company_sources row is untouched by the migration beyond its new columns", async () => {
+  await ensureCompanyRegistryImported();
   const { data, error } = await adminClient
     .from("company_sources")
     .select("id, company_id, review_status, ats_provider, discovery_source, normalized_source_key")

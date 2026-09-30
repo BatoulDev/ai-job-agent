@@ -1,17 +1,24 @@
 // DB test for Phase 13's findCareerPageExtractionCandidates against the
-// real local Supabase instance and its real, already-imported
+// real local Supabase instance and its real, repository-tracked
 // company_sources registry — mirrors
 // tests/db/find-eligible-company-sources.test.mjs's structure for the
 // suitable_public_html_subject_to_review classification instead of
-// suitable_public_ats.
-import { test } from "node:test";
+// suitable_public_ats. Explicitly validates registry-derived behavior, so
+// ensureCompanyRegistryImported() (tests/db/helpers.mjs) imports the real
+// registry automatically and deterministically rather than requiring a
+// developer to have already run scripts/import-company-registry.mjs
+// manually (the DB test reproducibility gap this task closes).
+import { test, before } from "node:test";
 import assert from "node:assert/strict";
-import { adminClient, assertExpectedLocalProject } from "./helpers.mjs";
+import { adminClient, assertExpectedLocalProject, ensureCompanyRegistryImported } from "./helpers.mjs";
 import { findCareerPageExtractionCandidates } from "../../src/lib/ingestion/findCareerPageExtractionCandidates.ts";
 
-test("findCareerPageExtractionCandidates: returns verified, suitable_public_html_subject_to_review rows with a real careers URL, bounded by limit", async () => {
+before(async () => {
   await assertExpectedLocalProject();
+  await ensureCompanyRegistryImported();
+});
 
+test("findCareerPageExtractionCandidates: returns verified, suitable_public_html_subject_to_review rows with a real careers URL, bounded by limit", async () => {
   const candidates = await findCareerPageExtractionCandidates(adminClient, 5);
   assert.equal(candidates.length, 5, "limit must be honored — the real registry has far more than 5 such rows (Phase 12 found 358)");
 
