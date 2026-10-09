@@ -198,6 +198,30 @@ test("a truncated run (more valid jobs than the cap) never closes stale jobs", a
   assert.ok(rows.every((r) => r.status === "active"), "jobs outside a truncated page must remain active");
 });
 
+// 2026-10-02 fix: a caller (the n8n orchestrator, or any other) must never
+// be able to request more than providerConfig.ts's own maxJobsPerRun —
+// greenhouse's is 50. Requesting 1000 here proves the server clamps the
+// effective cap down to 50 regardless, truncating a 51-job batch that the
+// caller's own requested cap would NOT have truncated.
+test("a requested cap above the provider's own maxJobsPerRun is clamped server-side, never honored verbatim", async () => {
+  const sourceId = await createFixtureSource();
+  const rawJobs = Array.from({ length: 51 }, (_, i) => rawJob(`clamp-${i}`));
+
+  const result = await runIngestionBatch(adminClient, sourceId, "greenhouse", rawJobs, {
+    maxJobsPerSource: 1000,
+    dryRun: false,
+  });
+  await trackJobsForSource(sourceId);
+
+  assert.equal(result.jobsValid, 51);
+  assert.equal(result.truncated, true, "greenhouse's maxJobsPerRun (50) must clamp a requested cap of 1000");
+  assert.equal(result.jobsCreated, 50, "only the provider-authoritative cap's worth of rows may be written");
+  assert.equal(result.jobsClosed, 0, "a clamp-truncated run must never stale-close");
+
+  const { count } = await adminClient.from("jobs").select("*", { count: "exact", head: true }).eq("source_id", sourceId);
+  assert.equal(count, 50, "the database must never hold more rows than the provider's authoritative cap");
+});
+
 test("a complete (non-truncated) run closes jobs no longer present as stale, and reopens them if seen again", async () => {
   const sourceId = await createFixtureSource();
   const seed = await runIngestionBatch(adminClient, sourceId, "greenhouse", [rawJob("stale-a"), rawJob("stale-b")], {
@@ -221,4 +245,84 @@ test("a complete (non-truncated) run closes jobs no longer present as stale, and
   assert.equal(staleA.status, "active");
   assert.equal(staleB.status, "unavailable");
   assert.equal(staleB.status_reason, "not_found_in_latest_ingestion_run");
+});
+
+// Real-ingestion pilot (2026-10-01): first_seen_at/last_seen_at/last_checked_at/
+// last_successful_check_at were schema-documented (20260914120000_add_jobs_
+// freshness_and_geography.sql) but never actually set by persistValidatedJobs,
+// and a reopened job kept its stale status_reason. Fixed in ingestSourceBatch.ts
+// without a DB-wide default — see tests/db/jobs-freshness-and-lifecycle.test.mjs's
+// existing "no freshness timestamps by default" contract for non-ingestion
+// inserts, which a DB default would have broken.
+test("a new ingestion insert sets first_seen_at/last_seen_at/last_checked_at/last_successful_check_at", async () => {
+  const sourceId = await createFixtureSource();
+  const before = new Date();
+  await runIngestionBatch(adminClient, sourceId, "greenhouse", [rawJob("fresh-1")], { maxJobsPerSource: 10, dryRun: false });
+  await trackJobsForSource(sourceId);
+
+  const { data: row } = await adminClient
+    .from("jobs")
+    .select("first_seen_at, last_seen_at, last_checked_at, last_successful_check_at")
+    .eq("source_id", sourceId)
+    .eq("external_id", "fresh-1")
+    .single();
+
+  for (const field of ["first_seen_at", "last_seen_at", "last_checked_at", "last_successful_check_at"]) {
+    assert.notEqual(row[field], null, `${field} must be set on first ingestion`);
+    assert.ok(new Date(row[field]) >= before, `${field} must reflect this ingestion run`);
+  }
+});
+
+test("a second ingestion of the same job preserves first_seen_at while advancing last_seen_at/last_checked_at/last_successful_check_at", async () => {
+  const sourceId = await createFixtureSource();
+  await runIngestionBatch(adminClient, sourceId, "greenhouse", [rawJob("fresh-2")], { maxJobsPerSource: 10, dryRun: false });
+  await trackJobsForSource(sourceId);
+
+  const { data: firstRow } = await adminClient
+    .from("jobs")
+    .select("first_seen_at, last_seen_at")
+    .eq("source_id", sourceId)
+    .eq("external_id", "fresh-2")
+    .single();
+
+  await new Promise((resolve) => setTimeout(resolve, 10));
+  await runIngestionBatch(adminClient, sourceId, "greenhouse", [rawJob("fresh-2")], { maxJobsPerSource: 10, dryRun: false });
+
+  const { data: secondRow } = await adminClient
+    .from("jobs")
+    .select("first_seen_at, last_seen_at")
+    .eq("source_id", sourceId)
+    .eq("external_id", "fresh-2")
+    .single();
+
+  assert.equal(secondRow.first_seen_at, firstRow.first_seen_at, "first_seen_at must never change once set");
+  assert.ok(new Date(secondRow.last_seen_at) > new Date(firstRow.last_seen_at), "last_seen_at must advance on every successful ingestion");
+});
+
+test("a job that is stale-closed then reappears is reactivated, clears its stale status_reason, and keeps its original first_seen_at", async () => {
+  const sourceId = await createFixtureSource();
+  await runIngestionBatch(adminClient, sourceId, "greenhouse", [rawJob("reopen-1"), rawJob("keep-alive")], { maxJobsPerSource: 10, dryRun: false });
+  await trackJobsForSource(sourceId);
+
+  const { data: original } = await adminClient.from("jobs").select("first_seen_at").eq("source_id", sourceId).eq("external_id", "reopen-1").single();
+
+  // Complete, non-truncated run that omits reopen-1 — closes it with a reason.
+  const closeResult = await runIngestionBatch(adminClient, sourceId, "greenhouse", [rawJob("keep-alive")], { maxJobsPerSource: 10, dryRun: false });
+  assert.equal(closeResult.jobsClosed, 1);
+  const { data: closed } = await adminClient.from("jobs").select("status, status_reason").eq("source_id", sourceId).eq("external_id", "reopen-1").single();
+  assert.equal(closed.status, "unavailable");
+  assert.equal(closed.status_reason, "not_found_in_latest_ingestion_run");
+
+  // reopen-1 reappears in a later successful run.
+  await runIngestionBatch(adminClient, sourceId, "greenhouse", [rawJob("reopen-1"), rawJob("keep-alive")], { maxJobsPerSource: 10, dryRun: false });
+  const { data: reopened } = await adminClient
+    .from("jobs")
+    .select("status, status_reason, first_seen_at")
+    .eq("source_id", sourceId)
+    .eq("external_id", "reopen-1")
+    .single();
+
+  assert.equal(reopened.status, "active");
+  assert.equal(reopened.status_reason, null, "a reopened job must not keep displaying its old close reason");
+  assert.equal(reopened.first_seen_at, original.first_seen_at, "reopening must not reset first_seen_at");
 });

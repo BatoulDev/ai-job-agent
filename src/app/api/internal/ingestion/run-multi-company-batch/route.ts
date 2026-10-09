@@ -28,7 +28,7 @@ export async function POST(request: Request) {
   if (!parsed.ok) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
-  const { sourceType, rawJobs, maxJobsPerSource, dryRun } = parsed.value;
+  const { sourceType, rawJobs, maxJobsPerSource, dryRun, refreshScope } = parsed.value;
 
   const adapter = getProviderAdapter(sourceType);
   if (!adapter) {
@@ -38,7 +38,7 @@ export async function POST(request: Request) {
   try {
     const mappedJobs = rawJobs.map((raw) => adapter(raw));
     const supabase = createAdminClient();
-    const result = await runMultiCompanyIngestionBatch(supabase, sourceType, mappedJobs, { maxJobsPerSource, dryRun });
+    const result = await runMultiCompanyIngestionBatch(supabase, sourceType, mappedJobs, { maxJobsPerSource, dryRun }, refreshScope);
     return NextResponse.json(result);
   } catch (error) {
     console.error(`Multi-company ingestion batch failed for provider ${sourceType}:`, error);

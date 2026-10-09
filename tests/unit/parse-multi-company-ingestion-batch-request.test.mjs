@@ -69,9 +69,10 @@ describe("parseMultiCompanyIngestionBatchRequestBody — malformed/tampered/disa
     assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ rawJobs })).ok, false);
   });
 
-  test("rejects a non-integer or out-of-range maxJobsPerSource", () => {
+  test("rejects a non-integer, out-of-range, or missing maxJobsPerSource — never silently defaulted", () => {
     assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ maxJobsPerSource: 0 })).ok, false);
     assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ maxJobsPerSource: 501 })).ok, false);
+    assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ maxJobsPerSource: undefined })).ok, false);
   });
 
   test("rejects a non-boolean dryRun", () => {
@@ -82,5 +83,39 @@ describe("parseMultiCompanyIngestionBatchRequestBody — malformed/tampered/disa
     const result = parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceId: "sr-should-be-ignored" }));
     assert.equal(result.ok, true);
     assert.equal("sourceId" in result.value, false);
+  });
+});
+
+// Phase 22 fix: GulfTalent SA/AE collision — refreshScope lets a caller
+// declare which independently-complete query partition this call's rawJobs
+// belong to, separate from sourceType identity. Optional/null by default so
+// every single-partition provider (RemoteOK/Jobicy/Arbeitnow/Bayt/Indeed)
+// is unaffected.
+describe("parseMultiCompanyIngestionBatchRequestBody — refreshScope (Phase 22 fix)", () => {
+  test("defaults to null when omitted", () => {
+    const result = parseMultiCompanyIngestionBatchRequestBody(validBody());
+    assert.equal(result.ok, true);
+    assert.equal(result.value.refreshScope, null);
+  });
+
+  test("accepts an explicit null", () => {
+    const result = parseMultiCompanyIngestionBatchRequestBody(validBody({ refreshScope: null }));
+    assert.equal(result.ok, true);
+    assert.equal(result.value.refreshScope, null);
+  });
+
+  test("accepts a deterministic partition string, e.g. GulfTalent's SA/AE market split", () => {
+    const result = parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceType: "gulftalent", refreshScope: "country:SA" }));
+    assert.equal(result.ok, true);
+    assert.equal(result.value.refreshScope, "country:SA");
+  });
+
+  test("rejects a non-string, non-null refreshScope", () => {
+    assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ refreshScope: 123 })).ok, false);
+    assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ refreshScope: {} })).ok, false);
+  });
+
+  test("rejects an empty-string refreshScope", () => {
+    assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ refreshScope: "   " })).ok, false);
   });
 });

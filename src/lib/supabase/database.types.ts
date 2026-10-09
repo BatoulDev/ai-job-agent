@@ -1086,6 +1086,7 @@ export type Database = {
           last_successful_check_at: string | null
           location: string | null
           published_at: string | null
+          refresh_scope: string | null
           relocation_required: boolean | null
           remote_scope: string | null
           seniority: string | null
@@ -1126,6 +1127,7 @@ export type Database = {
           last_successful_check_at?: string | null
           location?: string | null
           published_at?: string | null
+          refresh_scope?: string | null
           relocation_required?: boolean | null
           remote_scope?: string | null
           seniority?: string | null
@@ -1166,6 +1168,7 @@ export type Database = {
           last_successful_check_at?: string | null
           location?: string | null
           published_at?: string | null
+          refresh_scope?: string | null
           relocation_required?: boolean | null
           remote_scope?: string | null
           seniority?: string | null

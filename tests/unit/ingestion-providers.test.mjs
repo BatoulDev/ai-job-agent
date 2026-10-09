@@ -494,7 +494,7 @@ describe("mapWorkdayJob — mapping logic only, NOT wired into the ingestion wor
   });
 });
 
-describe("mapBaytJob / mapGulfTalentJob — BLOCKED_ON_AUTHORIZATION, documented Apify actor schema fixtures only (never live-verified, docs/LEBANON_GULF_SOURCE_RESEARCH.md §5)", () => {
+describe("mapBaytJob / mapGulfTalentJob — blackfalcondata Apify actors, live-verified (Phase 21, docs/LEBANON_LIVE_SOURCE_EXPANSION.md) — fixtures here mirror the real observed schema, not invented data", () => {
   test("mapBaytJob maps the blackfalcondata/bayt-scraper documented output schema", () => {
     const job = mapBaytJob({
       jobId: "bayt-12345",

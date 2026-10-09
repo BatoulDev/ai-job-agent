@@ -15,13 +15,28 @@ const workflowConfiguration = node({
       mode: 'raw',
       jsonOutput: {
         appBaseUrl: 'http://host.docker.internal:3000',
-        maxJobsPerSource: 5,
+        // 2026-10-02 fix: this was 5 — far below any real ATS/multi-company
+        // batch size, which falsely truncated every paid-provider run (see
+        // src/lib/ingestion/ingestSourceBatch.ts's clampToProviderCeiling
+        // comment). 50 is a generous requested-cap default for branches with
+        // no source-specific cap of their own (ATS, free multi-company
+        // feeds, career pages) — safe because the server always clamps the
+        // requested value down to providerConfig.ts's own maxJobsPerRun
+        // regardless of what this sends. The Apify branch no longer reads
+        // this field at all — each seed in Apify Multi-Company Source Seeds
+        // below carries its own max_jobs_per_run instead.
+        maxJobsPerSource: 50,
         rateLimitDelaySeconds: 2,
-        dryRun: true,
+        // 2026-10-02: flipped to false for the next manual run — the cap
+        // fix above is validated (targeted + full test suites, build, type
+        // check, lint all green; local DB counts unchanged). Still manual
+        // trigger only, active:false, no schedule — see this workflow's own
+        // overview sticky note.
+        dryRun: false,
       },
     },
   },
-  output: [{ appBaseUrl: 'http://host.docker.internal:3000', maxJobsPerSource: 5, rateLimitDelaySeconds: 2, dryRun: true }],
+  output: [{ appBaseUrl: 'http://host.docker.internal:3000', maxJobsPerSource: 50, rateLimitDelaySeconds: 2, dryRun: false }],
 });
 
 const listIngestionSources = node({
@@ -720,7 +735,16 @@ const apifyMultiCompanySourceSeeds = node({
     notes:
       'Static seed list — bounded to the real markets live-benchmarked this phase (Bayt: Lebanon; GulfTalent: Saudi ' +
       'Arabia + UAE/Dubai; Indeed: UAE/Dubai only — Indeed and GulfTalent both real-confirmed to have no Lebanon ' +
-      'country option). Qatar/Kuwait not yet included — add once benchmarked.',
+      "country option). Qatar/Kuwait not yet included — add once benchmarked. refresh_scope (Phase 22 fix): a real " +
+      'paid-pilot run proved these two GulfTalent entries share one source_type but are independently-complete ' +
+      "query partitions — without a distinct refresh_scope per entry, the AE/Dubai call's stale-close sweep wrongly " +
+      "closed the SA call's jobs as 'not seen'. Bayt/Indeed keep refresh_scope: null (one undivided partition each " +
+      'today, unchanged behavior) — only add a value here if a second independent query is ever added for them. ' +
+      "max_jobs_per_run (2026-10-02 fix): each seed's own requested ingestion cap, read by Call Apify Batch " +
+      'Endpoint instead of the global Workflow Configuration.maxJobsPerSource — the global 5 was far below every ' +
+      'real paid batch size (25/15/15/15) and falsely truncated all four. Still clamped server-side against ' +
+      "providerConfig.ts's maxJobsPerRun (40 for all three) — this value can only ever be lowered by the server, " +
+      'never raised.',
     parameters: {
       mode: 'raw',
       jsonOutput: {
@@ -729,27 +753,47 @@ const apifyMultiCompanySourceSeeds = node({
             provider_type: 'bayt',
             actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items',
             request_body: { country: 'LB', maxResults: 25 },
+            refresh_scope: null,
+            max_jobs_per_run: 25,
           },
           {
             provider_type: 'gulftalent',
             actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items',
             request_body: { country: 'SA', maxResults: 15 },
+            refresh_scope: 'country:SA',
+            max_jobs_per_run: 15,
           },
           {
             provider_type: 'gulftalent',
             actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items',
             request_body: { country: 'AE', location: 'Dubai', maxResults: 15 },
+            refresh_scope: 'country:AE:location:Dubai',
+            max_jobs_per_run: 15,
           },
           {
             provider_type: 'indeed',
             actor_url: 'https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items',
             request_body: { country: 'ae', location: 'Dubai', count: 15 },
+            refresh_scope: null,
+            max_jobs_per_run: 15,
           },
         ],
       },
     },
   },
-  output: [{ apify_sources: [{ provider_type: 'bayt', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items', request_body: { country: 'LB', maxResults: 25 } }] }],
+  output: [
+    {
+      apify_sources: [
+        {
+          provider_type: 'bayt',
+          actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items',
+          request_body: { country: 'LB', maxResults: 25 },
+          refresh_scope: null,
+          max_jobs_per_run: 25,
+        },
+      ],
+    },
+  ],
 });
 
 const splitOutApifySources = node({
@@ -836,8 +880,9 @@ const callApifyBatchEndpoint = node({
         '{{ {\n' +
           "  sourceType: $('Split Out Apify Sources').item.json.provider_type,\n" +
           '  rawJobs: $json.jobs,\n' +
-          "  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n" +
-          "  dryRun: $('Workflow Configuration').first().json.dryRun\n" +
+          "  maxJobsPerSource: $('Split Out Apify Sources').item.json.max_jobs_per_run,\n" +
+          "  dryRun: $('Workflow Configuration').first().json.dryRun,\n" +
+          "  refreshScope: $('Split Out Apify Sources').item.json.refresh_scope ?? null\n" +
           '} }}'
       ),
       options: { timeout: 30000 },
@@ -1114,9 +1159,12 @@ const scopeLimitationNote = sticky(
     'multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates ' +
     '(findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on ' +
     'a shared endpoint per tier — no provider-specific matching/eligibility logic anywhere downstream of ingestion. ' +
-    'See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider, and ' +
-    "why JSearch/Adzuna/Bayt/GulfTalent remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL or " +
-    'BLOCKED_ON_AUTHORIZATION, not implemented as a no-op here.',
+    'See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider. ' +
+    'JSearch/Adzuna remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL, no API key available. ' +
+    "Bayt/GulfTalent/Indeed are enabled:true, implemented, and live-verified (Phase 21, docs/LEBANON_LIVE_SOURCE_" +
+    "EXPANSION.md) — see the Apify multi-company branch below, not a no-op here. Their remaining gaps before " +
+    'production activation are operational, not code: the Apify/Ingestion-Worker-Secret credentials still need ' +
+    'manual binding in the n8n UI, and one small live reconfirmation run is wanted before this workflow goes live.',
   [listIngestionSources],
   { color: 6 }
 );

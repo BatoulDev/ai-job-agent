@@ -64,11 +64,12 @@ describe("parseIngestionBatchRequestBody — malformed/tampered requests rejecte
     assert.equal(parseIngestionBatchRequestBody(validBody({ rawJobs })).ok, false);
   });
 
-  test("rejects a non-integer or out-of-range maxJobsPerSource", () => {
+  test("rejects a non-integer, out-of-range, or missing maxJobsPerSource — never silently defaulted", () => {
     assert.equal(parseIngestionBatchRequestBody(validBody({ maxJobsPerSource: 0 })).ok, false);
     assert.equal(parseIngestionBatchRequestBody(validBody({ maxJobsPerSource: 1.5 })).ok, false);
     assert.equal(parseIngestionBatchRequestBody(validBody({ maxJobsPerSource: 501 })).ok, false);
     assert.equal(parseIngestionBatchRequestBody(validBody({ maxJobsPerSource: "10" })).ok, false);
+    assert.equal(parseIngestionBatchRequestBody(validBody({ maxJobsPerSource: undefined })).ok, false);
   });
 
   test("rejects a non-boolean dryRun", () => {
