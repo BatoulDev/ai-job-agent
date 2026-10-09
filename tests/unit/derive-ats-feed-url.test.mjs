@@ -12,9 +12,21 @@ describe("deriveAtsFeedUrl", () => {
     assert.deepEqual(result, { sourceType: "greenhouse", feedUrl: "https://boards-api.greenhouse.io/v1/boards/alpaca/jobs?content=true" });
   });
 
-  test("derives an EU Greenhouse feed URL with the correct EU API host (real registry row: Tamara)", () => {
+  // 2026-10-02 fix: boards-api.eu.greenhouse.io does not exist (confirmed
+  // live — DNS ENOTFOUND). Only the human-facing board page is
+  // region-prefixed (job-boards.eu.*); Greenhouse's Job Board API itself is
+  // one single global host for every tenant. A live GET against
+  // boards-api.greenhouse.io/v1/boards/tamara/jobs?content=true (real
+  // registry row: Tamara, an EU-hosted tenant) returned HTTP 200 with 32
+  // real jobs, proving the global host is correct for EU boards too.
+  test("derives an EU Greenhouse feed URL using the global API host, not a region-prefixed one (real registry row: Tamara — live-verified this phase)", () => {
     const result = deriveAtsFeedUrl("Greenhouse", "https://job-boards.eu.greenhouse.io/tamara");
-    assert.deepEqual(result, { sourceType: "greenhouse", feedUrl: "https://boards-api.eu.greenhouse.io/v1/boards/tamara/jobs?content=true" });
+    assert.deepEqual(result, { sourceType: "greenhouse", feedUrl: "https://boards-api.greenhouse.io/v1/boards/tamara/jobs?content=true" });
+  });
+
+  test("preserves a hyphenated token correctly for an EU Greenhouse board", () => {
+    const result = deriveAtsFeedUrl("Greenhouse", "https://job-boards.eu.greenhouse.io/some-eu-tenant");
+    assert.deepEqual(result, { sourceType: "greenhouse", feedUrl: "https://boards-api.greenhouse.io/v1/boards/some-eu-tenant/jobs?content=true" });
   });
 
   test("derives a Lever feed URL, token may contain a dot (real registry row: Wahed)", () => {

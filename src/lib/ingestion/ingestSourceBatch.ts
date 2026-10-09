@@ -35,7 +35,7 @@ import {
   type JobUpsertRow,
 } from "./rawProviderJob.ts";
 import { validateMultiCompanyProviderJob } from "./multiCompanyProviderJob.ts";
-import { isProviderEnabled } from "./providerConfig.ts";
+import { isProviderEnabled, getProviderConfig } from "./providerConfig.ts";
 
 export interface SourceProvenance {
   sourceId: string;
@@ -78,6 +78,22 @@ export interface IngestionBatchOptions {
   maxJobsPerSource: number;
   /** When true, validates and reports but never writes to the database. */
   dryRun: boolean;
+}
+
+/**
+ * Server-side authoritative ceiling (the "Layer B" fix for the 2026-10-02
+ * false-truncation bug): a caller's requested maxJobsPerSource can only ever
+ * be lowered here, never raised. providerConfig.ts's maxJobsPerRun is the
+ * single reviewed, git-tracked cost/load ceiling per provider (see that
+ * file's header) — trusting a caller-supplied number alone as the real cap
+ * would let a misconfigured or compromised orchestrator exceed it
+ * (AGENTS.md §26/27). A sourceType with no providerConfig entry (currently
+ * only career_page) falls back to the caller's requested value, itself
+ * already bounded by the parser's own hard MAX_JOBS_PER_SOURCE_CAP.
+ */
+function clampToProviderCeiling(sourceType: JobSourceType, requestedMaxJobsPerSource: number): number {
+  const providerMax = getProviderConfig(sourceType)?.maxJobsPerRun;
+  return providerMax === undefined ? requestedMaxJobsPerSource : Math.min(requestedMaxJobsPerSource, providerMax);
 }
 
 export type IngestionBatchOutcome =
@@ -124,8 +140,63 @@ function emptyResult(outcome: IngestionBatchOutcome, jobsFetched: number, jobsRe
  * scope by source_type instead, with source_id explicitly IS NULL so a
  * RemoteOK batch, say, never touches admin_manual/career_page/linkedin
  * rows that also have a null source_id but a different source_type.
+ *
+ * refreshScope (Phase 22 fix) is a second, independent scoping dimension
+ * for multi-company feeds only: source_type/dedup_scope answers "is this
+ * the same provider/job" (identity, unchanged); refreshScope answers "did
+ * this call see the complete universe this job belongs to" (stale-close
+ * safety). A provider queried through one undivided call per run (RemoteOK,
+ * Jobicy, Arbeitnow, Bayt, Indeed today) passes refreshScope: null, which
+ * reproduces the exact pre-fix behavior (scope = source_type alone). A
+ * provider queried through multiple independently-complete market
+ * partitions (GulfTalent: SA, then AE/Dubai) passes a distinct refreshScope
+ * per partition, so one partition's complete refresh can never stale-close
+ * another partition's jobs that happen to share one source_type — the
+ * real bug confirmed in the 2026-10-01 paid pilot (GulfTalent AE's run
+ * wrongly closed GulfTalent SA's jobs). See
+ * 20261002090000_add_jobs_refresh_scope.sql for why this needed a column
+ * rather than reusing an existing one (job-content columns like
+ * country_code aren't a reliable, deterministic stand-in for which query
+ * fetched a job).
  */
-type PersistScope = { sourceId: string; sourceType?: never } | { sourceId: null; sourceType: JobSourceType };
+type PersistScope =
+  | { sourceId: string; sourceType?: never; refreshScope?: never }
+  | { sourceId: null; sourceType: JobSourceType; refreshScope: string | null };
+
+/**
+ * Identity scope (source_id | source_type) only — matches dedup_scope
+ * exactly, deliberately WITHOUT refresh_scope. Used for the existing-rows
+ * lookup (first_seen_at preservation, created-vs-updated accounting): a
+ * job's identity is whether it's the same (dedup_scope, external_id), not
+ * which refresh partition most recently touched it — a job that moves from
+ * one partition to another (e.g. GulfTalent relists the same jobId under a
+ * different market search) is still the same row being updated, never a
+ * new one. Mirrors ON CONFLICT (dedup_scope, external_id)'s own semantics.
+ */
+function identityScopeQuery<T extends { eq: (...args: [string, unknown]) => T; is: (...args: [string, unknown]) => T }>(
+  query: T,
+  scope: PersistScope
+): T {
+  return scope.sourceId !== null ? query.eq("source_id", scope.sourceId) : query.is("source_id", null).eq("source_type", scope.sourceType);
+}
+
+/**
+ * Refresh scope (source_id | source_type[+refreshScope]) — identity scope
+ * plus an additional refresh_scope filter for multi-company feeds. Used
+ * only for the active-rows-for-stale-close query: "did this run see the
+ * complete universe this job belongs to" is answered per refresh
+ * partition, not per provider-wide identity (see PersistScope's comment).
+ */
+function refreshScopeQuery<T extends { eq: (...args: [string, unknown]) => T; is: (...args: [string, unknown]) => T }>(
+  query: T,
+  scope: PersistScope
+): T {
+  const byIdentity = identityScopeQuery(query, scope);
+  if (scope.sourceId !== null) {
+    return byIdentity;
+  }
+  return scope.refreshScope === null ? byIdentity.is("refresh_scope", null) : byIdentity.eq("refresh_scope", scope.refreshScope);
+}
 
 /**
  * Shared idempotent-upsert + bounded stale-close logic, used by both
@@ -178,17 +249,43 @@ async function persistValidatedJobs(
   }
 
   const externalIds = bounded.map((row) => row.external_id);
-  const existingQuery = supabase.from("jobs").select("external_id").in("external_id", externalIds);
-  const { data: existingRows, error: existingError } =
-    scope.sourceId !== null
-      ? await existingQuery.eq("source_id", scope.sourceId)
-      : await existingQuery.is("source_id", null).eq("source_type", scope.sourceType);
+  const existingQuery = supabase.from("jobs").select("external_id, first_seen_at").in("external_id", externalIds);
+  const { data: existingRows, error: existingError } = await identityScopeQuery(existingQuery, scope);
   if (existingError) {
     throw new Error(`ingestion: failed to read existing jobs: ${existingError.message}`);
   }
   const existingExternalIds = new Set((existingRows ?? []).map((row) => row.external_id));
+  // Reuse the row's own prior first_seen_at on update, rather than a DB column
+  // default — a default would apply to every insert into jobs (admin_manual,
+  // test fixtures, ...), not just ingestion, incorrectly widening this fix's
+  // scope (confirmed by tests/db/jobs-freshness-and-lifecycle.test.mjs's
+  // existing "no freshness timestamps by default" contract for non-ingestion
+  // inserts). Falls back to null here only if the existing row's own
+  // first_seen_at was itself never set (pre-fix data); never fabricated.
+  const existingFirstSeenAt = new Map((existingRows ?? []).map((row) => [row.external_id, row.first_seen_at]));
 
-  const { error: upsertError } = await supabase.from("jobs").upsert(bounded, { onConflict: "dedup_scope,external_id" });
+  // Stamp freshness metadata at upsert time rather than in mapRawProviderJobToJobRow
+  // (which stays a pure, clock-free mapping function). last_seen_at/last_checked_at/
+  // last_successful_check_at mean "this run confirmed the job still exists" (see
+  // 20260914120000_add_jobs_freshness_and_geography.sql's column comments) — true
+  // for every row reaching this point, created or updated. status_reason is
+  // explicitly cleared so a job that was previously stale-closed and has now
+  // reappeared doesn't keep displaying its old close reason once reopened.
+  const now = new Date().toISOString();
+  const stamped = bounded.map((row) => ({
+    ...row,
+    first_seen_at: existingFirstSeenAt.get(row.external_id) ?? now,
+    last_seen_at: now,
+    last_checked_at: now,
+    last_successful_check_at: now,
+    status_reason: null,
+    // Only multi-company rows ever carry a refresh_scope — company-specific
+    // sources are already fully scoped by source_id and never set this
+    // column, leaving it null exactly as it was before this column existed.
+    ...(scope.sourceId === null ? { refresh_scope: scope.refreshScope } : {}),
+  }));
+
+  const { error: upsertError } = await supabase.from("jobs").upsert(stamped, { onConflict: "dedup_scope,external_id" });
   if (upsertError) {
     throw new Error(`ingestion: upsert failed: ${upsertError.message}`);
   }
@@ -200,10 +297,7 @@ async function persistValidatedJobs(
   if (!truncated) {
     const seenExternalIds = new Set(bounded.map((row) => row.external_id));
     const activeQuery = supabase.from("jobs").select("id, external_id").eq("status", "active");
-    const { data: activeRows, error: activeError } =
-      scope.sourceId !== null
-        ? await activeQuery.eq("source_id", scope.sourceId)
-        : await activeQuery.is("source_id", null).eq("source_type", scope.sourceType);
+    const { data: activeRows, error: activeError } = await refreshScopeQuery(activeQuery, scope);
     if (activeError) {
       throw new Error(`ingestion: failed to read active jobs for stale-close: ${activeError.message}`);
     }
@@ -264,7 +358,8 @@ export async function runIngestionBatch(
     validated.push(mapRawProviderJobToJobRow(raw, { sourceId, sourceType, companyName: provenance.provenance.companyName }));
   }
 
-  return persistValidatedJobs(supabase, rawJobs.length, validated, jobsRejected, options, { sourceId });
+  const effectiveOptions = { ...options, maxJobsPerSource: clampToProviderCeiling(sourceType, options.maxJobsPerSource) };
+  return persistValidatedJobs(supabase, rawJobs.length, validated, jobsRejected, effectiveOptions, { sourceId });
 }
 
 /**
@@ -276,14 +371,23 @@ export async function runIngestionBatch(
  * discipline runIngestionBatch already applies to company_sources.
  * source_id is always null on every row this writes, so dedup_scope falls
  * back to 'type:'||source_type (see 20260915170000's generated column) —
- * every job from one provider shares one dedup/stale-close scope,
- * correctly isolated from every other source_type by scopeQuery above.
+ * every job from one provider shares one dedup identity, correctly
+ * isolated from every other source_type by scopeQuery above.
+ *
+ * refreshScope (Phase 22 fix, defaults to null): pass this when the caller's
+ * rawJobs are only one of several independently-complete query partitions
+ * for this source_type (e.g. GulfTalent queried once per market) — see
+ * PersistScope's comment above for why this is a separate dimension from
+ * dedup identity. Omit it (or pass null) for a provider queried as one
+ * undivided call per run, which reproduces the exact pre-fix stale-close
+ * behavior.
  */
 export async function runMultiCompanyIngestionBatch(
   supabase: SupabaseClient,
   sourceType: JobSourceType,
   rawJobs: readonly RawProviderJob[],
-  options: IngestionBatchOptions
+  options: IngestionBatchOptions,
+  refreshScope: string | null = null
 ): Promise<IngestionBatchResult> {
   if (!isProviderEnabled(sourceType)) {
     return emptyResult("provider_not_enabled", rawJobs.length, rawJobs.length);
@@ -300,5 +404,6 @@ export async function runMultiCompanyIngestionBatch(
     validated.push(mapRawProviderJobToJobRow(raw, { sourceId: null, sourceType }));
   }
 
-  return persistValidatedJobs(supabase, rawJobs.length, validated, jobsRejected, options, { sourceId: null, sourceType });
+  const effectiveOptions = { ...options, maxJobsPerSource: clampToProviderCeiling(sourceType, options.maxJobsPerSource) };
+  return persistValidatedJobs(supabase, rawJobs.length, validated, jobsRejected, effectiveOptions, { sourceId: null, sourceType, refreshScope });
 }

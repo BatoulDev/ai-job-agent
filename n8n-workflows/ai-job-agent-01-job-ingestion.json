@@ -25,7 +25,7 @@
       ],
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\"appBaseUrl\":\"http://host.docker.internal:3000\",\"maxJobsPerSource\":5,\"rateLimitDelaySeconds\":2,\"dryRun\":true}"
+        "jsonOutput": "{\"appBaseUrl\":\"http://host.docker.internal:3000\",\"maxJobsPerSource\":50,\"rateLimitDelaySeconds\":2,\"dryRun\":false}"
       }
     },
     {
@@ -1394,7 +1394,7 @@
         -16
       ],
       "parameters": {
-        "content": "### Dynamic source discovery (Phase 12) + three-tier orchestration (Phase 13)\nOne POST /api/internal/ingestion/list-sources call now returns three independent arrays this workflow fans out to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby/Oracle Cloud Recruiting — findEligibleCompanySources.ts), (2) Tier-D enabled multi-company feeds (RemoteOK/Jobicy/Arbeitnow — multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates (findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on a shared endpoint per tier — no provider-specific matching/eligibility logic anywhere downstream of ingestion. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider, and why JSearch/Adzuna/Bayt/GulfTalent remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL or BLOCKED_ON_AUTHORIZATION, not implemented as a no-op here.",
+        "content": "### Dynamic source discovery (Phase 12) + three-tier orchestration (Phase 13)\nOne POST /api/internal/ingestion/list-sources call now returns three independent arrays this workflow fans out to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby/Oracle Cloud Recruiting — findEligibleCompanySources.ts), (2) Tier-D enabled multi-company feeds (RemoteOK/Jobicy/Arbeitnow — multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates (findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on a shared endpoint per tier — no provider-specific matching/eligibility logic anywhere downstream of ingestion. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider. JSearch/Adzuna remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL, no API key available. Bayt/GulfTalent/Indeed are enabled:true, implemented, and live-verified (Phase 21, docs/LEBANON_LIVE_SOURCE_EXPANSION.md) — see the Apify multi-company branch below, not a no-op here. Their remaining gaps before production activation are operational, not code: the Apify/Ingestion-Worker-Secret credentials still need manual binding in the n8n UI, and one small live reconfirmation run is wanted before this workflow goes live.",
         "color": 6,
         "width": 340,
         "height": 220
@@ -1443,10 +1443,10 @@
       ],
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25}},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15}},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15}},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15}}]}",
+        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25},\"refresh_scope\":null,\"max_jobs_per_run\":25},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15},\"refresh_scope\":\"country:SA\",\"max_jobs_per_run\":15},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15},\"refresh_scope\":\"country:AE:location:Dubai\",\"max_jobs_per_run\":15},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15},\"refresh_scope\":null,\"max_jobs_per_run\":15}]}",
         "options": {}
       },
-      "notes": "Phase 21. Static seed list — Bayt/GulfTalent/Indeed are Apify actor calls, not simple GET feed URLs, so they cannot go through the dynamic getEnabledMultiCompanyFeedSources() discovery buildFeedUrl() uses for RemoteOK/Jobicy/Arbeitnow. Bounded to the real markets live-benchmarked this phase (Bayt: Lebanon; GulfTalent: Saudi Arabia + UAE/Dubai; Indeed: UAE/Dubai only — Indeed and GulfTalent both real-confirmed to have no Lebanon country option). Qatar/Kuwait not yet included — add once benchmarked."
+      "notes": "Phase 21. Static seed list — Bayt/GulfTalent/Indeed are Apify actor calls, not simple GET feed URLs, so they cannot go through the dynamic getEnabledMultiCompanyFeedSources() discovery buildFeedUrl() uses for RemoteOK/Jobicy/Arbeitnow. Bounded to the real markets live-benchmarked this phase (Bayt: Lebanon; GulfTalent: Saudi Arabia + UAE/Dubai; Indeed: UAE/Dubai only — Indeed and GulfTalent both real-confirmed to have no Lebanon country option). Qatar/Kuwait not yet included — add once benchmarked. refresh_scope (Phase 22 fix): a real paid-pilot run proved the two GulfTalent entries share one source_type but are independently-complete query partitions — without a distinct refresh_scope per entry, the AE/Dubai call's stale-close sweep wrongly closed the SA call's jobs as 'not seen'. Bayt/Indeed keep refresh_scope: null (one undivided partition each today) — only add a value if a second independent query is ever added for them. max_jobs_per_run (2026-10-02 fix): each seed's own requested ingestion cap, read by Call Apify Batch Endpoint instead of the global Workflow Configuration.maxJobsPerSource — the global 5 was far below every real paid batch size (25/15/15/15) and falsely truncated all four. Still clamped server-side against providerConfig.ts's maxJobsPerRun (40 for all three) — this value can only ever be lowered by the server, never raised."
     },
     {
       "id": "cfb8970f-8a1d-45e2-a4e1-479054ff7028",
@@ -1544,7 +1544,7 @@
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  sourceType: $('Split Out Apify Sources').item.json.provider_type,\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
+        "jsonBody": "={{ {\n  sourceType: $('Split Out Apify Sources').item.json.provider_type,\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Split Out Apify Sources').item.json.max_jobs_per_run,\n  dryRun: $('Workflow Configuration').first().json.dryRun,\n  refreshScope: $('Split Out Apify Sources').item.json.refresh_scope ?? null\n} }}",
         "options": {
           "timeout": 30000
         }

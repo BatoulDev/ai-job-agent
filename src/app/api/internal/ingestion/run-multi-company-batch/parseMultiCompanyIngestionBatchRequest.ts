@@ -20,6 +20,15 @@ export interface MultiCompanyIngestionBatchRequestBody {
   rawJobs: unknown[];
   maxJobsPerSource: number;
   dryRun: boolean;
+  /**
+   * Phase 22 fix: which independently-complete query partition this call's
+   * rawJobs represent, when sourceType is queried through more than one
+   * (e.g. GulfTalent "country:SA" vs "country:AE:location:Dubai") — see
+   * ingestSourceBatch.ts's PersistScope comment. Optional and null by
+   * default so every existing single-partition provider (RemoteOK, Jobicy,
+   * Arbeitnow, Bayt, Indeed) is completely unaffected.
+   */
+  refreshScope: string | null;
 }
 
 export type ParseMultiCompanyIngestionBatchRequestResult =
@@ -71,6 +80,13 @@ export function parseMultiCompanyIngestionBatchRequestBody(body: unknown): Parse
     return { ok: false, error: "dryRun must be a boolean" };
   }
 
+  if (record.refreshScope !== undefined && record.refreshScope !== null && typeof record.refreshScope !== "string") {
+    return { ok: false, error: "refreshScope must be a string or null" };
+  }
+  if (typeof record.refreshScope === "string" && !record.refreshScope.trim()) {
+    return { ok: false, error: "refreshScope must not be empty when provided" };
+  }
+
   return {
     ok: true,
     value: {
@@ -78,6 +94,7 @@ export function parseMultiCompanyIngestionBatchRequestBody(body: unknown): Parse
       rawJobs: record.rawJobs,
       maxJobsPerSource: record.maxJobsPerSource,
       dryRun: record.dryRun,
+      refreshScope: typeof record.refreshScope === "string" ? record.refreshScope : null,
     },
   };
 }

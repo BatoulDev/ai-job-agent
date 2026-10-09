@@ -61,9 +61,16 @@ export function deriveAtsFeedUrl(atsProvider: string | null, officialCareersUrl:
   const label = normalizeAtsProviderLabel(atsProvider);
 
   if (label.includes("greenhouse")) {
+    // 2026-10-02 fix: there is no boards-api.eu.greenhouse.io — confirmed by
+    // live DNS lookup (ENOTFOUND) and by a live GET against the global host
+    // below succeeding with real job data (Tamara, a real job-boards.eu
+    // tenant, returned 32 real jobs from boards-api.greenhouse.io). Only the
+    // human-facing board page is region-prefixed (job-boards.eu.*); the
+    // Job Board API itself is one single global host for every tenant
+    // regardless of which board-page region they're hosted under.
     const euMatch = officialCareersUrl.match(GREENHOUSE_EU_PATTERN);
     if (euMatch) {
-      return { sourceType: "greenhouse", feedUrl: `https://boards-api.eu.greenhouse.io/v1/boards/${euMatch[1]}/jobs?content=true` };
+      return { sourceType: "greenhouse", feedUrl: `https://boards-api.greenhouse.io/v1/boards/${euMatch[1]}/jobs?content=true` };
     }
     const match = officialCareersUrl.match(GREENHOUSE_PATTERN);
     if (match) {
