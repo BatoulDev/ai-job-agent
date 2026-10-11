@@ -13,6 +13,7 @@
 // `location` column as a fallback for rows ingested with just raw text.
 
 import { normalizeLocation, type LocationConfidence, type WorkArrangement } from "./normalizeLocation.ts";
+import type { EmploymentType } from "./rawProviderJob.ts";
 
 export interface JobLocationColumns {
   location: string | null;
@@ -20,6 +21,7 @@ export interface JobLocationColumns {
   city: string | null;
   work_arrangement: string | null;
   remote_scope: string | null;
+  employment_type: string | null;
 }
 
 export interface EligibilityLocation {
@@ -27,6 +29,7 @@ export interface EligibilityLocation {
   workArrangement: WorkArrangement | null;
   remoteScope: string | null;
   locationConfidence: LocationConfidence;
+  employmentType: EmploymentType | null;
 }
 
 function asWorkArrangement(value: string | null): WorkArrangement | null {
@@ -36,8 +39,19 @@ function asWorkArrangement(value: string | null): WorkArrangement | null {
   return null;
 }
 
+// Never invented from anything else (e.g. title/description text) — only a
+// value already sitting in the employment_type column counts, same
+// trust-structured-columns-only policy as asWorkArrangement above.
+function asEmploymentType(value: string | null): EmploymentType | null {
+  if (value === "full-time" || value === "part-time" || value === "internship" || value === "contract") {
+    return value;
+  }
+  return null;
+}
+
 export function deriveEligibilityLocation(job: JobLocationColumns): EligibilityLocation {
   const workArrangement = asWorkArrangement(job.work_arrangement);
+  const employmentType = asEmploymentType(job.employment_type);
 
   // Structured columns already populated (curated entry, or a prior
   // ingestion run already wrote normalized values) — trust them; only
@@ -50,6 +64,7 @@ export function deriveEligibilityLocation(job: JobLocationColumns): EligibilityL
       workArrangement,
       remoteScope: workArrangement === "remote" ? job.remote_scope : null,
       locationConfidence: isAmbiguousRemote ? "medium" : "high",
+      employmentType,
     };
   }
 
@@ -62,6 +77,7 @@ export function deriveEligibilityLocation(job: JobLocationColumns): EligibilityL
       workArrangement,
       remoteScope: job.remote_scope,
       locationConfidence: "high",
+      employmentType,
     };
   }
 
@@ -73,5 +89,6 @@ export function deriveEligibilityLocation(job: JobLocationColumns): EligibilityL
     workArrangement: normalized.workArrangement,
     remoteScope: normalized.remoteScope,
     locationConfidence: normalized.locationConfidence,
+    employmentType,
   };
 }

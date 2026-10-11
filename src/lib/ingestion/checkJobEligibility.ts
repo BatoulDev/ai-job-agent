@@ -2,6 +2,15 @@
 // allowed to be shown to this user at all, given their plan and job
 // preferences? See docs/OVERNIGHT_BUILD_PROGRESS.md Phase 02.
 //
+// Employment-type matching (product decision, job-matching preference fix):
+// unlike work arrangement, a known employment-type conflict (e.g. a
+// full-time-only user against a part-time job) is a hard rejection with NO
+// "flexible"-style escape hatch — explicit preference always beats semantic
+// similarity, so the LLM reranker never even sees these jobs. freelance
+// (user vocabulary) and contract (job vocabulary) are treated as the same
+// real-world arrangement. A null job.employmentType is "unknown", same
+// conservative non-rejection treatment as an unknown work arrangement.
+//
 // This is a coarse market/plan gate, not the actual match-quality logic
 // (Phase 05/06 embeddings + LLM rerank run only on jobs that pass this
 // filter). Never uses AI — every branch here is a deterministic plan/
@@ -56,12 +65,14 @@
 //     reason on its own.
 
 import type { LocationConfidence, WorkArrangement } from "./normalizeLocation.ts";
+import type { EmploymentType } from "./rawProviderJob.ts";
 import type { PlanCode } from "@/lib/plans/types";
-import type { JobMarketCoverage } from "@/lib/jobPreferences/types";
+import type { JobMarketCoverage, JobType } from "@/lib/jobPreferences/types";
 
 export type EligibilityReason =
   | "eligible"
   | "location_confidence_too_low"
+  | "employment_type_conflict"
   | "work_arrangement_conflict"
   | "work_arrangement_unknown_and_ineligible"
   | "onsite_hybrid_outside_lebanon_requires_pro_relocation"
@@ -84,6 +95,13 @@ export interface JobEligibilityLocationInput {
   workArrangement: WorkArrangement | null;
   remoteScope: string | null;
   locationConfidence: LocationConfidence;
+  /**
+   * The job's employment_type. Null means the provider/admin never stated
+   * one — never invented, same fail-conservative treatment as a null
+   * workArrangement above: it is simply excluded from the hard
+   * employment-type check below, never guessed at.
+   */
+  employmentType: EmploymentType | null;
 }
 
 export interface JobEligibilityInput {
@@ -96,6 +114,15 @@ export interface JobEligibilityInput {
    * that would somehow rank differently from a real preference.
    */
   preferredWorkArrangement: WorkArrangement | null;
+  /**
+   * The user's job_preferences.job_type. "open" and null both mean "no
+   * restrictive preference" — never a rejection reason. A specific value
+   * (full-time/part-time/internship/freelance) is a HARD gate: a known,
+   * incompatible job.employmentType is rejected before semantic shortlisting
+   * ever runs (see isEmploymentTypeCompatible below) — explicit preference
+   * beats similarity, by product decision.
+   */
+  preferredJobType: JobType | null;
   /**
    * The sole active tier is 'remote_worldwide' — only ever non-null for a
    * Lebanon-resident Pro user with a remote/flexible work_arrangement
@@ -124,6 +151,20 @@ function eligible(status: WorkArrangementStatus): JobEligibilityResult {
 
 function ineligible(reason: Exclude<EligibilityReason, "eligible">, status: WorkArrangementStatus): JobEligibilityResult {
   return { eligible: false, reason, workArrangementStatus: status };
+}
+
+/**
+ * Explicit user job_type preference vs. a job's employment_type.
+ * "open" is always compatible (no restrictive preference). The one
+ * cross-vocabulary mapping is freelance <-> contract: job_preferences has
+ * no "contract" option and jobs has no "freelance" option, but they name
+ * the same real-world arrangement — approved product decision, not a
+ * guess. Every other pairing requires an exact match.
+ */
+export function isEmploymentTypeCompatible(preferredJobType: JobType, jobEmploymentType: EmploymentType): boolean {
+  if (preferredJobType === "open") return true;
+  if (preferredJobType === "freelance") return jobEmploymentType === "contract";
+  return preferredJobType === jobEmploymentType;
 }
 
 /** Lebanon is itself MENA, so a MENA-scoped or worldwide remote job always includes Lebanon-based applicants. */
@@ -182,6 +223,19 @@ export function checkJobEligibility(input: JobEligibilityInput): JobEligibilityR
 
   const arrangementStatus: WorkArrangementStatus =
     jobArrangement === null || preferredArrangement === null ? "unknown" : compareKnownArrangement(jobArrangement, preferredArrangement);
+
+  // Hard employment-type gate (approved product decision): only runs when
+  // BOTH sides are known and the preference is restrictive ("open"/null is
+  // never restrictive — isEmploymentTypeCompatible already returns true for
+  // "open", and a null preferredJobType/employmentType skips this entirely,
+  // same conservative "unknown is never a rejection reason" treatment as
+  // work arrangement above). Checked before any geography/plan branch so a
+  // known conflict is rejected without ever reaching semantic shortlisting.
+  const preferredJobType = input.preferredJobType ?? null;
+  const jobEmploymentType = job.employmentType ?? null;
+  if (preferredJobType !== null && jobEmploymentType !== null && !isEmploymentTypeCompatible(preferredJobType, jobEmploymentType)) {
+    return ineligible("employment_type_conflict", arrangementStatus);
+  }
 
   if (arrangementStatus === "conflict") {
     return ineligible("work_arrangement_conflict", "conflict");
