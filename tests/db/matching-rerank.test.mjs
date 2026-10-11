@@ -445,3 +445,49 @@ test("missing_skills: a newer analysis's match is an independent row — an olde
   assert.deepEqual(oldRow.missing_skills, ["Kubernetes", "AWS"], "the stale analysis's own row must be untouched");
   assert.deepEqual(newRow.missing_skills, [], "the newer analysis's row must reflect only its own result, never the older analysis's missing_skills");
 });
+
+// Regression test for the real root cause of the intermittent flake
+// previously observed on the test above (and on whichever test happened to
+// run right after it): shortlistJobsForUser's candidate query ordered only
+// by last_seen_at DESC. Every fixture job in this file (like virtually
+// every job in a real, not-yet-freshness-tracked dataset) has
+// last_seen_at = null, so Postgres had no deterministic order among the
+// tied rows — combined with this file's own earlier tests leaving many
+// same-user, identical-embedding (tied-similarity) jobs un-cleaned until
+// the file's after() hook, whichever arbitrary 10 of the 10+ accumulated
+// jobs Postgres happened to return varied run to run, sometimes excluding
+// whichever job a later test had just inserted. Fixed in shortlist.ts by
+// adding `created_at DESC` as a deterministic secondary sort key — this
+// reproduces that exact shape (many tied-similarity, null-last_seen_at
+// sibling jobs for one user) directly, rather than relying on incidental
+// accumulation from earlier tests in this file.
+test("shortlistJobsForUser/findRerankCandidates: candidate selection is deterministic across repeated calls, even with many tied-similarity sibling jobs", async () => {
+  // Deliberately sets no work_arrangement/job_type preference at all — this
+  // test is about ordering/truncation determinism, not eligibility, so it
+  // needs no preference-conflict setup, only enough fixture jobs to
+  // reproduce the tied-similarity shape that made ordering non-deterministic.
+  const analysis = await approveAnalysisWithEmbedding("determinism", [1, 0, 0, 0]);
+
+  // 12 identical-embedding sibling jobs, none with last_seen_at set —
+  // exactly the tied, undated shape that made the real ordering
+  // non-deterministic. Inserted first, so the target job below is the
+  // "late" one most exposed to a top-10 truncation if ordering ever
+  // regresses to being non-deterministic again.
+  for (let i = 0; i < 12; i++) {
+    await insertFixtureJob({ title: `Determinism Filler Job ${i}`, embedding: [1, 0, 0, 0] });
+  }
+  const targetJob = await insertFixtureJob({ title: "Determinism Target Job", embedding: [1, 0, 0, 0] });
+
+  const runs = await Promise.all(
+    Array.from({ length: 5 }, () => findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 }))
+  );
+  const jobIdSetsPerRun = runs.map((candidates) => new Set(candidates.filter((c) => c.cvAnalysisId === analysis.id).map((c) => c.jobId)));
+
+  for (const [i, jobIds] of jobIdSetsPerRun.entries()) {
+    assert.ok(jobIds.has(targetJob.id), `run ${i}: the target job must deterministically survive the top-10 candidate cut`);
+  }
+  const [first, ...rest] = jobIdSetsPerRun.map((s) => [...s].sort().join(","));
+  for (const [i, serialized] of rest.entries()) {
+    assert.equal(serialized, first, `run ${i + 1}: candidate set must be byte-identical to run 0 — any difference means ordering is still non-deterministic`);
+  }
+});
