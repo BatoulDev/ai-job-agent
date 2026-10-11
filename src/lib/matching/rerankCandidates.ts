@@ -14,7 +14,7 @@ import type { SupabaseClient } from "@supabase/supabase-js";
 import { shortlistJobsForUser, type ShortlistUserContext } from "./shortlist.ts";
 import { buildRerankPrompt, type RerankJobInput, type RerankProfileInput } from "./rerankPrompt.ts";
 import type { PlanCode } from "@/lib/plans/types";
-import type { JobMarketCoverage, WorkArrangement } from "@/lib/jobPreferences/types";
+import type { JobMarketCoverage, JobType, WorkArrangement } from "@/lib/jobPreferences/types";
 
 export interface RerankCandidate {
   /** Stable id for round-tripping through an external caller (n8n) — see save side, which parses this back apart. */
@@ -41,13 +41,27 @@ export function decodeCandidateId(candidateId: string): { cvAnalysisId: string; 
   return { cvAnalysisId: candidateId.slice(0, separatorIndex), jobId: candidateId.slice(separatorIndex + 1) };
 }
 
-async function loadUserContext(supabase: SupabaseClient, userId: string): Promise<ShortlistUserContext> {
+// Extends the hard-eligibility context with fields the rerank LLM prompt
+// needs but checkJobEligibility() itself has no use for (target roles/
+// preferred locations/experience level are semantic signals, never a hard
+// gate — see shortlist.ts/embeddingText.ts for where they actually matter).
+// Kept as a local extension rather than widening ShortlistUserContext,
+// which stays exactly "what hard eligibility needs," nothing more.
+interface UserContext extends ShortlistUserContext {
+  targetRoles: string[];
+  preferredLocations: string[];
+  experienceLevel: string | null;
+}
+
+async function loadUserContext(supabase: SupabaseClient, userId: string): Promise<UserContext> {
   const { data: subscription } = await supabase.from("subscriptions").select("plan_code").eq("user_id", userId).maybeSingle();
   const planCode = (subscription?.plan_code as PlanCode | undefined) ?? "free";
 
   const { data: preferences } = await supabase
     .from("job_preferences")
-    .select("id, work_arrangement, job_market_coverage, international_search_enabled, willing_to_relocate")
+    .select(
+      "id, work_arrangement, job_type, job_market_coverage, international_search_enabled, willing_to_relocate, experience_level, custom_target_roles, custom_locations, location, job_preference_target_roles(target_roles(name)), job_preference_locations(locations(name))"
+    )
     .eq("user_id", userId)
     .maybeSingle();
 
@@ -65,13 +79,38 @@ async function loadUserContext(supabase: SupabaseClient, userId: string): Promis
     relocationMarketCountryCodes = [...new Set(codes)];
   }
 
+  // Reference-catalog selections + free-text custom entries are equally
+  // valid — combined the same way embedProfile.ts and the cv-analysis-worker
+  // already do, so the rerank prompt never silently drops whichever
+  // selection method the user actually used. Supabase's untyped client
+  // infers a nested-embed shape conservatively as an array at every level
+  // (even though target_role_id/location_id are each a many-to-one FK, so
+  // each child row really embeds a single related row at runtime) —
+  // handled defensively to match either shape, same as embedProfile.ts.
+  const namesFromEmbed = (embedded: { name: string }[] | { name: string } | null | undefined): string[] => {
+    const rows = embedded == null ? [] : Array.isArray(embedded) ? embedded : [embedded];
+    return rows.map((r) => r.name).filter((name): name is string => typeof name === "string" && name.length > 0);
+  };
+  const referenceRoleNames = (
+    (preferences?.job_preference_target_roles as { target_roles: { name: string }[] | { name: string } | null }[] | undefined) ?? []
+  ).flatMap((row) => namesFromEmbed(row.target_roles));
+  const referenceLocationNames = (
+    (preferences?.job_preference_locations as { locations: { name: string }[] | { name: string } | null }[] | undefined) ?? []
+  ).flatMap((row) => namesFromEmbed(row.locations));
+  const customRoles = ((preferences?.custom_target_roles as string[] | null) ?? []).filter((r) => r.length > 0);
+  const customLocations = (preferences?.custom_locations as string[] | null) ?? (preferences?.location ? [preferences.location] : []);
+
   return {
     planCode,
     preferredWorkArrangement: (preferences?.work_arrangement as WorkArrangement | null) ?? null,
+    preferredJobType: (preferences?.job_type as JobType | null) ?? null,
     jobMarketCoverage: (preferences?.job_market_coverage as JobMarketCoverage | null) ?? null,
     internationalSearchEnabled: preferences?.international_search_enabled ?? false,
     willingToRelocate: preferences?.willing_to_relocate ?? null,
     relocationMarketCountryCodes,
+    targetRoles: [...referenceRoleNames, ...customRoles],
+    preferredLocations: [...referenceLocationNames, ...customLocations],
+    experienceLevel: (preferences?.experience_level as string | null) ?? null,
   };
 }
 
@@ -118,6 +157,11 @@ export async function findRerankCandidates(supabase: SupabaseClient, options: Fi
       recommendedRoles: (analysis.recommended_roles as string[] | null) ?? [],
       strongestAreas: (analysis.strongest_areas as string[] | null) ?? [],
       profileLevel: analysis.profile_level,
+      preferredWorkArrangement: userContext.preferredWorkArrangement,
+      preferredJobType: userContext.preferredJobType,
+      targetRoles: userContext.targetRoles,
+      preferredLocations: userContext.preferredLocations,
+      experienceLevel: userContext.experienceLevel,
     };
 
     for (const { jobId } of shortlisted) {

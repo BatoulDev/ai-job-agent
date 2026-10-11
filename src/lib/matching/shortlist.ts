@@ -41,7 +41,7 @@ export async function shortlistJobsForUser(
 ): Promise<ShortlistedJob[]> {
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, location, country_code, city, work_arrangement, remote_scope, embedding")
+    .select("id, location, country_code, city, work_arrangement, remote_scope, embedding, employment_type")
     .eq("status", "active")
     .not("embedding", "is", null)
     .order("last_seen_at", { ascending: false })
@@ -67,6 +67,7 @@ export async function shortlistJobsForUser(
       city: job.city,
       work_arrangement: job.work_arrangement,
       remote_scope: job.remote_scope,
+      employment_type: job.employment_type,
     });
     const eligibility = checkJobEligibility({ job: location, ...userContext });
     if (!eligibility.eligible) continue;

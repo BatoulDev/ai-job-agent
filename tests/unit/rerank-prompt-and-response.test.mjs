@@ -15,6 +15,11 @@ describe("buildRerankPrompt", () => {
     recommendedRoles: ["Backend Engineer"],
     strongestAreas: ["API design"],
     profileLevel: "mid-level",
+    preferredWorkArrangement: null,
+    preferredJobType: null,
+    targetRoles: [],
+    preferredLocations: [],
+    experienceLevel: null,
   };
   const job = {
     title: "Backend Engineer",
@@ -70,6 +75,60 @@ describe("buildRerankPrompt", () => {
 
   test("is deterministic", () => {
     assert.equal(buildRerankPrompt(profile, job), buildRerankPrompt({ ...profile }, { ...job }));
+  });
+
+  test("17/18. includes an explicit USER PREFERENCES section with the user's employment-type and work-arrangement preference, distinct from the JOB LISTING section", () => {
+    const prompt = buildRerankPrompt({ ...profile, preferredJobType: "part-time", preferredWorkArrangement: "remote" }, job);
+    assert.match(prompt, /USER PREFERENCES/);
+    assert.match(prompt, /Employment type: part-time/);
+    assert.match(prompt, /Work arrangement: remote/);
+    // Both the USER PREFERENCES line and the JOB LISTING line exist, and in
+    // the right order, proving they're separate sections, not merged.
+    const prefIndex = prompt.indexOf("=== USER PREFERENCES ===");
+    const jobIndex = prompt.indexOf("=== JOB LISTING ===");
+    assert.ok(prefIndex > -1 && jobIndex > -1 && prefIndex < jobIndex);
+  });
+
+  test("19. cleanly omits the USER PREFERENCES section when both preferences are null, rather than printing 'null'", () => {
+    const prompt = buildRerankPrompt({ ...profile, preferredJobType: null, preferredWorkArrangement: null }, job);
+    assert.doesNotMatch(prompt, /=== USER PREFERENCES ===/);
+    assert.doesNotMatch(prompt, /null/);
+  });
+
+  test("19b. renders only the preference that is actually set when the other is null", () => {
+    const prompt = buildRerankPrompt({ ...profile, preferredJobType: "freelance", preferredWorkArrangement: null }, job);
+    assert.match(prompt, /=== USER PREFERENCES ===/);
+    assert.match(prompt, /Employment type: freelance/);
+    assert.doesNotMatch(prompt, /Work arrangement: null/);
+  });
+
+  // Preference-to-matching coverage audit: preference_alignment must be
+  // judged against the user's actual stated target roles/locations/
+  // experience level, not only the AI Career Profile's own derived
+  // recommendedRoles/profileLevel — see rerankPrompt.ts's RerankProfileInput.
+  test("includes the user's actual target roles and preferred locations, distinct from the AI-derived recommendedRoles", () => {
+    const prompt = buildRerankPrompt(
+      { ...profile, recommendedRoles: ["Backend Engineer"], targetRoles: ["Software Engineer", "Platform Engineer"], preferredLocations: ["Beirut", "Remote"] },
+      job
+    );
+    assert.match(prompt, /Target roles: Software Engineer, Platform Engineer/);
+    assert.match(prompt, /Preferred locations: Beirut, Remote/);
+    // Both the user's stated roles and the AI's derived recommendation must
+    // be present — they are not the same thing and neither replaces the other.
+    assert.match(prompt, /Recommended roles: Backend Engineer/);
+  });
+
+  test("includes the user's stated experience-level preference, distinct from the AI-derived profileLevel", () => {
+    const prompt = buildRerankPrompt({ ...profile, profileLevel: "mid-level", experienceLevel: "entry-level" }, job);
+    assert.match(prompt, /Level: mid-level/);
+    assert.match(prompt, /Experience level: entry-level/);
+  });
+
+  test("omits target roles / preferred locations / experience level lines when unset, never prints empty labels", () => {
+    const prompt = buildRerankPrompt({ ...profile, targetRoles: [], preferredLocations: [], experienceLevel: null }, job);
+    assert.doesNotMatch(prompt, /Target roles:/);
+    assert.doesNotMatch(prompt, /Preferred locations:/);
+    assert.doesNotMatch(prompt, /Experience level:/);
   });
 });
 

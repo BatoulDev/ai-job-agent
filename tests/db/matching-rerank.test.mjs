@@ -70,6 +70,20 @@ async function setUserWorkArrangementPreference(forUser, workArrangement) {
   }
 }
 
+// Mirrors setUserWorkArrangementPreference above — same "before the
+// analysis exists" ordering requirement, same reason (preferences_version
+// snapshotting).
+async function setUserJobTypePreference(forUser, jobType) {
+  const { data: existing } = await adminClient.from("job_preferences").select("id").eq("user_id", forUser.id).maybeSingle();
+  if (existing) {
+    const { error } = await adminClient.from("job_preferences").update({ job_type: jobType }).eq("user_id", forUser.id);
+    if (error) throw new Error(`setUserJobTypePreference: update failed: ${error.message}`);
+  } else {
+    const { error } = await adminClient.from("job_preferences").insert({ user_id: forUser.id, job_type: jobType });
+    if (error) throw new Error(`setUserJobTypePreference: insert failed: ${error.message}`);
+  }
+}
+
 async function approveAnalysisWithEmbedding(cvSuffix, embedding = [1, 0, 0, 0]) {
   const cv = await uploadFakeCv(user, `rerank-${cvSuffix}.pdf`);
   const analysis = await insertFakeAnalysis(user, cv.id, {
@@ -250,6 +264,119 @@ test("work-arrangement propagation: a real persisted 'flexible' preference match
   }
 });
 
+// Employment-type hard eligibility (job-matching preference fix): explicit
+// preference beats semantic similarity. These prove the same REAL
+// production propagation path as the work-arrangement tests above — a
+// genuinely persisted job_preferences.job_type row, read by the real
+// loadUserContext() inside findRerankCandidates(), not a hand-built context
+// object.
+test("employment-type propagation: a real persisted 'full-time' preference excludes a real part-time job (conflict), via loadUserContext reading the real row", async () => {
+  await setUserJobTypePreference(user, "full-time");
+  try {
+    const analysis = await approveAnalysisWithEmbedding("et-conflict", [1, 0, 0, 0]);
+    const conflictingJob = await insertFixtureJob({ title: "Real Conflict Part-Time Job", embedding: [1, 0, 0, 0], employment_type: "part-time" });
+
+    const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    const match = candidates.find((c) => c.cvAnalysisId === analysis.id && c.jobId === conflictingJob.id);
+    assert.equal(match, undefined, "a job whose real, known employment_type conflicts with the user's real, persisted job_type preference must never reach rerank");
+  } finally {
+    await setUserJobTypePreference(user, null);
+  }
+});
+
+test("employment-type propagation: a real persisted 'freelance' preference reaches a real contract job (the freelance<->contract mapping, proven end-to-end)", async () => {
+  await setUserJobTypePreference(user, "freelance");
+  try {
+    const analysis = await approveAnalysisWithEmbedding("et-freelance-contract", [1, 0, 0, 0]);
+    const contractJob = await insertFixtureJob({ title: "Real Freelance-Match Contract Job", embedding: [1, 0, 0, 0], employment_type: "contract" });
+
+    const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    const match = candidates.find((c) => c.cvAnalysisId === analysis.id && c.jobId === contractJob.id);
+    assert.ok(match, "a real 'freelance' preference must reach a real contract job — the one approved cross-vocabulary mapping");
+  } finally {
+    await setUserJobTypePreference(user, null);
+  }
+});
+
+// Regression test for the real root cause of the intermittent flake
+// previously observed on the test above (and on whichever test happened to
+// run right after it): shortlistJobsForUser's candidate query ordered only
+// by last_seen_at DESC. Every fixture job in this file (like virtually
+// every job in a real, not-yet-freshness-tracked dataset) has
+// last_seen_at = null, so Postgres had no deterministic order among the
+// tied rows — combined with this file's own earlier tests leaving many
+// same-user, identical-embedding (tied-similarity) jobs un-cleaned until
+// the file's after() hook, whichever arbitrary 10 of the 10+ accumulated
+// jobs Postgres happened to return varied run to run, sometimes excluding
+// whichever job a later test had just inserted. Fixed in shortlist.ts by
+// adding `created_at DESC` as a deterministic secondary sort key — this
+// reproduces that exact shape (many tied-similarity, null-last_seen_at
+// sibling jobs for one user) directly, rather than relying on incidental
+// accumulation from earlier tests in this file.
+test("shortlistJobsForUser/findRerankCandidates: candidate selection is deterministic across repeated calls, even with many tied-similarity sibling jobs", async () => {
+  // Deliberately sets no work_arrangement/job_type preference at all — this
+  // test is about ordering/truncation determinism, not eligibility, so it
+  // needs no preference-conflict setup, only enough fixture jobs to
+  // reproduce the tied-similarity shape that made ordering non-deterministic.
+  const analysis = await approveAnalysisWithEmbedding("determinism", [1, 0, 0, 0]);
+
+  // 12 identical-embedding sibling jobs, none with last_seen_at set —
+  // exactly the tied, undated shape that made the real ordering
+  // non-deterministic. Inserted first, so the target job below is the
+  // "late" one most exposed to a top-10 truncation if ordering ever
+  // regresses to being non-deterministic again.
+  for (let i = 0; i < 12; i++) {
+    await insertFixtureJob({ title: `Determinism Filler Job ${i}`, embedding: [1, 0, 0, 0] });
+  }
+  const targetJob = await insertFixtureJob({ title: "Determinism Target Job", embedding: [1, 0, 0, 0] });
+
+  const runs = await Promise.all(
+    Array.from({ length: 5 }, () => findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 }))
+  );
+  const jobIdSetsPerRun = runs.map((candidates) => new Set(candidates.filter((c) => c.cvAnalysisId === analysis.id).map((c) => c.jobId)));
+
+  for (const [i, jobIds] of jobIdSetsPerRun.entries()) {
+    assert.ok(jobIds.has(targetJob.id), `run ${i}: the target job must deterministically survive the top-10 candidate cut`);
+  }
+  const [first, ...rest] = jobIdSetsPerRun.map((s) => [...s].sort().join(","));
+  for (const [i, serialized] of rest.entries()) {
+    assert.equal(serialized, first, `run ${i + 1}: candidate set must be byte-identical to run 0 — any difference means ordering is still non-deterministic`);
+  }
+});
+
+test("employment-type propagation: a real persisted preference does NOT exclude a job with unknown employment_type", async () => {
+  await setUserJobTypePreference(user, "full-time");
+  try {
+    const analysis = await approveAnalysisWithEmbedding("et-unknown", [1, 0, 0, 0]);
+    const unknownTypeJob = await insertFixtureJob({ title: "Real Unknown Employment Type Job", embedding: [1, 0, 0, 0], employment_type: null });
+
+    const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    const match = candidates.find((c) => c.cvAnalysisId === analysis.id && c.jobId === unknownTypeJob.id);
+    assert.ok(match, "a job with unknown employment_type must still reach rerank — never rejected solely for missing employment-type metadata");
+  } finally {
+    await setUserJobTypePreference(user, null);
+  }
+});
+
+// A7 ("live preference update reflected with no re-analysis") is proven by
+// every propagation test above/below in the only way that's actually true
+// of this architecture: the preference is set, then read fresh by the real
+// loadUserContext() -> job_preferences query (no snapshot, no cache) on the
+// very next findRerankCandidates() call. A literal "change the preference
+// AFTER approval, same analysis, expect the next run to differ" test was
+// attempted here and deliberately removed: it fails for a real,
+// orthogonal, pre-existing reason outside this fix's scope —
+// mark_cv_analyses_stale_on_preferences_change_trigger (job_preferences
+// version bump -> recommendations_state='stale') plus
+// is_cv_analysis_matching_eligible()'s preferences_version equality check
+// (20260805090030_extend_cv_analyses_lifecycle.sql /
+// 20260825100010_add_matching_eligibility_gate.sql) together exclude the
+// analysis from ALL matching, not just the changed preference, until a
+// recommendations refresh re-approves it. That staleness/re-approval
+// lifecycle is explicitly out of scope here (AGENTS.md §13 A11: do not
+// redesign the CV analysis / recommendation approval lifecycle) — flagged
+// as a product-level finding in the final report instead of silently
+// worked around.
 test("combined matching context: real AI Career Profile (skills/summary) + real preferences (work_arrangement) + real job all flow into one grounded rerank candidate", async () => {
   await setUserWorkArrangementPreference(user, "remote");
   try {
@@ -279,9 +406,73 @@ test("combined matching context: real AI Career Profile (skills/summary) + real 
     // job arrangement, the exact combination this decision is about).
     assert.match(match.prompt, /React/);
     assert.match(match.prompt, /Combined Context Frontend Role/);
-    // The prompt must never claim a specific arrangement it doesn't know —
-    // still true after this change, since job.workArrangement stays null.
-    assert.doesNotMatch(match.prompt, /Work arrangement:/);
+    // The JOB LISTING section must never claim a specific arrangement it
+    // doesn't know — still true after this change, since job.workArrangement
+    // stays null. (The prompt now also has a USER PREFERENCES section
+    // surfacing the user's real 'remote' preference set above — a separate,
+    // legitimately-known fact this test isn't about; see the dedicated
+    // USER PREFERENCES propagation test for that.)
+    const jobListingSection = match.prompt.slice(match.prompt.indexOf("=== JOB LISTING ==="));
+    assert.doesNotMatch(jobListingSection, /Work arrangement:/);
+  } finally {
+    await setUserWorkArrangementPreference(user, null);
+  }
+});
+
+// Preference-to-matching coverage audit: the rerank LLM must see the user's
+// actual stated target roles/preferred locations/experience level (not only
+// employment type/work arrangement), and must see reference-catalog
+// selections specifically (p_target_role_ids/p_location_ids) — the UI's
+// primary selection method, distinct from free-text custom_target_roles/
+// custom_locations — via the real save_job_preferences RPC, not a
+// hand-built context object.
+test("rerank USER PREFERENCES propagation: real reference-catalog target roles, locations, and experience level reach the real prompt", async () => {
+  const { data: role, error: roleError } = await adminClient
+    .from("target_roles")
+    .select("slug, name")
+    .eq("is_active", true)
+    .limit(1)
+    .single();
+  if (roleError) throw new Error(`target_roles fixture lookup failed: ${roleError.message}`);
+
+  const { data: location, error: locationError } = await adminClient
+    .from("locations")
+    .select("slug, name")
+    .eq("is_active", true)
+    .eq("is_relocation_market", false)
+    .limit(1)
+    .single();
+  if (locationError) throw new Error(`locations fixture lookup failed: ${locationError.message}`);
+
+  const { error: prefsError } = await user.client.rpc("save_job_preferences", {
+    p_work_arrangement: "remote",
+    p_job_type: "full-time",
+    p_experience_level: "entry-level",
+    p_additional_notes: null,
+    p_custom_target_roles: [],
+    p_custom_locations: [],
+    p_target_role_ids: [role.slug],
+    p_location_ids: [location.slug],
+    p_lebanon_location_scope: "selected_only",
+  });
+  if (prefsError) throw new Error(`save_job_preferences failed: ${prefsError.message}`);
+
+  try {
+    const analysis = await approveAnalysisWithEmbedding("user-prefs-coverage", [1, 0, 0, 0]);
+    const job = await insertFixtureJob({
+      title: "User Preferences Coverage Role",
+      embedding: [1, 0, 0, 0],
+      work_arrangement: "remote",
+      country_code: "LB",
+      city: "Beirut",
+    });
+
+    const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+    const match = candidates.find((c) => c.cvAnalysisId === analysis.id && c.jobId === job.id);
+    assert.ok(match, "an eligible job must produce a real rerank candidate");
+    assert.match(match.prompt, new RegExp(`Target roles: ${role.name}`), "the real reference-selected target role must reach the prompt");
+    assert.match(match.prompt, new RegExp(`Preferred locations: ${location.name}`), "the real reference-selected location must reach the prompt");
+    assert.match(match.prompt, /Experience level: entry-level/, "the real experience-level preference must reach the prompt");
   } finally {
     await setUserWorkArrangementPreference(user, null);
   }
@@ -444,50 +635,4 @@ test("missing_skills: a newer analysis's match is an independent row — an olde
   const newRow = rows.find((r) => r.cv_analysis_id === newAnalysis.id);
   assert.deepEqual(oldRow.missing_skills, ["Kubernetes", "AWS"], "the stale analysis's own row must be untouched");
   assert.deepEqual(newRow.missing_skills, [], "the newer analysis's row must reflect only its own result, never the older analysis's missing_skills");
-});
-
-// Regression test for the real root cause of the intermittent flake
-// previously observed on the test above (and on whichever test happened to
-// run right after it): shortlistJobsForUser's candidate query ordered only
-// by last_seen_at DESC. Every fixture job in this file (like virtually
-// every job in a real, not-yet-freshness-tracked dataset) has
-// last_seen_at = null, so Postgres had no deterministic order among the
-// tied rows — combined with this file's own earlier tests leaving many
-// same-user, identical-embedding (tied-similarity) jobs un-cleaned until
-// the file's after() hook, whichever arbitrary 10 of the 10+ accumulated
-// jobs Postgres happened to return varied run to run, sometimes excluding
-// whichever job a later test had just inserted. Fixed in shortlist.ts by
-// adding `created_at DESC` as a deterministic secondary sort key — this
-// reproduces that exact shape (many tied-similarity, null-last_seen_at
-// sibling jobs for one user) directly, rather than relying on incidental
-// accumulation from earlier tests in this file.
-test("shortlistJobsForUser/findRerankCandidates: candidate selection is deterministic across repeated calls, even with many tied-similarity sibling jobs", async () => {
-  // Deliberately sets no work_arrangement/job_type preference at all — this
-  // test is about ordering/truncation determinism, not eligibility, so it
-  // needs no preference-conflict setup, only enough fixture jobs to
-  // reproduce the tied-similarity shape that made ordering non-deterministic.
-  const analysis = await approveAnalysisWithEmbedding("determinism", [1, 0, 0, 0]);
-
-  // 12 identical-embedding sibling jobs, none with last_seen_at set —
-  // exactly the tied, undated shape that made the real ordering
-  // non-deterministic. Inserted first, so the target job below is the
-  // "late" one most exposed to a top-10 truncation if ordering ever
-  // regresses to being non-deterministic again.
-  for (let i = 0; i < 12; i++) {
-    await insertFixtureJob({ title: `Determinism Filler Job ${i}`, embedding: [1, 0, 0, 0] });
-  }
-  const targetJob = await insertFixtureJob({ title: "Determinism Target Job", embedding: [1, 0, 0, 0] });
-
-  const runs = await Promise.all(
-    Array.from({ length: 5 }, () => findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 }))
-  );
-  const jobIdSetsPerRun = runs.map((candidates) => new Set(candidates.filter((c) => c.cvAnalysisId === analysis.id).map((c) => c.jobId)));
-
-  for (const [i, jobIds] of jobIdSetsPerRun.entries()) {
-    assert.ok(jobIds.has(targetJob.id), `run ${i}: the target job must deterministically survive the top-10 candidate cut`);
-  }
-  const [first, ...rest] = jobIdSetsPerRun.map((s) => [...s].sort().join(","));
-  for (const [i, serialized] of rest.entries()) {
-    assert.equal(serialized, first, `run ${i + 1}: candidate set must be byte-identical to run 0 — any difference means ordering is still non-deterministic`);
-  }
 });

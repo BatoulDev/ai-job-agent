@@ -23,17 +23,40 @@ interface PreferencesRow {
   location: string | null;
   job_type: string | null;
   experience_level: string | null;
+  // Reference-catalog selections (job_preference_target_roles /
+  // job_preference_locations) — distinct from the free-text custom_* arrays
+  // above. Both are equally valid user selections (save_job_preferences
+  // accepts them independently and the cv-analysis-worker's own preference
+  // merge already combines both for the AI Career Profile prompt); omitting
+  // either here would silently drop whichever selection method the user
+  // actually used from the profile embedding.
+  // Supabase's untyped client infers a nested-embed shape conservatively as
+  // an array at every level (even though target_role_id/location_id are
+  // each a many-to-one FK, so each child row really embeds a single related
+  // row at runtime) — typed and handled defensively to match either shape.
+  job_preference_target_roles: { target_roles: { name: string }[] | { name: string } | null }[] | null;
+  job_preference_locations: { locations: { name: string }[] | { name: string } | null }[] | null;
+}
+
+function namesFromEmbed(embedded: { name: string }[] | { name: string } | null | undefined): string[] {
+  const rows = embedded == null ? [] : Array.isArray(embedded) ? embedded : [embedded];
+  return rows.map((r) => r.name).filter((name): name is string => typeof name === "string" && name.length > 0);
 }
 
 function buildProfileEmbeddingInput(analysis: AnalysisRow, preferences: PreferencesRow | null): ProfileEmbeddingInput {
+  const referenceRoleNames = (preferences?.job_preference_target_roles ?? []).flatMap((row) => namesFromEmbed(row.target_roles));
+  const referenceLocationNames = (preferences?.job_preference_locations ?? []).flatMap((row) => namesFromEmbed(row.locations));
+  const customRoles = (preferences?.custom_target_roles ?? []).filter((r) => r.length > 0);
+  const customLocations = preferences?.custom_locations ?? (preferences?.location ? [preferences.location] : []);
+
   return {
     professionalSummary: analysis.professional_summary,
     skills: (analysis.skills as string[] | null) ?? [],
     recommendedRoles: (analysis.recommended_roles as string[] | null) ?? [],
     strongestAreas: (analysis.strongest_areas as string[] | null) ?? [],
     profileLevel: analysis.profile_level,
-    targetRoles: preferences?.custom_target_roles ?? [],
-    preferredLocations: preferences?.custom_locations ?? (preferences?.location ? [preferences.location] : []),
+    targetRoles: [...referenceRoleNames, ...customRoles],
+    preferredLocations: [...referenceLocationNames, ...customLocations],
     jobType: preferences?.job_type ?? null,
     experienceLevel: preferences?.experience_level ?? null,
   };
@@ -70,7 +93,9 @@ export async function embedProfileIfEligible(
 
   const { data: preferences, error: preferencesError } = await supabase
     .from("job_preferences")
-    .select("custom_target_roles, custom_locations, location, job_type, experience_level")
+    .select(
+      "custom_target_roles, custom_locations, location, job_type, experience_level, job_preference_target_roles(target_roles(name)), job_preference_locations(locations(name))"
+    )
     .eq("user_id", analysis.user_id)
     .maybeSingle();
   if (preferencesError) {
@@ -135,7 +160,9 @@ export async function findProfilesNeedingEmbedding(supabase: SupabaseClient, lim
   const userIds = [...new Set(candidates.map((c) => c.user_id))];
   const { data: preferencesRows, error: preferencesError } = await supabase
     .from("job_preferences")
-    .select("user_id, custom_target_roles, custom_locations, location, job_type, experience_level")
+    .select(
+      "user_id, custom_target_roles, custom_locations, location, job_type, experience_level, job_preference_target_roles(target_roles(name)), job_preference_locations(locations(name))"
+    )
     .in("user_id", userIds);
   if (preferencesError) throw new Error(`findProfilesNeedingEmbedding: preferences query failed: ${preferencesError.message}`);
   const preferencesByUser = new Map((preferencesRows ?? []).map((p) => [p.user_id, p]));
