@@ -20,8 +20,26 @@
  *
  * WORKFLOW CONFIGURATION NODE (first node after the trigger — edit before activating)
  * ──────────────────────────────────────────────────────────────────────────────────
- *   supabaseBaseUrl — local: http://host.docker.internal:55321. Centralized
- *                     here deliberately — every downstream node reads it via
+ *   supabaseBaseUrl — local: http://supabase_kong_ai-job-agent:8000 (the
+ *                     Supabase Kong container's name and internal port on
+ *                     the shared `supabase_network_ai-job-agent` Docker
+ *                     network — n8n's container was attached to that network
+ *                     via `docker network connect`). Previously
+ *                     http://host.docker.internal:55321: that host-alias
+ *                     DNS path depends entirely on a live round-trip to
+ *                     Docker Desktop's internal DNS proxy with no static
+ *                     /etc/hosts fallback, and was observed intermittently
+ *                     failing with `getaddrinfo EAI_AGAIN host.docker.
+ *                     internal` (confirmed via live execution history,
+ *                     2026-10-11) correlating with the separately-tracked
+ *                     supabase_vector_ai-job-agent crash loop. The
+ *                     container-name address resolves via Docker's own
+ *                     embedded DNS (127.0.0.11) once both containers share
+ *                     a network, with no dependency on that external proxy —
+ *                     measured 25/25 and 30/30 clean DNS+HTTP checks over
+ *                     this path while the crash loop continued in the
+ *                     background. Centralized here deliberately — every
+ *                     downstream node reads it via
  *                     $('Workflow Configuration').first().json.supabaseBaseUrl,
  *                     never a second literal copy. n8n environment variables
  *                     ($env) and Variables ($vars) were both evaluated as
@@ -132,7 +150,7 @@ const workflowConfig = node({
           {
             id: 'supabase-base-url',
             name: 'supabaseBaseUrl',
-            value: 'http://host.docker.internal:55321',
+            value: 'http://supabase_kong_ai-job-agent:8000',
             type: 'string'
           },
           {
@@ -145,7 +163,7 @@ const workflowConfig = node({
       },
       options: {}
     },
-    output: [{ json: { supabaseBaseUrl: 'http://host.docker.internal:55321', environment: 'local' } }]
+    output: [{ json: { supabaseBaseUrl: 'http://supabase_kong_ai-job-agent:8000', environment: 'local' } }]
   }
 });
 
@@ -640,7 +658,7 @@ const loadPreferences = node({
     continueOnFail: true,
     parameters: {
       method: 'GET',
-      url: expr("={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/job_preferences?user_id=eq.{{ $('Validate CV Context').item.json.userId }}&select=id,user_id,work_arrangement,job_market_coverage,job_type,experience_level,additional_notes,custom_target_roles,custom_locations,version&limit=1"),
+      url: expr("={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/job_preferences?user_id=eq.{{ $('Validate CV Context').item.json.userId }}&select=id,user_id,work_arrangement,job_market_coverage,job_type,experience_level,additional_notes,custom_target_roles,custom_locations,lebanon_location_scope,international_search_enabled,willing_to_relocate,work_authorization_status,version&limit=1"),
       authentication: 'predefinedCredentialType',
       nodeCredentialType: 'supabaseApi',
       sendHeaders: true,
@@ -706,12 +724,73 @@ const loadPreferenceLocations = node({
   }
 });
 
+// ── 4h-r. Load selected relocation (Gulf) markets — Pro-only international
+//          preferences, only ever non-empty when international_search_enabled
+//          and willing_to_relocate are both true, same scope chain as roles/
+//          locations above. These previously reached the stale/re-analysis
+//          trigger but never the AI prompt itself — now included so the
+//          Career Profile is generated from the full, current preference
+//          state (approved product rule: ACTIVE CV + ALL CURRENT PREFERENCES).
+const loadPreferenceRelocationLocations = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Load Preference Relocation Locations',
+    continueOnFail: true,
+    alwaysOutputData: true,
+    parameters: {
+      method: 'GET',
+      url: expr("={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/job_preference_relocation_locations?job_preference_id=eq.{{ (Array.isArray($('Load Preferences').item.json) ? ($('Load Preferences').item.json[0] || {}) : ($('Load Preferences').item.json || {})).id || '00000000-0000-0000-0000-000000000000' }}&select=locations(name)&limit=20"),
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'supabaseApi',
+      sendHeaders: true,
+      headerParameters: {
+        parameters: [
+          { name: 'Accept', value: 'application/json' }
+        ]
+      }
+    },
+    credentials: { supabaseApi: supabaseCred },
+    output: [{ json: [{ locations: { name: 'Dubai' } }] }]
+  }
+});
+
+// ── 4h-a. Load already-authorized countries — same scope chain, only ever
+//          non-empty when work_authorization_status = 'already_authorized'.
+const loadPreferenceAuthorizedCountries = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Load Preference Authorized Countries',
+    continueOnFail: true,
+    alwaysOutputData: true,
+    parameters: {
+      method: 'GET',
+      url: expr("={{ $('Workflow Configuration').first().json.supabaseBaseUrl }}/rest/v1/job_preference_authorized_countries?job_preference_id=eq.{{ (Array.isArray($('Load Preferences').item.json) ? ($('Load Preferences').item.json[0] || {}) : ($('Load Preferences').item.json || {})).id || '00000000-0000-0000-0000-000000000000' }}&select=countries(name)&limit=20"),
+      authentication: 'predefinedCredentialType',
+      nodeCredentialType: 'supabaseApi',
+      sendHeaders: true,
+      headerParameters: {
+        parameters: [
+          { name: 'Accept', value: 'application/json' }
+        ]
+      }
+    },
+    credentials: { supabaseApi: supabaseCred },
+    output: [{ json: [{ countries: { name: 'United Arab Emirates' } }] }]
+  }
+});
+
 // ── 4i. Merge all preference data into a single structured snapshot ────────────
-// Combines the main job_preferences row with role names from job_preference_target_roles
-// and location names from job_preference_locations. Each fetch is already scoped to
-// the claimed task's userId — roles/locations are joined via job_preference_id,
-// which was derived from a userId-filtered query. An additional user_id guard
-// catches any accidental cross-user reference at the Code layer.
+// Combines the main job_preferences row with role/location/relocation-market/
+// authorized-country names from their respective join tables. Each fetch is
+// already scoped to the claimed task's userId — every join table is reached
+// via job_preference_id, which was derived from a userId-filtered query. An
+// additional user_id guard catches any accidental cross-user reference at
+// the Code layer. Every field the user can currently persist is represented
+// here — the approved product rule (ACTIVE CV + ALL CURRENT PREFERENCES ->
+// AI Career Profile) requires the full preference state to reach this
+// snapshot, not a hand-picked subset.
 const mergePreferenceData = node({
   type: 'n8n-nodes-base.code',
   version: 2,
@@ -734,16 +813,32 @@ if (prefsRow && prefsRow.user_id && prefsRow.user_id !== taskCtx.userId) {
   throw new Error('PERMANENT: job_preferences user_id does not match task user_id');
 }
 
-// alwaysOutputData on Load Preference Roles guarantees at-least-1 item even when Supabase
-// returns []. Empty-sentinel items produce no target_roles.name and are filtered out.
+// alwaysOutputData on every join-table fetch below guarantees at-least-1 item
+// even when Supabase returns [] — empty-sentinel items produce no name and
+// are filtered out. Every fetch is read via its own explicit node-name lookup
+// (never the implicit immediate-predecessor input) so this node's own
+// behavior never depends on its position in the execution chain.
 const joinRoleNames = $('Load Preference Roles').all()
   .map(item => item.json?.target_roles?.name)
   .filter(n => typeof n === 'string' && n.length > 0);
 
-// $input.all() collects every location item from the current batch, ensuring
-// we capture all rows when Load Preference Locations produces multiple items.
-const joinLocNames = $input.all()
+const joinLocNames = $('Load Preference Locations').all()
   .map(item => item.json?.locations?.name)
+  .filter(n => typeof n === 'string' && n.length > 0);
+
+// Pro-only international preferences (20260902090010_plan_aware_job_preferences.sql):
+// relocation markets are the Gulf locations the user selected; authorized
+// countries are the ones they already hold legal work authorization in.
+// Both are only ever non-empty under their own documented preconditions
+// (international_search_enabled + willing_to_relocate; work_authorization_
+// status = 'already_authorized' respectively) — never inferred here, only
+// read back exactly as selected.
+const relocationLocationNames = $('Load Preference Relocation Locations').all()
+  .map(item => item.json?.locations?.name)
+  .filter(n => typeof n === 'string' && n.length > 0);
+
+const authorizedCountryNames = $('Load Preference Authorized Countries').all()
+  .map(item => item.json?.countries?.name)
   .filter(n => typeof n === 'string' && n.length > 0);
 
 const customRoles = Array.isArray(prefsRow?.custom_target_roles)
@@ -762,20 +857,38 @@ const allLocs  = [...joinLocNames,  ...customLocs];
 return [{
   json: {
     preferenceSnapshot: {
-      target_roles:        allRoles.length > 0 ? allRoles : [],
-      preferred_locations: allLocs.length  > 0 ? allLocs  : [],
-      work_arrangement:    prefsRow?.work_arrangement    || null,
-      job_market_coverage: prefsRow?.job_market_coverage || null,
-      job_type:            prefsRow?.job_type            || null,
-      experience_level:    prefsRow?.experience_level    || null,
-      additional_notes:    prefsRow?.additional_notes    || null,
-      preferences_version: typeof prefsRow?.version === 'number' ? prefsRow.version : null
+      target_roles:                 allRoles.length > 0 ? allRoles : [],
+      preferred_locations:          allLocs.length  > 0 ? allLocs  : [],
+      work_arrangement:             prefsRow?.work_arrangement             || null,
+      job_market_coverage:          prefsRow?.job_market_coverage          || null,
+      job_type:                     prefsRow?.job_type                     || null,
+      experience_level:             prefsRow?.experience_level             || null,
+      additional_notes:             prefsRow?.additional_notes             || null,
+      lebanon_location_scope:       prefsRow?.lebanon_location_scope       || null,
+      international_search_enabled: typeof prefsRow?.international_search_enabled === 'boolean' ? prefsRow.international_search_enabled : null,
+      willing_to_relocate:          typeof prefsRow?.willing_to_relocate === 'boolean' ? prefsRow.willing_to_relocate : null,
+      work_authorization_status:    prefsRow?.work_authorization_status    || null,
+      relocation_locations:         relocationLocationNames,
+      authorized_countries:         authorizedCountryNames,
+      preferences_version:          typeof prefsRow?.version === 'number' ? prefsRow.version : null
     }
   }
 }];
 `
     },
-    output: [{ json: { preferenceSnapshot: { target_roles: ['Software Engineer'], preferred_locations: ['Remote'], work_arrangement: 'remote', job_type: 'full-time', experience_level: 'junior', additional_notes: null, job_market_coverage: null, preferences_version: 1 } } }]
+    output: [{
+      json: {
+        preferenceSnapshot: {
+          target_roles: ['Software Engineer'], preferred_locations: ['Remote'],
+          work_arrangement: 'remote', job_type: 'full-time', experience_level: 'junior',
+          additional_notes: null, job_market_coverage: null,
+          lebanon_location_scope: 'selected_only', international_search_enabled: false,
+          willing_to_relocate: null, work_authorization_status: null,
+          relocation_locations: [], authorized_countries: [],
+          preferences_version: 1
+        }
+      }
+    }]
   }
 });
 
@@ -854,8 +967,46 @@ if (mergedPrefs?.error && String(mergedPrefs.error).includes('PERMANENT:')) {
 const preferenceSnapshot = mergedPrefs?.preferenceSnapshot || {
   target_roles: [], preferred_locations: [], work_arrangement: null,
   job_market_coverage: null, job_type: null, experience_level: null,
-  additional_notes: null, preferences_version: null
+  additional_notes: null, lebanon_location_scope: null,
+  international_search_enabled: null, willing_to_relocate: null,
+  work_authorization_status: null, relocation_locations: [],
+  authorized_countries: [], preferences_version: null
 };
+
+// Renders a short scalar/enum value as a readable label without inventing
+// one — 'full-time' -> 'Full-time', 'selected_only' -> 'Selected only'.
+// Returns null (never a fabricated default) when the value itself is null/
+// undefined/empty, so callers can render their own explicit 'Not specified'.
+function humanizeEnum(v) {
+  if (v === null || v === undefined || v === '') return null;
+  const s = String(v).replace(/_/g, ' ');
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+// Clear, explicitly-labeled USER PREFERENCES text — never a raw JSON dump,
+// so the model reads each preference as a stated fact rather than having to
+// parse structure. Every field the user can currently persist is rendered;
+// an unset field reads as 'Not specified'/'None', never a guessed value.
+function buildPreferencesText(prefs) {
+  const lines = [
+    'Target roles: ' + (prefs.target_roles && prefs.target_roles.length ? prefs.target_roles.join(', ') : 'Not specified'),
+    'Preferred locations: ' + (prefs.preferred_locations && prefs.preferred_locations.length ? prefs.preferred_locations.join(', ') : 'Not specified'),
+    'Job type: ' + (humanizeEnum(prefs.job_type) || 'Not specified'),
+    'Work arrangement: ' + (humanizeEnum(prefs.work_arrangement) || 'Not specified'),
+    'Experience level: ' + (humanizeEnum(prefs.experience_level) || 'Not specified'),
+    'Lebanon search scope: ' + (humanizeEnum(prefs.lebanon_location_scope) || 'Not specified'),
+    'International search enabled: ' + (prefs.international_search_enabled === true ? 'Yes' : prefs.international_search_enabled === false ? 'No' : 'Not specified'),
+    'Willing to relocate: ' + (prefs.willing_to_relocate === true ? 'Yes' : prefs.willing_to_relocate === false ? 'No' : 'Not specified'),
+    'Relocation locations: ' + (prefs.relocation_locations && prefs.relocation_locations.length ? prefs.relocation_locations.join(', ') : 'None'),
+    'Work authorization status: ' + (humanizeEnum(prefs.work_authorization_status) || 'Not specified'),
+    'Authorized countries: ' + (prefs.authorized_countries && prefs.authorized_countries.length ? prefs.authorized_countries.join(', ') : 'None'),
+    'Job market coverage: ' + (humanizeEnum(prefs.job_market_coverage) || 'Not specified')
+  ];
+  if (prefs.additional_notes) {
+    lines.push('Additional notes: ' + prefs.additional_notes);
+  }
+  return lines.join('\\n');
+}
 
 // Load Task Feedback: alwaysOutputData means this node always has one item.
 // A real feedback row has feedback_type set; the empty sentinel does not.
@@ -874,7 +1025,13 @@ if (isLightweight) {
     'You are refreshing an AI Job Guide career profile\\'s RECOMMENDATIONS ONLY. ' +
     'The candidate\\'s CV facts below are already extracted and verified — they are ' +
     'fixed context, not something for you to extract, change, or repeat. Base your ' +
-    'recommendations strictly on the CV FACTS and JOB PREFERENCES provided.\\n\\n' +
+    'recommendations strictly on the CV FACTS and USER PREFERENCES provided.\\n\\n' +
+    'USER PREFERENCES rules: USER PREFERENCES describes what the candidate WANTS and ALLOWS \\u2014 ' +
+    'never confuse it with CV FACTS, which describes what the candidate HAS. Treat every explicit ' +
+    'preference as a firm constraint, never a soft suggestion to override. \\'Not specified\\'/\\'None\\' ' +
+    'means the user has not set that preference \\u2014 never invent a value for it or assume a default. ' +
+    'Never assume willingness to relocate or international search intent beyond exactly what is stated. ' +
+    'Never assume work authorization for a country that is not explicitly listed as authorized.\\n\\n' +
     'Return ONLY a valid JSON object with EXACTLY these fields. No markdown, no explanation.\\n\\n' +
     '{\\n' +
     '  "profile_level": "junior",\\n' +
@@ -887,11 +1044,11 @@ if (isLightweight) {
     'Field rules:\\n' +
     '- profile_level MUST be exactly one of: internship, entry-level, junior, mid-level, senior, open-to-all\\n' +
     '- Every recommendation must be grounded in the CV FACTS given below \\u2014 never invent skills, experience, or education not present there.\\n' +
-    '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and preferences.\\n' +
+    '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and all stated preferences (including location/relocation/international-search/work-authorization preferences where relevant).\\n' +
     '- Use [] for missing arrays.';
 
   userParts = [
-    'JOB PREFERENCES:\\n' + JSON.stringify(preferenceSnapshot, null, 2),
+    '=== USER PREFERENCES ===\\n' + buildPreferencesText(preferenceSnapshot),
     'CV FACTS (already verified \\u2014 fixed context, do not restate or alter):\\n' + JSON.stringify(priorFacts, null, 2)
   ];
 } else {
@@ -903,6 +1060,12 @@ if (isLightweight) {
   systemPrompt =
     'You are an expert CV analyst. Extract structured professional information from ' +
     'the CV text and generate a career profile informed by the job preferences.\\n\\n' +
+    'USER PREFERENCES rules: USER PREFERENCES describes what the candidate WANTS and ALLOWS \\u2014 ' +
+    'keep it clearly separate from the CV text, which describes what the candidate HAS. Treat every ' +
+    'explicit preference as a firm constraint, never a soft suggestion to override. \\'Not specified\\'/' +
+    '\\'None\\' means the user has not set that preference \\u2014 never invent a value for it or assume a ' +
+    'default. Never assume willingness to relocate or international search intent beyond exactly what is ' +
+    'stated. Never assume work authorization for a country that is not explicitly listed as authorized.\\n\\n' +
     'Return ONLY a valid JSON object with EXACTLY these fields. No markdown, no explanation.\\n\\n' +
     '{\\n' +
     '  "candidate_name": "Full name as it appears on the CV header or contact section, or null if not found",\\n' +
@@ -933,11 +1096,11 @@ if (isLightweight) {
     '- contact_info.links: array of public profile URLs (LinkedIn, GitHub, portfolio). Never include email or phone.\\n' +
     '- contact_info.location: city/country string or null.\\n' +
     '- Use [] for missing arrays, null or empty string for missing scalars.\\n' +
-    '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and preferences.\\n' +
+    '- career_recommendations, search_focus, development_areas should reflect the CV strengths relative to the target roles and all stated preferences (including location/relocation/international-search/work-authorization preferences where relevant).\\n' +
     '- candidate_name: copy the name exactly from the CV header or contact section. null if absent.\\n' +
     '- candidate_email: copy the email exactly from the CV. null if absent.';
 
-  userParts = ['JOB PREFERENCES:\\n' + JSON.stringify(preferenceSnapshot, null, 2)];
+  userParts = ['=== USER PREFERENCES ===\\n' + buildPreferencesText(preferenceSnapshot)];
 }
 
 // When user feedback is present, add a clear instruction. System instructions
@@ -1218,6 +1381,17 @@ const validateCvOwnership = node({
 const parseCtx    = $('Parse AI Response').item.json;
 const profileJson = $input.item.json;
 
+// Propagate an upstream failure instead of silently treating it as "could
+// not verify ownership" — without this, an error-shaped item (no
+// candidate_name, no insertBody) fell through to the default branch below,
+// which drops outcome/insertBody from its passthrough. The next node
+// (Insert CV Analysis) then built its JSON body from the now-missing
+// insertBody, and n8n rejected the resulting undefined value with its own
+// generic "JSON Body" error — masking whatever actually failed upstream.
+if (parseCtx?.error) {
+  throw new Error(parseCtx.error);
+}
+
 const taskId          = parseCtx?.taskId;
 const taskAttempt     = parseCtx?.taskAttempt;
 const taskMaxAttempts = parseCtx?.taskMaxAttempts;
@@ -1432,34 +1606,42 @@ if (parseSucceeded && !insertError) {
     }
   }
 
-  // Walk the error chain to find the first informative message.
+  // Walk the error chain to find the first informative message, checked in
+  // pipeline order (earliest node first) so a node's own real error is
+  // never masked by a later, generic symptom of that same failure.
   //
-  // Build OpenAI Request is checked before Call OpenAI: when Build OpenAI
-  // Request fails to construct a request (e.g. it inherited an upstream
-  // PERMANENT error via continueOnFail), Call OpenAI still runs against the
-  // resulting missing/invalid body and produces its own generic secondary
-  // symptom (e.g. "invalid JSON body"). That symptom must never outrank the
-  // root cause. Call OpenAI's error still surfaces normally whenever Build
-  // OpenAI Request succeeded but the OpenAI call itself genuinely failed
-  // (timeout, rate limit, non-2xx response, malformed API response, etc.).
+  // insertError and Call OpenAI's error are both exactly that kind of
+  // generic, terminal symptom: Insert CV Analysis and Call OpenAI are plain
+  // HTTP Request nodes whose JSON body is built from a field (insertBody /
+  // openAIBody) that simply does not exist on an item an earlier node
+  // already turned into { error: ... }. n8n then rejects the resulting
+  // undefined body with its own unhelpful "JSON Body" error, which carries
+  // no information about what actually went wrong upstream. That symptom
+  // must never outrank the real root cause, so both are checked LAST —
+  // only once every real upstream check below comes back empty does an
+  // insertError/Call OpenAI error mean a genuine failure at that exact node
+  // (e.g. a real Supabase insert failure, or Call OpenAI's own timeout/
+  // rate-limit/non-2xx response when Build OpenAI Request succeeded).
   const rawError = (
-    insertError ||
     parseResult?.error ||
     $('Build OpenAI Request').item.json?.error ||
-    $('Call OpenAI').item.json?.error ||
     $('Validate CV Ownership').item.json?.error ||
     $('Load User Profile').item.json?.error ||
     $('Merge Preference Data').item.json?.error ||
+    $('Load Preference Authorized Countries').item.json?.error ||
+    $('Load Preference Relocation Locations').item.json?.error ||
     $('Load Preference Locations').item.json?.error ||
     $('Load Preference Roles').item.json?.error ||
     $('Load Preferences').item.json?.error ||
     safeNodeError('Normalize CV Context') ||
     safeNodeError('Load Prior CV Facts') ||
-    safeNodeError('Extract PDF Text') ||
-    safeNodeError('Download CV Binary') ||
-    safeNodeError('Sign Storage URL') ||
+    safeNodeError('Extract PDF Text1') ||
+    safeNodeError('Download CV Binary1') ||
+    safeNodeError('Sign Storage URL1') ||
     validateCtx?.error ||
     $('Load CV Row').item.json?.error ||
+    $('Call OpenAI').item.json?.error ||
+    insertError ||
     'Unknown processing error'
   )?.toString() || 'Unknown processing error';
 
@@ -1541,6 +1723,8 @@ export default workflow('cv-analysis-worker', 'CV Analysis Worker')
         .to(loadPreferences)
         .to(loadPreferenceRoles)
         .to(loadPreferenceLocations)
+        .to(loadPreferenceRelocationLocations)
+        .to(loadPreferenceAuthorizedCountries)
         .to(mergePreferenceData)
         .to(loadTaskFeedback)
         .to(buildOpenAIRequest)
