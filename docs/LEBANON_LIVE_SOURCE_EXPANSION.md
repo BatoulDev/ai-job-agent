@@ -529,6 +529,174 @@ confirmation, not the larger documented pilot review AGENTS.md §35 rule
 10 requires before flipping `enabled: true` — that remains a founder
 decision, not a default outcome of this build.
 
+## 12. LinkedIn Lebanon final validation (30-item sample, founder review gate)
+
+Second, larger bounded run following §11's 10-item pilot — the explicit
+final-validation phase before asking the founder to review and approve
+production enablement (AGENTS.md §35 rule 10). Same free-schema-first
+discipline re-confirmed before spending: the actor's build was
+byte-identical to §11's (same `buildId`, same pricing model), so the
+10-item pilot's schema/billing findings (`rows` is the real per-search
+cap; `maxItems`/`maxTotalChargeUsd` are platform run options, not actor
+input) still hold without needing a second 137KB schema re-fetch.
+
+**Real, bounded run**: `rows: 30`, `locations: ["Lebanon"]`,
+`companyProfile: false`, `enrichCompany: false`, run options
+`maxItems=30&maxTotalChargeUsd=0.15&timeout=180`. Completed in well
+under the timeout, **exactly 30 items returned, $0.0076 billed** — no
+overrun, cap never triggered.
+
+### Geographic validation (the critical new check this phase added)
+
+Real risk identified and tested for: towns also named "Lebanon" outside
+the country (Pennsylvania, Tennessee, Ohio, New Hampshire). Probing the
+shared `normalizeLocation.ts` directly found a genuine, pre-existing gap
+— a spelled-out `"...United States"` suffix was already caught by the
+existing multi-region ambiguity logic (two competing country matches →
+null/low-confidence), but a bare `"Lebanon, Pennsylvania"` / `"Lebanon,
+Tennessee"` / `"Lebanon, Ohio"` / `"Lebanon, New Hampshire"` (no
+`"United States"` suffix) wrongly resolved to `countryCode: "LB"`,
+medium confidence. **Fixed at the root** (not duplicated per-provider):
+added the four full state names as `US` aliases in
+`normalizeLocation.ts`'s `KNOWN_COUNTRIES` table — the same mechanism
+that already defends the "United States" case. Deliberately did **not**
+add bare 2-letter abbreviations (PA/TN/OH/NH): naive substring matching
+would make `"oh"` collide with real city names like `"Doha"`, which
+would wrongly tag `"Doha, Qatar"` as ambiguous. This leaves a documented,
+narrow residual gap (a bare abbreviation with no full state name and no
+"United States" suffix) — never observed in any real LinkedIn sample
+(40 real jobs across both pilots), since LinkedIn's own location
+breadcrumb consistently spells out the full region/country name. Full
+regression suite re-run after the fix: all 807 unit tests still pass,
+including Doha/Qatar and every other provider's existing location
+fixtures — zero regressions.
+
+Applied to all 30 real jobs: **30/30 confirmed Lebanon-country** (every
+`location` string carried a real Lebanese governorate — Beirut, Mount
+Lebanon, Keserwan-Jbeil — or resolved to bare `"Lebanon"`), **0
+ambiguous, 0 non-Lebanon**. No false positive occurred in this sample,
+but the fix is real and independently verified via the US-state test
+cases above, not just "no bad data happened to appear."
+
+### Real schema (30/30 real Lebanon jobs) — same shape as §11, more data
+
+- `workType` empty on **40/40** real jobs across both pilots now —
+  confirms this is a stable provider/query characteristic, not sampling
+  noise. `classifyWorkArrangementFromText` fallback: **11/29 valid jobs**
+  got a real, evidence-backed classification this run (vs. 3/9 in the
+  smaller pilot) — all high or medium confidence, all with a real quoted
+  evidence phrase (e.g. "Remote Work-at-Home", "hybrid approach, with
+  teams in the office around four days a week"). 18/29 stayed unknown —
+  never guessed.
+- `applyType`: EASY_APPLY 16/30, EXTERNAL 14/30 — a healthier external-
+  link share than §11's smaller sample, with real diverse employer ATS
+  destinations (BairesDev, Y Combinator, L'Oréal, iCIMS, SmartRecruiters,
+  Accor, BambooHR, Greenhouse ×2, a hospital's own careers page, Nexans,
+  VML).
+- `contractType` was **"Full-time" on 30/30** — still no real
+  part-time/contract/internship/temporary sample to confirm those
+  mappings live; the adapter's mapping table stays as documented
+  (Temporary/Volunteer deliberately unmapped, AGENTS.md §30).
+- 1/30 rows had an empty `companyName` (the same real "Execution Trader"
+  posting from §11, reappearing with a stable external id) — correctly
+  rejected by `missing_company_name`. The real public LinkedIn page for
+  this posting displays `"CONFIDENTIAL."` as a literal company-name
+  placeholder (confirmed via manual page check below) — a provider
+  extraction gap on an already-ambiguous posting, not a pipeline bug.
+
+### Manual public-page verification (12 real jobs checked, no login/cookies)
+
+Fetched each job's public LinkedIn URL directly (plain HTTP, no browser
+session, no authentication) and compared title/company/location/
+employment-type/work-arrangement/description/posted-date against the
+provider's extracted data. Mix covered: remote (MCI ×2), hybrid (Execution
+Trader, WPP Media ×2, VML), unknown-arrangement (L'Oréal, MGallery, Saint
+George Hospital, OLX Lebanon, Khatib & Alami, Nexans, Horecons),
+Easy Apply and External apply types, and seven distinct Lebanon
+regions/cities (Beirut, Dekwaneh, Ghazir, Nahr Ibrahim, Rmeil, plus two
+bare-country postings).
+
+**Result: 10 MATCH, 2 PARTIAL_MATCH, 0 MISMATCH, 0 UNVERIFIABLE.**
+
+- Work-arrangement fidelity was perfect on every checked job, including
+  three real hybrid/remote evidence phrases that matched the classifier's
+  extracted evidence **word-for-word** against the live page.
+- The 2 partial matches: (1) the "Execution Trader" page shows
+  `"CONFIDENTIAL."` as a company name the provider's `companyName` field
+  left empty (see above); (2) two WPP Media listings' scraped `title`
+  carries extra boilerplate (`"WPP Media: <role>, Lebanon"`) that the
+  real on-page title doesn't include (`"<role>"` alone) — same real role,
+  cosmetically verbose title, not a wrong value, not a matching-quality
+  problem.
+
+### Pipeline metrics (real data, through the actual production functions)
+
+| | |
+|---|---|
+| TOTAL_RETURNED | 30 |
+| VALID_JOBS | 29 |
+| REJECTED_MALFORMED | 1 (`missing_company_name`) |
+| CONFIRMED_LEBANON | 30 |
+| AMBIGUOUS_LOCATION | 0 |
+| NON_LEBANON | 0 |
+| DUPLICATES (within this run) | 0 (30/30 unique external ids) |
+| Cross-run overlap with §11's 10-item pilot | 10/10 (100% — every §11 job reappeared with the identical external id) |
+| NEW_UNIQUE (vs. §11) | 20 |
+
+Field completeness (29 valid rows): TITLE/COMPANY/LOCATION/DESCRIPTION/
+EMPLOYMENT_TYPE/LINKEDIN_URL/POSTED_DATE all 100%.
+WORK_ARRANGEMENT_DIRECT 0/29, WORK_ARRANGEMENT_FALLBACK 11/29,
+WORK_ARRANGEMENT_UNKNOWN 18/29.
+
+### Test-DB persistence, dedup, and matching proof (new this phase)
+
+§11 never actually proved a DB write — this phase does, without
+flipping `providerConfig.ts`'s `linkedin.enabled` to `true`.
+`persistValidatedJobs` (the shared idempotent-upsert/stale-close core
+`runIngestionBatch`/`runMultiCompanyIngestionBatch` both call) is now
+exported specifically for this: a controlled, real-shaped 5-job subset
+is mapped through the real adapter, validated, and persisted directly
+into the local test database (`tests/db/linkedin-pilot-persistence.test.mjs`).
+Proven for real, not asserted:
+
+- All 5 rows persist with `source_type:'linkedin'`,
+  `dedup_scope:'type:linkedin'`, correct `country_code`/`city`,
+  `employment_type:'full-time'`, the right `work_arrangement` per job
+  (`remote`/`hybrid`/`null` — never guessed), and a non-null
+  `application_url` even for the real EXTERNAL-with-empty-`applyUrl`
+  case (jobUrl fallback, AGENTS.md §35 rule 7).
+- Re-ingesting the identical batch is idempotent: `jobsCreated:0`,
+  `jobsUpdated:5`, row count unchanged.
+- A dedicated test proves dedup identity is `external_id`, never the
+  URL: the same id re-ingested with a differently-decorated tracking
+  URL (`?trk=...`) updates the one existing row, never inserts a second.
+- `checkJobEligibility()`/`deriveEligibilityLocation()` — the same
+  bridge already proven for Bayt/GulfTalent/Indeed (§5) — handles these
+  real LinkedIn rows identically: a Lebanon remote job is eligible for a
+  Free-plan Lebanon user; an unknown-work-arrangement Lebanon job is
+  *not* falsely rejected; a known work-arrangement conflict (onsite-only
+  user vs. a hybrid job) and a known employment-type conflict
+  (part-time-only user vs. a full-time job) both still correctly
+  reject; a Pro remote-worldwide user still sees an onsite-Lebanon job.
+  Synthetic test inputs only — no real users, no real CVs, no database
+  rows created for the "users" side of this check.
+
+All fixtures created by this phase's DB tests were deleted and verified
+removed by the test run itself (`tests/db/helpers.mjs`'s
+`deleteFakeJobs`) — no production rows touched, no unrelated jobs
+closed.
+
+### Status
+
+**Adapter, config, and shared-code geography fix all implemented and
+tested. `linkedin.enabled` stays `false`, markets stay `["lebanon"]`
+only.** Two independent live pilots (10 then 30 items, $0.0001 +
+$0.0076 = $0.0077 total LinkedIn spend across both) plus a manual
+12-job public-page fidelity check and a real test-DB persistence/dedup/
+matching proof now exist. Production enablement remains a founder
+decision per AGENTS.md §35 rule 10 — not a default outcome of this
+phase.
+
 ## Next recommended phase
 
 Once the founder decides the work-arrangement question (§5), a focused
@@ -536,9 +704,10 @@ phase to (a) bind the two remaining n8n credentials, (b) extend
 GulfTalent/Indeed to Qatar and Kuwait, and (c) re-run the matching
 handoff proof against the (hopefully much larger) eligible set.
 
-Separately, once the founder reviews §11's LinkedIn pilot evidence and
-explicitly approves production enablement (AGENTS.md §35 rule 10): flip
+Separately, once the founder reviews §11-12's LinkedIn pilot evidence
+(including the 12-job manual link-by-link comparison) and explicitly
+approves production enablement (AGENTS.md §35 rule 10): flip
 `enabled: true` in `providerConfig.ts`, wire an n8n branch mirroring the
 existing Apify Source Seeds pattern, and run a larger (still bounded)
 sample before trusting volume/duplication-rate claims beyond this
-10-item run.
+30-item run.

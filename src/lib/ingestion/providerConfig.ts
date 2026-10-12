@@ -322,9 +322,10 @@ const TIER_C_PROVIDERS: readonly ProviderConfig[] = [
     priority: 40,
     scheduleHint: "daily",
     freshnessCutoffDays: 7,
-    // Matches the one real, bounded pilot run exactly (rows:10 input +
-    // maxItems=10 run option) — raise only after a larger validated run.
-    maxJobsPerRun: 10,
+    // Matches the larger of the two real, bounded pilot runs (rows:30
+    // input + maxItems=30 run option, $0.0076, 30/30 confirmed Lebanon) —
+    // raise only after an even larger validated run.
+    maxJobsPerRun: 30,
     paginated: false,
     // maxTries:1 (no retry), deliberately different from every other
     // Apify-backed provider above: an Apify actor run is billed per run,
@@ -339,7 +340,7 @@ const TIER_C_PROVIDERS: readonly ProviderConfig[] = [
     requiresCredentialEnvVar: "APIFY_API_TOKEN",
     rateLimitHint: "governed by Apify actor run concurrency, not a per-request limit",
     notes:
-      "LIVE-VERIFIED (Lebanon pilot, 10 real items, $0.0001): real schema confirmed (providers/linkedin.ts). workType was empty on 10/10 real jobs — classifyWorkArrangementFromText.ts is wired in as a fallback only. applyType was EASY_APPLY on 7/10, EXTERNAL on 3/10 (2 of those 3 had an empty applyUrl) — every row's canonical jobUrl is used as the application-target fallback (AGENTS.md §35 rule 7). 1/10 rows had an empty companyName, correctly rejected by the existing missing_company_name rule. Remaining gate before enabled:true: AGENTS.md §35 rule 10 (explicit human approval after a larger, documented pilot review) — not a default outcome of this implementation. See docs/LEBANON_LIVE_SOURCE_EXPANSION.md.",
+      "LIVE-VERIFIED twice (first 10-item pilot $0.0001, then a 30-item final-validation run $0.0076 — docs/LEBANON_LIVE_SOURCE_EXPANSION.md §11-12): real schema confirmed both times (providers/linkedin.ts). workType was empty on 40/40 real jobs across both runs — classifyWorkArrangementFromText.ts is wired in as a fallback only (11/29 valid jobs in the 30-item run got a real high/medium-confidence fallback classification; 0 forced/guessed). applyType was EASY_APPLY on 16/30, EXTERNAL on 14/30 in the larger run — every row's canonical jobUrl is used as the application-target fallback for rows with no/empty applyUrl (AGENTS.md §35 rule 7). 1/30 rows had an empty companyName, correctly rejected by the existing missing_company_name rule. A real geographic-validation pass (30/30 confirmed Lebanon-country, 0 ambiguous, 0 non-Lebanon) also found and fixed a latent shared-code gap in normalizeLocation.ts (US towns also named Lebanon — PA/TN/OH/NH — could wrongly resolve to countryCode LB; fixed for the full-state-name case, see that file's own comment for the documented residual abbreviation-only gap). A 10-row test-DB persistence + re-ingestion + matching-eligibility proof (tests/db/linkedin-pilot-persistence.test.mjs) passed without flipping this flag. Remaining gate before enabled:true: AGENTS.md §35 rule 10 (explicit human approval after founder review of the sampled jobs/links) — not a default outcome of this implementation. See docs/LEBANON_LIVE_SOURCE_EXPANSION.md.",
   },
   {
     sourceType: "workday",
