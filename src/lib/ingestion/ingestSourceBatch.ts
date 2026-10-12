@@ -159,7 +159,7 @@ function emptyResult(outcome: IngestionBatchOutcome, jobsFetched: number, jobsRe
  * country_code aren't a reliable, deterministic stand-in for which query
  * fetched a job).
  */
-type PersistScope =
+export type PersistScope =
   | { sourceId: string; sourceType?: never; refreshScope?: never }
   | { sourceId: null; sourceType: JobSourceType; refreshScope: string | null };
 
@@ -206,8 +206,18 @@ function refreshScopeQuery<T extends { eq: (...args: [string, unknown]) => T; is
  * function's own verification step above its call to this one). Extracted
  * here so dedup/idempotency/stale-close behavior can never drift between
  * the two paths.
+ *
+ * Exported for one additional reason beyond runIngestionBatch/
+ * runMultiCompanyIngestionBatch above: it is the real DB-write code a
+ * disabled provider's test-DB persistence proof needs (LinkedIn Lebanon
+ * final-validation phase, docs/LEBANON_LIVE_SOURCE_EXPANSION.md §12) —
+ * calling this directly, with already-validated rows, proves the exact
+ * same idempotent-upsert/dedupe/stale-close path a real enabled run would
+ * use, without flipping providerConfig.ts's enabled flag just to test.
+ * Production code must still only reach this through the two gated entry
+ * points above, which re-check authorization live before ever calling it.
  */
-async function persistValidatedJobs(
+export async function persistValidatedJobs(
   supabase: SupabaseClient,
   rawJobsCount: number,
   validated: JobUpsertRow[],
