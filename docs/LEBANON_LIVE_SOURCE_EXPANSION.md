@@ -373,6 +373,18 @@ benchmarks.
 
 ## 8. LinkedIn bebity research
 
+> **Policy update (2026-10-09)**: AGENTS.md §7/§35 now permits guarded
+> LinkedIn job discovery/ingestion under strict conditions (see §35 for
+> the full list). The two real findings below are preserved exactly as
+> discovered — neither is erased or softened. Of the two, the
+> **Easy-Apply finding's disqualifying weight is superseded by an
+> explicit Easy-Apply product decision the same day**: a LinkedIn Easy
+> Apply job is now accepted provided a valid canonical public LinkedIn
+> URL exists (AGENTS.md §35 rule 7) — the user still always applies
+> manually, never via automated Easy Apply. The **cost-control finding
+> is not superseded** and remains the real evidence bar any future
+> LinkedIn attempt must clear before spending.
+
 See `docs/LINKEDIN_JOB_DISCOVERY_RESEARCH.md` for the full research
 output, including a real cost incident (§7). Research only — never
 connected to production ingestion, never persisted to the `jobs` table,

@@ -6,7 +6,7 @@ const FAQS = [
   {
     question: "Does it apply on LinkedIn automatically?",
     answer:
-      "No. We never auto-apply on LinkedIn and we don't scrape LinkedIn. For LinkedIn roles, we show you the job link along with your prepared materials so you can apply yourself.",
+      "No. We never auto-apply on LinkedIn, and we never log in, use personal credentials or cookies, or access private profiles. Any LinkedIn job we show comes from a public listing, and you always apply yourself using the original job link or your prepared materials.",
   },
   {
     question: "Can I approve before sending?",
