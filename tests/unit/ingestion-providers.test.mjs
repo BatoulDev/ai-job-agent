@@ -21,6 +21,7 @@ import { mapAdzunaJob } from "../../src/lib/ingestion/providers/adzuna.ts";
 import { mapBaytJob } from "../../src/lib/ingestion/providers/bayt.ts";
 import { mapGulfTalentJob } from "../../src/lib/ingestion/providers/gulftalent.ts";
 import { mapIndeedJob } from "../../src/lib/ingestion/providers/indeed.ts";
+import { mapLinkedInJob } from "../../src/lib/ingestion/providers/linkedin.ts";
 import { getProviderAdapter } from "../../src/lib/ingestion/providers/index.ts";
 import { validateRawProviderJob } from "../../src/lib/ingestion/rawProviderJob.ts";
 import { validateMultiCompanyProviderJob } from "../../src/lib/ingestion/multiCompanyProviderJob.ts";
@@ -178,7 +179,10 @@ describe("getProviderAdapter — registry", () => {
 
   test("returns null for a source type with no automated adapter", () => {
     assert.equal(getProviderAdapter("admin_manual"), null);
-    assert.equal(getProviderAdapter("linkedin"), null);
+  });
+
+  test("linkedin has a registered adapter (pilot build), even though providerConfig.ts keeps it enabled:false", () => {
+    assert.equal(typeof getProviderAdapter("linkedin"), "function");
   });
 });
 
@@ -750,5 +754,106 @@ describe("mapIndeedJob — curious_coder/indeed-scraper, live-verified (Phase 21
     assert.equal(job.title, null);
     assert.equal(job.rawLocation, null);
     assert.deepEqual(validateMultiCompanyProviderJob(job, "indeed"), { valid: false, reason: "missing_company_name" });
+  });
+});
+
+// Lebanon pilot: new adapter, built from a real bounded 10-item Lebanon
+// benchmark ($0.0001, run options maxItems=10&maxTotalChargeUsd=0.05 —
+// NOT the actor's own input, which has no maxItems field; its real
+// bounding field is `rows`) against bebity/linkedin-jobs-scraper. Every
+// fixture below mirrors the real observed field shapes — see
+// docs/LEBANON_LIVE_SOURCE_EXPANSION.md. providerConfig.ts keeps
+// linkedin enabled:false pending explicit human approval (AGENTS.md §35
+// rule 10) — these tests only prove the mapping/adapter contract.
+describe("mapLinkedInJob — bebity/linkedin-jobs-scraper, Lebanon pilot", () => {
+  const realShapedRaw = {
+    id: "4467352986",
+    title: "Senior Accountant",
+    companyName: "Le Gray",
+    location: "Beirut, Beirut Governorate, Lebanon",
+    description: "Oversee the finance team and manage the hotel's accounting operations.",
+    contractType: "Full-time",
+    workType: "",
+    applyType: "EASY_APPLY",
+    applyUrl: "https://lb.linkedin.com/jobs/view/senior-accountant-at-le-gray-4467352986",
+    jobUrl: "https://lb.linkedin.com/jobs/view/senior-accountant-at-le-gray-4467352986",
+    publishedAt: "2026-09-28",
+    experienceLevel: "Mid-Senior level",
+  };
+
+  test("maps the real bebity output schema", () => {
+    const job = mapLinkedInJob(realShapedRaw);
+    assert.equal(job.externalId, "4467352986");
+    assert.equal(job.title, "Senior Accountant");
+    assert.equal(job.companyName, "Le Gray");
+    assert.equal(job.rawLocation, "Beirut, Beirut Governorate, Lebanon");
+    assert.equal(job.applicationUrl, realShapedRaw.applyUrl);
+    assert.equal(job.sourceListingUrl, realShapedRaw.jobUrl);
+    assert.equal(job.employmentType, "full-time");
+    assert.equal(job.publishedAt, "2026-09-28");
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "linkedin"), { valid: true });
+  });
+
+  test("real finding: workType is empty on every real sample — falls back to classifyWorkArrangementFromText instead of staying null outright", () => {
+    const job = mapLinkedInJob({ ...realShapedRaw, description: "This is a fully remote position, work from home." });
+    assert.equal(job.providerWorkArrangement, "remote");
+  });
+
+  test("a description with no explicit arrangement evidence stays null — the classifier fallback never guesses", () => {
+    const job = mapLinkedInJob(realShapedRaw);
+    assert.equal(job.providerWorkArrangement, null);
+  });
+
+  test("a real structured workType value (never observed yet, but handled defensively) is trusted over the text classifier", () => {
+    const job = mapLinkedInJob({ ...realShapedRaw, workType: "Remote", description: "Must work from the office daily." });
+    assert.equal(job.providerWorkArrangement, "remote");
+  });
+
+  test("real finding: applyType EXTERNAL with a real external applyUrl is used as the application target", () => {
+    const job = mapLinkedInJob({
+      ...realShapedRaw,
+      applyType: "EXTERNAL",
+      applyUrl: "https://careers.accor.com/global/en/job/executive-chef-in-mgallery-le-vendome-beirut-beirut-lebanon",
+      jobUrl: "https://www.linkedin.com/jobs/view/4477224028",
+    });
+    assert.equal(job.applicationUrl, "https://careers.accor.com/global/en/job/executive-chef-in-mgallery-le-vendome-beirut-beirut-lebanon");
+    assert.equal(job.sourceListingUrl, "https://www.linkedin.com/jobs/view/4477224028");
+  });
+
+  test("real finding: applyType EXTERNAL with an empty applyUrl falls back to the canonical jobUrl (AGENTS.md §35 rule 7) — never rejected for lacking an external link", () => {
+    const job = mapLinkedInJob({
+      ...realShapedRaw,
+      applyType: "EXTERNAL",
+      applyUrl: "",
+      jobUrl: "https://lb.linkedin.com/jobs/view/senior-java-developer-remote-work-at-bairesdev-4438265428",
+    });
+    assert.equal(job.applicationUrl, "https://lb.linkedin.com/jobs/view/senior-java-developer-remote-work-at-bairesdev-4438265428");
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "linkedin"), { valid: true });
+  });
+
+  test("real finding: an empty companyName (observed in 1/10 real Lebanon jobs) maps to null and is rejected by the multi-company validator", () => {
+    const job = mapLinkedInJob({ ...realShapedRaw, companyName: "" });
+    assert.equal(job.companyName, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "linkedin"), { valid: false, reason: "missing_company_name" });
+  });
+
+  test("maps the unambiguous experienceLevel values ('Entry level', 'Internship') to seniority; ambiguous/unknown values stay null", () => {
+    assert.equal(mapLinkedInJob({ ...realShapedRaw, experienceLevel: "Entry level" }).seniority, "entry-level");
+    assert.equal(mapLinkedInJob({ ...realShapedRaw, experienceLevel: "Internship" }).seniority, "internship");
+    assert.equal(mapLinkedInJob({ ...realShapedRaw, experienceLevel: "Mid-Senior level" }).seniority, null);
+    assert.equal(mapLinkedInJob({ ...realShapedRaw, experienceLevel: "Not Applicable" }).seniority, null);
+  });
+
+  test("an unmapped contractType (e.g. real 'Temporary'/'Volunteer' enum values) stays null, never guessed", () => {
+    assert.equal(mapLinkedInJob({ ...realShapedRaw, contractType: "Temporary" }).employmentType, null);
+    assert.equal(mapLinkedInJob({ ...realShapedRaw, contractType: "Volunteer" }).employmentType, null);
+  });
+
+  test("a completely empty raw object never throws — produces an all-empty shape correctly rejected by validation", () => {
+    const job = mapLinkedInJob({});
+    assert.equal(job.externalId, "");
+    assert.equal(job.title, null);
+    assert.equal(job.applicationUrl, null);
+    assert.deepEqual(validateMultiCompanyProviderJob(job, "linkedin"), { valid: false, reason: "missing_company_name" });
   });
 });

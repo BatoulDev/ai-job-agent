@@ -40,12 +40,17 @@ describe("parseMultiCompanyIngestionBatchRequestBody — malformed/tampered/disa
     assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceType: "ashby" })).ok, false);
   });
 
-  test("rejects an unknown sourceType", () => {
-    assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceType: "linkedin" })).ok, false);
+  test("rejects a genuinely unknown sourceType", () => {
+    assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceType: "unknown_provider" })).ok, false);
   });
 
-  test("rejects a disabled/credential-blocked provider (jsearch/adzuna) even though it is a known JobSourceType", () => {
-    for (const sourceType of ["jsearch", "adzuna"]) {
+  // Lebanon pilot: linkedin is a known multi-company sourceType (adapter +
+  // allowlist entry exist for the pilot build) but stays disabled in
+  // providerConfig.ts — AGENTS.md §35 rule 10 requires explicit human
+  // approval before any production enablement, same fail-closed
+  // discipline as jsearch/adzuna's credential-blocked state.
+  test("rejects a disabled/credential-blocked or pilot-pending provider (jsearch/adzuna/linkedin) even though it is a known JobSourceType", () => {
+    for (const sourceType of ["jsearch", "adzuna", "linkedin"]) {
       assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ sourceType })).ok, false, `${sourceType} should be rejected while disabled`);
     }
   });

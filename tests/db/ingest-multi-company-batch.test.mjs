@@ -61,6 +61,30 @@ test("a disabled/unknown provider is rejected before any write (fail-closed)", a
   assert.equal(result.jobsCreated, 0);
 });
 
+// Lebanon pilot: linkedin has a real adapter + providerConfig entry (see
+// providers/linkedin.ts, providerConfig.ts) but stays enabled:false
+// pending explicit human approval (AGENTS.md §35 rule 10) — same
+// fail-closed proof as jsearch above, using real-shaped pilot data (not
+// a generic fixture) to prove the gate holds even for data that would
+// otherwise map and validate cleanly.
+test("linkedin (real Lebanon pilot shape) is rejected before any write while disabled — the approval gate, not a mapping problem", async () => {
+  await assertExpectedLocalProject();
+  const realShapedRaw = {
+    externalId: `disabled-${randomUUID()}`,
+    title: "Senior Accountant",
+    description: "Oversee the finance team and manage the hotel's accounting operations.",
+    companyName: "Le Gray",
+    rawLocation: "Beirut, Beirut Governorate, Lebanon",
+    applicationUrl: "https://lb.linkedin.com/jobs/view/senior-accountant-at-le-gray-4467352986",
+  };
+  const result = await runMultiCompanyIngestionBatch(adminClient, "linkedin", [realShapedRaw], {
+    maxJobsPerSource: 10,
+    dryRun: false,
+  });
+  assert.equal(result.outcome, "provider_not_enabled");
+  assert.equal(result.jobsCreated, 0);
+});
+
 // Phase 19 added named persistence-layer guards for Bayt/GulfTalent here
 // (superseded — both, plus Indeed, went live enabled:true in Phase 21
 // after real benchmark validation; the generic jsearch guard above still
