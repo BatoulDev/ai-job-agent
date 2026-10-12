@@ -441,9 +441,104 @@ the 53 real Bayt/GulfTalent/Indeed jobs ingested this phase.
   necessary (§4); revisit once Bayt/GulfTalent/Indeed markets actually
   overlap in production data.
 
+## 11. LinkedIn Lebanon pilot — production adapter build (dated, post-policy-change)
+
+Following the 2026-10-09 AGENTS.md §35 policy change (§8 above), this
+phase built the actual centralized LinkedIn adapter
+(`src/lib/ingestion/providers/linkedin.ts`) and ran the one bounded,
+free-schema-first pilot call that policy requires before trusting any
+cost bound.
+
+**Free schema reconfirmation (no cost)**: `GET
+/v2/acts/bebity~linkedin-jobs-scraper` and its latest build's input
+schema, fetched live before any paid call. This is the real root-cause
+finding the §8 incident was missing: **the actor's own input has no
+`maxItems` field at all** — the real per-search bounding field is
+`rows` (default `0` = unbounded). `maxItems`/`maxTotalChargeUsd` are
+platform-level **run options** (query/body fields on the Run Actor
+call itself, confirmed via `defaultRunOptions` in the actor metadata),
+not actor input — sending `maxItems` inside the input JSON (as the §8
+incident did) is silently ignored by the actor while the platform never
+sees it as a run option either. The pricing model is also no longer the
+flat-rate plan assumed earlier — it is `PAY_PER_EVENT`: a one-time
+actor-start charge plus ~$0.001-0.0015 per job result on the free tier
+(cheaper on paid tiers).
+
+**Real, bounded paid run**: `rows: 10`, `locations: ["Lebanon"]`,
+`companyProfile: false`, `enrichCompany: false` as input, with
+`maxItems=10&maxTotalChargeUsd=0.05&timeout=150` as run options (the
+real financial backstop). Completed in 10s, exactly 10 items returned,
+**$0.0001** billed — no overrun, `maxTotalChargeUsd` never triggered.
+
+**Real schema (10/10 real Lebanon jobs)**: fields are `id`, `title`,
+`companyName`, `companyUrl`, `companyId`, `location`, `description`,
+`descriptionHtml`, `contractType`, `experienceLevel`, `workType`,
+`applyType` (`EASY_APPLY` | `EXTERNAL`), `applyUrl`, `jobUrl`,
+`publishedAt`, `postedTime`, `salary`, `sector`, `jobFunction`,
+`posterFullName`, `posterProfileUrl`, `scrapingInfo`.
+
+- `workType` was an **empty string on 10/10** real rows — confirms the
+  earlier free-sample finding exactly; `classifyWorkArrangementFromText`
+  is wired into the adapter as a fallback (never primary) for this
+  reason. 3/9 valid rows got a real high-confidence fallback
+  classification (all `"remote"`, from explicit title/description
+  evidence — e.g. "Remote Call Center Representative"); 6/9 stayed
+  unknown (`null`), never guessed.
+- `applyType` was `EASY_APPLY` on 7/10 and **EXTERNAL on 3/10** — a real,
+  non-trivial external-link share, unlike the earlier 15-item free
+  sample's 100% Easy-Apply finding (same actor, different query/sample).
+  2 of those 3 EXTERNAL rows had an **empty `applyUrl`** despite the
+  non-Easy-Apply `applyType` — a real schema quirk. `jobUrl` (always a
+  real `*.linkedin.com/jobs/view/...` canonical link in every sample,
+  including those two) is therefore always the application-target
+  fallback, exactly as AGENTS.md §35 rule 7 anticipates.
+- 1/10 rows had an empty `companyName` ("Execution Trader") — correctly
+  rejected by the existing `missing_company_name` rule, the same
+  pattern already proven for Bayt/Indeed.
+- `contractType` was `"Full-time"` on 10/10 in this small sample — no
+  part-time/contract/internship observed yet to confirm those mappings
+  live.
+
+**Pipeline metrics (real data, through the actual production
+map→validate→upsert-row functions, not a simulation)**:
+
+| | |
+|---|---|
+| TOTAL_RETURNED | 10 |
+| VALID_JOBS | 9 |
+| REJECTED_MALFORMED | 1 (`missing_company_name`) |
+| DUPLICATES | 0 (10/10 unique `id`) |
+| NEW_UNIQUE | 9 |
+
+Field completeness (over the 9 valid rows, as persisted `JobUpsertRow`
+shape): TITLE 100%, COMPANY 100%, LOCATION 100%, DESCRIPTION 100%,
+EMPLOYMENT_TYPE 100% (all real `"Full-time"` → `full-time`),
+WORK_ARRANGEMENT_DIRECT 0/9, WORK_ARRANGEMENT_FALLBACK 3/9,
+WORK_ARRANGEMENT_UNKNOWN 6/9, LINKEDIN_URL (`source_url`) 100%,
+POSTED_DATE 100%. `application_method` was `external_link` for all 9
+(the jobUrl/applyUrl fallback chain never left a row without a target).
+
+**Cost ledger addition**: $0.0001 for this phase's one real LinkedIn
+run (10 items, 10 seconds) — on top of the §7 total, giving a project
+cost-to-date of **~$1.524**.
+
+**Status: adapter implemented and registered
+(`providers/index.ts`/`providerConfig.ts`), `enabled: false`, markets
+`["lebanon"]` only.** This one bounded run is a real schema/cost
+confirmation, not the larger documented pilot review AGENTS.md §35 rule
+10 requires before flipping `enabled: true` — that remains a founder
+decision, not a default outcome of this build.
+
 ## Next recommended phase
 
 Once the founder decides the work-arrangement question (§5), a focused
 phase to (a) bind the two remaining n8n credentials, (b) extend
 GulfTalent/Indeed to Qatar and Kuwait, and (c) re-run the matching
 handoff proof against the (hopefully much larger) eligible set.
+
+Separately, once the founder reviews §11's LinkedIn pilot evidence and
+explicitly approves production enablement (AGENTS.md §35 rule 10): flip
+`enabled: true` in `providerConfig.ts`, wire an n8n branch mirroring the
+existing Apify Source Seeds pattern, and run a larger (still bounded)
+sample before trusting volume/duplication-rate claims beyond this
+10-item run.
