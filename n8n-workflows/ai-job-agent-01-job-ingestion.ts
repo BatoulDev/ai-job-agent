@@ -1209,6 +1209,527 @@ const apifyMultiCompanyNote = sticky(
   { color: 3 }
 );
 
+// ─────────────────────────────────────────────────────────────────────────
+// LinkedIn enrichment (data-slayer exact-ID pass). Fifth independent
+// branch, same "fresh off Workflow Configuration" pattern as the Apify
+// multi-company branch above. NOT a discovery branch — Bebity itself has
+// no branch in this workflow yet (LinkedIn discovery remains
+// providerConfig.ts enabled:false, pending its own separate, explicitly-
+// approved integration). This branch only ever acts on LinkedIn jobs
+// however they already exist in the jobs table (source_type='linkedin',
+// dedup_scope='type:linkedin') with work_arrangement still null and
+// linkedin_enrichment_attempts under the cap — see
+// src/lib/ingestion/findEligibleLinkedInEnrichmentJobs.ts,
+// src/lib/ingestion/linkedinEnrichment.ts, and
+// src/lib/ingestion/applyLinkedInEnrichmentBatch.ts for all real business
+// logic (fully unit/DB tested); this branch is intentionally thin —
+// list eligible ids -> confirm real price -> one bounded paid call ->
+// forward the raw result untouched to the internal endpoint that
+// reconciles and applies it. No fan-out loop: the list endpoint already
+// bounds one call to ENRICHMENT_BATCH_SIZE (25) ids, so one run of this
+// branch is already exactly one bounded batch.
+// ─────────────────────────────────────────────────────────────────────────
+
+// Every terminal path on this branch reports the exact same observability
+// shape (13 counters + error) — unset fields are always written as their
+// 0/false default, never omitted, so a dashboard reading this run's Record
+// node never sees an undefined field depending on which path was taken.
+// n8n Workflow SDK code does not allow top-level helper functions
+// (confirmed via validate_workflow — both a function declaration and an
+// arrow-function const are rejected as unsupported syntax), so each node
+// below writes its own full 14-entry assignments array literal rather than
+// calling a shared builder.
+
+const listLinkedInEnrichmentQueue = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'List LinkedIn Enrichment Queue',
+    notes:
+      'Returns up to ENRICHMENT_BATCH_SIZE (25) already-persisted LinkedIn job external_ids where ' +
+      'work_arrangement IS NULL AND linkedin_enrichment_attempts < 2 (src/lib/ingestion/findEligibleLinkedInEnrichmentJobs.ts). ' +
+      "Always returns job_ids: [] while providerConfig.ts's linkedin.enabled stays false, so this entire branch is a " +
+      'structural no-op in that state regardless of anything below it.',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/list-linkedin-enrichment-queue"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ {} }}'),
+      options: { timeout: 30000 },
+    },
+  },
+  output: [{ job_ids: ['4467352986', '4476779325'] }],
+});
+
+const logListQueueFailure = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Log List Queue Failure',
+    notes: 'Terminal — nothing to enrich this run if the queue listing itself failed. Never blocks the rest of ingestion (this is its own independent branch).',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'eligible_jobs', name: 'eligible_jobs', value: 0, type: 'number' },
+          { id: 'jobs_sent_to_data_slayer', name: 'jobs_sent_to_data_slayer', value: 0, type: 'number' },
+          { id: 'batch_count', name: 'batch_count', value: 0, type: 'number' },
+          { id: 'pricing_aborted', name: 'pricing_aborted', value: false, type: 'boolean' },
+          { id: 'actor_failed', name: 'actor_failed', value: false, type: 'boolean' },
+          { id: 'items_requested', name: 'items_requested', value: 0, type: 'number' },
+          { id: 'items_returned', name: 'items_returned', value: 0, type: 'number' },
+          { id: 'items_missing', name: 'items_missing', value: 0, type: 'number' },
+          { id: 'items_sent_to_enrichment_api', name: 'items_sent_to_enrichment_api', value: 0, type: 'number' },
+          { id: 'enrichment_jobs_updated', name: 'enrichment_jobs_updated', value: 0, type: 'number' },
+          { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
+          { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
+          { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'list-linkedin-enrichment-queue call failed' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ eligible_jobs: 0, error: 'list-linkedin-enrichment-queue call failed' }],
+});
+
+const checkEligibleJobsExist = switchCase({
+  version: 3.4,
+  config: {
+    name: 'Check Eligible Jobs Exist',
+    parameters: {
+      rules: {
+        values: [
+          {
+            outputKey: 'has_jobs',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [{ leftValue: expr('{{ $json.job_ids.length }}'), operator: { type: 'number', operation: 'gt' }, rightValue: 0 }],
+              combinator: 'and',
+            },
+          },
+        ],
+      },
+      options: { fallbackOutput: 'extra', renameFallbackOutput: 'no_jobs' },
+    },
+  },
+  output: [{ job_ids: ['4467352986'] }],
+});
+
+const buildNoEligibleJobsResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build No Eligible Jobs Result',
+    notes: 'Legitimate "nothing to do" outcome, not a failure — every counter stays at its 0/false default.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'eligible_jobs', name: 'eligible_jobs', value: 0, type: 'number' },
+          { id: 'jobs_sent_to_data_slayer', name: 'jobs_sent_to_data_slayer', value: 0, type: 'number' },
+          { id: 'batch_count', name: 'batch_count', value: 0, type: 'number' },
+          { id: 'pricing_aborted', name: 'pricing_aborted', value: false, type: 'boolean' },
+          { id: 'actor_failed', name: 'actor_failed', value: false, type: 'boolean' },
+          { id: 'items_requested', name: 'items_requested', value: 0, type: 'number' },
+          { id: 'items_returned', name: 'items_returned', value: 0, type: 'number' },
+          { id: 'items_missing', name: 'items_missing', value: 0, type: 'number' },
+          { id: 'items_sent_to_enrichment_api', name: 'items_sent_to_enrichment_api', value: 0, type: 'number' },
+          { id: 'enrichment_jobs_updated', name: 'enrichment_jobs_updated', value: 0, type: 'number' },
+          { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
+          { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
+          { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          { id: 'error', name: 'error', value: null, type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ eligible_jobs: 0, error: null }],
+});
+
+// Free, read-only Apify metadata call — confirms the actor's real current
+// price before any paid run, never trusting a hardcoded/previously-
+// observed value (AGENTS.md §35 rule 4/5 — the same lesson from the real
+// bebity $1.47/978-item cost incident this project already hit once).
+const fetchDataSlayerPricing = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Fetch Data-Slayer Pricing Metadata',
+    notes: "Free GET — never counts toward enrichment spend. Reconfirmed every run, not cached, so a real-world price change is caught before it is ever paid, not after.",
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    parameters: {
+      method: 'GET',
+      url: 'https://api.apify.com/v2/acts/data-slayer~linkedin-job-scraper',
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      options: { timeout: 15000 },
+    },
+    credentials: { httpHeaderAuth: newCredential('AI Job Guide - Apify') },
+  },
+  output: [{ data: { pricingInfos: [{ pricingPerEvent: { actorChargeEvents: { 'apify-default-dataset-item': { eventPriceUsd: 0.004 } } } }] } }],
+});
+
+const buildPricingMetadataFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Pricing Metadata Failure Result',
+    notes: 'Could not confirm the actor is still safely priced — treated as pricing_aborted, same as price-too-high. Never assumes a stale/last-known price is still accurate.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'eligible_jobs', name: 'eligible_jobs', value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"), type: 'number' },
+          { id: 'jobs_sent_to_data_slayer', name: 'jobs_sent_to_data_slayer', value: 0, type: 'number' },
+          { id: 'batch_count', name: 'batch_count', value: 0, type: 'number' },
+          { id: 'pricing_aborted', name: 'pricing_aborted', value: true, type: 'boolean' },
+          { id: 'actor_failed', name: 'actor_failed', value: false, type: 'boolean' },
+          { id: 'items_requested', name: 'items_requested', value: 0, type: 'number' },
+          { id: 'items_returned', name: 'items_returned', value: 0, type: 'number' },
+          { id: 'items_missing', name: 'items_missing', value: 0, type: 'number' },
+          { id: 'items_sent_to_enrichment_api', name: 'items_sent_to_enrichment_api', value: 0, type: 'number' },
+          { id: 'enrichment_jobs_updated', name: 'enrichment_jobs_updated', value: 0, type: 'number' },
+          { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
+          { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
+          { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          {
+            id: 'error',
+            name: 'error',
+            value: expr("{{ 'could not confirm data-slayer pricing before a paid call: ' + ($json.error?.message ?? 'unknown error') }}"),
+            type: 'string',
+          },
+        ],
+      },
+    },
+  },
+  output: [{ eligible_jobs: 2, pricing_aborted: true }],
+});
+
+// Mirrors linkedinEnrichment.ts's DATA_SLAYER_MAX_ACCEPTABLE_PRICE_PER_JOB_USD
+// (0.005) — kept in sync by code review, the same way the Apify seed list
+// above already mirrors providerConfig.ts's maxJobsPerRun values.
+const checkDataSlayerPriceGate = switchCase({
+  version: 3.4,
+  config: {
+    name: 'Check Data-Slayer Price',
+    notes: 'price_ok only when the real, just-fetched price is <= $0.005/job (DATA_SLAYER_MAX_ACCEPTABLE_PRICE_PER_JOB_USD). Never a large slack multiplier.',
+    parameters: {
+      rules: {
+        values: [
+          {
+            outputKey: 'price_ok',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [
+                {
+                  leftValue: expr("{{ $json.data.pricingInfos.at(-1).pricingPerEvent.actorChargeEvents['apify-default-dataset-item'].eventPriceUsd }}"),
+                  operator: { type: 'number', operation: 'lte' },
+                  rightValue: 0.005,
+                },
+              ],
+              combinator: 'and',
+            },
+          },
+        ],
+      },
+      options: { fallbackOutput: 'extra', renameFallbackOutput: 'price_too_high' },
+    },
+  },
+  output: [{ data: { pricingInfos: [{ pricingPerEvent: { actorChargeEvents: { 'apify-default-dataset-item': { eventPriceUsd: 0.004 } } } }] } }],
+});
+
+const buildPricingAbortedResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Pricing Aborted Result',
+    notes: 'Real price exceeded the configured maximum — actor is never called, jobs are left completely unchanged, no attempt is consumed.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'eligible_jobs', name: 'eligible_jobs', value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"), type: 'number' },
+          { id: 'jobs_sent_to_data_slayer', name: 'jobs_sent_to_data_slayer', value: 0, type: 'number' },
+          { id: 'batch_count', name: 'batch_count', value: 0, type: 'number' },
+          { id: 'pricing_aborted', name: 'pricing_aborted', value: true, type: 'boolean' },
+          { id: 'actor_failed', name: 'actor_failed', value: false, type: 'boolean' },
+          { id: 'items_requested', name: 'items_requested', value: 0, type: 'number' },
+          { id: 'items_returned', name: 'items_returned', value: 0, type: 'number' },
+          { id: 'items_missing', name: 'items_missing', value: 0, type: 'number' },
+          { id: 'items_sent_to_enrichment_api', name: 'items_sent_to_enrichment_api', value: 0, type: 'number' },
+          { id: 'enrichment_jobs_updated', name: 'enrichment_jobs_updated', value: 0, type: 'number' },
+          { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
+          { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
+          { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          {
+            id: 'error',
+            name: 'error',
+            value: expr(
+              "{{ 'data-slayer price ' + $json.data.pricingInfos.at(-1).pricingPerEvent.actorChargeEvents['apify-default-dataset-item'].eventPriceUsd + ' exceeds configured maximum 0.005/job' }}"
+            ),
+            type: 'string',
+          },
+        ],
+      },
+    },
+  },
+  output: [{ eligible_jobs: 2, pricing_aborted: true }],
+});
+
+// Paid, non-idempotent call — retryOnFail is deliberately false (AGENTS.md
+// §18/§35 rule 4/5: never auto-retry a non-idempotent paid action).
+// maxItems/maxTotalChargeUsd are the real platform-level financial
+// backstop — exact batch size, no slack multiplier, mirrors
+// linkedinEnrichment.ts's computeMaxTotalChargeUsd exactly (batch size *
+// 0.005, no padding). Credential 'AI Job Guide - Apify' must be bound
+// manually in the n8n UI, same confirmed MCP tool limitation already
+// noted on Call Apify Actor above.
+const callDataSlayerActor = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call Data-Slayer Actor',
+    onError: 'continueErrorOutput',
+    retryOnFail: false,
+    parameters: {
+      method: 'POST',
+      url: expr(
+        "={{ 'https://api.apify.com/v2/acts/data-slayer~linkedin-job-scraper/run-sync-get-dataset-items?maxItems=' + $('List LinkedIn Enrichment Queue').item.json.job_ids.length + '&maxTotalChargeUsd=' + ($('List LinkedIn Enrichment Queue').item.json.job_ids.length * 0.005) }}"
+      ),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr("{{ { job_ids_or_urls: $('List LinkedIn Enrichment Queue').item.json.job_ids, include_hiring_team: false } }}"),
+      options: { timeout: 60000 },
+    },
+    credentials: { httpHeaderAuth: newCredential('AI Job Guide - Apify') },
+  },
+  output: [{ job_posting_id: '4467352986', workplace_types: ['ONSITE'], employment_status: 'Full-time' }],
+});
+
+const buildActorFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Actor Failure Result',
+    notes:
+      'Actor timeout/5xx/failed run/cost-cap-reached all land here via onError. No structurally valid response was received for any requested id, so nothing is forwarded to the apply endpoint at all — no attempt is consumed for any job, every one remains immediately retryable next run.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'eligible_jobs', name: 'eligible_jobs', value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"), type: 'number' },
+          { id: 'jobs_sent_to_data_slayer', name: 'jobs_sent_to_data_slayer', value: 0, type: 'number' },
+          { id: 'batch_count', name: 'batch_count', value: 0, type: 'number' },
+          { id: 'pricing_aborted', name: 'pricing_aborted', value: false, type: 'boolean' },
+          { id: 'actor_failed', name: 'actor_failed', value: true, type: 'boolean' },
+          { id: 'items_requested', name: 'items_requested', value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"), type: 'number' },
+          { id: 'items_returned', name: 'items_returned', value: 0, type: 'number' },
+          { id: 'items_missing', name: 'items_missing', value: 0, type: 'number' },
+          { id: 'items_sent_to_enrichment_api', name: 'items_sent_to_enrichment_api', value: 0, type: 'number' },
+          { id: 'enrichment_jobs_updated', name: 'enrichment_jobs_updated', value: 0, type: 'number' },
+          { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
+          { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
+          { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'data-slayer actor call failed' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ eligible_jobs: 2, actor_failed: true }],
+});
+
+// data-slayer's run-sync-get-dataset-items returns a bare top-level array
+// (same shape as Lever / the other Apify actors above) — n8n auto-splits
+// it into one item per job; this re-aggregates into one {items:[...]}
+// item before reconciliation. aggregateAllItemData on zero input items
+// still emits exactly one item with an empty array (a total actor
+// success-but-empty-dataset case), so the chain below always continues.
+const aggregateDataSlayerDataset = node({
+  type: 'n8n-nodes-base.aggregate',
+  version: 1,
+  config: {
+    name: 'Aggregate Data-Slayer Dataset',
+    parameters: { aggregate: 'aggregateAllItemData', destinationFieldName: 'items', include: 'allFields' },
+  },
+  output: [{ items: [{ job_posting_id: '4467352986', workplace_types: ['ONSITE'] }] }],
+});
+
+// Forwards the requested id list and the raw dataset verbatim — all
+// reconciliation (matching by job_posting_id, safe against a partial/
+// reordered/short dataset) and all business logic (structured WA ->
+// classifier -> null, employment-type gap-fill, bounded-retry attempt
+// counting) happens entirely server-side
+// (buildEnrichmentItemsFromDataset + applyLinkedInEnrichmentBatch) — never
+// duplicated here. retryOnFail is false: a retry of this call against an
+// already-applied dataset would double-count attempts for any job that
+// resolved to null on the first (successfully applied, response-lost)
+// attempt.
+const callLinkedInEnrichmentBatchEndpoint = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call LinkedIn Enrichment Batch Endpoint',
+    onError: 'continueErrorOutput',
+    retryOnFail: false,
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-linkedin-enrichment-batch"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr(
+        '{{ {\n' +
+          "  requestedJobIds: $('List LinkedIn Enrichment Queue').item.json.job_ids,\n" +
+          '  rawDatasetItems: $json.items\n' +
+          '} }}'
+      ),
+      options: { timeout: 30000 },
+    },
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+  },
+  output: [{ jobsRequested: 2, jobsUpdated: 2, jobsProviderFailure: 0, structuredWaPresentCount: 1, structuredWaEmptyCount: 1, classifierFallbackUsedCount: 0, finalWaUnresolvedCount: 0 }],
+});
+
+const buildApplyCallFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Apply Call Failure Result',
+    notes: 'The actor call itself succeeded (a real dataset was fetched and paid for), but applying it to our own jobs table failed — e.g. a transient network error calling our own endpoint. The paid data is not lost: every requested id remains eligible (attempts untouched) for the next run to try applying again.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'eligible_jobs', name: 'eligible_jobs', value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"), type: 'number' },
+          {
+            id: 'jobs_sent_to_data_slayer',
+            name: 'jobs_sent_to_data_slayer',
+            value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"),
+            type: 'number',
+          },
+          { id: 'batch_count', name: 'batch_count', value: 1, type: 'number' },
+          { id: 'pricing_aborted', name: 'pricing_aborted', value: false, type: 'boolean' },
+          { id: 'actor_failed', name: 'actor_failed', value: false, type: 'boolean' },
+          { id: 'items_requested', name: 'items_requested', value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"), type: 'number' },
+          { id: 'items_returned', name: 'items_returned', value: expr("{{ $('Aggregate Data-Slayer Dataset').item.json.items.length }}"), type: 'number' },
+          {
+            id: 'items_missing',
+            name: 'items_missing',
+            value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length - $('Aggregate Data-Slayer Dataset').item.json.items.length }}"),
+            type: 'number',
+          },
+          { id: 'items_sent_to_enrichment_api', name: 'items_sent_to_enrichment_api', value: 0, type: 'number' },
+          { id: 'enrichment_jobs_updated', name: 'enrichment_jobs_updated', value: 0, type: 'number' },
+          { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
+          { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
+          { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'run-linkedin-enrichment-batch call failed' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ eligible_jobs: 2, items_requested: 2, items_returned: 2 }],
+});
+
+const buildEnrichmentSuccessResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Enrichment Success Result',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'eligible_jobs', name: 'eligible_jobs', value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"), type: 'number' },
+          {
+            id: 'jobs_sent_to_data_slayer',
+            name: 'jobs_sent_to_data_slayer',
+            value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"),
+            type: 'number',
+          },
+          { id: 'batch_count', name: 'batch_count', value: 1, type: 'number' },
+          { id: 'pricing_aborted', name: 'pricing_aborted', value: false, type: 'boolean' },
+          { id: 'actor_failed', name: 'actor_failed', value: false, type: 'boolean' },
+          { id: 'items_requested', name: 'items_requested', value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"), type: 'number' },
+          { id: 'items_returned', name: 'items_returned', value: expr("{{ $('Aggregate Data-Slayer Dataset').item.json.items.length }}"), type: 'number' },
+          {
+            id: 'items_missing',
+            name: 'items_missing',
+            value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length - $('Aggregate Data-Slayer Dataset').item.json.items.length }}"),
+            type: 'number',
+          },
+          {
+            id: 'items_sent_to_enrichment_api',
+            name: 'items_sent_to_enrichment_api',
+            value: expr("{{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}"),
+            type: 'number',
+          },
+          { id: 'enrichment_jobs_updated', name: 'enrichment_jobs_updated', value: expr('{{ $json.jobsUpdated }}'), type: 'number' },
+          { id: 'structured_wa_present', name: 'structured_wa_present', value: expr('{{ $json.structuredWaPresentCount }}'), type: 'number' },
+          { id: 'structured_wa_empty', name: 'structured_wa_empty', value: expr('{{ $json.structuredWaEmptyCount }}'), type: 'number' },
+          { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: expr('{{ $json.finalWaUnresolvedCount }}'), type: 'number' },
+          { id: 'error', name: 'error', value: null, type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ eligible_jobs: 2, enrichment_jobs_updated: 2, structured_wa_present: 1, structured_wa_empty: 1, final_wa_unresolved: 0, error: null }],
+});
+
+const recordLinkedInEnrichmentResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Record LinkedIn Enrichment Result',
+    notes: 'Pure convergence point — every path (no eligible jobs, list failure, pricing-metadata failure, price too high, actor failure, apply-call failure, success) lands here with the same observability shape, visible in this node'+"'"+'s own execution history in the n8n UI.',
+    parameters: { mode: 'manual', includeOtherFields: true, assignments: { assignments: [] } },
+  },
+  output: [{ eligible_jobs: 2, enrichment_jobs_updated: 2, error: null }],
+});
+
+const linkedInEnrichmentNote = sticky(
+  '### LinkedIn enrichment — data-slayer exact-ID pass\n' +
+    'EXACT_ID_ENRICHMENT_ONLY, never a discovery source (its real input schema is only job_ids_or_urls + ' +
+    'include_hiring_team — confirmed live, no keyword/location field exists). Bebity itself has no branch in this ' +
+    'workflow yet, so this branch acts purely on whatever LinkedIn jobs already exist in the jobs table — a ' +
+    'future, separately-approved Bebity discovery branch and this one are independent. Work-arrangement value ' +
+    'priority is QUALITY-FIRST and deliberately NOT classifier-gated for cost (a dated product decision — see ' +
+    'docs/LEBANON_LIVE_SOURCE_EXPANSION.md): every eligible job (work_arrangement null, attempts < 2) is sent to ' +
+    'data-slayer; structured workplace_types wins when present, classifyWorkArrangementFromText.ts is the fallback, ' +
+    'null otherwise. Real price is re-fetched and checked every run (never cached) before the one paid call — ' +
+    'the same lesson as the real bebity $1.47/978-item incident. No loop/fan-out: List LinkedIn Enrichment Queue ' +
+    'already bounds one run to <=25 ids, so one data-slayer call handles the whole batch; more eligible jobs than ' +
+    'that are picked up by a later run. Both new Apify-facing HTTP nodes need their credential bound manually in ' +
+    "the n8n UI (same confirmed MCP tool limitation noted on the Apify multi-company branch) — Fetch Data-Slayer " +
+    "Pricing Metadata and Call Data-Slayer Actor both need 'AI Job Guide - Apify'. NOT regenerated into this " +
+    'workflow'+"'"+'s matching .json this phase — see this feature'+"'"+'s own implementation report for why (the only ' +
+    'available JSON-generation/live-write tool is create_workflow_from_code, which this phase was explicitly ' +
+    'instructed never to use). This .ts source HAS been run through the read-only validate_workflow MCP tool ' +
+    '(confirmed non-destructive) and passed (valid:true, 76 nodes) — see this feature'+"'"+'s own validation report. ' +
+    'That same check caught a real SDK-syntax violation this branch originally introduced (a top-level helper ' +
+    'function — both a function declaration and an arrow-function const are rejected by the SDK'+"'"+'s code format), ' +
+    'now fixed by inlining each terminal node'+"'"+'s assignments array literally instead of sharing a builder.',
+  [listLinkedInEnrichmentQueue],
+  { color: 2 }
+);
+
 export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job Ingestion')
   .add(startTrigger)
   .to(workflowConfiguration)
@@ -1300,8 +1821,48 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
   .to(apifyRateLimitDelay)
   .to(nextBatch(loopApifySources))
 
+  // LinkedIn enrichment (data-slayer exact-ID pass) — fifth independent
+  // branch, fresh off Workflow Configuration like the Apify branch above.
+  // No loop: List LinkedIn Enrichment Queue already bounds one run to a
+  // single <=25-id batch.
+  .add(workflowConfiguration)
+  .to(listLinkedInEnrichmentQueue.onError(logListQueueFailure))
+  .to(
+    checkEligibleJobsExist
+      .onCase(
+        0,
+        fetchDataSlayerPricing.onError(buildPricingMetadataFailureResult).to(
+          checkDataSlayerPriceGate
+            .onCase(
+              0,
+              callDataSlayerActor
+                .onError(buildActorFailureResult)
+                .to(aggregateDataSlayerDataset.to(callLinkedInEnrichmentBatchEndpoint.onError(buildApplyCallFailureResult).to(buildEnrichmentSuccessResult)))
+            )
+            .onCase(1, buildPricingAbortedResult)
+        )
+      )
+      .onCase(1, buildNoEligibleJobsResult)
+  )
+  .add(logListQueueFailure)
+  .to(recordLinkedInEnrichmentResult)
+  .add(buildNoEligibleJobsResult)
+  .to(recordLinkedInEnrichmentResult)
+  .add(buildPricingMetadataFailureResult)
+  .to(recordLinkedInEnrichmentResult)
+  .add(buildPricingAbortedResult)
+  .to(recordLinkedInEnrichmentResult)
+  .add(buildActorFailureResult)
+  .to(recordLinkedInEnrichmentResult)
+  .add(buildApplyCallFailureResult)
+  .to(recordLinkedInEnrichmentResult)
+  .add(buildEnrichmentSuccessResult)
+  .to(recordLinkedInEnrichmentResult)
+  .add(recordLinkedInEnrichmentResult)
+
   .add(overviewNote)
   .add(scopeLimitationNote)
   .add(multiCompanyNote)
   .add(careerPageNote)
-  .add(apifyMultiCompanyNote);
+  .add(apifyMultiCompanyNote)
+  .add(linkedInEnrichmentNote);

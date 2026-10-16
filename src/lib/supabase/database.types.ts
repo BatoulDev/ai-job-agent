@@ -1084,6 +1084,8 @@ export type Database = {
           last_checked_at: string | null
           last_seen_at: string | null
           last_successful_check_at: string | null
+          linkedin_enrichment_attempts: number
+          linkedin_enrichment_last_attempt_at: string | null
           location: string | null
           published_at: string | null
           refresh_scope: string | null
@@ -1125,6 +1127,8 @@ export type Database = {
           last_checked_at?: string | null
           last_seen_at?: string | null
           last_successful_check_at?: string | null
+          linkedin_enrichment_attempts?: number
+          linkedin_enrichment_last_attempt_at?: string | null
           location?: string | null
           published_at?: string | null
           refresh_scope?: string | null
@@ -1166,6 +1170,8 @@ export type Database = {
           last_checked_at?: string | null
           last_seen_at?: string | null
           last_successful_check_at?: string | null
+          linkedin_enrichment_attempts?: number
+          linkedin_enrichment_last_attempt_at?: string | null
           location?: string | null
           published_at?: string | null
           refresh_scope?: string | null
