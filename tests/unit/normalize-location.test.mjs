@@ -82,6 +82,60 @@ describe("normalizeLocation — real registry-derived city/country strings", () 
   });
 });
 
+// LinkedIn Lebanon pilot, final validation phase
+// (docs/LEBANON_LIVE_SOURCE_EXPANSION.md §12): real US towns also named
+// "Lebanon" (Pennsylvania, Tennessee, Ohio, New Hampshire) must never be
+// silently accepted as the country Lebanon. A spelled-out "United States"
+// suffix already triggered the existing multi-region ambiguity path before
+// this fix; these cases close the gap for a bare "Lebanon, <US state>"
+// string with no "United States"/"USA" suffix at all.
+describe("normalizeLocation — US towns named Lebanon are never mistaken for the country", () => {
+  test("'Lebanon, Pennsylvania' resolves ambiguous (null country, low confidence), not LB", () => {
+    const result = normalizeLocation({ rawLocation: "Lebanon, Pennsylvania" });
+    assert.equal(result.countryCode, null);
+    assert.equal(result.locationConfidence, "low");
+  });
+
+  test("'Lebanon, Tennessee' resolves ambiguous, not LB", () => {
+    const result = normalizeLocation({ rawLocation: "Lebanon, Tennessee" });
+    assert.equal(result.countryCode, null);
+    assert.equal(result.locationConfidence, "low");
+  });
+
+  test("'Lebanon, Ohio' resolves ambiguous, not LB", () => {
+    const result = normalizeLocation({ rawLocation: "Lebanon, Ohio" });
+    assert.equal(result.countryCode, null);
+    assert.equal(result.locationConfidence, "low");
+  });
+
+  test("'Lebanon, New Hampshire' resolves ambiguous, not LB", () => {
+    const result = normalizeLocation({ rawLocation: "Lebanon, New Hampshire" });
+    assert.equal(result.countryCode, null);
+    assert.equal(result.locationConfidence, "low");
+  });
+
+  test("the full 'Lebanon, <state>, United States' form was already ambiguous before this fix — still is", () => {
+    const result = normalizeLocation({ rawLocation: "Lebanon, Pennsylvania, United States" });
+    assert.equal(result.countryCode, null);
+    assert.equal(result.locationConfidence, "low");
+  });
+
+  test("a real Lebanon-country breadcrumb is unaffected by the new US-state aliases", () => {
+    const result = normalizeLocation({ rawLocation: "Beirut, Beirut Governorate, Lebanon" });
+    assert.equal(result.countryCode, "LB");
+    assert.equal(result.city, "Beirut");
+    assert.equal(result.locationConfidence, "high");
+  });
+
+  test("documented residual gap: a bare state abbreviation with no full state name or 'United States' still resolves to LB — never fixed with unsafe substring matching (e.g. bare 'oh' would break 'Doha, Qatar')", () => {
+    const result = normalizeLocation({ rawLocation: "Lebanon, PA" });
+    assert.equal(result.countryCode, "LB");
+    // Proves the fix didn't introduce the unsafe path it deliberately avoided.
+    const doha = normalizeLocation({ rawLocation: "Doha, Qatar" });
+    assert.equal(doha.countryCode, "QA");
+  });
+});
+
 describe("normalizeLocation — work arrangement detection", () => {
   test("provider hint 'remote' is trusted over ambiguous text", () => {
     const result = normalizeLocation({ rawLocation: "Beirut", providerWorkArrangement: "Remote" });

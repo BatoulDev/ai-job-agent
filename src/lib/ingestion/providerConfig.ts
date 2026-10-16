@@ -308,6 +308,41 @@ const TIER_C_PROVIDERS: readonly ProviderConfig[] = [
     notes: "LIVE-VERIFIED (Phase 21): a real 10-item UAE (Dubai) benchmark run confirmed the real schema (providers/indeed.ts). country:\"lb\" was rejected by the actor's own input validation (Lebanon is not in its supported country list) at zero cost — this provider can only ever serve the Gulf tier for this project. originalApplyUrl in all 10 real samples pointed to Indeed's own domain, not an employer ATS — a legitimate but board-hosted application destination, not a bug. 8/10 real jobs had a real company name (2/10 null, correctly rejected by validation). Remaining gate before enabled:true: n8n integration + a real bounded ingestion-pipeline run (Phase 21, in progress). See docs/LEBANON_LIVE_SOURCE_EXPANSION.md.",
   },
   {
+    sourceType: "linkedin",
+    displayName: "LinkedIn (via Apify bebity/linkedin-jobs-scraper)",
+    tier: "C",
+    kind: "multi_company_feed",
+    enabled: false,
+    // Lebanon only, per AGENTS.md §35 rule 6/10 — Gulf/international
+    // markets are a future, separately-validated config change, not a
+    // default outcome of this pilot's implementation. Whether this
+    // actor's `locations` field even resolves Gulf markets correctly has
+    // never been tested.
+    markets: ["lebanon"],
+    priority: 40,
+    scheduleHint: "daily",
+    freshnessCutoffDays: 7,
+    // Matches the larger of the two real, bounded pilot runs (rows:30
+    // input + maxItems=30 run option, $0.0076, 30/30 confirmed Lebanon) —
+    // raise only after an even larger validated run.
+    maxJobsPerRun: 30,
+    paginated: false,
+    // maxTries:1 (no retry), deliberately different from every other
+    // Apify-backed provider above: an Apify actor run is billed per run,
+    // not idempotent on failure, and this actor's real runtime (~10s for
+    // 10 items, but LinkedIn scraping is real browser automation that can
+    // run much longer) makes an automatic retry a real double-spend risk
+    // (AGENTS.md §18 — never retry a non-idempotent paid action). A
+    // future orchestrator can retry deliberately with human visibility.
+    retry: { maxTries: 1, waitBetweenTriesMs: 0 },
+    costGuardNote:
+      "PAY_PER_EVENT (confirmed live, free schema fetch): ~$0.0001 actor-start + a per-job-result charge (~$0.001-0.0015/job on the FREE tier, cheaper on paid tiers) — no actor-input maxItems field exists (the real bounding input is `rows`); the real financial backstop is the platform-level `maxTotalChargeUsd` run option, which MUST be set on every call (AGENTS.md §35 rule 4/5) after the real $1.47/978-item incident where `maxItems` was sent as input and silently ignored.",
+    requiresCredentialEnvVar: "APIFY_API_TOKEN",
+    rateLimitHint: "governed by Apify actor run concurrency, not a per-request limit",
+    notes:
+      "LIVE-VERIFIED twice (first 10-item pilot $0.0001, then a 30-item final-validation run $0.0076 — docs/LEBANON_LIVE_SOURCE_EXPANSION.md §11-12): real schema confirmed both times (providers/linkedin.ts). workType was empty on 40/40 real jobs across both runs — classifyWorkArrangementFromText.ts is wired in as a fallback only (11/29 valid jobs in the 30-item run got a real high/medium-confidence fallback classification; 0 forced/guessed). applyType was EASY_APPLY on 16/30, EXTERNAL on 14/30 in the larger run — every row's canonical jobUrl is used as the application-target fallback for rows with no/empty applyUrl (AGENTS.md §35 rule 7). 1/30 rows had an empty companyName, correctly rejected by the existing missing_company_name rule. A real geographic-validation pass (30/30 confirmed Lebanon-country, 0 ambiguous, 0 non-Lebanon) also found and fixed a latent shared-code gap in normalizeLocation.ts (US towns also named Lebanon — PA/TN/OH/NH — could wrongly resolve to countryCode LB; fixed for the full-state-name case, see that file's own comment for the documented residual abbreviation-only gap). A 10-row test-DB persistence + re-ingestion + matching-eligibility proof (tests/db/linkedin-pilot-persistence.test.mjs) passed without flipping this flag. Remaining gate before enabled:true: AGENTS.md §35 rule 10 (explicit human approval after founder review of the sampled jobs/links) — not a default outcome of this implementation. See docs/LEBANON_LIVE_SOURCE_EXPANSION.md.",
+  },
+  {
     sourceType: "workday",
     displayName: "Workday (direct ATS)",
     tier: "A",

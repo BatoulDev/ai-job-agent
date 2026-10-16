@@ -791,15 +791,22 @@ test('Load Preference Locations URL handles direct-object response from Load Pre
 
 // ─── Merge Preference Data: regression tests (execution #53) ─────────────────
 
-function runMergePreferenceData({ validateCtxJson, loadPrefsJson, roleItems = [], locationItems = [] }) {
+function runMergePreferenceData({
+  validateCtxJson,
+  loadPrefsJson,
+  roleItems = [],
+  locationItems = [],
+  relocationItems = [],
+  authorizedCountryItems = [],
+}) {
   const node = wf.nodes.find(n => n.name === 'Merge Preference Data');
   assert.ok(node, '"Merge Preference Data" node must exist');
   const code = node.parameters.jsCode;
 
-  const mockInput = {
-    item: { json: locationItems[0] ?? {} },
-    all:  () => locationItems.map(j => ({ json: j })),
-  };
+  // $input is never read by this node anymore — every join-table fetch is
+  // looked up by its own explicit node name, so this node's behavior cannot
+  // depend on which node happens to be its immediate predecessor.
+  const mockInput = { item: { json: null }, all: () => [] };
 
   const mockDollar = (nodeName) => {
     switch (nodeName) {
@@ -811,6 +818,21 @@ function runMergePreferenceData({ validateCtxJson, loadPrefsJson, roleItems = []
         return {
           item: { json: roleItems[0] ?? {} },
           all:  () => roleItems.map(j => ({ json: j })),
+        };
+      case 'Load Preference Locations':
+        return {
+          item: { json: locationItems[0] ?? {} },
+          all:  () => locationItems.map(j => ({ json: j })),
+        };
+      case 'Load Preference Relocation Locations':
+        return {
+          item: { json: relocationItems[0] ?? {} },
+          all:  () => relocationItems.map(j => ({ json: j })),
+        };
+      case 'Load Preference Authorized Countries':
+        return {
+          item: { json: authorizedCountryItems[0] ?? {} },
+          all:  () => authorizedCountryItems.map(j => ({ json: j })),
         };
       default:
         return { item: { json: null }, all: () => [] };
@@ -829,6 +851,10 @@ function makePrefsRow(overrides) {
     job_type: 'full-time',
     experience_level: 'junior',
     additional_notes: null,
+    lebanon_location_scope: null,
+    international_search_enabled: null,
+    willing_to_relocate: null,
+    work_authorization_status: null,
     version: 1,
     custom_target_roles: [],
     custom_locations: [],
@@ -984,12 +1010,15 @@ test('Merge Preference Data: user_id mismatch throws PERMANENT error', () => {
   );
 });
 
-test('Merge Preference Data uses $input.all() for location collection (not $input.item.json)', () => {
+test('Merge Preference Data reads every join table by explicit node name, never $input (position-independent)', () => {
   const n = wf.nodes.find(nd => nd.name === 'Merge Preference Data');
-  assert.ok(n.parameters.jsCode.includes('$input.all()'),
-    '"Merge Preference Data" must use $input.all() to collect all location items');
-  assert.ok(!n.parameters.jsCode.includes('$input.item.json'),
-    '"Merge Preference Data" must not use $input.item.json (misses multi-item batches)');
+  const code = n.parameters.jsCode;
+  assert.ok(!code.includes('$input.all()') && !code.includes('$input.item.json'),
+    '"Merge Preference Data" must not read $input at all — two more join-table fetches ' +
+    '(relocation locations, authorized countries) were inserted ahead of it, so reading ' +
+    "$input would silently pick up the wrong node's data depending on chain position");
+  assert.ok(code.includes("$('Load Preference Locations').all()"),
+    '"Merge Preference Data" must use $("Load Preference Locations").all() to collect all location items');
 });
 
 test('Merge Preference Data uses $("Load Preference Roles").all() for role collection', () => {
@@ -998,6 +1027,103 @@ test('Merge Preference Data uses $("Load Preference Roles").all() for role colle
     n.parameters.jsCode.includes("$('Load Preference Roles').all()"),
     '"Merge Preference Data" must use $("Load Preference Roles").all() to collect all role items'
   );
+});
+
+// ─── Merge Preference Data: full preference coverage (previously-missing fields) ─
+
+test('Merge Preference Data: includes lebanon_location_scope, international_search_enabled, willing_to_relocate, work_authorization_status in the snapshot', () => {
+  const prefs = makePrefsRow({
+    lebanon_location_scope: 'selected_and_nearby',
+    international_search_enabled: true,
+    willing_to_relocate: false,
+    work_authorization_status: 'unsure',
+  });
+  const result = runMergePreferenceData({
+    validateCtxJson: makeCtxJson(),
+    loadPrefsJson: prefs,
+    roleItems: [{}],
+    locationItems: [{}],
+  });
+  const snap = result[0].json.preferenceSnapshot;
+  assert.equal(snap.lebanon_location_scope, 'selected_and_nearby');
+  assert.equal(snap.international_search_enabled, true);
+  assert.equal(snap.willing_to_relocate, false);
+  assert.equal(snap.work_authorization_status, 'unsure');
+});
+
+test('Merge Preference Data: willing_to_relocate=false is preserved as false, never coerced to null', () => {
+  // Regression guard: `value || null` would silently turn `false` into `null`,
+  // losing the user's explicit "No" — must use a type-checked read instead.
+  const prefs = makePrefsRow({ willing_to_relocate: false, international_search_enabled: false });
+  const result = runMergePreferenceData({
+    validateCtxJson: makeCtxJson(),
+    loadPrefsJson: prefs,
+    roleItems: [{}],
+    locationItems: [{}],
+  });
+  const snap = result[0].json.preferenceSnapshot;
+  assert.strictEqual(snap.willing_to_relocate, false);
+  assert.strictEqual(snap.international_search_enabled, false);
+});
+
+test('Merge Preference Data: includes selected relocation locations from the join table', () => {
+  const result = runMergePreferenceData({
+    validateCtxJson: makeCtxJson(),
+    loadPrefsJson: makePrefsRow({ willing_to_relocate: true, international_search_enabled: true }),
+    roleItems: [{}],
+    locationItems: [{}],
+    relocationItems: [{ locations: { name: 'Dubai' } }, { locations: { name: 'Doha' } }],
+  });
+  assert.deepStrictEqual(result[0].json.preferenceSnapshot.relocation_locations, ['Dubai', 'Doha']);
+});
+
+test('Merge Preference Data: empty relocation-locations join (alwaysOutputData sentinel) yields []', () => {
+  const result = runMergePreferenceData({
+    validateCtxJson: makeCtxJson(),
+    loadPrefsJson: makePrefsRow(),
+    roleItems: [{}],
+    locationItems: [{}],
+    relocationItems: [{}],
+  });
+  assert.deepStrictEqual(result[0].json.preferenceSnapshot.relocation_locations, []);
+});
+
+test('Merge Preference Data: includes authorized countries from the join table', () => {
+  const result = runMergePreferenceData({
+    validateCtxJson: makeCtxJson(),
+    loadPrefsJson: makePrefsRow({ work_authorization_status: 'already_authorized' }),
+    roleItems: [{}],
+    locationItems: [{}],
+    authorizedCountryItems: [{ countries: { name: 'United Arab Emirates' } }],
+  });
+  assert.deepStrictEqual(result[0].json.preferenceSnapshot.authorized_countries, ['United Arab Emirates']);
+});
+
+test('Merge Preference Data: empty authorized-countries join (alwaysOutputData sentinel) yields []', () => {
+  const result = runMergePreferenceData({
+    validateCtxJson: makeCtxJson(),
+    loadPrefsJson: makePrefsRow(),
+    roleItems: [{}],
+    locationItems: [{}],
+    authorizedCountryItems: [{}],
+  });
+  assert.deepStrictEqual(result[0].json.preferenceSnapshot.authorized_countries, []);
+});
+
+test('Merge Preference Data: null Load Preferences response yields a fully-populated empty snapshot (new fields included)', () => {
+  const result = runMergePreferenceData({
+    validateCtxJson: makeCtxJson(),
+    loadPrefsJson: null,
+    roleItems: [{}],
+    locationItems: [{}],
+  });
+  const snap = result[0].json.preferenceSnapshot;
+  assert.equal(snap.lebanon_location_scope, null);
+  assert.equal(snap.international_search_enabled, null);
+  assert.equal(snap.willing_to_relocate, null);
+  assert.equal(snap.work_authorization_status, null);
+  assert.deepStrictEqual(snap.relocation_locations, []);
+  assert.deepStrictEqual(snap.authorized_countries, []);
 });
 
 // ─── Download CV Binary URL: /storage/v1 prefix regression (execution #53) ───
@@ -1168,7 +1294,7 @@ function makeLightweightNormCtx(priorFacts = {}) {
   };
 }
 
-function makeMergedPrefs(roles = ['Software Engineer'], locs = ['Remote']) {
+function makeMergedPrefs(roles = ['Software Engineer'], locs = ['Remote'], overrides = {}) {
   return {
     preferenceSnapshot: {
       target_roles: roles,
@@ -1178,7 +1304,14 @@ function makeMergedPrefs(roles = ['Software Engineer'], locs = ['Remote']) {
       job_type: 'full-time',
       experience_level: 'junior',
       additional_notes: null,
+      lebanon_location_scope: null,
+      international_search_enabled: null,
+      willing_to_relocate: null,
+      work_authorization_status: null,
+      relocation_locations: [],
+      authorized_countries: [],
       preferences_version: 1,
+      ...overrides,
     },
   };
 }
@@ -1194,7 +1327,7 @@ function makeBuildCtx(overrides = {}) {
   };
 }
 
-test('Build OpenAI Request: no feedback row → single-section user message (JOB PREFERENCES + CV TEXT)', () => {
+test('Build OpenAI Request: no feedback row → single-section user message (USER PREFERENCES + CV TEXT)', () => {
   // Empty sentinel from alwaysOutputData — no feedback_type field.
   const result = runBuildOpenAIRequest({
     taskCtxJson: makeBuildCtx(),
@@ -1205,7 +1338,7 @@ test('Build OpenAI Request: no feedback row → single-section user message (JOB
   assert.equal(result.length, 1);
   const messages = result[0].json.openAIBody.messages;
   const userMsg = messages.find(m => m.role === 'user')?.content ?? '';
-  assert.ok(userMsg.includes('JOB PREFERENCES:'), 'user message must include JOB PREFERENCES section');
+  assert.ok(userMsg.includes('=== USER PREFERENCES ==='), 'user message must include a USER PREFERENCES section');
   assert.ok(userMsg.includes('CV TEXT:'), 'user message must include CV TEXT section');
   assert.ok(!userMsg.includes('USER FEEDBACK'), 'user message must NOT include USER FEEDBACK when no feedback row');
 });
@@ -1223,20 +1356,107 @@ test('Build OpenAI Request: with feedback row → three-section user message inc
     feedbackItemJson: feedbackItem,
   });
   const userMsg = result[0].json.openAIBody.messages.find(m => m.role === 'user')?.content ?? '';
-  assert.ok(userMsg.includes('JOB PREFERENCES:'), 'section 1: JOB PREFERENCES must be present');
+  assert.ok(userMsg.includes('=== USER PREFERENCES ==='), 'section 1: USER PREFERENCES must be present');
   assert.ok(userMsg.includes('USER FEEDBACK (cv_correction):'), 'section 2: USER FEEDBACK with type must be present');
   assert.ok(userMsg.includes('Section: Work experience'), 'section 2: affected_section must be included');
   assert.ok(userMsg.includes('I left in 2024'), 'section 2: feedback_text must be present');
   assert.ok(userMsg.includes('CV TEXT:'), 'section 3: CV TEXT must be present');
   // Order: preferences, then feedback, then CV text.
   assert.ok(
-    userMsg.indexOf('JOB PREFERENCES:') < userMsg.indexOf('USER FEEDBACK'),
-    'JOB PREFERENCES must appear before USER FEEDBACK'
+    userMsg.indexOf('=== USER PREFERENCES ===') < userMsg.indexOf('USER FEEDBACK'),
+    'USER PREFERENCES must appear before USER FEEDBACK'
   );
   assert.ok(
     userMsg.indexOf('USER FEEDBACK') < userMsg.indexOf('CV TEXT:'),
     'USER FEEDBACK must appear before CV TEXT'
   );
+});
+
+// ─── Build OpenAI Request: USER PREFERENCES section — full preference coverage ─
+
+test('Build OpenAI Request: USER PREFERENCES section renders every current preference field with clear labels, never raw JSON', () => {
+  const result = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeNormCtx(),
+    mergePrefsJson: makeMergedPrefs(['Software Engineer'], ['Beirut'], {
+      job_type: 'full-time',
+      work_arrangement: 'remote',
+      experience_level: 'entry-level',
+      lebanon_location_scope: 'selected_only',
+      international_search_enabled: false,
+      willing_to_relocate: false,
+      work_authorization_status: null,
+      relocation_locations: [],
+      authorized_countries: [],
+    }),
+    feedbackItemJson: {},
+  });
+  const userMsg = result[0].json.openAIBody.messages.find(m => m.role === 'user')?.content ?? '';
+  assert.ok(userMsg.includes('Target roles: Software Engineer'), 'target roles must be labeled clearly');
+  assert.ok(userMsg.includes('Preferred locations: Beirut'), 'preferred locations must be labeled clearly');
+  assert.ok(userMsg.includes('Job type: Full-time'), 'job type must be a readable label, not raw enum text');
+  assert.ok(userMsg.includes('Work arrangement: Remote'), 'work arrangement must be a readable label');
+  assert.ok(userMsg.includes('Experience level: Entry-level'), 'experience level must be a readable label');
+  assert.ok(userMsg.includes('Lebanon search scope: Selected only'), 'lebanon_location_scope must be present and labeled');
+  assert.ok(userMsg.includes('International search enabled: No'), 'international_search_enabled must be present and labeled');
+  assert.ok(userMsg.includes('Willing to relocate: No'), 'willing_to_relocate must be present and labeled');
+  assert.ok(userMsg.includes('Relocation locations: None'), 'empty relocation_locations must render as None');
+  assert.ok(userMsg.includes('Work authorization status: Not specified'), 'null work_authorization_status must render as Not specified');
+  assert.ok(userMsg.includes('Authorized countries: None'), 'empty authorized_countries must render as None');
+  assert.ok(!userMsg.includes('"target_roles"'), 'USER PREFERENCES must never be a raw JSON dump');
+  assert.ok(!userMsg.includes('{\n'), 'USER PREFERENCES must never be a raw JSON dump');
+});
+
+test('Build OpenAI Request: USER PREFERENCES section includes relocation locations and authorized countries when set', () => {
+  const result = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeNormCtx(),
+    mergePrefsJson: makeMergedPrefs(['Software Engineer'], ['Remote'], {
+      international_search_enabled: true,
+      willing_to_relocate: true,
+      relocation_locations: ['Dubai', 'Doha'],
+      work_authorization_status: 'already_authorized',
+      authorized_countries: ['United Arab Emirates'],
+    }),
+    feedbackItemJson: {},
+  });
+  const userMsg = result[0].json.openAIBody.messages.find(m => m.role === 'user')?.content ?? '';
+  assert.ok(userMsg.includes('International search enabled: Yes'));
+  assert.ok(userMsg.includes('Willing to relocate: Yes'));
+  assert.ok(userMsg.includes('Relocation locations: Dubai, Doha'));
+  assert.ok(userMsg.includes('Work authorization status: Already authorized'));
+  assert.ok(userMsg.includes('Authorized countries: United Arab Emirates'));
+});
+
+test('Build OpenAI Request: system prompt instructs the model never to invent preferences or override explicit constraints', () => {
+  const result = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeNormCtx(),
+    mergePrefsJson: makeMergedPrefs(),
+    feedbackItemJson: {},
+  });
+  const sysMsg = result[0].json.openAIBody.messages.find(m => m.role === 'system')?.content ?? '';
+  assert.ok(/never invent a value/i.test(sysMsg), 'system prompt must forbid inventing an unset preference value');
+  assert.ok(/never assume willingness to relocate/i.test(sysMsg), 'system prompt must forbid assuming relocation willingness');
+  assert.ok(/never assume work authorization/i.test(sysMsg), 'system prompt must forbid assuming work authorization');
+});
+
+test('Build OpenAI Request (lightweight path): USER PREFERENCES section also renders every preference field with clear labels', () => {
+  const result = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeLightweightNormCtx(),
+    mergePrefsJson: makeMergedPrefs(['Software Engineer'], ['Beirut'], {
+      willing_to_relocate: true,
+      international_search_enabled: true,
+      relocation_locations: ['Dubai'],
+    }),
+    feedbackItemJson: {},
+  });
+  const userMsg = result[0].json.openAIBody.messages.find(m => m.role === 'user')?.content ?? '';
+  assert.ok(userMsg.includes('=== USER PREFERENCES ==='));
+  assert.ok(userMsg.includes('Willing to relocate: Yes'));
+  assert.ok(userMsg.includes('Relocation locations: Dubai'));
+  assert.ok(!userMsg.includes('"target_roles"'), 'lightweight USER PREFERENCES must never be a raw JSON dump either');
 });
 
 test('Build OpenAI Request: feedback without affected_section omits Section: line', () => {
@@ -1735,4 +1955,250 @@ test('Build Task Update: success path is unaffected by the error-chain reorder',
   });
   assert.equal(result[0].json.patchBody.status, 'completed');
   assert.ok(result[0].json.patchBody.completed_at);
+});
+
+// ─── Build Task Update: insertError/Call OpenAI must never mask a real upstream
+// error (second masking path, found via live execution evidence) ──────────────
+//
+// Real failed executions (reproduced locally with a synthetic non-PDF CV
+// fixture, never real CV content) showed last_error stuck at the generic
+// "The value in the 'JSON Body' field is not valid JSON" even after the
+// Build-OpenAI-Request-vs-Call-OpenAI ordering fix above. Root cause: when
+// Build OpenAI Request/Parse AI Response fail, Validate CV Ownership read
+// the error-shaped Parse AI Response item, found no candidate_name, and
+// fell into its default "unable_to_verify" branch — whose passthrough does
+// not carry outcome/insertBody forward (see the new guard in Validate CV
+// Ownership). Insert CV Analysis then built its JSON body from the now-
+// missing insertBody and got the same generic "JSON Body" rejection from
+// n8n — and because Build Task Update checked that insertError first, it
+// won every time. Fix: insertError (and Call OpenAI's error, which Parse AI
+// Response already folds into its own .error whenever it is the real cause)
+// are now checked LAST, after every real upstream node.
+
+test('Build Task Update: insertError (generic "JSON Body" symptom) never masks a real upstream error', () => {
+  const result = runBuildTaskUpdate({
+    parseResultJson: makeParseResultCtx(),
+    insertResultJson: { error: 'The value in the \'JSON Body\' field is not valid JSON' },
+    nodeJsons: {
+      'Build OpenAI Request': { error: 'PERMANENT: PDF produced no extractable text (may be scanned/image-only)' },
+    },
+  });
+  assert.equal(
+    result[0].json.patchBody.last_error,
+    'PDF produced no extractable text (may be scanned/image-only)',
+    'the real upstream cause must win over Insert CV Analysis\'s generic JSON-body symptom'
+  );
+  assert.equal(result[0].json.patchBody.status, 'failed');
+});
+
+test('Build Task Update: a genuine Insert CV Analysis failure still surfaces when nothing upstream failed', () => {
+  const result = runBuildTaskUpdate({
+    parseResultJson: makeParseResultCtx(),
+    insertResultJson: { error: 'duplicate key value violates unique constraint' },
+    nodeJsons: {
+      'Build OpenAI Request': {},
+      'Validate CV Ownership': { ownershipStatus: 'verified' },
+    },
+  });
+  assert.equal(
+    result[0].json.patchBody.last_error,
+    'duplicate key value violates unique constraint',
+    'a real insert failure, with no upstream error anywhere, must still be reported verbatim'
+  );
+});
+
+// ─── Validate CV Ownership: upstream-error propagation ─────────────────────────
+//
+// Missing guard found via the same live execution evidence as above: this
+// node read Parse AI Response's output but never checked it for .error, so
+// an upstream failure silently became "unable_to_verify" with no error, no
+// outcome, and no insertBody carried forward.
+
+function runValidateCvOwnership({ parseCtxJson = {}, profileJson = {} }) {
+  const node = wf.nodes.find(n => n.name === 'Validate CV Ownership');
+  assert.ok(node, '"Validate CV Ownership" node must exist');
+  const code = node.parameters.jsCode;
+
+  const mockDollar = (nodeName) => {
+    if (nodeName === 'Parse AI Response') return { item: { json: parseCtxJson } };
+    return { item: { json: {} } };
+  };
+  const mockInput = { item: { json: profileJson } };
+  return new Function('$input', '$', code)(mockInput, mockDollar);
+}
+
+test('Validate CV Ownership: propagates an upstream Parse AI Response error instead of silently returning unable_to_verify', () => {
+  assert.throws(
+    () => runValidateCvOwnership({
+      parseCtxJson: { error: 'PERMANENT: PDF produced no extractable text (may be scanned/image-only)' },
+      profileJson: { id: 'user-uuid-1', full_name: 'Jane Doe' },
+    }),
+    /PDF produced no extractable text/,
+    'an upstream error must propagate, not be swallowed into ownershipStatus=unable_to_verify'
+  );
+});
+
+test('Validate CV Ownership: normal (non-error) input still resolves ownership as before', () => {
+  const result = runValidateCvOwnership({
+    parseCtxJson: { taskId: 't1', taskAttempt: 1, taskMaxAttempts: 3, candidate_name: 'Jane Doe', outcome: 'success', insertBody: { user_id: 'u1' } },
+    profileJson: { id: 'u1', full_name: 'Jane Doe' },
+  });
+  assert.equal(result[0].json.ownershipStatus, 'verified');
+  assert.equal(result[0].json.outcome, 'success');
+  assert.deepEqual(result[0].json.insertBody, { user_id: 'u1' });
+});
+
+// ─── Build OpenAI Request: openAIBody always survives a real JSON round-trip ──
+//
+// Confirms the object-reference mechanism (Build OpenAI Request returns a
+// normal JS object; Call OpenAI sends it via `{{ $json.openAIBody }}`, never
+// a hand-assembled JSON string) is safe for exactly the content classes a
+// real CV/preferences payload can contain. The live "JSON Body" bug was
+// never actually caused by any of these — this is regression coverage
+// proving that remains true, not a reproduction of the real bug (see the
+// Build Task Update / Validate CV Ownership tests above for that).
+
+test('Build OpenAI Request: openAIBody round-trips through JSON.stringify/JSON.parse with quotes, apostrophes, newlines, and Arabic/Unicode CV text', () => {
+  const trickyText = [
+    'Line one with a "quoted phrase" and an apostrophe: don\'t stop.',
+    'Line two with a literal backslash: C:\\Users\\example and a tab\tcharacter.',
+    'Line three in Arabic: مرحبا بك في السيرة الذاتية، أنا مهندس برمجيات.',
+    'Line four, very long: ' + 'x'.repeat(5000),
+  ].join('\n');
+
+  const result = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeNormCtx(trickyText),
+    mergePrefsJson: makeMergedPrefs(['Software Engineer'], ['Remote'], {
+      additional_notes: 'Prefers "remote only" — no exceptions.\nAvailable immediately.',
+    }),
+    feedbackItemJson: {},
+  });
+
+  const openAIBody = result[0].json.openAIBody;
+  let serialized;
+  assert.doesNotThrow(() => { serialized = JSON.stringify(openAIBody); }, 'JSON.stringify must never throw on a normal JS object');
+  let parsedBack;
+  assert.doesNotThrow(() => { parsedBack = JSON.parse(serialized); }, 'the stringified body must itself be valid, parseable JSON');
+  assert.ok(parsedBack.messages[1].content.includes(trickyText), 'the tricky CV text must survive the round-trip unchanged');
+});
+
+test('Build OpenAI Request: null/empty preferences still produce a JSON-serializable openAIBody with every field represented', () => {
+  const result = runBuildOpenAIRequest({
+    taskCtxJson: makeBuildCtx(),
+    normCtxJson: makeNormCtx('Plain CV text.'),
+    mergePrefsJson: makeMergedPrefs([], [], {
+      work_arrangement: null,
+      job_type: null,
+      experience_level: null,
+      lebanon_location_scope: null,
+      international_search_enabled: null,
+      willing_to_relocate: null,
+      work_authorization_status: null,
+      additional_notes: null,
+    }),
+    feedbackItemJson: {},
+  });
+
+  const openAIBody = result[0].json.openAIBody;
+  assert.doesNotThrow(() => JSON.parse(JSON.stringify(openAIBody)));
+  const userMessage = openAIBody.messages[1].content;
+  for (const label of ['Target roles', 'Preferred locations', 'Job type', 'Work arrangement', 'Experience level', 'Willing to relocate', 'Work authorization status']) {
+    assert.ok(userMessage.includes(label), `expected "${label}:" to still be rendered when the preference itself is null`);
+  }
+});
+
+// ─── Build Task Update: .ts / .json error-chain parity, and corrected ─────────
+// live node-name references (cleanup following the live E2E validation).
+//
+// 1. .json was missing the two newer preference-loading nodes
+//    (Load Preference Authorized Countries / Load Preference Relocation
+//    Locations) in its error-priority chain — .ts already had them.
+// 2. Three safeNodeError(...) calls referenced node names without the live
+//    "1" suffix (Extract PDF Text / Download CV Binary / Sign Storage URL),
+//    which never matched the actually-deployed node names (Extract PDF
+//    Text1 / Download CV Binary1 / Sign Storage URL1) and were therefore
+//    dead — $(name) always throws for a nonexistent node name, and
+//    safeNodeError's catch silently swallows that into undefined.
+
+function extractRawErrorChain(jsCode) {
+  return jsCode.split('const rawError = (')[1].split(')?.toString()')[0].replace(/\s+/g, ' ').trim();
+}
+
+test('Build Task Update: .ts and .json error-priority chains are identical', () => {
+  const tsChain = extractRawErrorChain(tsRaw.split("name: 'Build Task Update'")[1]);
+  const jsonNode = wf.nodes.find((n) => n.name === 'Build Task Update');
+  const jsonChain = extractRawErrorChain(jsonNode.parameters.jsCode);
+  assert.equal(jsonChain, tsChain, '.json\'s rawError chain must exactly match .ts\'s (modulo whitespace)');
+});
+
+test('Build Task Update: error chain includes both newer preference-loading nodes (both .ts and .json)', () => {
+  const jsonNode = wf.nodes.find((n) => n.name === 'Build Task Update');
+  for (const code of [tsRaw, jsonNode.parameters.jsCode]) {
+    assert.ok(code.includes("$('Load Preference Authorized Countries').item.json?.error"));
+    assert.ok(code.includes("$('Load Preference Relocation Locations').item.json?.error"));
+  }
+});
+
+test('Build Task Update: safeNodeError references the corrected live node names (both .ts and .json)', () => {
+  const jsonNode = wf.nodes.find((n) => n.name === 'Build Task Update');
+  for (const code of [tsRaw, jsonNode.parameters.jsCode]) {
+    assert.ok(code.includes("safeNodeError('Extract PDF Text1')"));
+    assert.ok(code.includes("safeNodeError('Download CV Binary1')"));
+    assert.ok(code.includes("safeNodeError('Sign Storage URL1')"));
+  }
+});
+
+test('Build Task Update: no dead (un-suffixed) safeNodeError references to these three nodes remain', () => {
+  const jsonNode = wf.nodes.find((n) => n.name === 'Build Task Update');
+  for (const code of [tsRaw, jsonNode.parameters.jsCode]) {
+    assert.ok(!code.includes("safeNodeError('Extract PDF Text')"));
+    assert.ok(!code.includes("safeNodeError('Download CV Binary')"));
+    assert.ok(!code.includes("safeNodeError('Sign Storage URL')"));
+  }
+});
+
+test('Build Task Update: a Sign Storage URL1 error is now actually picked up (was previously a dead reference)', () => {
+  // Realistic failure point: Sign Storage URL1 fails before Download CV
+  // Binary1/Extract PDF Text1 (full-extraction branch) or Load Prior CV
+  // Facts (lightweight branch) ever run — exactly the "$('Node Name') throws
+  // for a node that didn't execute in this item's path" case the source's
+  // own safeNodeError helper exists to guard against.
+  const result = runBuildTaskUpdate({
+    parseResultJson: makeParseResultCtx({ taskAttempt: 1, taskMaxAttempts: 3 }),
+    throwFor: ['Normalize CV Context', 'Load Prior CV Facts', 'Extract PDF Text1', 'Download CV Binary1'],
+    nodeJsons: { 'Sign Storage URL1': { error: 'RETRYABLE: storage sign request failed' } },
+  });
+  assert.equal(
+    result[0].json.patchBody.last_error,
+    'storage sign request failed',
+    'Sign Storage URL1\'s real error must now be found — previously the unsuffixed lookup silently returned undefined'
+  );
+});
+
+test('Build Task Update: error propagation behavior is otherwise unchanged (regression)', () => {
+  // Same scenarios as the pre-existing error-priority tests above, re-asserted
+  // against the now-corrected chain to prove the cleanup didn't change
+  // existing propagation behavior.
+  const permanentWins = runBuildTaskUpdate({
+    parseResultJson: makeParseResultCtx(),
+    nodeJsons: {
+      'Build OpenAI Request': { error: 'PERMANENT: no prior completed CV analysis exists for this lightweight task' },
+      'Call OpenAI': { error: "The value in the 'JSON Body' field is not valid JSON" },
+    },
+  });
+  assert.equal(permanentWins[0].json.patchBody.last_error, 'no prior completed CV analysis exists for this lightweight task');
+
+  const insertStillLast = runBuildTaskUpdate({
+    parseResultJson: makeParseResultCtx(),
+    insertResultJson: { error: 'The value in the \'JSON Body\' field is not valid JSON' },
+    nodeJsons: { 'Build OpenAI Request': { error: 'PERMANENT: PDF produced no extractable text (may be scanned/image-only)' } },
+  });
+  assert.equal(insertStillLast[0].json.patchBody.last_error, 'PDF produced no extractable text (may be scanned/image-only)');
+
+  const successUnaffected = runBuildTaskUpdate({
+    parseResultJson: { ...makeParseResultCtx(), outcome: 'success' },
+    insertResultJson: {},
+  });
+  assert.equal(successUnaffected[0].json.patchBody.status, 'completed');
 });

@@ -12,7 +12,26 @@ describe("providerConfig", () => {
   });
 
   test("isProviderEnabled is fail-closed for an unlisted source type", () => {
+    assert.equal(isProviderEnabled("admin_manual"), false);
+  });
+
+  // Lebanon pilot: linkedin IS now listed (adapter + config exist for the
+  // pilot build) but stays enabled:false — AGENTS.md §35 rule 6/10
+  // requires a completed, documented pilot review and explicit human
+  // approval before any production enablement; that is not a default
+  // outcome of this implementation.
+  test("linkedin is listed but NOT enabled — production enablement requires explicit human approval (AGENTS.md §35 rule 10)", () => {
     assert.equal(isProviderEnabled("linkedin"), false);
+    const config = getProviderConfig("linkedin");
+    assert.ok(config, "linkedin must have a providerConfig entry for the pilot build");
+    assert.equal(config.enabled, false);
+    assert.equal(config.requiresCredentialEnvVar, "APIFY_API_TOKEN");
+    assert.deepEqual(config.markets, ["lebanon"]);
+  });
+
+  test("getEnabledProviders / getProvidersForMarket never include linkedin while it is disabled", () => {
+    assert.ok(!getEnabledProviders().some((p) => p.sourceType === "linkedin"));
+    assert.ok(!getProvidersForMarket("lebanon").some((p) => p.sourceType === "linkedin"));
   });
 
   test("Tier-A ATS types (greenhouse/lever/workable/ashby) are all enabled", () => {

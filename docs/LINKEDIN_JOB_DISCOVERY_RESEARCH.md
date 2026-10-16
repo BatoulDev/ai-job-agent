@@ -5,9 +5,24 @@ public job-market visibility and employer discovery. **No LinkedIn
 job was persisted to the production `jobs` table.** No LinkedIn account
 was logged into, no user LinkedIn credentials were used, no LinkedIn
 interaction (Easy Apply, messages, connections, likes) was automated.
-Per this project's rules, LinkedIn is never a production ingestion
-source — this document exists to identify employers/roles worth
-chasing through an official, approved source instead.
+At the time this research was done, this project's rule was that
+LinkedIn is never a production ingestion source — this document exists
+to identify employers/roles worth chasing through an official, approved
+source instead.
+
+> **Policy update (2026-10-09)** — AGENTS.md §7/§35 now permits guarded
+> LinkedIn job discovery/ingestion under strict conditions (public
+> listings or an approved provider only, no login/cookie/credential use,
+> bounded cost/result caps, disabled until a pilot proves quality,
+> original-URL preservation, auto-apply still prohibited). **The real
+> findings below are not superseded or softened by that change** — the
+> cost-control failure and the Easy-Apply-only data-quality problem
+> documented in this file remain real, valid evidence that any future
+> LinkedIn attempt must explicitly address (a live, free schema/cap
+> re-confirmation before spending; evidence of a non-trivial
+> non-Easy-Apply share) before being considered production-ready.
+> Implementation is **not** automatically approved by the policy change
+> alone — see AGENTS.md §35 rule 6 for the required pilot.
 
 ---
 
@@ -100,6 +115,19 @@ companies list their own external apply link alongside Easy Apply),
 but it is real, negative evidence that materially changes bebity's
 recommendation from Phase 20's "TEST FIRST."
 
+> **Easy-Apply product decision (2026-10-09)** — this finding is
+> preserved exactly as discovered and is **not** erased or softened.
+> What has changed is the product's response to it: AGENTS.md §35 now
+> explicitly accepts a LinkedIn Easy Apply job for ingestion, provided
+> a valid canonical public LinkedIn job URL exists — excluding
+> Easy-Apply-only listings was judged to severely reduce Lebanon
+> coverage. AI Job Guide still never clicks Easy Apply, logs in, uses
+> cookies/credentials, or submits on the user's behalf; the user is
+> redirected to the listing and always applies manually. The 100%
+> Easy-Apply share observed in this sample is therefore no longer
+> disqualifying on its own — only a listing with no usable public/
+> canonical URL at all is rejected.
+
 ### Companies discovered (real, from the 15-item sample)
 
 MultiBank Group, MCI (BPO — two distinct *remote* Lebanon-based
@@ -170,6 +198,19 @@ research.** Two independent problems, not one:
    sample (or a different LinkedIn actor from Phase 20's comparison,
    e.g. `curious_coder`) to determine whether this is representative or
    an artifact of this particular query.
+
+> **Dated update (2026-10-09)**: problem 2 (apply-link provenance) is
+> resolved by product decision, not further research — see the
+> Easy-Apply product decision note above and AGENTS.md §35 rule 7.
+> Easy-Apply-only postings are no longer, by themselves, disqualifying.
+> Problem 1 (cost control) is **not** resolved by that decision and
+> remains the active gate on any future paid run; a separate, dated
+> live input-schema reconfirmation for `bebity/linkedin-jobs-scraper`
+> was performed this same day — see that task's own report/commit
+> history for the current schema findings, which supersede the
+> "documented bounding parameter did not work" uncertainty above only
+> to the extent of what was re-verified live and free, not by
+> re-trusting documentation again.
 
 This remains research-only, exactly as instructed — no LinkedIn scraper
 was or will be wired into production ingestion this phase.

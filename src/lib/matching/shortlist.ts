@@ -41,10 +41,19 @@ export async function shortlistJobsForUser(
 ): Promise<ShortlistedJob[]> {
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, location, country_code, city, work_arrangement, remote_scope, embedding")
+    .select("id, location, country_code, city, work_arrangement, remote_scope, embedding, employment_type")
     .eq("status", "active")
     .not("embedding", "is", null)
     .order("last_seen_at", { ascending: false })
+    // Deterministic tiebreak: last_seen_at is nullable (and genuinely NULL
+    // for every row that has never had its freshness tracked), so without a
+    // secondary key, Postgres returns tied rows in an undefined, physically-
+    // determined order that can vary between executions. created_at is
+    // NOT NULL DEFAULT now() and strictly increases per insert, so this
+    // never changes the ordering when last_seen_at actually differs — it
+    // only makes the otherwise-arbitrary tie order reproducible, preferring
+    // the more recently-created listing among equally-fresh/untracked jobs.
+    .order("created_at", { ascending: false })
     .limit(options.candidatePoolSize);
   if (error) throw new Error(`shortlistJobsForUser: failed to fetch candidate jobs: ${error.message}`);
 
@@ -58,6 +67,7 @@ export async function shortlistJobsForUser(
       city: job.city,
       work_arrangement: job.work_arrangement,
       remote_scope: job.remote_scope,
+      employment_type: job.employment_type,
     });
     const eligibility = checkJobEligibility({ job: location, ...userContext });
     if (!eligibility.eligible) continue;

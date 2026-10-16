@@ -6,7 +6,7 @@
 
 import { test, describe } from "node:test";
 import assert from "node:assert/strict";
-import { checkJobEligibility } from "../../src/lib/ingestion/checkJobEligibility.ts";
+import { checkJobEligibility, isEmploymentTypeCompatible } from "../../src/lib/ingestion/checkJobEligibility.ts";
 import { deriveEligibilityLocation } from "../../src/lib/ingestion/jobEligibilityLocation.ts";
 
 function baseInput(overrides = {}) {
@@ -16,10 +16,12 @@ function baseInput(overrides = {}) {
       workArrangement: "onsite",
       remoteScope: null,
       locationConfidence: "high",
+      employmentType: null,
       ...overrides.job,
     },
     planCode: overrides.planCode ?? "free",
     preferredWorkArrangement: overrides.preferredWorkArrangement ?? null,
+    preferredJobType: overrides.preferredJobType ?? null,
     jobMarketCoverage: overrides.jobMarketCoverage ?? null,
     internationalSearchEnabled: overrides.internationalSearchEnabled ?? false,
     willingToRelocate: overrides.willingToRelocate ?? null,
@@ -250,6 +252,148 @@ describe("checkJobEligibility — work arrangement: match / conflict / unknown",
   });
 });
 
+// Employment-type hard eligibility (approved product decision, job-matching
+// preference fix): a known conflict is a hard rejection — no "flexible"
+// escape hatch like work arrangement has. Explicit preference beats
+// semantic similarity; the LLM reranker must never see these jobs.
+describe("checkJobEligibility — employment type: hard eligibility", () => {
+  test("isEmploymentTypeCompatible: freelance <-> contract is the one cross-vocabulary mapping", () => {
+    assert.equal(isEmploymentTypeCompatible("freelance", "contract"), true);
+    assert.equal(isEmploymentTypeCompatible("freelance", "full-time"), false);
+    assert.equal(isEmploymentTypeCompatible("open", "contract"), true);
+  });
+
+  // Regression coverage following the matching-rerank.test.mjs flake
+  // investigation (root cause: non-deterministic candidate ordering, not
+  // this logic — see shortlist.ts). Explicit "X vs contract" cases for
+  // every preference, so the freelance<->contract mapping is proven
+  // alongside its negatives, not in isolation.
+  test("full-time user + contract job -> reject", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "full-time", job: { employmentType: "contract" } }));
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "employment_type_conflict");
+  });
+
+  test("part-time user + contract job -> reject", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "part-time", job: { employmentType: "contract" } }));
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "employment_type_conflict");
+  });
+
+  test("1. full-time user + full-time job -> pass", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "full-time", job: { employmentType: "full-time" } }));
+    assert.equal(result.eligible, true);
+  });
+
+  test("2. full-time user + part-time job -> reject", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "full-time", job: { employmentType: "part-time" } }));
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "employment_type_conflict");
+  });
+
+  test("full-time user + internship job -> reject", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "full-time", job: { employmentType: "internship" } }));
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "employment_type_conflict");
+  });
+
+  test("3. part-time user + part-time job -> pass", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "part-time", job: { employmentType: "part-time" } }));
+    assert.equal(result.eligible, true);
+  });
+
+  test("4. part-time user + full-time job -> reject", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "part-time", job: { employmentType: "full-time" } }));
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "employment_type_conflict");
+  });
+
+  test("5. internship user + internship job -> pass", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "internship", job: { employmentType: "internship" } }));
+    assert.equal(result.eligible, true);
+  });
+
+  test("internship user + full-time job -> reject", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "internship", job: { employmentType: "full-time" } }));
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "employment_type_conflict");
+  });
+
+  test("6. internship user + contract job -> reject", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "internship", job: { employmentType: "contract" } }));
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "employment_type_conflict");
+  });
+
+  test("7. freelance user + contract job -> pass", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "freelance", job: { employmentType: "contract" } }));
+    assert.equal(result.eligible, true);
+  });
+
+  test("8. freelance user + full-time job -> reject", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "freelance", job: { employmentType: "full-time" } }));
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "employment_type_conflict");
+  });
+
+  test("9. open user + full-time job -> pass", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "open", job: { employmentType: "full-time" } }));
+    assert.equal(result.eligible, true);
+  });
+
+  test("10. open user + part-time job -> pass", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "open", job: { employmentType: "part-time" } }));
+    assert.equal(result.eligible, true);
+  });
+
+  test("11. open user + internship job -> pass", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "open", job: { employmentType: "internship" } }));
+    assert.equal(result.eligible, true);
+  });
+
+  test("12. open user + contract job -> pass", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "open", job: { employmentType: "contract" } }));
+    assert.equal(result.eligible, true);
+  });
+
+  test("13a. job employment_type null, user has a restrictive preference -> not rejected solely for that reason (unknown, conservative)", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "full-time", job: { employmentType: null } }));
+    assert.equal(result.eligible, true);
+    assert.notEqual(result.reason, "employment_type_conflict");
+  });
+
+  test("13b. user has no job-type preference (null) -> never rejected on employment type, regardless of the job's value", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: null, job: { employmentType: "part-time" } }));
+    assert.equal(result.eligible, true);
+    assert.notEqual(result.reason, "employment_type_conflict");
+  });
+
+  test("16. employment-type conflict is detected by the same pure function the shortlist filters on BEFORE rerank ever runs — proven structurally: checkJobEligibility() (the function shortlistJobsForUser calls pre-similarity-ranking, pre-rerank) returns ineligible for a known conflict, so a conflicting job never reaches the embedded candidate pool rerankCandidates.ts consumes", () => {
+    const result = checkJobEligibility(baseInput({ preferredJobType: "full-time", job: { employmentType: "part-time" } }));
+    assert.equal(result.eligible, false);
+  });
+
+  test("20. an employment-type match does not override an unrelated hard geographic/plan rejection", () => {
+    const result = checkJobEligibility(
+      baseInput({
+        planCode: "free",
+        preferredJobType: "full-time",
+        job: { countryCode: "AE", workArrangement: "onsite", employmentType: "full-time" },
+      }),
+    );
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "onsite_hybrid_outside_lebanon_requires_pro_relocation");
+  });
+
+  test("20b. an employment-type conflict does not get masked by an otherwise-eligible geography/plan — it is checked independently", () => {
+    const result = checkJobEligibility(
+      baseInput({ planCode: "pro", preferredJobType: "full-time", job: { countryCode: "LB", employmentType: "part-time" } }),
+    );
+    assert.equal(result.eligible, false);
+    assert.equal(result.reason, "employment_type_conflict");
+  });
+});
+
 describe("checkJobEligibility — Lebanon onsite/hybrid, every plan", () => {
   for (const planCode of ["free", "student", "pro"]) {
     test(`${planCode}: Lebanon onsite job is eligible`, () => {
@@ -423,10 +567,36 @@ describe("deriveEligibilityLocation — public.jobs row adapter", () => {
       city: "Dubai",
       work_arrangement: "onsite",
       remote_scope: null,
+      employment_type: "full-time",
     });
     assert.equal(result.countryCode, "AE");
     assert.equal(result.workArrangement, "onsite");
     assert.equal(result.locationConfidence, "high");
+    assert.equal(result.employmentType, "full-time");
+  });
+
+  test("an unrecognized employment_type value is never invented into a known one — passed through as null", () => {
+    const result = deriveEligibilityLocation({
+      location: null,
+      country_code: "LB",
+      city: "Beirut",
+      work_arrangement: "onsite",
+      remote_scope: null,
+      employment_type: "something-unrecognized",
+    });
+    assert.equal(result.employmentType, null);
+  });
+
+  test("a null employment_type stays null — never invented", () => {
+    const result = deriveEligibilityLocation({
+      location: null,
+      country_code: "LB",
+      city: "Beirut",
+      work_arrangement: "onsite",
+      remote_scope: null,
+      employment_type: null,
+    });
+    assert.equal(result.employmentType, null);
   });
 
   test("remote with structured country but no remote_scope is medium confidence", () => {

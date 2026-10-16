@@ -227,3 +227,35 @@ test("invalid transition rejected: cannot confirm a superseded analysis", async 
   const { error } = await userA.client.rpc("confirm_cv_analysis", { p_analysis_id: superseded.id });
   assert.notEqual(error, null);
 });
+
+// Worker-retry duplicate protection (cv_analyses_analysis_task_id_key,
+// 20260804090010_create_cv_analyses.sql): a retried worker execution for
+// the SAME analysis_task_id (e.g. after a task-status-update failure left
+// a completed result but no 'completed' task row yet) can never insert a
+// second cv_analyses row for that task — the unique constraint, not
+// application code, is what the n8n worker's own
+// "Prefer: resolution=ignore-duplicates" insert relies on to stay
+// idempotent. Proven directly here at the DB layer.
+test("retrying a worker insert for the same analysis_task_id cannot create a duplicate result", async () => {
+  const cv = await uploadFakeCv(userB, "retry-dup.pdf");
+  const { data: task, error: taskError } = await adminClient.rpc("create_analysis_task", {
+    p_user_id: userB.id,
+    p_cv_id: cv.id,
+    p_trigger: "cv_replaced",
+  });
+  assert.equal(taskError, null, `create_analysis_task failed: ${taskError?.message}`);
+
+  const first = await insertFakeAnalysis(userB, cv.id, { analysis_task_id: task.id });
+  assert.equal(first.analysis_task_id, task.id);
+
+  const { error: dupError } = await adminClient
+    .from("cv_analyses")
+    .insert({
+      user_id: userB.id,
+      cv_id: cv.id,
+      analysis_task_id: task.id,
+      status: "completed",
+      preference_snapshot: {},
+    });
+  assert.notEqual(dupError, null, "a second cv_analyses row for the same analysis_task_id must be rejected");
+});

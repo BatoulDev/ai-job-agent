@@ -36,6 +36,17 @@ function countingGenerator() {
   return { fn, callCount: () => calls };
 }
 
+// Captures the exact text handed to the embedding provider, so a test can
+// assert on its content (not just that embedding happened).
+function capturingGenerator() {
+  let lastText = null;
+  const fn = async (text) => {
+    lastText = text;
+    return fakeEmbedding(text);
+  };
+  return { fn, lastText: () => lastText };
+}
+
 const jobIdsToClean = [];
 let user;
 
@@ -151,6 +162,58 @@ test("embedProfileIfEligible: embeds an approved, current analysis and skips an 
   const second = await embedProfileIfEligible(adminClient, approved.id, generator.fn);
   assert.deepEqual(second, { updated: false, reason: "unchanged" });
   assert.equal(generator.callCount(), 1, "an unchanged profile must never call the embedding generator again");
+});
+
+// Preference-to-matching coverage audit finding: save_job_preferences
+// accepts reference-catalog selections (p_target_role_ids/p_location_ids)
+// as a first-class, independent input alongside free-text custom_* arrays
+// — the cv-analysis-worker's own preference merge already combines both for
+// the AI Career Profile prompt. The profile embedding previously only ever
+// read custom_target_roles/custom_locations, silently dropping whichever
+// roles/locations the user selected from the reference catalog.
+test("embedProfileIfEligible: reference-catalog target roles and locations reach the embedded text (not just free-text custom_* fields)", async () => {
+  const { data: role, error: roleError } = await adminClient
+    .from("target_roles")
+    .select("slug, name")
+    .eq("is_active", true)
+    .limit(1)
+    .single();
+  assert.equal(roleError, null, `target_roles fixture lookup failed: ${roleError?.message}`);
+
+  const { data: location, error: locationError } = await adminClient
+    .from("locations")
+    .select("slug, name")
+    .eq("is_active", true)
+    .eq("is_relocation_market", false)
+    .limit(1)
+    .single();
+  assert.equal(locationError, null, `locations fixture lookup failed: ${locationError?.message}`);
+
+  const { error: prefsError } = await user.client.rpc("save_job_preferences", {
+    p_work_arrangement: "remote",
+    p_job_type: "full-time",
+    p_experience_level: "junior",
+    p_additional_notes: null,
+    p_custom_target_roles: [],
+    p_custom_locations: [],
+    p_target_role_ids: [role.slug],
+    p_location_ids: [location.slug],
+    p_lebanon_location_scope: "selected_only",
+  });
+  assert.equal(prefsError, null, `save_job_preferences failed: ${prefsError?.message}`);
+
+  const cv = await uploadFakeCv(user, "matching-embed-reference-prefs.pdf");
+  const analysis = await insertFakeAnalysis(user, cv.id);
+  const { data: approved, error: confirmError } = await user.client.rpc("confirm_cv_analysis", { p_analysis_id: analysis.id });
+  assert.equal(confirmError, null, `confirm_cv_analysis failed: ${confirmError?.message}`);
+
+  const generator = capturingGenerator();
+  const result = await embedProfileIfEligible(adminClient, approved.id, generator.fn);
+  assert.deepEqual(result, { updated: true, reason: "embedded" });
+
+  const embeddedText = generator.lastText();
+  assert.ok(embeddedText.includes(role.name), `embedded text must include the reference-selected target role "${role.name}"`);
+  assert.ok(embeddedText.includes(location.name), `embedded text must include the reference-selected location "${location.name}"`);
 });
 
 test("shortlistJobsForUser: filters by hard eligibility and ranks the rest by similarity", async () => {

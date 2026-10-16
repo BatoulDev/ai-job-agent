@@ -101,7 +101,21 @@ const KNOWN_COUNTRIES: Array<{ countryCode: string; aliases: string[] }> = [
   { countryCode: "QA", aliases: ["qatar"] },
   { countryCode: "KW", aliases: ["kuwait"] },
   { countryCode: "AE", aliases: ["united arab emirates", "u.a.e.", "uae"] },
-  { countryCode: "US", aliases: ["united states", "u.s.a.", "usa", "us only"] },
+  {
+    countryCode: "US",
+    // Full state names only — never bare 2-letter abbreviations (PA/TN/OH/
+    // NH), which collide as naive substrings with unrelated real city names
+    // (e.g. "oh" inside "Doha") under this function's plain .includes()
+    // matching. These four specifically guard against real US towns that
+    // share Lebanon's country name (Lebanon, PA/TN/OH/NH) wrongly resolving
+    // to countryCode "LB" — found during the LinkedIn Lebanon pilot's
+    // geographic-validation pass (docs/LEBANON_LIVE_SOURCE_EXPANSION.md
+    // §12). A bare-abbreviation-only location (no full state name, no
+    // "United States") remains an unfixed, documented residual risk — never
+    // observed in real LinkedIn data, which consistently spells out the
+    // full region/country in its location breadcrumb.
+    aliases: ["united states", "u.s.a.", "usa", "us only", "pennsylvania", "tennessee", "ohio", "new hampshire"],
+  },
   { countryCode: "GB", aliases: ["united kingdom", "u.k.", "uk only"] },
   { countryCode: "CA", aliases: ["canada"] },
   { countryCode: "DE", aliases: ["germany"] },

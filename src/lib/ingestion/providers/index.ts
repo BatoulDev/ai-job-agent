@@ -34,6 +34,7 @@ import { mapAdzunaJob, type AdzunaRawJob } from "./adzuna.ts";
 import { mapBaytJob, type BaytRawJob } from "./bayt.ts";
 import { mapGulfTalentJob, type GulfTalentRawJob } from "./gulftalent.ts";
 import { mapIndeedJob, type IndeedRawJob } from "./indeed.ts";
+import { mapLinkedInJob, type LinkedInRawJob } from "./linkedin.ts";
 
 export type ProviderAdapter = (raw: unknown) => RawProviderJob;
 
@@ -61,6 +62,12 @@ export const PROVIDER_ADAPTERS: Partial<Record<JobSourceType, ProviderAdapter>> 
   bayt: (raw) => mapBaytJob(raw as BaytRawJob),
   gulftalent: (raw) => mapGulfTalentJob(raw as GulfTalentRawJob),
   indeed: (raw) => mapIndeedJob(raw as IndeedRawJob),
+  // linkedin: registered so the adapter contract is complete and
+  // testable, but providerConfig.ts keeps it enabled:false (AGENTS.md
+  // §35 rule 6/10 — pilot review + explicit human approval required
+  // before any production enablement) and run-multi-company-batch's
+  // allowlist only accepts it for the bounded Lebanon pilot path.
+  linkedin: (raw) => mapLinkedInJob(raw as LinkedInRawJob),
   career_page: (raw) => raw as RawProviderJob,
 };
 

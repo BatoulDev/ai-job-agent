@@ -409,7 +409,24 @@ deno_version = 2
 # secret_key = "env(SECRET_VALUE)"
 
 [analytics]
-enabled = true
+# Disabled on this local dev host (2026-10-11): the generated Vector sidecar
+# (supabase_vector_ai-job-agent) collects container logs via Docker's TCP
+# API (DOCKER_HOST=http://host.docker.internal:2375), which Docker Desktop
+# does not expose by default (the "Expose daemon on tcp://localhost:2375
+# without TLS" setting is off, correctly, for security) and which this task
+# deliberately does not enable. Vector crash-looped instantly on every
+# startup (ConnectionRefused) because it treats that one failing source as
+# fatal and exits the whole process; Docker's `unless-stopped` restart
+# policy then relaunched it every ~60s indefinitely (341 restarts observed).
+# Confirmed purely a logging/observability sidecar: Postgres, Auth, Storage,
+# Kong/REST, Realtime, and n8n connectivity all ran with 10h+ continuous
+# uptime throughout, unaffected. Disabling analytics (which also stops the
+# now-pointless Logflare container vector would have fed) is the narrowest
+# fix that doesn't require exposing the Docker daemon over insecure TCP or
+# mounting a host socket into the container. Takes effect on the next
+# `supabase stop && supabase start` cycle — re-enable by setting this back
+# to true if Docker Desktop's TCP daemon exposure is ever turned on.
+enabled = false
 port = 55327
 # Configure one of the supported backends: `postgres`, `bigquery`.
 backend = "postgres"
