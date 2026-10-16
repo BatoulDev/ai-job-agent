@@ -6,6 +6,47 @@ const startTrigger = trigger({
   config: { name: 'Start Job Ingestion Run' },
 });
 
+// Production daily cadence (added once the LinkedIn enrichment branch's
+// production-readiness audit closed out — see this workflow's own overview
+// sticky note: "stays inactive until a human reviews a run and decides on a
+// schedule"). Kept alongside the Manual Trigger deliberately, exactly the
+// same reasoning already used for Source Intelligence Analyzer's own
+// Schedule Trigger: an operator still needs a no-wait way to run one
+// controlled batch for testing/admin use. Both triggers feed the same
+// Workflow Configuration node and fire independent executions — they never
+// conflict with or duplicate each other.
+//
+// TIMEZONE (confirmed, same gap already documented in
+// source-intelligence-analyzer.ts's own Schedule Trigger): the Schedule
+// Trigger node's own parameters (ScheduleTriggerV13Params) have no
+// timezone field at all — triggerAtHour/triggerAtMinute are always
+// interpreted in the WORKFLOW's own settings.timezone (falling back to the
+// n8n instance's GENERIC_TIMEZONE, then UTC, if unset). Neither the n8n
+// Workflow SDK nor n8n-mcp's update_workflow exposes a
+// setWorkflowSettings-equivalent operation for settings.timezone — the
+// exact same confirmed tool limitation as errorWorkflow attachment, which
+// also had to be set once, by hand, in the n8n UI. triggerAtHour:9/
+// triggerAtMinute:0 below is only genuinely "09:00 Asia/Beirut" once a human sets
+// this workflow's own Settings → Timezone → Asia/Beirut in the n8n UI —
+// using the real IANA identifier there (not a fixed UTC offset) is what
+// makes Lebanon's DST transitions resolve correctly automatically; a
+// hardcoded offset would silently drift by an hour across DST boundaries.
+// Until that manual step is done, this instance has no GENERIC_TIMEZONE
+// set either, so 9/0 would otherwise resolve to 09:00 UTC, not Beirut time.
+const dailyBeirutTrigger = trigger({
+  type: 'n8n-nodes-base.scheduleTrigger',
+  version: 1.3,
+  config: {
+    name: 'Daily 09:00 Beirut Trigger',
+    parameters: {
+      rule: {
+        interval: [{ field: 'days', daysInterval: 1, triggerAtHour: 9, triggerAtMinute: 0 }],
+      },
+    },
+  },
+  output: [{}],
+});
+
 const workflowConfiguration = node({
   type: 'n8n-nodes-base.set',
   version: 3.4,
@@ -1813,6 +1854,12 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
   .to(workflowConfiguration)
   .to(listIngestionSources.onError(logListSourcesFailure))
   .to(splitOutSources)
+
+  // Daily production cadence — independent entry point, converges on the
+  // exact same Workflow Configuration node the Manual Trigger feeds (see
+  // dailyBeirutTrigger's own comment for the timezone caveat).
+  .add(dailyBeirutTrigger)
+  .to(workflowConfiguration)
   .to(
     loopSources.onEachBatch(
       fetchSourceJobs

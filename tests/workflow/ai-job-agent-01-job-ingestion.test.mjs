@@ -64,10 +64,11 @@ test('workflow is inactive in JSON', () => {
   assert.equal(wf.active, false, 'Workflow must remain inactive until a human reviews a real run');
 });
 
-test('exactly one Manual Trigger, no Schedule Trigger', () => {
-  const triggers = wf.nodes.filter((n) => n.type === 'n8n-nodes-base.manualTrigger');
-  assert.equal(triggers.length, 1);
-  assert.ok(!wf.nodes.some((n) => n.type === 'n8n-nodes-base.scheduleTrigger'), 'must not include a Schedule Trigger this phase');
+test('exactly one Manual Trigger and exactly one Schedule Trigger (production daily cadence, added alongside the manual entry point for testing/admin use)', () => {
+  const manualTriggers = wf.nodes.filter((n) => n.type === 'n8n-nodes-base.manualTrigger');
+  assert.equal(manualTriggers.length, 1);
+  const scheduleTriggers = wf.nodes.filter((n) => n.type === 'n8n-nodes-base.scheduleTrigger');
+  assert.equal(scheduleTriggers.length, 1, 'exactly one Schedule Trigger — the daily production cadence');
 });
 
 test('no Supabase HTTP calls — persistence is fully delegated to the internal endpoint', () => {
@@ -288,8 +289,8 @@ test('the Tier-B loop batches one candidate at a time', () => {
   assertBatchesOneAtATime(findNode('Loop Career Page Candidates (Rate Limited)'));
 });
 
-test('exactly 76 nodes total, matching the live, MCP-synced workflow (adds the LinkedIn data-slayer enrichment branch — 15 nodes + 1 sticky — and the previously-missing Apify multi-company sticky note, on top of the 59-node Phase 21 baseline)', () => {
-  assert.equal(wf.nodes.length, 76);
+test('exactly 77 nodes total, matching the live, MCP-synced workflow (76 from the production-readiness audit + 1 new Schedule Trigger for the daily production cadence)', () => {
+  assert.equal(wf.nodes.length, 77);
 });
 
 test('Apify multi-company branch (Phase 21) is fully isolated — its own seed, split, loop, actor call, aggregate, batch endpoint, success/failure builders, and rate limiter', () => {
@@ -423,4 +424,50 @@ test('the LinkedIn branch has no loop/rate-limit-delay node — one run is alrea
     (n) => n.type === 'n8n-nodes-base.splitInBatches' && n.name.toLowerCase().includes('linkedin')
   );
   assert.equal(splitBatchesNearLinkedIn.length, 0, 'List LinkedIn Enrichment Queue already bounds one run to one batch — no fan-out loop is needed or present');
+});
+
+// ── Daily production Schedule Trigger ──────────────────────────────────
+// Added once the production-readiness audit (and the explicit, approved
+// bounded LinkedIn pilot decision) closed out — see this workflow's own
+// overview sticky note: "stays inactive until a human reviews a run and
+// decides on a schedule." Kept alongside the Manual Trigger, never
+// replacing it, mirroring the exact same pattern already proven in
+// source-intelligence-analyzer.ts/.test.mjs.
+
+test('Daily 09:00 Beirut Trigger exists as a real Schedule Trigger node, alongside (never instead of) Start Job Ingestion Run', () => {
+  const schedule = findNode('Daily 09:00 Beirut Trigger');
+  assert.equal(schedule.type, 'n8n-nodes-base.scheduleTrigger');
+  findNode('Start Job Ingestion Run');
+});
+
+test('the schedule rule is daily at 09:00 (hour/minute), not a cron expression and not some other interval unit', () => {
+  const schedule = findNode('Daily 09:00 Beirut Trigger');
+  const rule = schedule.parameters.rule.interval[0];
+  assert.equal(rule.field, 'days', 'must be a days-interval rule, not seconds/minutes/hours/weeks/months/cronExpression');
+  assert.equal(rule.daysInterval, 1, 'must fire every day, not every N days');
+  assert.equal(rule.triggerAtHour, 9);
+  assert.equal(rule.triggerAtMinute, 0);
+});
+
+test('both the Manual Trigger and the Schedule Trigger converge on the same Workflow Configuration node — two independent entry points, one pipeline', () => {
+  assert.ok(wf.connections['Start Job Ingestion Run']?.main?.[0]?.some((c) => c.node === 'Workflow Configuration'), 'Manual Trigger must still feed Workflow Configuration');
+  assert.ok(wf.connections['Daily 09:00 Beirut Trigger']?.main?.[0]?.some((c) => c.node === 'Workflow Configuration'), 'Schedule Trigger must feed Workflow Configuration');
+});
+
+test('adding the Schedule Trigger did not change Workflow Configuration\'s own downstream fan-out — still exactly the 3 existing branches', () => {
+  const fanOut = wf.connections['Workflow Configuration']?.main?.[0] ?? [];
+  assert.equal(fanOut.length, 3, 'Workflow Configuration must still fan out to exactly 3 branches (List Ingestion Sources, Apify Multi-Company Source Seeds, List LinkedIn Enrichment Queue) — adding a second trigger upstream must never add a new downstream branch');
+  assert.ok(fanOut.some((c) => c.node === 'List Ingestion Sources'));
+  assert.ok(fanOut.some((c) => c.node === 'Apify Multi-Company Source Seeds'));
+  assert.ok(fanOut.some((c) => c.node === 'List LinkedIn Enrichment Queue'));
+});
+
+test('workflow-level timezone: if set, must be the real IANA identifier Asia/Beirut (never a fixed UTC offset, so Lebanon\'s DST transitions resolve automatically); if unset, this is the documented, still-pending manual n8n UI step (same confirmed SDK/MCP limitation as Error Workflow attachment — see the trigger node\'s own notes)', () => {
+  if (wf.settings.timezone !== undefined) {
+    assert.equal(wf.settings.timezone, 'Asia/Beirut');
+  }
+});
+
+test('the workflow remains inactive after adding the production schedule — going live is still a separate, explicit decision', () => {
+  assert.equal(wf.active, false);
 });

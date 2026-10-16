@@ -2817,6 +2817,29 @@
         320,
         2912
       ]
+    },
+    {
+      "id": "29405a73-06a2-4a41-90fc-0ef36e67c19b",
+      "name": "Daily 09:00 Beirut Trigger",
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        0,
+        650
+      ],
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "days",
+              "daysInterval": 1,
+              "triggerAtHour": 9,
+              "triggerAtMinute": 0
+            }
+          ]
+        }
+      },
+      "notes": "Production daily cadence. TIMEZONE: this node's own parameters have no timezone field — triggerAtHour/triggerAtMinute are interpreted using this WORKFLOW's own Settings → Timezone (falls back to the n8n instance's GENERIC_TIMEZONE, then UTC, if unset). Neither the n8n Workflow SDK nor n8n-mcp's update_workflow exposes a way to set workflow-level settings.timezone — confirmed, same category of manual-only limitation as this workflow's Error Workflow attachment. For 9/0 below to mean real 09:00 Asia/Beirut (with correct automatic DST handling), a human must set this workflow's own Settings → Timezone → Asia/Beirut once in the n8n UI. Until then this resolves to 09:00 UTC, not Beirut time."
     }
   ],
   "connections": {
@@ -3794,11 +3817,25 @@
           }
         ]
       ]
+    },
+    "Daily 09:00 Beirut Trigger": {
+      "main": [
+        [
+          {
+            "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": true
+    "availableInMCP": true,
+    "timeSavedMode": "fixed",
+    "errorWorkflow": "GRkqmVu5eWZdKRyU",
+    "callerPolicy": "workflowsFromSameOwner"
   }
 }
