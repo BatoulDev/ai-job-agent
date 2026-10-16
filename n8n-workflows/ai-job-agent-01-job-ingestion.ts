@@ -1231,14 +1231,18 @@ const apifyMultiCompanyNote = sticky(
 // ─────────────────────────────────────────────────────────────────────────
 
 // Every terminal path on this branch reports the exact same observability
-// shape (13 counters + error) — unset fields are always written as their
-// 0/false default, never omitted, so a dashboard reading this run's Record
-// node never sees an undefined field depending on which path was taken.
-// n8n Workflow SDK code does not allow top-level helper functions
-// (confirmed via validate_workflow — both a function declaration and an
-// arrow-function const are rejected as unsupported syntax), so each node
-// below writes its own full 14-entry assignments array literal rather than
-// calling a shared builder.
+// shape (19 counters + error — 13 from the original design, plus 6 added in
+// the 2026-10-16 production-readiness audit: jobs_skipped_not_eligible,
+// jobs_validation_failed, jobs_provider_failure, identity_mismatch_count,
+// employment_type_conflict_count, schema_drift_warning_count — see Build
+// Enrichment Success Result's own comment for why) — unset fields are
+// always written as their 0/false default, never omitted, so a dashboard
+// reading this run's Record node never sees an undefined field depending
+// on which path was taken. n8n Workflow SDK code does not allow top-level
+// helper functions (confirmed via validate_workflow — both a function
+// declaration and an arrow-function const are rejected as unsupported
+// syntax), so each node below writes its own full assignments array
+// literal rather than calling a shared builder.
 
 const listLinkedInEnrichmentQueue = node({
   type: 'n8n-nodes-base.httpRequest',
@@ -1293,6 +1297,12 @@ const logListQueueFailure = node({
           { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
           { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
           { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          { id: 'jobs_skipped_not_eligible', name: 'jobs_skipped_not_eligible', value: 0, type: 'number' },
+          { id: 'jobs_validation_failed', name: 'jobs_validation_failed', value: 0, type: 'number' },
+          { id: 'jobs_provider_failure', name: 'jobs_provider_failure', value: 0, type: 'number' },
+          { id: 'identity_mismatch_count', name: 'identity_mismatch_count', value: 0, type: 'number' },
+          { id: 'employment_type_conflict_count', name: 'employment_type_conflict_count', value: 0, type: 'number' },
+          { id: 'schema_drift_warning_count', name: 'schema_drift_warning_count', value: 0, type: 'number' },
           { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'list-linkedin-enrichment-queue call failed' }}"), type: 'string' },
         ],
       },
@@ -1347,6 +1357,12 @@ const buildNoEligibleJobsResult = node({
           { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
           { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
           { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          { id: 'jobs_skipped_not_eligible', name: 'jobs_skipped_not_eligible', value: 0, type: 'number' },
+          { id: 'jobs_validation_failed', name: 'jobs_validation_failed', value: 0, type: 'number' },
+          { id: 'jobs_provider_failure', name: 'jobs_provider_failure', value: 0, type: 'number' },
+          { id: 'identity_mismatch_count', name: 'identity_mismatch_count', value: 0, type: 'number' },
+          { id: 'employment_type_conflict_count', name: 'employment_type_conflict_count', value: 0, type: 'number' },
+          { id: 'schema_drift_warning_count', name: 'schema_drift_warning_count', value: 0, type: 'number' },
           { id: 'error', name: 'error', value: null, type: 'string' },
         ],
       },
@@ -1545,6 +1561,12 @@ const buildActorFailureResult = node({
           { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
           { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
           { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          { id: 'jobs_skipped_not_eligible', name: 'jobs_skipped_not_eligible', value: 0, type: 'number' },
+          { id: 'jobs_validation_failed', name: 'jobs_validation_failed', value: 0, type: 'number' },
+          { id: 'jobs_provider_failure', name: 'jobs_provider_failure', value: 0, type: 'number' },
+          { id: 'identity_mismatch_count', name: 'identity_mismatch_count', value: 0, type: 'number' },
+          { id: 'employment_type_conflict_count', name: 'employment_type_conflict_count', value: 0, type: 'number' },
+          { id: 'schema_drift_warning_count', name: 'schema_drift_warning_count', value: 0, type: 'number' },
           { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'data-slayer actor call failed' }}"), type: 'string' },
         ],
       },
@@ -1604,7 +1626,28 @@ const callLinkedInEnrichmentBatchEndpoint = node({
     },
     credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
   },
-  output: [{ jobsRequested: 2, jobsUpdated: 2, jobsProviderFailure: 0, structuredWaPresentCount: 1, structuredWaEmptyCount: 1, classifierFallbackUsedCount: 0, finalWaUnresolvedCount: 0 }],
+  // Full real response shape (applyLinkedInEnrichmentBatch.ts's
+  // LinkedInEnrichmentBatchResult) — kept complete, not just the fields
+  // Build Enrichment Success Result happens to read, so validate_workflow's
+  // static expression-path check can see every field a future node might
+  // need without a false "no predecessor outputs this field" warning.
+  output: [
+    {
+      jobsRequested: 2,
+      jobsSkippedNotEligible: 0,
+      jobsUpdated: 2,
+      jobsValidationFailed: 0,
+      jobsProviderFailure: 0,
+      identityMismatchCount: 0,
+      structuredWaPresentCount: 1,
+      structuredWaEmptyCount: 1,
+      classifierFallbackUsedCount: 0,
+      finalWaUnresolvedCount: 0,
+      employmentTypeFilledCount: 0,
+      employmentTypeConflictCount: 0,
+      schemaDriftWarnings: [],
+    },
+  ],
 });
 
 const buildApplyCallFailureResult = node({
@@ -1640,6 +1683,12 @@ const buildApplyCallFailureResult = node({
           { id: 'structured_wa_present', name: 'structured_wa_present', value: 0, type: 'number' },
           { id: 'structured_wa_empty', name: 'structured_wa_empty', value: 0, type: 'number' },
           { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: 0, type: 'number' },
+          { id: 'jobs_skipped_not_eligible', name: 'jobs_skipped_not_eligible', value: 0, type: 'number' },
+          { id: 'jobs_validation_failed', name: 'jobs_validation_failed', value: 0, type: 'number' },
+          { id: 'jobs_provider_failure', name: 'jobs_provider_failure', value: 0, type: 'number' },
+          { id: 'identity_mismatch_count', name: 'identity_mismatch_count', value: 0, type: 'number' },
+          { id: 'employment_type_conflict_count', name: 'employment_type_conflict_count', value: 0, type: 'number' },
+          { id: 'schema_drift_warning_count', name: 'schema_drift_warning_count', value: 0, type: 'number' },
           { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'run-linkedin-enrichment-batch call failed' }}"), type: 'string' },
         ],
       },
@@ -1685,12 +1734,41 @@ const buildEnrichmentSuccessResult = node({
           { id: 'structured_wa_present', name: 'structured_wa_present', value: expr('{{ $json.structuredWaPresentCount }}'), type: 'number' },
           { id: 'structured_wa_empty', name: 'structured_wa_empty', value: expr('{{ $json.structuredWaEmptyCount }}'), type: 'number' },
           { id: 'final_wa_unresolved', name: 'final_wa_unresolved', value: expr('{{ $json.finalWaUnresolvedCount }}'), type: 'number' },
+          // Added in the 2026-10-16 production-readiness audit: the apply
+          // endpoint (applyLinkedInEnrichmentBatch.ts) already computes
+          // these — a real degradation (many skipped/validation-failed/
+          // provider-failure items) previously had no visible counter at
+          // all, so a run with e.g. 20/25 skipped and 5 updated looked
+          // identical in this node's own execution history to a clean
+          // 5-requested/5-updated run. Pure pass-through, zero behavior
+          // change — same discipline as the 13 counters above it.
+          { id: 'jobs_skipped_not_eligible', name: 'jobs_skipped_not_eligible', value: expr('{{ $json.jobsSkippedNotEligible }}'), type: 'number' },
+          { id: 'jobs_validation_failed', name: 'jobs_validation_failed', value: expr('{{ $json.jobsValidationFailed }}'), type: 'number' },
+          { id: 'jobs_provider_failure', name: 'jobs_provider_failure', value: expr('{{ $json.jobsProviderFailure }}'), type: 'number' },
+          { id: 'identity_mismatch_count', name: 'identity_mismatch_count', value: expr('{{ $json.identityMismatchCount }}'), type: 'number' },
+          { id: 'employment_type_conflict_count', name: 'employment_type_conflict_count', value: expr('{{ $json.employmentTypeConflictCount }}'), type: 'number' },
+          { id: 'schema_drift_warning_count', name: 'schema_drift_warning_count', value: expr('{{ $json.schemaDriftWarnings.length }}'), type: 'number' },
           { id: 'error', name: 'error', value: null, type: 'string' },
         ],
       },
     },
   },
-  output: [{ eligible_jobs: 2, enrichment_jobs_updated: 2, structured_wa_present: 1, structured_wa_empty: 1, final_wa_unresolved: 0, error: null }],
+  output: [
+    {
+      eligible_jobs: 2,
+      enrichment_jobs_updated: 2,
+      structured_wa_present: 1,
+      structured_wa_empty: 1,
+      final_wa_unresolved: 0,
+      jobs_skipped_not_eligible: 0,
+      jobs_validation_failed: 0,
+      jobs_provider_failure: 0,
+      identity_mismatch_count: 0,
+      employment_type_conflict_count: 0,
+      schema_drift_warning_count: 0,
+      error: null,
+    },
+  ],
 });
 
 const recordLinkedInEnrichmentResult = node({

@@ -4,6 +4,7 @@
   "description": "Manual trigger, dryRun-default job ingestion. n8n owns provider HTTP fetch/retry/rate-limiting for sources discovered dynamically from company_sources (Phase 12) across three tiers (Phase 13): company-specific ATS, multi-company feeds, career-page extraction. TypeScript owns validation, dedup, persistence via three internal endpoints.",
   "nodes": [
     {
+      "parameters": {},
       "id": "28d0b4de-d306-42c0-8514-9cc716903e2d",
       "name": "Start Job Ingestion Run",
       "type": "n8n-nodes-base.manualTrigger",
@@ -11,10 +12,14 @@
       "position": [
         0,
         464
-      ],
-      "parameters": {}
+      ]
     },
     {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"appBaseUrl\":\"http://host.docker.internal:3000\",\"maxJobsPerSource\":50,\"rateLimitDelaySeconds\":2,\"dryRun\":false}",
+        "options": {}
+      },
       "id": "d4bdc059-5b22-4207-824c-2f5732cd19f5",
       "name": "Workflow Configuration",
       "type": "n8n-nodes-base.set",
@@ -22,13 +27,21 @@
       "position": [
         224,
         464
-      ],
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "{\"appBaseUrl\":\"http://host.docker.internal:3000\",\"maxJobsPerSource\":50,\"rateLimitDelaySeconds\":2,\"dryRun\":false}"
-      }
+      ]
     },
     {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.appBaseUrl }}/api/internal/ingestion/list-sources",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
       "id": "1c8f91ea-3733-4ebf-8b98-a15db4319a4f",
       "name": "List Ingestion Sources",
       "type": "n8n-nodes-base.httpRequest",
@@ -37,42 +50,14 @@
         448,
         464
       ],
-      "notes": "Discovers verified, automatable company_sources rows dynamically (Phase 12), plus enabled multi-company feed providers and career-page extraction candidates (Phase 13). See src/lib/ingestion/findEligibleCompanySources.ts, multiCompanyFeedUrls.ts, findCareerPageExtractionCandidates.ts.",
-      "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $json.appBaseUrl }}/api/internal/ingestion/list-sources",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ {} }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "credentials": {
-        "httpBearerAuth": {
-          "name": "Ingestion Worker Secret"
-        }
-      }
+      "onError": "continueErrorOutput",
+      "notes": "Discovers verified, automatable company_sources rows dynamically (Phase 12), plus enabled multi-company feed providers and career-page extraction candidates (Phase 13). See src/lib/ingestion/findEligibleCompanySources.ts, multiCompanyFeedUrls.ts, findCareerPageExtractionCandidates.ts."
     },
     {
-      "id": "d2f4f123-d797-4606-b204-654e81ad70af",
-      "name": "Log List Sources Failure",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        448,
-        650
-      ],
-      "notes": "Terminal failure for this run — nothing to loop over if source discovery itself failed. A human reviews the n8n execution log.",
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -82,10 +67,24 @@
               "type": "string"
             }
           ]
-        }
-      }
+        },
+        "options": {}
+      },
+      "id": "d2f4f123-d797-4606-b204-654e81ad70af",
+      "name": "Log List Sources Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        656
+      ],
+      "notes": "Terminal failure for this run — nothing to loop over if source discovery itself failed. A human reviews the n8n execution log."
     },
     {
+      "parameters": {
+        "fieldToSplitOut": "sources",
+        "options": {}
+      },
       "id": "307af5a9-520d-4788-8ff3-5db314be4043",
       "name": "Split Out Sources",
       "type": "n8n-nodes-base.splitOut",
@@ -93,12 +92,12 @@
       "position": [
         672,
         464
-      ],
-      "parameters": {
-        "fieldToSplitOut": "sources"
-      }
+      ]
     },
     {
+      "parameters": {
+        "options": {}
+      },
       "id": "d4fda19b-89d0-4ce7-99d4-6df854e6e147",
       "name": "Loop Sources (Rate Limited)",
       "type": "n8n-nodes-base.splitInBatches",
@@ -106,12 +105,15 @@
       "position": [
         896,
         464
-      ],
-      "parameters": {
-        "batchSize": 1
-      }
+      ]
     },
     {
+      "parameters": {
+        "url": "={{ $json.feed_url }}",
+        "options": {
+          "timeout": 15000
+        }
+      },
       "id": "77446e74-48d1-4334-bcb8-912b4f85f219",
       "name": "Fetch Source Jobs",
       "type": "n8n-nodes-base.httpRequest",
@@ -120,33 +122,16 @@
         1120,
         464
       ],
-      "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 4,
       "waitBetweenTries": 5000,
-      "parameters": {
-        "method": "GET",
-        "url": "={{ $json.feed_url }}",
-        "authentication": "none",
-        "options": {
-          "timeout": 15000
-        }
-      }
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "59497294-33fe-4800-ab9e-dba98d8bead4",
-      "name": "Extract Jobs By ATS Type",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.4,
-      "position": [
-        1344,
-        240
-      ],
       "parameters": {
         "rules": {
           "values": [
             {
-              "outputKey": "greenhouse",
               "conditions": {
                 "options": {
                   "caseSensitive": true,
@@ -168,7 +153,6 @@
               }
             },
             {
-              "outputKey": "lever",
               "conditions": {
                 "options": {
                   "caseSensitive": true,
@@ -190,7 +174,6 @@
               }
             },
             {
-              "outputKey": "workable",
               "conditions": {
                 "options": {
                   "caseSensitive": true,
@@ -212,7 +195,6 @@
               }
             },
             {
-              "outputKey": "ashby",
               "conditions": {
                 "options": {
                   "caseSensitive": true,
@@ -234,7 +216,6 @@
               }
             },
             {
-              "outputKey": "oracle_hcm",
               "conditions": {
                 "options": {
                   "caseSensitive": true,
@@ -261,9 +242,30 @@
           "fallbackOutput": "extra",
           "renameFallbackOutput": "Unsupported"
         }
-      }
+      },
+      "id": "59497294-33fe-4800-ab9e-dba98d8bead4",
+      "name": "Extract Jobs By ATS Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1056,
+        128
+      ]
     },
     {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rawJobs",
+              "name": "rawJobs",
+              "value": "={{ $json.jobs }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
       "id": "13d5c141-3dc5-4dbb-8ef3-d5e7dfffc1de",
       "name": "Extract Greenhouse Jobs",
       "type": "n8n-nodes-base.set",
@@ -272,22 +274,14 @@
         1568,
         0
       ],
-      "onError": "continueErrorOutput",
-      "parameters": {
-        "mode": "manual",
-        "assignments": {
-          "assignments": [
-            {
-              "id": "rawJobs",
-              "name": "rawJobs",
-              "value": "={{ $json.jobs }}",
-              "type": "array"
-            }
-          ]
-        }
-      }
+      "onError": "continueErrorOutput"
     },
     {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "options": {}
+      },
       "id": "2920673b-d3dd-4b23-8213-e023af9f01d9",
       "name": "Aggregate Lever Jobs",
       "type": "n8n-nodes-base.aggregate",
@@ -296,14 +290,22 @@
         1392,
         192
       ],
-      "notes": "Phase 14 fix. Lever's postings API returns a bare top-level JSON array, so n8n's core JSON-to-items conversion auto-splits it into one item per job (confirmed live: a real 21-job response from Wahed's board produced 21 separate items reaching this branch, each individually failing Extract Lever Jobs's old 'rawJobs: $json' assumption that $json was still the whole array). Collects them back into one {jobs:[...]} item first, mirroring the same pattern already used for RemoteOK in the Tier-D branch below.",
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "jobs",
-        "include": "allFields"
-      }
+      "notes": "Phase 14 fix. Lever's postings API returns a bare top-level JSON array, so n8n's core JSON-to-items conversion auto-splits it into one item per job (confirmed live: a real 21-job response from Wahed's board produced 21 separate items reaching this branch, each individually failing Extract Lever Jobs's old 'rawJobs: $json' assumption that $json was still the whole array). Collects them back into one {jobs:[...]} item first, mirroring the same pattern already used for RemoteOK in the Tier-D branch below."
     },
     {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "rawJobs",
+              "name": "rawJobs",
+              "value": "={{ $json.jobs }}",
+              "type": "array"
+            }
+          ]
+        },
+        "options": {}
+      },
       "id": "f469d074-2d67-415a-8db0-16665a0be094",
       "name": "Extract Lever Jobs",
       "type": "n8n-nodes-base.set",
@@ -312,10 +314,11 @@
         1568,
         192
       ],
-      "notes": "Lever's postings API returns a bare top-level array, auto-split by n8n into one item per job — Aggregate Lever Jobs collects them back into a single {jobs:[...]} item before this node runs (Phase 14 fix; docs/job-ingestion-pilot.md §5).",
       "onError": "continueErrorOutput",
+      "notes": "Lever's postings API returns a bare top-level array, auto-split by n8n into one item per job — Aggregate Lever Jobs collects them back into a single {jobs:[...]} item before this node runs (Phase 14 fix; docs/job-ingestion-pilot.md §5)."
+    },
+    {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -325,10 +328,9 @@
               "type": "array"
             }
           ]
-        }
-      }
-    },
-    {
+        },
+        "options": {}
+      },
       "id": "dbec8e1b-8d46-422e-bd3a-25a3bced21ae",
       "name": "Extract Workable Jobs",
       "type": "n8n-nodes-base.set",
@@ -337,9 +339,10 @@
         1568,
         384
       ],
-      "onError": "continueErrorOutput",
+      "onError": "continueErrorOutput"
+    },
+    {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -349,10 +352,9 @@
               "type": "array"
             }
           ]
-        }
-      }
-    },
-    {
+        },
+        "options": {}
+      },
       "id": "2b33b8c5-650f-4e46-80c5-0ae40f441f89",
       "name": "Extract Ashby Jobs",
       "type": "n8n-nodes-base.set",
@@ -361,35 +363,11 @@
         1568,
         656
       ],
-      "notes": "Phase 13. Ashby posting-api returns {jobs:[...], apiVersion} — confirmed live against a real registry board (sr-qa-the-utopia-studio).",
       "onError": "continueErrorOutput",
-      "parameters": {
-        "mode": "manual",
-        "assignments": {
-          "assignments": [
-            {
-              "id": "rawJobs",
-              "name": "rawJobs",
-              "value": "={{ $json.jobs }}",
-              "type": "array"
-            }
-          ]
-        }
-      }
+      "notes": "Phase 13. Ashby posting-api returns {jobs:[...], apiVersion} — confirmed live against a real registry board (sr-qa-the-utopia-studio)."
     },
     {
-      "id": "ac4ae318-c432-457d-87b7-38334e71634f",
-      "name": "Extract Oracle HCM Jobs",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1568,
-        848
-      ],
-      "notes": "Phase 16. Confirmed live against a real registry tenant (AUBMC, Lebanon) — a direct unauthenticated GET to recruitingCEJobRequisitions returned real job data, and the derived candidate-facing URL returned a real 200 job page. See providers/oracle-hcm.ts and deriveAtsFeedUrl.ts.",
-      "onError": "continueErrorOutput",
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -399,10 +377,33 @@
               "value": "={{ (() => {\n  const feedUrl = $('Split Out Sources').item.json.feed_url;\n  const m = feedUrl.match(/^https:\\/\\/([^/]+)\\/hcmRestApi.*siteNumber=([A-Za-z0-9_]+)/);\n  const candidateSiteUrl = m ? `https://${m[1]}/hcmUI/CandidateExperience/en/sites/${m[2]}` : null;\n  const list = $json.items?.[0]?.requisitionList ?? [];\n  return list.map((job) => ({ ...job, candidateSiteUrl }));\n})() }}"
             }
           ]
-        }
-      }
+        },
+        "options": {}
+      },
+      "id": "ac4ae318-c432-457d-87b7-38334e71634f",
+      "name": "Extract Oracle HCM Jobs",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        848
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "Phase 16. Confirmed live against a real registry tenant (AUBMC, Lebanon) — a direct unauthenticated GET to recruitingCEJobRequisitions returned real job data, and the derived candidate-facing URL returned a real 200 job page. See providers/oracle-hcm.ts and deriveAtsFeedUrl.ts."
     },
     {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-batch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  sourceId: $('Split Out Sources').item.json.source_id,\n  sourceType: $('Split Out Sources').item.json.ats_type,\n  rawJobs: $json.rawJobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
       "id": "13dc2df2-1d01-47ed-8c86-63afdd9d47a3",
       "name": "Call Ingestion Batch Endpoint",
       "type": "n8n-nodes-base.httpRequest",
@@ -411,41 +412,13 @@
         1792,
         272
       ],
-      "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-batch",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ {\n  sourceId: $('Split Out Sources').item.json.source_id,\n  sourceType: $('Split Out Sources').item.json.ats_type,\n  rawJobs: $json.rawJobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "credentials": {
-        "httpBearerAuth": {
-          "name": "Ingestion Worker Secret"
-        }
-      }
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "dc6d5184-50ae-451c-a268-0a1a5a442ab1",
-      "name": "Build Success Result",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2016,
-        80
-      ],
       "parameters": {
-        "mode": "manual",
-        "includeOtherFields": true,
         "assignments": {
           "assignments": [
             {
@@ -473,20 +446,21 @@
               "type": "string"
             }
           ]
-        }
-      }
-    },
-    {
-      "id": "55d6fb05-dab5-4741-8cae-7f7710aaf32e",
-      "name": "Build Endpoint Failure Result",
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "dc6d5184-50ae-451c-a268-0a1a5a442ab1",
+      "name": "Build Success Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
         2016,
-        336
-      ],
+        80
+      ]
+    },
+    {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -556,20 +530,20 @@
               "type": "string"
             }
           ]
-        }
-      }
-    },
-    {
-      "id": "81b33b60-6761-4fa5-9139-bbef960bd5e2",
-      "name": "Build Unsupported Source Result",
+        },
+        "options": {}
+      },
+      "id": "55d6fb05-dab5-4741-8cae-7f7710aaf32e",
+      "name": "Build Endpoint Failure Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
         2016,
-        528
-      ],
+        336
+      ]
+    },
+    {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -639,20 +613,20 @@
               "type": "string"
             }
           ]
-        }
-      }
-    },
-    {
-      "id": "331b9cd7-c935-4a69-8c83-ada76644e42b",
-      "name": "Build Fetch Failure Result",
+        },
+        "options": {}
+      },
+      "id": "81b33b60-6761-4fa5-9139-bbef960bd5e2",
+      "name": "Build Unsupported Source Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
         2016,
-        720
-      ],
+        528
+      ]
+    },
+    {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -722,10 +696,26 @@
               "type": "string"
             }
           ]
-        }
-      }
+        },
+        "options": {}
+      },
+      "id": "331b9cd7-c935-4a69-8c83-ada76644e42b",
+      "name": "Build Fetch Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        720
+      ]
     },
     {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
       "id": "68f41690-5e23-475c-a9d2-bc564fd176a9",
       "name": "Record Source Result",
       "type": "n8n-nodes-base.set",
@@ -734,16 +724,12 @@
         2240,
         560
       ],
-      "notes": "Pure convergence point — every per-source path (success, fetch failure, endpoint-call failure, unsupported ats_type) lands here with the same shape. Each iteration's outcome is visible in this node's own execution history in the n8n UI (no combined summary node — see the overview sticky note).",
-      "parameters": {
-        "mode": "manual",
-        "includeOtherFields": true,
-        "assignments": {
-          "assignments": []
-        }
-      }
+      "notes": "Pure convergence point — every per-source path (success, fetch failure, endpoint-call failure, unsupported ats_type) lands here with the same shape. Each iteration's outcome is visible in this node's own execution history in the n8n UI (no combined summary node — see the overview sticky note)."
     },
     {
+      "parameters": {
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
+      },
       "id": "1a2dc791-515a-4552-be08-54b94e7fca9d",
       "name": "Rate Limit Delay",
       "type": "n8n-nodes-base.wait",
@@ -752,13 +738,13 @@
         2464,
         720
       ],
-      "parameters": {
-        "resume": "timeInterval",
-        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}",
-        "unit": "seconds"
-      }
+      "webhookId": "943f2759-7735-4399-92e9-2e4136942ee7"
     },
     {
+      "parameters": {
+        "fieldToSplitOut": "multi_company_sources",
+        "options": {}
+      },
       "id": "999d1624-0a08-4193-b798-38fba1b466b1",
       "name": "Split Out Multi-Company Sources",
       "type": "n8n-nodes-base.splitOut",
@@ -766,12 +752,12 @@
       "position": [
         672,
         1760
-      ],
-      "parameters": {
-        "fieldToSplitOut": "multi_company_sources"
-      }
+      ]
     },
     {
+      "parameters": {
+        "options": {}
+      },
       "id": "29d749a7-14c5-4ff1-976f-3705e127f1ef",
       "name": "Loop Multi-Company Sources (Rate Limited)",
       "type": "n8n-nodes-base.splitInBatches",
@@ -779,12 +765,15 @@
       "position": [
         896,
         1760
-      ],
-      "parameters": {
-        "batchSize": 1
-      }
+      ]
     },
     {
+      "parameters": {
+        "url": "={{ $json.feed_url }}",
+        "options": {
+          "timeout": 20000
+        }
+      },
       "id": "d2cd2f19-a0a1-414b-9661-64aa00518503",
       "name": "Fetch Multi-Company Feed",
       "type": "n8n-nodes-base.httpRequest",
@@ -793,34 +782,17 @@
         1120,
         1632
       ],
-      "notes": "First page only, deliberately — Arbeitnow is the only paginated provider here and its remote:true jobs are a small subset of page 1; native HTTP pagination was judged not worth the added complexity this phase. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md.",
-      "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 3,
       "waitBetweenTries": 5000,
-      "parameters": {
-        "method": "GET",
-        "url": "={{ $json.feed_url }}",
-        "authentication": "none",
-        "options": {
-          "timeout": 20000
-        }
-      }
+      "onError": "continueErrorOutput",
+      "notes": "First page only, deliberately — Arbeitnow is the only paginated provider here and its remote:true jobs are a small subset of page 1; native HTTP pagination was judged not worth the added complexity this phase. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md."
     },
     {
-      "id": "3633e94e-40f5-4e68-b6e7-c1d9b5721289",
-      "name": "Extract Raw Jobs By Provider Type",
-      "type": "n8n-nodes-base.switch",
-      "typeVersion": 3.4,
-      "position": [
-        1344,
-        1392
-      ],
       "parameters": {
         "rules": {
           "values": [
             {
-              "outputKey": "remoteok",
               "conditions": {
                 "options": {
                   "caseSensitive": true,
@@ -842,7 +814,6 @@
               }
             },
             {
-              "outputKey": "jobicy",
               "conditions": {
                 "options": {
                   "caseSensitive": true,
@@ -864,7 +835,6 @@
               }
             },
             {
-              "outputKey": "arbeitnow",
               "conditions": {
                 "options": {
                   "caseSensitive": true,
@@ -891,9 +861,22 @@
           "fallbackOutput": "extra",
           "renameFallbackOutput": "Unsupported"
         }
-      }
+      },
+      "id": "3633e94e-40f5-4e68-b6e7-c1d9b5721289",
+      "name": "Extract Raw Jobs By Provider Type",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        1392
+      ]
     },
     {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "options": {}
+      },
       "id": "9cd12bae-f6e6-4517-963b-6cebafe7a517",
       "name": "Aggregate RemoteOK Jobs",
       "type": "n8n-nodes-base.aggregate",
@@ -901,14 +884,13 @@
       "position": [
         2016,
         1200
-      ],
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "jobs",
-        "include": "allFields"
-      }
+      ]
     },
     {
+      "parameters": {
+        "fieldToSplitOut": "jobs",
+        "options": {}
+      },
       "id": "91995a16-7b5a-43bf-9749-68542aa6deff",
       "name": "Split Out Jobicy Jobs",
       "type": "n8n-nodes-base.splitOut",
@@ -916,12 +898,14 @@
       "position": [
         1792,
         1392
-      ],
-      "parameters": {
-        "fieldToSplitOut": "jobs"
-      }
+      ]
     },
     {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "options": {}
+      },
       "id": "40a546a6-a5a1-431c-a935-be7f0e3d230e",
       "name": "Aggregate Jobicy Jobs",
       "type": "n8n-nodes-base.aggregate",
@@ -929,14 +913,13 @@
       "position": [
         2016,
         1392
-      ],
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "jobs",
-        "include": "allFields"
-      }
+      ]
     },
     {
+      "parameters": {
+        "fieldToSplitOut": "data",
+        "options": {}
+      },
       "id": "c8a72873-2762-4a59-a7b1-2e68cd4e1ac2",
       "name": "Split Out Arbeitnow Jobs",
       "type": "n8n-nodes-base.splitOut",
@@ -944,21 +927,9 @@
       "position": [
         1568,
         1584
-      ],
-      "parameters": {
-        "fieldToSplitOut": "data"
-      }
+      ]
     },
     {
-      "id": "1f6cdc60-14cd-483d-989e-2a424d182cf7",
-      "name": "Filter Arbeitnow Remote Only",
-      "type": "n8n-nodes-base.filter",
-      "typeVersion": 2.3,
-      "position": [
-        1792,
-        1584
-      ],
-      "notes": "Arbeitnow's feed is dominated by DACH-region onsite listings — only remote:true rows are relevant to this project's international-remote lane (see docs/PROVIDER_EXPANSION_IMPLEMENTATION.md).",
       "parameters": {
         "conditions": {
           "options": {
@@ -980,9 +951,23 @@
           "combinator": "and"
         },
         "options": {}
-      }
+      },
+      "id": "1f6cdc60-14cd-483d-989e-2a424d182cf7",
+      "name": "Filter Arbeitnow Remote Only",
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.3,
+      "position": [
+        1792,
+        1584
+      ],
+      "notes": "Arbeitnow's feed is dominated by DACH-region onsite listings — only remote:true rows are relevant to this project's international-remote lane (see docs/PROVIDER_EXPANSION_IMPLEMENTATION.md)."
     },
     {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "options": {}
+      },
       "id": "3a676961-cf76-486c-8be9-7f48d8e177e8",
       "name": "Aggregate Arbeitnow Jobs",
       "type": "n8n-nodes-base.aggregate",
@@ -990,14 +975,21 @@
       "position": [
         2016,
         1584
-      ],
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "jobs",
-        "include": "allFields"
-      }
+      ]
     },
     {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  sourceType: $('Split Out Multi-Company Sources').item.json.provider_type,\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
       "id": "737e7914-81dc-45b9-b671-51c9e349eaf4",
       "name": "Call Multi-Company Batch Endpoint",
       "type": "n8n-nodes-base.httpRequest",
@@ -1006,41 +998,13 @@
         2240,
         1472
       ],
-      "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ {\n  sourceType: $('Split Out Multi-Company Sources').item.json.provider_type,\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "credentials": {
-        "httpBearerAuth": {
-          "name": "Ingestion Worker Secret"
-        }
-      }
+      "onError": "continueErrorOutput"
     },
     {
-      "id": "678a88a9-8302-433f-bfca-b4ac4b76f692",
-      "name": "Build Multi-Company Success Result",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2464,
-        1296
-      ],
       "parameters": {
-        "mode": "manual",
-        "includeOtherFields": true,
         "assignments": {
           "assignments": [
             {
@@ -1062,21 +1026,21 @@
               "type": "string"
             }
           ]
-        }
-      }
-    },
-    {
-      "id": "8385990d-777a-4c45-8377-73ca0c2b44d9",
-      "name": "Build Multi-Company Failure Result",
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "678a88a9-8302-433f-bfca-b4ac4b76f692",
+      "name": "Build Multi-Company Success Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
         2464,
-        1776
-      ],
-      "notes": "Shared failure builder for fetch failures, endpoint-call failures, and an unsupported provider_type (defensive — providerConfig.ts/multiCompanyFeedUrls.ts never actually emit one).",
+        1296
+      ]
+    },
+    {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -1098,10 +1062,27 @@
               "type": "string"
             }
           ]
-        }
-      }
+        },
+        "options": {}
+      },
+      "id": "8385990d-777a-4c45-8377-73ca0c2b44d9",
+      "name": "Build Multi-Company Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        1776
+      ],
+      "notes": "Shared failure builder for fetch failures, endpoint-call failures, and an unsupported provider_type (defensive — providerConfig.ts/multiCompanyFeedUrls.ts never actually emit one)."
     },
     {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
       "id": "8b6d5e43-98aa-432a-a3b1-e74c48e3ffa7",
       "name": "Record Multi-Company Source Result",
       "type": "n8n-nodes-base.set",
@@ -1110,16 +1091,12 @@
         2688,
         1568
       ],
-      "notes": "Convergence point for the Tier-D loop, same purpose as Record Source Result above — one execution-history entry per provider per run.",
-      "parameters": {
-        "mode": "manual",
-        "includeOtherFields": true,
-        "assignments": {
-          "assignments": []
-        }
-      }
+      "notes": "Convergence point for the Tier-D loop, same purpose as Record Source Result above — one execution-history entry per provider per run."
     },
     {
+      "parameters": {
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
+      },
       "id": "602f44b9-15cf-4411-a2e6-94322befc2bc",
       "name": "Multi-Company Rate Limit Delay",
       "type": "n8n-nodes-base.wait",
@@ -1128,13 +1105,13 @@
         2912,
         1680
       ],
-      "parameters": {
-        "resume": "timeInterval",
-        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}",
-        "unit": "seconds"
-      }
+      "webhookId": "4e5de9b1-210e-438e-8d30-3b6e960e5d81"
     },
     {
+      "parameters": {
+        "fieldToSplitOut": "career_page_candidates",
+        "options": {}
+      },
       "id": "ebe7a517-8794-415a-846c-ac6743409656",
       "name": "Split Out Career Page Candidates",
       "type": "n8n-nodes-base.splitOut",
@@ -1142,12 +1119,12 @@
       "position": [
         672,
         2432
-      ],
-      "parameters": {
-        "fieldToSplitOut": "career_page_candidates"
-      }
+      ]
     },
     {
+      "parameters": {
+        "options": {}
+      },
       "id": "ece9a1fd-28ca-4abc-9450-db0c4120bc9e",
       "name": "Loop Career Page Candidates (Rate Limited)",
       "type": "n8n-nodes-base.splitInBatches",
@@ -1155,30 +1132,12 @@
       "position": [
         896,
         2432
-      ],
-      "parameters": {
-        "batchSize": 1
-      }
+      ]
     },
     {
-      "id": "76acb9fe-b6d5-4975-960f-c8a04d1b2d9b",
-      "name": "Fetch Career Page HTML",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1120,
-        2304
-      ],
-      "onError": "continueErrorOutput",
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 5000,
       "parameters": {
-        "method": "GET",
         "url": "={{ $json.careers_url }}",
-        "authentication": "none",
         "sendHeaders": true,
-        "specifyHeaders": "keypair",
         "headerParameters": {
           "parameters": [
             {
@@ -1188,17 +1147,41 @@
           ]
         },
         "options": {
-          "timeout": 20000,
           "response": {
             "response": {
               "responseFormat": "text",
               "outputPropertyName": "html"
             }
-          }
+          },
+          "timeout": 20000
         }
-      }
+      },
+      "id": "76acb9fe-b6d5-4975-960f-c8a04d1b2d9b",
+      "name": "Fetch Career Page HTML",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        2304
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput"
     },
     {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/extract-career-page-jobs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { html: $json.html } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
       "id": "54b7713f-1471-4ab0-b643-26b33a2501bd",
       "name": "Call Extract Career Page Jobs Endpoint",
       "type": "n8n-nodes-base.httpRequest",
@@ -1207,30 +1190,24 @@
         1344,
         2208
       ],
-      "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput"
+    },
+    {
       "parameters": {
         "method": "POST",
-        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/extract-career-page-jobs",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-batch",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
-        "contentType": "json",
         "specifyBody": "json",
-        "jsonBody": "={{ { html: $json.html } }}",
+        "jsonBody": "={{ {\n  sourceId: $('Split Out Career Page Candidates').item.json.source_id,\n  sourceType: 'career_page',\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
         "options": {
           "timeout": 30000
         }
       },
-      "credentials": {
-        "httpBearerAuth": {
-          "name": "Ingestion Worker Secret"
-        }
-      }
-    },
-    {
       "id": "486ce5fe-e8bb-419e-afee-61c7d5d5f837",
       "name": "Call Career Page Ingestion Batch Endpoint",
       "type": "n8n-nodes-base.httpRequest",
@@ -1239,42 +1216,14 @@
         1568,
         2128
       ],
-      "notes": "Same shared run-batch endpoint Tier A calls — career_page is a company-specific source_type (jobs.source_type check constraint already allowed it before Phase 13).",
-      "onError": "continueErrorOutput",
       "retryOnFail": true,
       "maxTries": 2,
       "waitBetweenTries": 3000,
-      "parameters": {
-        "method": "POST",
-        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-batch",
-        "authentication": "genericCredentialType",
-        "genericAuthType": "httpBearerAuth",
-        "sendBody": true,
-        "contentType": "json",
-        "specifyBody": "json",
-        "jsonBody": "={{ {\n  sourceId: $('Split Out Career Page Candidates').item.json.source_id,\n  sourceType: 'career_page',\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
-        "options": {
-          "timeout": 30000
-        }
-      },
-      "credentials": {
-        "httpBearerAuth": {
-          "name": "Ingestion Worker Secret"
-        }
-      }
+      "onError": "continueErrorOutput",
+      "notes": "Same shared run-batch endpoint Tier A calls — career_page is a company-specific source_type (jobs.source_type check constraint already allowed it before Phase 13)."
     },
     {
-      "id": "d4561f32-8221-4b25-b3bb-c23dd789db32",
-      "name": "Build Career Page Success Result",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        1792,
-        2080
-      ],
       "parameters": {
-        "mode": "manual",
-        "includeOtherFields": true,
         "assignments": {
           "assignments": [
             {
@@ -1296,21 +1245,21 @@
               "type": "string"
             }
           ]
-        }
-      }
-    },
-    {
-      "id": "d8ecf68a-8f3d-4da1-b638-7ae03d8ff3cc",
-      "name": "Build Career Page Failure Result",
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "d4561f32-8221-4b25-b3bb-c23dd789db32",
+      "name": "Build Career Page Success Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
         1792,
-        2368
-      ],
-      "notes": "Shared failure builder for HTML-fetch failures, extraction-endpoint failures, and ingestion-batch-endpoint failures.",
+        2080
+      ]
+    },
+    {
       "parameters": {
-        "mode": "manual",
         "assignments": {
           "assignments": [
             {
@@ -1332,10 +1281,27 @@
               "type": "string"
             }
           ]
-        }
-      }
+        },
+        "options": {}
+      },
+      "id": "d8ecf68a-8f3d-4da1-b638-7ae03d8ff3cc",
+      "name": "Build Career Page Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        2368
+      ],
+      "notes": "Shared failure builder for HTML-fetch failures, extraction-endpoint failures, and ingestion-batch-endpoint failures."
     },
     {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
       "id": "f33aa72f-950c-45f2-9667-47d8a9a71fe0",
       "name": "Record Career Page Source Result",
       "type": "n8n-nodes-base.set",
@@ -1344,16 +1310,12 @@
         2016,
         2272
       ],
-      "notes": "Convergence point for the Tier-B loop, same purpose as Record Source Result above.",
-      "parameters": {
-        "mode": "manual",
-        "includeOtherFields": true,
-        "assignments": {
-          "assignments": []
-        }
-      }
+      "notes": "Convergence point for the Tier-B loop, same purpose as Record Source Result above."
     },
     {
+      "parameters": {
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
+      },
       "id": "8d438ba7-ec72-4e6c-9103-d8b4b3a863bf",
       "name": "Career Page Rate Limit Delay",
       "type": "n8n-nodes-base.wait",
@@ -1362,13 +1324,15 @@
         2240,
         2432
       ],
-      "parameters": {
-        "resume": "timeInterval",
-        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}",
-        "unit": "seconds"
-      }
+      "webhookId": "ded71be8-606a-442c-a51f-feb968d607ef"
     },
     {
+      "parameters": {
+        "content": "### AI Job Guide / 01 Job Ingestion\nManual trigger, stays inactive until a human reviews a `local_pilot`-equivalent run (dryRun:false) and decides on a schedule. n8n owns provider HTTP calls + retry/backoff (native `retryOnFail`) + per-source rate limiting; ALL validation, field mapping, dedup identity, idempotent persistence, and stale-close safety live in src/lib/ingestion/* (Phase 03) behind three internal endpoints (run-batch, run-multi-company-batch, extract-career-page-jobs), which also re-verify authorization live on every call — n8n never needs Supabase access for this workflow at all.\n\nNo combined execution-summary node: n8n's cross-loop-iteration item linking does not reliably expose every iteration's result to a single downstream node once a loop's done output fires (confirmed by direct testing — `.all()` from that branch only resolved the last iteration). Each source/provider's real outcome is fully visible per-iteration in each tier's own Record *Result node execution history in the n8n UI, sufficient for this manually-reviewed, inactive workflow. Revisit if this is ever scheduled unattended and a single rollup notification becomes necessary.",
+        "height": 200,
+        "width": 300,
+        "color": 4
+      },
       "id": "77baa830-cd22-4b2f-be53-639d1627d5f8",
       "name": "Sticky Note 1d6c1cae",
       "type": "n8n-nodes-base.stickyNote",
@@ -1376,15 +1340,15 @@
       "position": [
         416,
         -48
-      ],
-      "parameters": {
-        "content": "### AI Job Guide / 01 Job Ingestion\nManual trigger, stays inactive until a human reviews a `local_pilot`-equivalent run (dryRun:false) and decides on a schedule. n8n owns provider HTTP calls + retry/backoff (native `retryOnFail`) + per-source rate limiting; ALL validation, field mapping, dedup identity, idempotent persistence, and stale-close safety live in src/lib/ingestion/* (Phase 03) behind three internal endpoints (run-batch, run-multi-company-batch, extract-career-page-jobs), which also re-verify authorization live on every call — n8n never needs Supabase access for this workflow at all.\n\nNo combined execution-summary node: n8n's cross-loop-iteration item linking does not reliably expose every iteration's result to a single downstream node once a loop's done output fires (confirmed by direct testing — `.all()` from that branch only resolved the last iteration). Each source/provider's real outcome is fully visible per-iteration in each tier's own Record *Result node execution history in the n8n UI, sufficient for this manually-reviewed, inactive workflow. Revisit if this is ever scheduled unattended and a single rollup notification becomes necessary.",
-        "color": 4,
-        "width": 300,
-        "height": 200
-      }
+      ]
     },
     {
+      "parameters": {
+        "content": "### Dynamic source discovery (Phase 12) + three-tier orchestration (Phase 13)\nOne POST /api/internal/ingestion/list-sources call now returns three independent arrays this workflow fans out to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby/Oracle Cloud Recruiting — findEligibleCompanySources.ts), (2) Tier-D enabled multi-company feeds (RemoteOK/Jobicy/Arbeitnow — multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates (findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on a shared endpoint per tier — no provider-specific matching/eligibility logic anywhere downstream of ingestion. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider. JSearch/Adzuna remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL, no API key available. Bayt/GulfTalent/Indeed are enabled:true, implemented, and live-verified (Phase 21, docs/LEBANON_LIVE_SOURCE_EXPANSION.md) — see the Apify multi-company branch below, not a no-op here. Their remaining gaps before production activation are operational, not code: the Apify/Ingestion-Worker-Secret credentials still need manual binding in the n8n UI, and one small live reconfirmation run is wanted before this workflow goes live.",
+        "height": 220,
+        "width": 340,
+        "color": 6
+      },
       "id": "2a99762b-cfa2-4e9b-a9e8-e4b93b79c7ca",
       "name": "Sticky Note 8c4d4722",
       "type": "n8n-nodes-base.stickyNote",
@@ -1392,47 +1356,46 @@
       "position": [
         -112,
         -16
-      ],
-      "parameters": {
-        "content": "### Dynamic source discovery (Phase 12) + three-tier orchestration (Phase 13)\nOne POST /api/internal/ingestion/list-sources call now returns three independent arrays this workflow fans out to below: (1) Tier-A company-specific ATS sources (Greenhouse/Lever/Workable/Ashby/Oracle Cloud Recruiting — findEligibleCompanySources.ts), (2) Tier-D enabled multi-company feeds (RemoteOK/Jobicy/Arbeitnow — multiCompanyFeedUrls.ts + providerConfig.ts), (3) Tier-B career-page extraction candidates (findCareerPageExtractionCandidates.ts). Each tier is its own modular loop with its own rate limit, converging on a shared endpoint per tier — no provider-specific matching/eligibility logic anywhere downstream of ingestion. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md for exact live-tested vs fixture-only status per provider. JSearch/Adzuna remain enabled:false (providerConfig.ts) — BLOCKED_ON_CREDENTIAL, no API key available. Bayt/GulfTalent/Indeed are enabled:true, implemented, and live-verified (Phase 21, docs/LEBANON_LIVE_SOURCE_EXPANSION.md) — see the Apify multi-company branch below, not a no-op here. Their remaining gaps before production activation are operational, not code: the Apify/Ingestion-Worker-Secret credentials still need manual binding in the n8n UI, and one small live reconfirmation run is wanted before this workflow goes live.",
-        "color": 6,
-        "width": 340,
-        "height": 220
-      }
+      ]
     },
     {
+      "parameters": {
+        "content": "### Tier D: multi-company feeds (Phase 13)\nRemoteOK/Jobicy/Arbeitnow are live, free, public APIs — no credential required. Each branch normalizes its own raw response shape (RemoteOK: auto-split top-level array; Jobicy/Arbeitnow: Split Out + Aggregate their nested array field) down to one common {jobs:[...]} shape before converging on Call Multi-Company Batch Endpoint, mirroring how Tier A above converges on Call Ingestion Batch Endpoint. First page only — see Fetch Multi-Company Feed's own note for why native pagination was skipped this phase.",
+        "height": 260,
+        "width": 360,
+        "color": 5
+      },
       "id": "6dcde2db-f180-448c-9092-db3ca7758134",
       "name": "Sticky Note Tier D Multi-Company",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         672,
-        1000
-      ],
-      "parameters": {
-        "content": "### Tier D: multi-company feeds (Phase 13)\nRemoteOK/Jobicy/Arbeitnow are live, free, public APIs — no credential required. Each branch normalizes its own raw response shape (RemoteOK: auto-split top-level array; Jobicy/Arbeitnow: Split Out + Aggregate their nested array field) down to one common {jobs:[...]} shape before converging on Call Multi-Company Batch Endpoint, mirroring how Tier A above converges on Call Ingestion Batch Endpoint. First page only — see Fetch Multi-Company Feed's own note for why native pagination was skipped this phase.",
-        "color": 5,
-        "width": 360,
-        "height": 260
-      }
+        1008
+      ]
     },
     {
+      "parameters": {
+        "content": "### Tier B: career-page extraction (Phase 13)\nFetches a real company_sources.official_careers_url and extracts schema.org JobPosting JSON-LD (extractCareerPageJobPostings.ts) — no headless browser, no Apify, no arbitrary scraping. Honest finding this phase: 0 of 11 sampled real candidates (Byblos Bank, touch Lebanon, Caritas Lebanon, Lebanese Red Cross, KPMG, Anghami, Whish Money, Mercy Corps, Deloitte, EY, Bank Audi) emit this markup on their recorded official_careers_url — that URL is almost always a landing/overview page, while JobPosting markup typically lives on an individual job's own detail page. The pipeline is real and live-tested end-to-end (fetch + extract against a real page returns an honest 0, not an error) and will start yielding jobs automatically, with zero code changes, the moment any candidate page — or a future per-job-detail-page discovery step — actually emits this markup. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md.",
+        "height": 300,
+        "width": 380,
+        "color": 7
+      },
       "id": "19ff6892-784f-4b5a-adcb-fd285def4cce",
       "name": "Sticky Note Tier B Career Page",
       "type": "n8n-nodes-base.stickyNote",
       "typeVersion": 1,
       "position": [
         672,
-        2680
-      ],
-      "parameters": {
-        "content": "### Tier B: career-page extraction (Phase 13)\nFetches a real company_sources.official_careers_url and extracts schema.org JobPosting JSON-LD (extractCareerPageJobPostings.ts) — no headless browser, no Apify, no arbitrary scraping. Honest finding this phase: 0 of 11 sampled real candidates (Byblos Bank, touch Lebanon, Caritas Lebanon, Lebanese Red Cross, KPMG, Anghami, Whish Money, Mercy Corps, Deloitte, EY, Bank Audi) emit this markup on their recorded official_careers_url — that URL is almost always a landing/overview page, while JobPosting markup typically lives on an individual job's own detail page. The pipeline is real and live-tested end-to-end (fetch + extract against a real page returns an honest 0, not an error) and will start yielding jobs automatically, with zero code changes, the moment any candidate page — or a future per-job-detail-page discovery step — actually emits this markup. See docs/PROVIDER_EXPANSION_IMPLEMENTATION.md.",
-        "color": 7,
-        "width": 380,
-        "height": 300
-      }
+        2688
+      ]
     },
     {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25},\"refresh_scope\":null,\"max_jobs_per_run\":25},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15},\"refresh_scope\":\"country:SA\",\"max_jobs_per_run\":15},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15},\"refresh_scope\":\"country:AE:location:Dubai\",\"max_jobs_per_run\":15},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15},\"refresh_scope\":null,\"max_jobs_per_run\":15}]}",
+        "options": {}
+      },
       "id": "ab329f9e-453f-485b-b8a6-0d187e6d6f4f",
       "name": "Apify Multi-Company Source Seeds",
       "type": "n8n-nodes-base.set",
@@ -1441,14 +1404,13 @@
         672,
         3200
       ],
-      "parameters": {
-        "mode": "raw",
-        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25},\"refresh_scope\":null,\"max_jobs_per_run\":25},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15},\"refresh_scope\":\"country:SA\",\"max_jobs_per_run\":15},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15},\"refresh_scope\":\"country:AE:location:Dubai\",\"max_jobs_per_run\":15},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15},\"refresh_scope\":null,\"max_jobs_per_run\":15}]}",
-        "options": {}
-      },
-      "notes": "Phase 21. Static seed list — Bayt/GulfTalent/Indeed are Apify actor calls, not simple GET feed URLs, so they cannot go through the dynamic getEnabledMultiCompanyFeedSources() discovery buildFeedUrl() uses for RemoteOK/Jobicy/Arbeitnow. Bounded to the real markets live-benchmarked this phase (Bayt: Lebanon; GulfTalent: Saudi Arabia + UAE/Dubai; Indeed: UAE/Dubai only — Indeed and GulfTalent both real-confirmed to have no Lebanon country option). Qatar/Kuwait not yet included — add once benchmarked. refresh_scope (Phase 22 fix): a real paid-pilot run proved the two GulfTalent entries share one source_type but are independently-complete query partitions — without a distinct refresh_scope per entry, the AE/Dubai call's stale-close sweep wrongly closed the SA call's jobs as 'not seen'. Bayt/Indeed keep refresh_scope: null (one undivided partition each today) — only add a value if a second independent query is ever added for them. max_jobs_per_run (2026-10-02 fix): each seed's own requested ingestion cap, read by Call Apify Batch Endpoint instead of the global Workflow Configuration.maxJobsPerSource — the global 5 was far below every real paid batch size (25/15/15/15) and falsely truncated all four. Still clamped server-side against providerConfig.ts's maxJobsPerRun (40 for all three) — this value can only ever be lowered by the server, never raised."
+      "notes": "Phase 21. Static seed list — Bayt/GulfTalent/Indeed are Apify actor calls, not simple GET feed URLs, so they cannot go through the dynamic getEnabledMultiCompanyFeedSources() discovery buildFeedUrl() uses for RemoteOK/Jobicy/Arbeitnow. Bounded to the real markets live-benchmarked this phase (Bayt: Lebanon; GulfTalent: Saudi Arabia + UAE/Dubai; Indeed: UAE/Dubai only — Indeed and GulfTalent both real-confirmed to have no Lebanon country option). Qatar/Kuwait not yet included — add once benchmarked. refresh_scope (Phase 22 fix): a real paid-pilot run proved the two GulfTalent entries share one source_type but are independently-complete query partitions — without a distinct refresh_scope per entry, the AE/Dubai call's stale-close sweep wrongly closed the SA call's jobs as 'not seen'. Bayt/Indeed keep refresh_scope: null (one undivided partition each today) — only add a value if a second independent query is ever added for them."
     },
     {
+      "parameters": {
+        "fieldToSplitOut": "apify_sources",
+        "options": {}
+      },
       "id": "cfb8970f-8a1d-45e2-a4e1-479054ff7028",
       "name": "Split Out Apify Sources",
       "type": "n8n-nodes-base.splitOut",
@@ -1456,13 +1418,12 @@
       "position": [
         896,
         3200
-      ],
-      "parameters": {
-        "fieldToSplitOut": "apify_sources",
-        "options": {}
-      }
+      ]
     },
     {
+      "parameters": {
+        "options": {}
+      },
       "id": "d0094670-257b-4e7e-ac68-ba47982bebc8",
       "name": "Loop Apify Sources (Rate Limited)",
       "type": "n8n-nodes-base.splitInBatches",
@@ -1470,45 +1431,41 @@
       "position": [
         1120,
         3200
-      ],
-      "parameters": {
-        "options": {}
-      }
+      ]
     },
     {
-      "id": "a64e8a85-88c4-4900-9b60-940d43d274db",
-      "name": "Call Apify Actor",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1344,
-        3072
-      ],
-      "onError": "continueErrorOutput",
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 5000,
       "parameters": {
         "method": "POST",
         "url": "={{ $json.actor_url }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
-        "contentType": "json",
         "specifyBody": "json",
         "jsonBody": "={{ $json.request_body }}",
         "options": {
           "timeout": 60000
         }
       },
-      "notes": "Phase 21. Credential 'AI Job Guide - Apify' (httpHeaderAuth) must be bound manually in the n8n UI — programmatic credential binding for generic-auth types on this node is a confirmed n8n MCP tool limitation, reported separately.",
-      "credentials": {
-        "httpHeaderAuth": {
-          "name": "AI Job Guide - Apify"
-        }
-      }
+      "id": "a64e8a85-88c4-4900-9b60-940d43d274db",
+      "name": "Call Apify Actor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        3088
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 5000,
+      "onError": "continueErrorOutput",
+      "notes": "Phase 21. Credential 'AI Job Guide - Apify' (httpHeaderAuth) must be bound manually in the n8n UI — programmatic credential binding for generic-auth types on this node is a confirmed n8n MCP tool limitation, reported separately."
     },
     {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "options": {}
+      },
       "id": "b983ed05-f7f4-4739-be96-715cd05d3b4f",
       "name": "Aggregate Apify Jobs",
       "type": "n8n-nodes-base.aggregate",
@@ -1517,26 +1474,9 @@
         1568,
         3072
       ],
-      "parameters": {
-        "aggregate": "aggregateAllItemData",
-        "destinationFieldName": "jobs",
-        "options": {}
-      },
       "notes": "Apify's run-sync-get-dataset-items returns a bare top-level array, same as Lever — n8n auto-splits it into one item per job, so this re-aggregates back into one {jobs:[...]} item before the batch endpoint call (mirrors Aggregate Lever Jobs / Aggregate RemoteOK Jobs)."
     },
     {
-      "id": "d5a5cbb2-7ab2-47a9-850d-93cb511c343d",
-      "name": "Call Apify Batch Endpoint",
-      "type": "n8n-nodes-base.httpRequest",
-      "typeVersion": 4.4,
-      "position": [
-        1792,
-        3072
-      ],
-      "onError": "continueErrorOutput",
-      "retryOnFail": true,
-      "maxTries": 2,
-      "waitBetweenTries": 3000,
       "parameters": {
         "method": "POST",
         "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch",
@@ -1549,22 +1489,21 @@
           "timeout": 30000
         }
       },
-      "notes": "Same shared batch endpoint the Tier D branch uses — a separate node (not reused directly) because its sourceType expression must resolve $('Split Out Apify Sources'), a different ancestor than the Tier D branch's $('Split Out Multi-Company Sources').",
-      "credentials": {
-        "httpBearerAuth": {
-          "name": "Ingestion Worker Secret"
-        }
-      }
+      "id": "d5a5cbb2-7ab2-47a9-850d-93cb511c343d",
+      "name": "Call Apify Batch Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1792,
+        3072
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput",
+      "notes": "Same shared batch endpoint the Tier D branch uses — a separate node (not reused directly) because its sourceType expression must resolve $('Split Out Apify Sources'), a different ancestor than the Tier D branch's $('Split Out Multi-Company Sources')."
     },
     {
-      "id": "ddd8b84a-bd06-4d6e-a1c8-03998e1a3689",
-      "name": "Build Apify Success Result",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
-      "position": [
-        2016,
-        3008
-      ],
       "parameters": {
         "assignments": {
           "assignments": [
@@ -1590,17 +1529,17 @@
         },
         "includeOtherFields": true,
         "options": {}
-      }
-    },
-    {
-      "id": "479dc358-05a7-403f-9ab6-57b34f955569",
-      "name": "Build Apify Failure Result",
+      },
+      "id": "ddd8b84a-bd06-4d6e-a1c8-03998e1a3689",
+      "name": "Build Apify Success Result",
       "type": "n8n-nodes-base.set",
       "typeVersion": 3.4,
       "position": [
         2016,
-        3200
-      ],
+        3008
+      ]
+    },
+    {
       "parameters": {
         "assignments": {
           "assignments": [
@@ -1625,9 +1564,24 @@
           ]
         },
         "options": {}
-      }
+      },
+      "id": "479dc358-05a7-403f-9ab6-57b34f955569",
+      "name": "Build Apify Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        3200
+      ]
     },
     {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
       "id": "d96d9995-afb7-46f5-b131-d34ea3b75744",
       "name": "Record Apify Source Result",
       "type": "n8n-nodes-base.set",
@@ -1635,16 +1589,12 @@
       "position": [
         2240,
         3104
-      ],
-      "parameters": {
-        "assignments": {
-          "assignments": []
-        },
-        "includeOtherFields": true,
-        "options": {}
-      }
+      ]
     },
     {
+      "parameters": {
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
+      },
       "id": "721884a7-4932-426c-8734-80da3072fb84",
       "name": "Apify Rate Limit Delay",
       "type": "n8n-nodes-base.wait",
@@ -1653,9 +1603,1220 @@
         2464,
         3104
       ],
+      "webhookId": "541d4efb-0b24-440c-9885-8beefa8a0530"
+    },
+    {
       "parameters": {
-        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
-      }
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/list-linkedin-enrichment-queue",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "d561c384-6b28-41bf-b738-49c9f2082371",
+      "name": "List LinkedIn Enrichment Queue",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        672,
+        3760
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput",
+      "notes": "Returns up to ENRICHMENT_BATCH_SIZE (25) already-persisted LinkedIn job external_ids where work_arrangement IS NULL AND linkedin_enrichment_attempts < 2 (src/lib/ingestion/findEligibleLinkedInEnrichmentJobs.ts). Always returns job_ids: [] while providerConfig.ts's linkedin.enabled stays false, so this entire branch is a structural no-op in that state regardless of anything below it."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eligible_jobs",
+              "name": "eligible_jobs",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_sent_to_data_slayer",
+              "name": "jobs_sent_to_data_slayer",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "batch_count",
+              "name": "batch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "pricing_aborted",
+              "name": "pricing_aborted",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "actor_failed",
+              "name": "actor_failed",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "items_requested",
+              "name": "items_requested",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_returned",
+              "name": "items_returned",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_missing",
+              "name": "items_missing",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_sent_to_enrichment_api",
+              "name": "items_sent_to_enrichment_api",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "enrichment_jobs_updated",
+              "name": "enrichment_jobs_updated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_present",
+              "name": "structured_wa_present",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_empty",
+              "name": "structured_wa_empty",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "final_wa_unresolved",
+              "name": "final_wa_unresolved",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_skipped_not_eligible",
+              "name": "jobs_skipped_not_eligible",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_validation_failed",
+              "name": "jobs_validation_failed",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_provider_failure",
+              "name": "jobs_provider_failure",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "identity_mismatch_count",
+              "name": "identity_mismatch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "employment_type_conflict_count",
+              "name": "employment_type_conflict_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "schema_drift_warning_count",
+              "name": "schema_drift_warning_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'list-linkedin-enrichment-queue call failed' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "715b32ae-8089-446e-8a48-c664a8ed13dc",
+      "name": "Log List Queue Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1200,
+        4544
+      ],
+      "notes": "Terminal — nothing to enrich this run if the queue listing itself failed. Never blocks the rest of ingestion (this is its own independent branch)."
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.job_ids.length }}",
+                    "operator": {
+                      "type": "number",
+                      "operation": "gt"
+                    },
+                    "rightValue": 0
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "no_jobs"
+        }
+      },
+      "id": "c208cd41-461a-47d0-b275-5d5f6b0f5b9d",
+      "name": "Check Eligible Jobs Exist",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        896,
+        3760
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eligible_jobs",
+              "name": "eligible_jobs",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_sent_to_data_slayer",
+              "name": "jobs_sent_to_data_slayer",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "batch_count",
+              "name": "batch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "pricing_aborted",
+              "name": "pricing_aborted",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "actor_failed",
+              "name": "actor_failed",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "items_requested",
+              "name": "items_requested",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_returned",
+              "name": "items_returned",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_missing",
+              "name": "items_missing",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_sent_to_enrichment_api",
+              "name": "items_sent_to_enrichment_api",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "enrichment_jobs_updated",
+              "name": "enrichment_jobs_updated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_present",
+              "name": "structured_wa_present",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_empty",
+              "name": "structured_wa_empty",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "final_wa_unresolved",
+              "name": "final_wa_unresolved",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_skipped_not_eligible",
+              "name": "jobs_skipped_not_eligible",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_validation_failed",
+              "name": "jobs_validation_failed",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_provider_failure",
+              "name": "jobs_provider_failure",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "identity_mismatch_count",
+              "name": "identity_mismatch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "employment_type_conflict_count",
+              "name": "employment_type_conflict_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "schema_drift_warning_count",
+              "name": "schema_drift_warning_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "6f61e4ed-c81f-421b-a8e3-c440f47a4141",
+      "name": "Build No Eligible Jobs Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1248,
+        4336
+      ],
+      "notes": "Legitimate \"nothing to do\" outcome, not a failure — every counter stays at its 0/false default."
+    },
+    {
+      "parameters": {
+        "url": "https://api.apify.com/v2/acts/data-slayer~linkedin-job-scraper",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      },
+      "id": "a521e77a-70c8-43ff-94e4-4746b9f91160",
+      "name": "Fetch Data-Slayer Pricing Metadata",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        3648
+      ],
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "onError": "continueErrorOutput",
+      "notes": "Free GET — never counts toward enrichment spend. Reconfirmed every run, not cached, so a real-world price change is caught before it is ever paid, not after."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eligible_jobs",
+              "name": "eligible_jobs",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "jobs_sent_to_data_slayer",
+              "name": "jobs_sent_to_data_slayer",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "batch_count",
+              "name": "batch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "pricing_aborted",
+              "name": "pricing_aborted",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "actor_failed",
+              "name": "actor_failed",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "items_requested",
+              "name": "items_requested",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_returned",
+              "name": "items_returned",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_missing",
+              "name": "items_missing",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_sent_to_enrichment_api",
+              "name": "items_sent_to_enrichment_api",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "enrichment_jobs_updated",
+              "name": "enrichment_jobs_updated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_present",
+              "name": "structured_wa_present",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_empty",
+              "name": "structured_wa_empty",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "final_wa_unresolved",
+              "name": "final_wa_unresolved",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_skipped_not_eligible",
+              "name": "jobs_skipped_not_eligible",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_validation_failed",
+              "name": "jobs_validation_failed",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_provider_failure",
+              "name": "jobs_provider_failure",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "identity_mismatch_count",
+              "name": "identity_mismatch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "employment_type_conflict_count",
+              "name": "employment_type_conflict_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "schema_drift_warning_count",
+              "name": "schema_drift_warning_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ 'could not confirm data-slayer pricing before a paid call: ' + ($json.error?.message ?? 'unknown error') }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d312bb3e-43de-460b-bd84-de7b34d3df40",
+      "name": "Build Pricing Metadata Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1312,
+        4144
+      ],
+      "notes": "Could not confirm the actor is still safely priced — treated as pricing_aborted, same as price-too-high. Never assumes a stale/last-known price is still accurate."
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.pricingInfos.at(-1).pricingPerEvent.actorChargeEvents['apify-default-dataset-item'].eventPriceUsd }}",
+                    "operator": {
+                      "type": "number",
+                      "operation": "lte"
+                    },
+                    "rightValue": 0.005
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "price_too_high"
+        }
+      },
+      "id": "9d5d9aa8-79d5-4491-9bb1-7757e3a89f4b",
+      "name": "Check Data-Slayer Price",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        3648
+      ],
+      "notes": "price_ok only when the real, just-fetched price is <= $0.005/job (DATA_SLAYER_MAX_ACCEPTABLE_PRICE_PER_JOB_USD). Never a large slack multiplier."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eligible_jobs",
+              "name": "eligible_jobs",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "jobs_sent_to_data_slayer",
+              "name": "jobs_sent_to_data_slayer",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "batch_count",
+              "name": "batch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "pricing_aborted",
+              "name": "pricing_aborted",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "actor_failed",
+              "name": "actor_failed",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "items_requested",
+              "name": "items_requested",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_returned",
+              "name": "items_returned",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_missing",
+              "name": "items_missing",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_sent_to_enrichment_api",
+              "name": "items_sent_to_enrichment_api",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "enrichment_jobs_updated",
+              "name": "enrichment_jobs_updated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_present",
+              "name": "structured_wa_present",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_empty",
+              "name": "structured_wa_empty",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "final_wa_unresolved",
+              "name": "final_wa_unresolved",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_skipped_not_eligible",
+              "name": "jobs_skipped_not_eligible",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_validation_failed",
+              "name": "jobs_validation_failed",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_provider_failure",
+              "name": "jobs_provider_failure",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "identity_mismatch_count",
+              "name": "identity_mismatch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "employment_type_conflict_count",
+              "name": "employment_type_conflict_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "schema_drift_warning_count",
+              "name": "schema_drift_warning_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ 'data-slayer price ' + $json.data.pricingInfos.at(-1).pricingPerEvent.actorChargeEvents['apify-default-dataset-item'].eventPriceUsd + ' exceeds configured maximum 0.005/job' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "b2ef8b7d-9a3b-4bee-8610-3aad92f9dda7",
+      "name": "Build Pricing Aborted Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1488,
+        3952
+      ],
+      "notes": "Real price exceeded the configured maximum — actor is never called, jobs are left completely unchanged, no attempt is consumed."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ 'https://api.apify.com/v2/acts/data-slayer~linkedin-job-scraper/run-sync-get-dataset-items?maxItems=' + $('List LinkedIn Enrichment Queue').item.json.job_ids.length + '&maxTotalChargeUsd=' + ($('List LinkedIn Enrichment Queue').item.json.job_ids.length * 0.005) }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { job_ids_or_urls: $('List LinkedIn Enrichment Queue').item.json.job_ids, include_hiring_team: false } }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "id": "17038a02-6fb4-4bd0-be17-a256c4659aa8",
+      "name": "Call Data-Slayer Actor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1568,
+        3520
+      ],
+      "retryOnFail": false,
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eligible_jobs",
+              "name": "eligible_jobs",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "jobs_sent_to_data_slayer",
+              "name": "jobs_sent_to_data_slayer",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "batch_count",
+              "name": "batch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "pricing_aborted",
+              "name": "pricing_aborted",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "actor_failed",
+              "name": "actor_failed",
+              "value": true,
+              "type": "boolean"
+            },
+            {
+              "id": "items_requested",
+              "name": "items_requested",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "items_returned",
+              "name": "items_returned",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_missing",
+              "name": "items_missing",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "items_sent_to_enrichment_api",
+              "name": "items_sent_to_enrichment_api",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "enrichment_jobs_updated",
+              "name": "enrichment_jobs_updated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_present",
+              "name": "structured_wa_present",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_empty",
+              "name": "structured_wa_empty",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "final_wa_unresolved",
+              "name": "final_wa_unresolved",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_skipped_not_eligible",
+              "name": "jobs_skipped_not_eligible",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_validation_failed",
+              "name": "jobs_validation_failed",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_provider_failure",
+              "name": "jobs_provider_failure",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "identity_mismatch_count",
+              "name": "identity_mismatch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "employment_type_conflict_count",
+              "name": "employment_type_conflict_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "schema_drift_warning_count",
+              "name": "schema_drift_warning_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'data-slayer actor call failed' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "c35b5f40-6a08-408b-afad-7184b99a4b5c",
+      "name": "Build Actor Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1712,
+        3808
+      ],
+      "notes": "Actor timeout/5xx/failed run/cost-cap-reached all land here via onError. No structurally valid response was received for any requested id, so nothing is forwarded to the apply endpoint at all — no attempt is consumed for any job, every one remains immediately retryable next run."
+    },
+    {
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "items",
+        "options": {}
+      },
+      "id": "aca1b25c-999c-4526-bbd8-6ec42cb67c38",
+      "name": "Aggregate Data-Slayer Dataset",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1776,
+        3504
+      ],
+      "notes": "data-slayer's run-sync-get-dataset-items returns a bare top-level array (same shape as Lever / the other Apify actors above) — n8n auto-splits it into one item per job; this re-aggregates into one {items:[...]} item before reconciliation. aggregateAllItemData on zero input items still emits exactly one item with an empty array (a total actor success-but-empty-dataset case), so the chain below always continues."
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-linkedin-enrichment-batch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  requestedJobIds: $('List LinkedIn Enrichment Queue').item.json.job_ids,\n  rawDatasetItems: $json.items\n} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "id": "4f89df55-bded-42a8-be0d-f6db9bd107b9",
+      "name": "Call LinkedIn Enrichment Batch Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1984,
+        3504
+      ],
+      "retryOnFail": false,
+      "onError": "continueErrorOutput",
+      "notes": "Forwards the requested id list and the raw dataset verbatim — all reconciliation and business logic happens entirely server-side (buildEnrichmentItemsFromDataset + applyLinkedInEnrichmentBatch) — never duplicated here. retryOnFail is false: a retry of this call against an already-applied dataset would double-count attempts for any job that resolved to null on the first (successfully applied, response-lost) attempt."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eligible_jobs",
+              "name": "eligible_jobs",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "jobs_sent_to_data_slayer",
+              "name": "jobs_sent_to_data_slayer",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "batch_count",
+              "name": "batch_count",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "pricing_aborted",
+              "name": "pricing_aborted",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "actor_failed",
+              "name": "actor_failed",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "items_requested",
+              "name": "items_requested",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "items_returned",
+              "name": "items_returned",
+              "value": "={{ $('Aggregate Data-Slayer Dataset').item.json.items.length }}",
+              "type": "number"
+            },
+            {
+              "id": "items_missing",
+              "name": "items_missing",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length - $('Aggregate Data-Slayer Dataset').item.json.items.length }}",
+              "type": "number"
+            },
+            {
+              "id": "items_sent_to_enrichment_api",
+              "name": "items_sent_to_enrichment_api",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "enrichment_jobs_updated",
+              "name": "enrichment_jobs_updated",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_present",
+              "name": "structured_wa_present",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_empty",
+              "name": "structured_wa_empty",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "final_wa_unresolved",
+              "name": "final_wa_unresolved",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_skipped_not_eligible",
+              "name": "jobs_skipped_not_eligible",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_validation_failed",
+              "name": "jobs_validation_failed",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "jobs_provider_failure",
+              "name": "jobs_provider_failure",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "identity_mismatch_count",
+              "name": "identity_mismatch_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "employment_type_conflict_count",
+              "name": "employment_type_conflict_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "schema_drift_warning_count",
+              "name": "schema_drift_warning_count",
+              "value": 0,
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'run-linkedin-enrichment-batch call failed' }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9332378e-1a98-4365-821c-3f99027a0cf7",
+      "name": "Build Apply Call Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2112,
+        3696
+      ],
+      "notes": "The actor call itself succeeded (a real dataset was fetched and paid for), but applying it to our own jobs table failed — e.g. a transient network error calling our own endpoint. The paid data is not lost: every requested id remains eligible (attempts untouched) for the next run to try applying again."
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "eligible_jobs",
+              "name": "eligible_jobs",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "jobs_sent_to_data_slayer",
+              "name": "jobs_sent_to_data_slayer",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "batch_count",
+              "name": "batch_count",
+              "value": 1,
+              "type": "number"
+            },
+            {
+              "id": "pricing_aborted",
+              "name": "pricing_aborted",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "actor_failed",
+              "name": "actor_failed",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "items_requested",
+              "name": "items_requested",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "items_returned",
+              "name": "items_returned",
+              "value": "={{ $('Aggregate Data-Slayer Dataset').item.json.items.length }}",
+              "type": "number"
+            },
+            {
+              "id": "items_missing",
+              "name": "items_missing",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length - $('Aggregate Data-Slayer Dataset').item.json.items.length }}",
+              "type": "number"
+            },
+            {
+              "id": "items_sent_to_enrichment_api",
+              "name": "items_sent_to_enrichment_api",
+              "value": "={{ $('List LinkedIn Enrichment Queue').item.json.job_ids.length }}",
+              "type": "number"
+            },
+            {
+              "id": "enrichment_jobs_updated",
+              "name": "enrichment_jobs_updated",
+              "value": "={{ $json.jobsUpdated }}",
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_present",
+              "name": "structured_wa_present",
+              "value": "={{ $json.structuredWaPresentCount }}",
+              "type": "number"
+            },
+            {
+              "id": "structured_wa_empty",
+              "name": "structured_wa_empty",
+              "value": "={{ $json.structuredWaEmptyCount }}",
+              "type": "number"
+            },
+            {
+              "id": "final_wa_unresolved",
+              "name": "final_wa_unresolved",
+              "value": "={{ $json.finalWaUnresolvedCount }}",
+              "type": "number"
+            },
+            {
+              "id": "jobs_skipped_not_eligible",
+              "name": "jobs_skipped_not_eligible",
+              "value": "={{ $json.jobsSkippedNotEligible }}",
+              "type": "number"
+            },
+            {
+              "id": "jobs_validation_failed",
+              "name": "jobs_validation_failed",
+              "value": "={{ $json.jobsValidationFailed }}",
+              "type": "number"
+            },
+            {
+              "id": "jobs_provider_failure",
+              "name": "jobs_provider_failure",
+              "value": "={{ $json.jobsProviderFailure }}",
+              "type": "number"
+            },
+            {
+              "id": "identity_mismatch_count",
+              "name": "identity_mismatch_count",
+              "value": "={{ $json.identityMismatchCount }}",
+              "type": "number"
+            },
+            {
+              "id": "employment_type_conflict_count",
+              "name": "employment_type_conflict_count",
+              "value": "={{ $json.employmentTypeConflictCount }}",
+              "type": "number"
+            },
+            {
+              "id": "schema_drift_warning_count",
+              "name": "schema_drift_warning_count",
+              "value": "={{ $json.schemaDriftWarnings.length }}",
+              "type": "number"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "f2c1ad65-a17f-40c2-be15-8c3b612f7721",
+      "name": "Build Enrichment Success Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2224,
+        3504
+      ]
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": []
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "id": "7866cc86-6ca9-4acf-a4e9-d8f45f4622cd",
+      "name": "Record LinkedIn Enrichment Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2816,
+        3776
+      ],
+      "notes": "Pure convergence point — every path (no eligible jobs, list failure, pricing-metadata failure, price too high, actor failure, apply-call failure, success) lands here with the same observability shape, visible in this node's own execution history in the n8n UI."
+    },
+    {
+      "parameters": {
+        "content": "### LinkedIn enrichment — data-slayer exact-ID pass\nEXACT_ID_ENRICHMENT_ONLY, never a discovery source (its real input schema is only job_ids_or_urls + include_hiring_team — confirmed live, no keyword/location field exists). Bebity itself has no branch in this workflow yet, so this branch acts purely on whatever LinkedIn jobs already exist in the jobs table — a future, separately-approved Bebity discovery branch and this one are independent. Work-arrangement value priority is QUALITY-FIRST and deliberately NOT classifier-gated for cost (a dated product decision — see docs/LEBANON_LIVE_SOURCE_EXPANSION.md): every eligible job (work_arrangement null, attempts < 2) is sent to data-slayer; structured workplace_types wins when present, classifyWorkArrangementFromText.ts is the fallback, null otherwise. Real price is re-fetched and checked every run (never cached) before the one paid call — the same lesson as the real bebity $1.47/978-item incident. No loop/fan-out: List LinkedIn Enrichment Queue already bounds one run to <=25 ids, so one data-slayer call handles the whole batch; more eligible jobs than that are picked up by a later run. Both new Apify-facing HTTP nodes need their credential bound manually in the n8n UI (same confirmed MCP tool limitation noted on the Apify multi-company branch) — Fetch Data-Slayer Pricing Metadata and Call Data-Slayer Actor both need 'AI Job Guide - Apify'.",
+        "height": 300,
+        "width": 380,
+        "color": 2
+      },
+      "id": "bca1d09c-decc-4854-88dc-d6afc420d9f7",
+      "name": "Sticky Note LinkedIn Enrichment",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -64,
+        3568
+      ]
+    },
+    {
+      "parameters": {
+        "content": "### Apify-sourced multi-company feeds (Phase 21)\nBayt, GulfTalent, and Indeed — all three via Apify actor calls (POST run-sync-get-dataset-items), not a plain GET feed URL, so this branch is fully isolated from the Tier D loop above rather than an extra switch case. Static seed list, not dynamic discovery — these providers cannot be found the way getEnabledMultiCompanyFeedSources() finds RemoteOK/Jobicy/Arbeitnow. Real live-benchmark findings (schema drift, applyUrl provenance, per-market quirks) are in providers/bayt.ts, gulftalent.ts, indeed.ts and docs/LEBANON_LIVE_SOURCE_EXPANSION.md. Both new HTTP nodes need their credential bound manually in the n8n UI (a confirmed MCP tool limitation, not a project issue) — Call Apify Actor needs 'AI Job Guide - Apify', Call Apify Batch Endpoint needs 'Ingestion Worker Secret'.",
+        "height": 220,
+        "width": 360,
+        "color": 3
+      },
+      "id": "1f5e8684-fd46-40e2-9276-bb4d3eb47988",
+      "name": "Sticky Note Apify Multi-Company",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        320,
+        2912
+      ]
     }
   ],
   "connections": {
@@ -1680,6 +2841,11 @@
           },
           {
             "node": "Apify Multi-Company Source Seeds",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "List LinkedIn Enrichment Queue",
             "type": "main",
             "index": 0
           }
@@ -2432,9 +3598,207 @@
           }
         ]
       ]
+    },
+    "List LinkedIn Enrichment Queue": {
+      "main": [
+        [
+          {
+            "node": "Check Eligible Jobs Exist",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log List Queue Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Eligible Jobs Exist": {
+      "main": [
+        [
+          {
+            "node": "Fetch Data-Slayer Pricing Metadata",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build No Eligible Jobs Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Data-Slayer Pricing Metadata": {
+      "main": [
+        [
+          {
+            "node": "Check Data-Slayer Price",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Pricing Metadata Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Data-Slayer Price": {
+      "main": [
+        [
+          {
+            "node": "Call Data-Slayer Actor",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Pricing Aborted Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Data-Slayer Actor": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Data-Slayer Dataset",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Actor Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Data-Slayer Dataset": {
+      "main": [
+        [
+          {
+            "node": "Call LinkedIn Enrichment Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call LinkedIn Enrichment Batch Endpoint": {
+      "main": [
+        [
+          {
+            "node": "Build Enrichment Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Apply Call Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Enrichment Success Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Enrichment Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log List Queue Failure": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Enrichment Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build No Eligible Jobs Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Enrichment Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Pricing Metadata Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Enrichment Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Pricing Aborted Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Enrichment Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Actor Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Enrichment Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Apply Call Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Enrichment Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
     }
   },
   "settings": {
-    "executionOrder": "v1"
+    "executionOrder": "v1",
+    "binaryMode": "separate",
+    "availableInMCP": true
   }
 }
