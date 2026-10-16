@@ -33,6 +33,26 @@ function findNode(name) {
   return n;
 }
 
+// n8n's real API fetch (confirmed this phase, 2026-10-16 production-
+// readiness audit) never serializes a switch rule's authoring-time
+// `outputKey` label — it is an SDK/UI-only display name, not part of the
+// stored node. Case routing is positional (rule index === connection
+// output index), so these tests assert on each rule's actual condition
+// (rightValue) in order instead of a field that doesn't survive a live
+// round-trip.
+function switchCaseValues(switchNode) {
+  return switchNode.parameters.rules.values.map((v) => v.conditions.conditions[0].rightValue);
+}
+
+// Same live-round-trip reality for splitInBatches: n8n omits `batchSize`
+// entirely from a GET when it equals the node's own default (1), rather
+// than writing it explicitly — confirmed by direct comparison against this
+// workflow's live MCP fetch. Treat "absent" and "1" as the same thing.
+function assertBatchesOneAtATime(loopNode) {
+  assert.equal(loopNode.type, 'n8n-nodes-base.splitInBatches');
+  assert.equal(loopNode.parameters.batchSize ?? 1, 1);
+}
+
 test('workflow JSON parses and has name/nodes/connections/settings', () => {
   assert.equal(typeof wf.name, 'string');
   assert.ok(Array.isArray(wf.nodes) && wf.nodes.length > 0);
@@ -44,10 +64,11 @@ test('workflow is inactive in JSON', () => {
   assert.equal(wf.active, false, 'Workflow must remain inactive until a human reviews a real run');
 });
 
-test('exactly one Manual Trigger, no Schedule Trigger', () => {
-  const triggers = wf.nodes.filter((n) => n.type === 'n8n-nodes-base.manualTrigger');
-  assert.equal(triggers.length, 1);
-  assert.ok(!wf.nodes.some((n) => n.type === 'n8n-nodes-base.scheduleTrigger'), 'must not include a Schedule Trigger this phase');
+test('exactly one Manual Trigger and exactly one Schedule Trigger (production daily cadence, added alongside the manual entry point for testing/admin use)', () => {
+  const manualTriggers = wf.nodes.filter((n) => n.type === 'n8n-nodes-base.manualTrigger');
+  assert.equal(manualTriggers.length, 1);
+  const scheduleTriggers = wf.nodes.filter((n) => n.type === 'n8n-nodes-base.scheduleTrigger');
+  assert.equal(scheduleTriggers.length, 1, 'exactly one Schedule Trigger — the daily production cadence');
 });
 
 test('no Supabase HTTP calls — persistence is fully delegated to the internal endpoint', () => {
@@ -119,8 +140,7 @@ test('every fallible node error output is wired to a Build *Result node, never l
 
 test('Extract Jobs By ATS Type has ashby and oracle_hcm cases (Phase 13/16) routing to their own extraction nodes, alongside greenhouse/lever/workable, with the fallback still catching anything else', () => {
   const switchNode = findNode('Extract Jobs By ATS Type');
-  const outputKeys = switchNode.parameters.rules.values.map((v) => v.outputKey);
-  assert.deepEqual(outputKeys, ['greenhouse', 'lever', 'workable', 'ashby', 'oracle_hcm']);
+  assert.deepEqual(switchCaseValues(switchNode), ['greenhouse', 'lever', 'workable', 'ashby', 'oracle_hcm']);
   const conns = wf.connections['Extract Jobs By ATS Type']?.main ?? [];
   assert.equal(conns.length, 6, 'five defined cases plus one fallback output');
   assert.ok(conns[3]?.some((c) => c.node === 'Extract Ashby Jobs'), 'the ashby case (index 3) must route to Extract Ashby Jobs');
@@ -154,9 +174,7 @@ test('the loop rate-limits between sources via Wait before looping back', () => 
 });
 
 test('the loop batches one source at a time', () => {
-  const loop = findNode('Loop Sources (Rate Limited)');
-  assert.equal(loop.type, 'n8n-nodes-base.splitInBatches');
-  assert.equal(loop.parameters.batchSize, 1);
+  assertBatchesOneAtATime(findNode('Loop Sources (Rate Limited)'));
 });
 
 // ── Tier D: multi-company feeds (Phase 13) ─────────────────────────────
@@ -171,8 +189,7 @@ test('Fetch Multi-Company Feed has native retry and continues on error', () => {
 
 test('Extract Raw Jobs By Provider Type routes remoteok/jobicy/arbeitnow to their own normalization branch, with a defensive fallback', () => {
   const switchNode = findNode('Extract Raw Jobs By Provider Type');
-  const outputKeys = switchNode.parameters.rules.values.map((v) => v.outputKey);
-  assert.deepEqual(outputKeys, ['remoteok', 'jobicy', 'arbeitnow']);
+  assert.deepEqual(switchCaseValues(switchNode), ['remoteok', 'jobicy', 'arbeitnow']);
   const conns = wf.connections['Extract Raw Jobs By Provider Type']?.main ?? [];
   assert.equal(conns.length, 4, 'three defined cases plus one fallback output');
   assert.ok(conns[0]?.some((c) => c.node === 'Aggregate RemoteOK Jobs'));
@@ -222,9 +239,7 @@ test('both Tier-D result paths converge on Record Multi-Company Source Result, w
 });
 
 test('the Tier-D loop batches one provider at a time', () => {
-  const loop = findNode('Loop Multi-Company Sources (Rate Limited)');
-  assert.equal(loop.type, 'n8n-nodes-base.splitInBatches');
-  assert.equal(loop.parameters.batchSize, 1);
+  assertBatchesOneAtATime(findNode('Loop Multi-Company Sources (Rate Limited)'));
 });
 
 // ── Tier B: career-page extraction (Phase 13) ──────────────────────────
@@ -271,13 +286,11 @@ test('both Tier-B result paths converge on Record Career Page Source Result, whi
 });
 
 test('the Tier-B loop batches one candidate at a time', () => {
-  const loop = findNode('Loop Career Page Candidates (Rate Limited)');
-  assert.equal(loop.type, 'n8n-nodes-base.splitInBatches');
-  assert.equal(loop.parameters.batchSize, 1);
+  assertBatchesOneAtATime(findNode('Loop Career Page Candidates (Rate Limited)'));
 });
 
-test('exactly 59 nodes total, matching the live, MCP-tested workflow (Phase 21 adds the isolated Apify multi-company branch: Bayt/GulfTalent/Indeed)', () => {
-  assert.equal(wf.nodes.length, 59);
+test('exactly 77 nodes total, matching the live, MCP-synced workflow (76 from the production-readiness audit + 1 new Schedule Trigger for the daily production cadence)', () => {
+  assert.equal(wf.nodes.length, 77);
 });
 
 test('Apify multi-company branch (Phase 21) is fully isolated — its own seed, split, loop, actor call, aggregate, batch endpoint, success/failure builders, and rate limiter', () => {
@@ -322,4 +335,139 @@ test('Lever case routes through Aggregate Lever Jobs before Extract Lever Jobs (
     '={{ $json.jobs }}',
     'must read the aggregated jobs array, not assume $json is still the whole raw response'
   );
+});
+
+// ── LinkedIn enrichment (data-slayer exact-ID pass) ────────────────────
+// Added during the 2026-10-16 production-readiness audit — this branch was
+// synced to the live workflow in a prior session but had no regression
+// coverage of its own; the six failures this audit found when reading the
+// real live-fetched JSON (see switchCaseValues/assertBatchesOneAtATime
+// above) proved this suite can silently drift from the live workflow it
+// claims to test. This section closes that gap for the newest branch.
+
+test('LinkedIn branch is its own fifth independent branch off Workflow Configuration — a failure here cannot block Tier A/D/B/Apify ingestion', () => {
+  const fanOut = wf.connections['Workflow Configuration']?.main?.[0] ?? [];
+  assert.ok(fanOut.some((c) => c.node === 'List Ingestion Sources'));
+  assert.ok(fanOut.some((c) => c.node === 'Apify Multi-Company Source Seeds'));
+  assert.ok(fanOut.some((c) => c.node === 'List LinkedIn Enrichment Queue'), 'LinkedIn branch must start fresh off Workflow Configuration, not depend on any other branch succeeding first');
+});
+
+test('List LinkedIn Enrichment Queue has Bearer auth, bounded retry, and a wired error output (never a hanging failure)', () => {
+  const node = findNode('List LinkedIn Enrichment Queue');
+  assert.equal(node.parameters.method, 'POST');
+  assert.match(node.parameters.url, /\/api\/internal\/ingestion\/list-linkedin-enrichment-queue$/);
+  assert.equal(node.parameters.authentication, 'genericCredentialType');
+  assert.equal(node.parameters.genericAuthType, 'httpBearerAuth');
+  assert.equal(node.retryOnFail, true);
+  assert.equal(node.onError, 'continueErrorOutput');
+  assert.ok(wf.connections['List LinkedIn Enrichment Queue']?.main?.[1]?.some((c) => c.node === 'Log List Queue Failure'), 'error output must be wired, never left hanging');
+});
+
+test('zero eligible jobs is a safe terminal, never the pricing/actor path', () => {
+  assert.ok(wf.connections['Check Eligible Jobs Exist']?.main?.[0]?.some((c) => c.node === 'Fetch Data-Slayer Pricing Metadata'), 'has_jobs case must lead to the pricing check');
+  assert.ok(wf.connections['Check Eligible Jobs Exist']?.main?.[1]?.some((c) => c.node === 'Build No Eligible Jobs Result'), 'no_jobs fallback must terminate safely, never reach pricing or the actor');
+});
+
+test('pricing metadata failure and price-too-high both abort before the actor is ever called', () => {
+  assert.ok(wf.connections['Fetch Data-Slayer Pricing Metadata']?.main?.[1]?.some((c) => c.node === 'Build Pricing Metadata Failure Result'), 'pricing metadata error output must be wired');
+  assert.ok(wf.connections['Check Data-Slayer Price']?.main?.[1]?.some((c) => c.node === 'Build Pricing Aborted Result'), 'price-too-high fallback must be wired');
+  const actorCallers = Object.entries(wf.connections)
+    .filter(([, c]) => (c.main ?? []).some((output) => (output ?? []).some((t) => t.node === 'Call Data-Slayer Actor')))
+    .map(([name]) => name);
+  assert.deepEqual(actorCallers, ['Check Data-Slayer Price'], 'the actor must only ever be reachable through the price_ok case — no other path may call it');
+});
+
+test('Call Data-Slayer Actor is exact-ID only, bounded, and never auto-retried (non-idempotent paid call)', () => {
+  const node = findNode('Call Data-Slayer Actor');
+  assert.equal(node.retryOnFail, false, 'a paid, non-idempotent actor call must never auto-retry (AGENTS.md §18/§35)');
+  assert.match(node.parameters.url, /maxItems=/);
+  assert.match(node.parameters.url, /maxTotalChargeUsd=/);
+  assert.match(node.parameters.jsonBody, /job_ids_or_urls/);
+  assert.match(node.parameters.jsonBody, /include_hiring_team:\s*false/);
+  assert.ok(!/keyword|location/i.test(node.parameters.jsonBody), 'must never send a keyword/location filter — this actor is exact-ID enrichment only, never discovery');
+  assert.equal((wf.connections['Call Data-Slayer Actor']?.main ?? []).length, 2, 'exactly one success + one error output');
+  assert.ok(wf.connections['Call Data-Slayer Actor']?.main?.[1]?.some((c) => c.node === 'Build Actor Failure Result'), 'actor error output must be wired, never left hanging');
+});
+
+test('actor success flows through dataset aggregation to server-side reconciliation, never applied twice', () => {
+  const actorOccurrences = wf.nodes.filter((n) => n.name === 'Call Data-Slayer Actor').length;
+  assert.equal(actorOccurrences, 1, 'the actor node must appear exactly once — no duplicate/hidden call path');
+  assert.ok(wf.connections['Call Data-Slayer Actor']?.main?.[0]?.some((c) => c.node === 'Aggregate Data-Slayer Dataset'));
+  assert.ok(wf.connections['Aggregate Data-Slayer Dataset']?.main?.[0]?.some((c) => c.node === 'Call LinkedIn Enrichment Batch Endpoint'));
+
+  const applyNode = findNode('Call LinkedIn Enrichment Batch Endpoint');
+  assert.equal(applyNode.retryOnFail, false, 'retrying an already-applied dataset would double-count attempts — must never auto-retry');
+  assert.match(applyNode.parameters.url, /\/api\/internal\/ingestion\/run-linkedin-enrichment-batch$/);
+  assert.match(applyNode.parameters.jsonBody, /requestedJobIds/);
+  assert.match(applyNode.parameters.jsonBody, /rawDatasetItems/);
+  assert.ok(wf.connections['Call LinkedIn Enrichment Batch Endpoint']?.main?.[1]?.some((c) => c.node === 'Build Apply Call Failure Result'), 'apply-call error output must be wired');
+});
+
+test('every LinkedIn branch terminal path converges on Record LinkedIn Enrichment Result — no path is left unobserved', () => {
+  const terminals = [
+    'Log List Queue Failure',
+    'Build No Eligible Jobs Result',
+    'Build Pricing Metadata Failure Result',
+    'Build Pricing Aborted Result',
+    'Build Actor Failure Result',
+    'Build Apply Call Failure Result',
+    'Build Enrichment Success Result',
+  ];
+  for (const name of terminals) {
+    assert.ok(wf.connections[name]?.main?.[0]?.some((c) => c.node === 'Record LinkedIn Enrichment Result'), `${name} must feed Record LinkedIn Enrichment Result`);
+  }
+});
+
+test('the LinkedIn branch has no loop/rate-limit-delay node — one run is already one bounded <=25-id batch, by design', () => {
+  assert.ok(!wf.nodes.some((n) => n.name === 'LinkedIn Rate Limit Delay'), 'no rate-limit loop should exist for this branch');
+  const splitBatchesNearLinkedIn = wf.nodes.filter(
+    (n) => n.type === 'n8n-nodes-base.splitInBatches' && n.name.toLowerCase().includes('linkedin')
+  );
+  assert.equal(splitBatchesNearLinkedIn.length, 0, 'List LinkedIn Enrichment Queue already bounds one run to one batch — no fan-out loop is needed or present');
+});
+
+// ── Daily production Schedule Trigger ──────────────────────────────────
+// Added once the production-readiness audit (and the explicit, approved
+// bounded LinkedIn pilot decision) closed out — see this workflow's own
+// overview sticky note: "stays inactive until a human reviews a run and
+// decides on a schedule." Kept alongside the Manual Trigger, never
+// replacing it, mirroring the exact same pattern already proven in
+// source-intelligence-analyzer.ts/.test.mjs.
+
+test('Daily 09:00 Beirut Trigger exists as a real Schedule Trigger node, alongside (never instead of) Start Job Ingestion Run', () => {
+  const schedule = findNode('Daily 09:00 Beirut Trigger');
+  assert.equal(schedule.type, 'n8n-nodes-base.scheduleTrigger');
+  findNode('Start Job Ingestion Run');
+});
+
+test('the schedule rule is daily at 09:00 (hour/minute), not a cron expression and not some other interval unit', () => {
+  const schedule = findNode('Daily 09:00 Beirut Trigger');
+  const rule = schedule.parameters.rule.interval[0];
+  assert.equal(rule.field, 'days', 'must be a days-interval rule, not seconds/minutes/hours/weeks/months/cronExpression');
+  assert.equal(rule.daysInterval, 1, 'must fire every day, not every N days');
+  assert.equal(rule.triggerAtHour, 9);
+  assert.equal(rule.triggerAtMinute, 0);
+});
+
+test('both the Manual Trigger and the Schedule Trigger converge on the same Workflow Configuration node — two independent entry points, one pipeline', () => {
+  assert.ok(wf.connections['Start Job Ingestion Run']?.main?.[0]?.some((c) => c.node === 'Workflow Configuration'), 'Manual Trigger must still feed Workflow Configuration');
+  assert.ok(wf.connections['Daily 09:00 Beirut Trigger']?.main?.[0]?.some((c) => c.node === 'Workflow Configuration'), 'Schedule Trigger must feed Workflow Configuration');
+});
+
+test('adding the Schedule Trigger did not change Workflow Configuration\'s own downstream fan-out — still exactly the 3 existing branches', () => {
+  const fanOut = wf.connections['Workflow Configuration']?.main?.[0] ?? [];
+  assert.equal(fanOut.length, 3, 'Workflow Configuration must still fan out to exactly 3 branches (List Ingestion Sources, Apify Multi-Company Source Seeds, List LinkedIn Enrichment Queue) — adding a second trigger upstream must never add a new downstream branch');
+  assert.ok(fanOut.some((c) => c.node === 'List Ingestion Sources'));
+  assert.ok(fanOut.some((c) => c.node === 'Apify Multi-Company Source Seeds'));
+  assert.ok(fanOut.some((c) => c.node === 'List LinkedIn Enrichment Queue'));
+});
+
+test('workflow-level timezone: if set, must be the real IANA identifier Asia/Beirut (never a fixed UTC offset, so Lebanon\'s DST transitions resolve automatically); if unset, this is the documented, still-pending manual n8n UI step (same confirmed SDK/MCP limitation as Error Workflow attachment — see the trigger node\'s own notes)', () => {
+  if (wf.settings.timezone !== undefined) {
+    assert.equal(wf.settings.timezone, 'Asia/Beirut');
+  }
+});
+
+test('the workflow remains inactive after adding the production schedule — going live is still a separate, explicit decision', () => {
+  assert.equal(wf.active, false);
 });
