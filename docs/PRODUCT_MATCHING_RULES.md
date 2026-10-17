@@ -340,6 +340,32 @@ query, unchanged) and from active capacity
 the same single field change achieves both "stop showing it as fresh" and
 "free the capacity slot," with no separate bookkeeping.
 
+**Fourth, complementary gate — matching-time freshness (`src/lib/matching/jobFreshness.ts`)**:
+all three mechanisms above require some ongoing signal (a fresh ingestion
+run, a populated deadline, or a close-text crawl) to ever fire. None of
+them fires for a job whose source has simply stopped being re-crawled at
+all (confirmed real gap: LinkedIn has no discovery branch wired into the
+ingestion workflow yet, so a persisted LinkedIn job is never re-confirmed
+by anything; any other source that is disabled, paused, or broken leaves
+its rows `status='active'` forever). `checkJobFreshness()` is a pure,
+read-time-only check — called inside `shortlistJobsForUser` alongside
+`checkJobEligibility()`, before similarity ranking and therefore before
+rerank too — that never reads or writes `status`: a job remains stored and
+`active` exactly as before, it is simply not selected for a given
+matching run until reconfirmed. This is deliberately not a fourth
+status-transition (an outage can never mass-expire anything this way; the
+moment the source is reconfirmed, `last_seen_at` updates and the job is
+normal again, no backfill needed). Priority order: explicit `expires_at`/
+`closing_date` in the past always excludes (same condition as
+`expire_due_jobs()`, respected immediately even while that sweep stays
+unscheduled); otherwise `last_seen_at` within `RECENT_CONFIRMATION_WINDOW_DAYS`
+(21) is authoritative; absent that, `published_at` (or, failing that,
+`created_at`) within `FALLBACK_PUBLISHED_WINDOW_DAYS` (45) is the fallback.
+Thresholds are evidence-based (see this feature's own pilot audit), not a
+blind 30-day guess — a flat posted-date-only rule would wrongly exclude
+real, still-reconfirmed "evergreen" Workable/Greenhouse postings this
+project's own data shows staying open 60-90+ days.
+
 **Do not** re-scope `job_match_limit`/`daily_new_match_limit` counting to
 a specific `cv_analysis_id` (the OLD model's mistake) — active capacity is
 counted per user across all of their surfaced matches, since that is what

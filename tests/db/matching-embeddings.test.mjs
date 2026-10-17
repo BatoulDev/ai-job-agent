@@ -269,6 +269,72 @@ test("shortlistJobsForUser: respects shortlistSize even when more eligible jobs 
   assert.equal(results.length, 2);
 });
 
+test("shortlistJobsForUser: a job unconfirmed for far longer than the freshness window never appears, regardless of similarity", async () => {
+  const profileEmbedding = [1, 0, 0, 0, 0, 0, 0, 0];
+  const closeVector = [1, 0, 0, 0, 0, 0, 0, 0];
+
+  const staleJob = await insertFixtureJob({
+    title: "Stale Unconfirmed Job",
+    last_seen_at: new Date(Date.now() - 90 * 86_400_000).toISOString(),
+    published_at: new Date(Date.now() - 400 * 86_400_000).toISOString(),
+  });
+  await adminClient.from("jobs").update({ embedding: closeVector }).eq("id", staleJob.id);
+
+  const results = await shortlistJobsForUser(
+    adminClient,
+    profileEmbedding,
+    { planCode: "free", jobMarketCoverage: null, internationalSearchEnabled: false, willingToRelocate: null, relocationMarketCountryCodes: [] },
+    { candidatePoolSize: 100, shortlistSize: 10 }
+  );
+
+  assert.ok(!results.some((r) => r.jobId === staleJob.id), "a job unconfirmed for far longer than the freshness window must never reach the similarity-ranked shortlist, even with a perfect vector match");
+
+  const { data: stillStored } = await adminClient.from("jobs").select("id, status").eq("id", staleJob.id).single();
+  assert.equal(stillStored.status, "active", "the stale job's row must remain stored, untouched — this is a read-time matching exclusion, never a status mutation or delete");
+});
+
+test("shortlistJobsForUser: an old posting still reconfirmed recently (evergreen listing) remains eligible", async () => {
+  const profileEmbedding = [1, 0, 0, 0, 0, 0, 0, 0];
+  const closeVector = [1, 0, 0, 0, 0, 0, 0, 0];
+
+  const evergreenJob = await insertFixtureJob({
+    title: "Evergreen Reconfirmed Job",
+    last_seen_at: new Date(Date.now() - 2 * 86_400_000).toISOString(),
+    published_at: new Date(Date.now() - 180 * 86_400_000).toISOString(),
+  });
+  await adminClient.from("jobs").update({ embedding: closeVector }).eq("id", evergreenJob.id);
+
+  const results = await shortlistJobsForUser(
+    adminClient,
+    profileEmbedding,
+    { planCode: "free", jobMarketCoverage: null, internationalSearchEnabled: false, willingToRelocate: null, relocationMarketCountryCodes: [] },
+    { candidatePoolSize: 100, shortlistSize: 10 }
+  );
+
+  assert.ok(results.some((r) => r.jobId === evergreenJob.id), "an old posting that is still actively reconfirmed by ingestion must remain eligible — a flat posted-date-only rule would wrongly exclude it");
+});
+
+test("shortlistJobsForUser: an explicitly expired job (expires_at passed) is excluded even though status is still active", async () => {
+  const profileEmbedding = [1, 0, 0, 0, 0, 0, 0, 0];
+  const closeVector = [1, 0, 0, 0, 0, 0, 0, 0];
+
+  const expiredJob = await insertFixtureJob({
+    title: "Expired Deadline Job",
+    last_seen_at: new Date().toISOString(),
+    expires_at: new Date(Date.now() - 3600_000).toISOString(),
+  });
+  await adminClient.from("jobs").update({ embedding: closeVector }).eq("id", expiredJob.id);
+
+  const results = await shortlistJobsForUser(
+    adminClient,
+    profileEmbedding,
+    { planCode: "free", jobMarketCoverage: null, internationalSearchEnabled: false, willingToRelocate: null, relocationMarketCountryCodes: [] },
+    { candidatePoolSize: 100, shortlistSize: 10 }
+  );
+
+  assert.ok(!results.some((r) => r.jobId === expiredJob.id), "a job past its expires_at must never be shortlisted, even while the (unscheduled) expire_due_jobs sweep has not yet flipped its status");
+});
+
 // ── Two-step split for the n8n-owned provider call (Phase 05 architecture
 // decision) ─────────────────────────────────────────────────────────────
 

@@ -79,6 +79,15 @@ export interface RawProviderJob {
   /** ISO 8601. */
   publishedAt?: string | null;
   sourceLastModifiedAt?: string | null;
+  /**
+   * Source-stated application deadline (ISO 8601), when the provider
+   * states one explicitly — e.g. schema.org JobPosting's `validThrough`
+   * (extractCareerPageJobPostings.ts). Maps to jobs.closing_date, which
+   * the already-existing (unscheduled) expire_due_jobs() sweep and the
+   * matching-time freshness gate (jobFreshness.ts) both already read.
+   * Most adapters have no such signal and leave this null/undefined.
+   */
+  closingDate?: string | null;
 }
 
 export type RawProviderJobRejectReason =
@@ -164,6 +173,7 @@ export interface JobUpsertRow {
   remote_scope: string | null;
   published_at: string | null;
   source_last_modified_at: string | null;
+  closing_date: string | null;
   /**
    * A low-confidence location is still ingested (never dropped — Phase 02's
    * eligibility gate is what actually hides it from users), but flagged
@@ -213,6 +223,7 @@ export function mapRawProviderJobToJobRow(raw: RawProviderJob, context: JobSourc
     remote_scope: location.remoteScope,
     published_at: raw.publishedAt ?? null,
     source_last_modified_at: raw.sourceLastModifiedAt ?? null,
+    closing_date: raw.closingDate ?? null,
     status: location.locationConfidence === "low" ? "pending_review" : "active",
   };
 }

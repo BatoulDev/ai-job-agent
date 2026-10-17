@@ -755,6 +755,32 @@ describe("mapIndeedJob — curious_coder/indeed-scraper, live-verified (Phase 21
     assert.equal(job.rawLocation, null);
     assert.deepEqual(validateMultiCompanyProviderJob(job, "indeed"), { valid: false, reason: "missing_company_name" });
   });
+
+  // `expired` is declared on IndeedRawJob's type but was NEVER observed in
+  // the one real live benchmark this adapter was built from (the "Real
+  // schema" list in docs/LEBANON_LIVE_SOURCE_EXPANSION.md §2 does not
+  // include it) — its real true/false/absent contract for
+  // curious_coder/indeed-scraper has never been confirmed live. Mapping
+  // `expired:true` to jobs.closing_date/status without that confirmation
+  // would be exactly the kind of guessed metadata AGENTS.md §30 forbids
+  // (and the kind of untested assumption the real bebity $1.47 cost
+  // incident already taught this project to distrust). Deliberately NOT
+  // implemented — these tests lock in the current, correct behavior so a
+  // future change cannot silently start trusting an unverified field.
+  test("mapIndeedJob: expired:true is never read — closingDate is unset regardless (NOT_SAFE_TO_IMPLEMENT, unverified contract)", () => {
+    const job = mapIndeedJob({ ...realShapedRaw, expired: true });
+    assert.equal(job.closingDate, undefined);
+  });
+
+  test("mapIndeedJob: expired:false is never read — no inferred 'still active' signal beyond existing rules", () => {
+    const job = mapIndeedJob({ ...realShapedRaw, expired: false });
+    assert.equal(job.closingDate, undefined);
+  });
+
+  test("mapIndeedJob: a missing expired field preserves current behavior exactly (no change for the common real case)", () => {
+    const job = mapIndeedJob(realShapedRaw);
+    assert.equal(job.closingDate, undefined);
+  });
 });
 
 // Lebanon pilot: new adapter, built from a real bounded 10-item Lebanon

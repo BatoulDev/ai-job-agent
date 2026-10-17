@@ -6,6 +6,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { deriveEligibilityLocation, type JobLocationColumns } from "../ingestion/jobEligibilityLocation.ts";
 import { checkJobEligibility, type JobEligibilityInput } from "../ingestion/checkJobEligibility.ts";
+import { checkJobFreshness } from "./jobFreshness.ts";
 import { cosineSimilarity } from "./cosineSimilarity.ts";
 
 export type ShortlistUserContext = Omit<JobEligibilityInput, "job">;
@@ -25,13 +26,21 @@ export interface ShortlistOptions {
 interface CandidateJobRow extends JobLocationColumns {
   id: string;
   embedding: number[] | null;
+  published_at: string | null;
+  last_seen_at: string | null;
+  expires_at: string | null;
+  closing_date: string | null;
+  created_at: string;
 }
 
 /**
  * Fetches a bounded pool of recently-seen active jobs, applies Phase 02's
- * hard eligibility gate, then ranks the eligible subset by cosine similarity
- * to the user's profile embedding. Never calls an LLM — see Phase 06 for
- * that step, which only ever runs on this function's (small) output.
+ * hard eligibility gate plus the freshness gate (jobFreshness.ts — catches
+ * jobs whose source has stopped being re-crawled entirely, which status
+ * alone does not yet express), then ranks the eligible subset by cosine
+ * similarity to the user's profile embedding. Never calls an LLM — see
+ * Phase 06 for that step, which only ever runs on this function's (small)
+ * output.
  */
 export async function shortlistJobsForUser(
   supabase: SupabaseClient,
@@ -41,7 +50,7 @@ export async function shortlistJobsForUser(
 ): Promise<ShortlistedJob[]> {
   const { data, error } = await supabase
     .from("jobs")
-    .select("id, location, country_code, city, work_arrangement, remote_scope, embedding, employment_type")
+    .select("id, location, country_code, city, work_arrangement, remote_scope, embedding, employment_type, published_at, last_seen_at, expires_at, closing_date, created_at")
     .eq("status", "active")
     .not("embedding", "is", null)
     .order("last_seen_at", { ascending: false })
@@ -60,6 +69,15 @@ export async function shortlistJobsForUser(
   const scored: ShortlistedJob[] = [];
   for (const job of (data ?? []) as CandidateJobRow[]) {
     if (!job.embedding) continue;
+
+    const freshness = checkJobFreshness({
+      publishedAt: job.published_at,
+      lastSeenAt: job.last_seen_at,
+      expiresAt: job.expires_at,
+      closingDate: job.closing_date,
+      createdAt: job.created_at,
+    });
+    if (!freshness.fresh) continue;
 
     const location = deriveEligibilityLocation({
       location: job.location,

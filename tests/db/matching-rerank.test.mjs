@@ -178,6 +178,22 @@ test("findRerankCandidates: returns a grounded prompt for an eligible, shortlist
   assert.equal(match.candidateId, encodeCandidateId(analysis.id, job.id));
 });
 
+test("findRerankCandidates: a stale, long-unconfirmed job is never built into a rerank prompt — the freshness gate runs upstream, inside shortlistJobsForUser, before any candidate reaches this step", async () => {
+  const analysis = await approveAnalysisWithEmbedding("find-stale", [1, 0, 0, 0]);
+  const staleJob = await insertFixtureJob({
+    title: "Stale Job Must Never Reach Rerank",
+    embedding: [1, 0, 0, 0],
+    last_seen_at: new Date(Date.now() - 90 * 86_400_000).toISOString(),
+    published_at: new Date(Date.now() - 400 * 86_400_000).toISOString(),
+  });
+
+  const candidates = await findRerankCandidates(adminClient, { userLimit: 50, jobsPerUser: 10, candidatePoolSize: 100 });
+  assert.ok(
+    !candidates.some((c) => c.cvAnalysisId === analysis.id && c.jobId === staleJob.id),
+    "a stale job must never be built into a rerank candidate/prompt, however strong its embedding similarity"
+  );
+});
+
 test("findRerankCandidates: excludes a job that already has a matches row for that (user, analysis)", async () => {
   const analysis = await approveAnalysisWithEmbedding("find-2", [1, 0, 0, 0]);
   const job = await insertFixtureJob({ title: "Already Matched Job", embedding: [1, 0, 0, 0] });

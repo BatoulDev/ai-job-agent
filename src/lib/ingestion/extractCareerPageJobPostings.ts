@@ -42,6 +42,21 @@ interface SchemaOrgJobPosting {
   jobLocation?: { address?: SchemaOrgPostalAddress } | { address?: SchemaOrgPostalAddress }[];
   jobLocationType?: string;
   applicantLocationRequirements?: unknown;
+  /** schema.org/JobPosting's standard deadline field — "the date after which the posting is removed/no longer valid". Real-world values vary: full ISO 8601, date-only (YYYY-MM-DD), or occasionally malformed/non-date text. */
+  validThrough?: string;
+}
+
+/**
+ * Parses schema.org JobPosting's validThrough into an ISO 8601 string, or
+ * null for anything not a genuine date (missing, malformed, non-date
+ * text) — never throws, never guesses a value. A date-only string
+ * (YYYY-MM-DD) parses fine via the Date constructor (UTC midnight), same
+ * as a full timestamp.
+ */
+function parseValidThrough(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const parsed = new Date(value.trim());
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
 const EMPLOYMENT_TYPE_MAP: Record<string, string> = {
@@ -114,6 +129,7 @@ function mapJobPosting(posting: SchemaOrgJobPosting): RawProviderJob {
     publishedAt: posting.datePosted ?? null,
     sourceLastModifiedAt: null,
     sourceListingUrl: typeof posting.url === "string" ? posting.url : null,
+    closingDate: parseValidThrough(posting.validThrough),
   };
 }
 

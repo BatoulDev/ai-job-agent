@@ -1393,7 +1393,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25},\"refresh_scope\":null,\"max_jobs_per_run\":25},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15},\"refresh_scope\":\"country:SA\",\"max_jobs_per_run\":15},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15},\"refresh_scope\":\"country:AE:location:Dubai\",\"max_jobs_per_run\":15},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15},\"refresh_scope\":null,\"max_jobs_per_run\":15}]}",
+        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25},\"refresh_scope\":null,\"max_jobs_per_run\":25,\"max_total_charge_usd\":0.02525},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15},\"refresh_scope\":\"country:SA\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15},\"refresh_scope\":\"country:AE:location:Dubai\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15},\"refresh_scope\":null,\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0016}]}",
         "options": {}
       },
       "id": "ab329f9e-453f-485b-b8a6-0d187e6d6f4f",
@@ -1436,7 +1436,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "={{ $json.actor_url }}",
+        "url": "={{ $json.actor_url + '?maxTotalChargeUsd=' + $json.max_total_charge_usd }}",
         "authentication": "genericCredentialType",
         "genericAuthType": "httpHeaderAuth",
         "sendBody": true,
@@ -1454,7 +1454,7 @@
         1344,
         3088
       ],
-      "retryOnFail": true,
+      "retryOnFail": false,
       "maxTries": 2,
       "waitBetweenTries": 5000,
       "onError": "continueErrorOutput",
