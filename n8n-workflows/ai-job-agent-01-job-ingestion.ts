@@ -785,7 +785,15 @@ const apifyMultiCompanySourceSeeds = node({
       'Endpoint instead of the global Workflow Configuration.maxJobsPerSource — the global 5 was far below every ' +
       'real paid batch size (25/15/15/15) and falsely truncated all four. Still clamped server-side against ' +
       "providerConfig.ts's maxJobsPerRun (40 for all three) — this value can only ever be lowered by the server, " +
-      'never raised.',
+      'never raised. ' +
+      'max_total_charge_usd (Phase 2 cost-safety fix): the real platform-level run-option cap for Call Apify ' +
+      'Actor below, same mechanism already used for Call Data-Slayer Actor. All three actors are real, confirmed ' +
+      "PAY_PER_EVENT (free pricing-metadata GET, re-verified live) — each value here is the exact real cost of a " +
+      'fully-successful run at this seed\'s own max_jobs_per_run: the one-time apify-actor-start charge plus ' +
+      "max_jobs_per_run x the per-dataset-item charge (Bayt 0.0005 + 25x0.00099 = 0.02525; GulfTalent " +
+      '0.005 + 15x0.0007 = 0.0155 for each of its two seeds; Indeed 0.0001 + 15x0.0001 = 0.0016). The actor-start ' +
+      'component is not an arbitrary buffer — omitting it would make the cap trigger before a run that returns ' +
+      'exactly max_jobs_per_run items and behaves entirely within its configured bounds.',
     parameters: {
       mode: 'raw',
       jsonOutput: {
@@ -796,6 +804,7 @@ const apifyMultiCompanySourceSeeds = node({
             request_body: { country: 'LB', maxResults: 25 },
             refresh_scope: null,
             max_jobs_per_run: 25,
+            max_total_charge_usd: 0.02525,
           },
           {
             provider_type: 'gulftalent',
@@ -803,6 +812,7 @@ const apifyMultiCompanySourceSeeds = node({
             request_body: { country: 'SA', maxResults: 15 },
             refresh_scope: 'country:SA',
             max_jobs_per_run: 15,
+            max_total_charge_usd: 0.0155,
           },
           {
             provider_type: 'gulftalent',
@@ -810,6 +820,7 @@ const apifyMultiCompanySourceSeeds = node({
             request_body: { country: 'AE', location: 'Dubai', maxResults: 15 },
             refresh_scope: 'country:AE:location:Dubai',
             max_jobs_per_run: 15,
+            max_total_charge_usd: 0.0155,
           },
           {
             provider_type: 'indeed',
@@ -817,6 +828,7 @@ const apifyMultiCompanySourceSeeds = node({
             request_body: { country: 'ae', location: 'Dubai', count: 15 },
             refresh_scope: null,
             max_jobs_per_run: 15,
+            max_total_charge_usd: 0.0016,
           },
         ],
       },
@@ -831,6 +843,7 @@ const apifyMultiCompanySourceSeeds = node({
           request_body: { country: 'LB', maxResults: 25 },
           refresh_scope: null,
           max_jobs_per_run: 25,
+          max_total_charge_usd: 0.02525,
         },
       ],
     },
@@ -844,13 +857,13 @@ const splitOutApifySources = node({
     name: 'Split Out Apify Sources',
     parameters: { fieldToSplitOut: 'apify_sources' },
   },
-  output: [{ provider_type: 'bayt', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items', request_body: { country: 'LB', maxResults: 25 } }],
+  output: [{ provider_type: 'bayt', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items', request_body: { country: 'LB', maxResults: 25 }, max_total_charge_usd: 0.02525 }],
 });
 
 const loopApifySources = splitInBatches({
   version: 3,
   config: { name: 'Loop Apify Sources (Rate Limited)', parameters: { batchSize: 1 } },
-  output: [{ provider_type: 'bayt', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items', request_body: { country: 'LB', maxResults: 25 } }],
+  output: [{ provider_type: 'bayt', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items', request_body: { country: 'LB', maxResults: 25 }, max_total_charge_usd: 0.02525 }],
 });
 
 const callApifyActor = node({
@@ -860,14 +873,21 @@ const callApifyActor = node({
     name: 'Call Apify Actor',
     notes:
       "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI — programmatic credential binding for " +
-      'generic-auth types on this node is a confirmed n8n MCP tool limitation (reported separately), not a project issue.',
+      'generic-auth types on this node is a confirmed n8n MCP tool limitation (reported separately), not a project issue. ' +
+      "retryOnFail is deliberately false (Phase 2 hardening fix, same reasoning already applied to Call Data-Slayer " +
+      'Actor above): Bayt/GulfTalent/Indeed are real, confirmed PAY_PER_EVENT actors (live-verified via a free ' +
+      "pricing-metadata GET, same check Data-Slayer's own call uses) — a run-sync-get-dataset-items call is a paid, " +
+      "non-idempotent external side effect, so a transport-level retry on this 60s-timeout node could start a second " +
+      'full-price actor run while the first is still executing/billing (AGENTS.md §18 — never retry a non-idempotent ' +
+      'paid action). Actor/network failure still reaches Build Apify Failure Result via onError below, unchanged. ' +
+      "maxTotalChargeUsd (Phase 2 cost-safety fix): appended as a real platform-level run option, per-seed " +
+      "max_total_charge_usd (Apify Multi-Company Source Seeds' own notes have the exact derivation) — the same " +
+      'financial backstop Call Data-Slayer Actor already uses, now applied here too.',
     onError: 'continueErrorOutput',
-    retryOnFail: true,
-    maxTries: 2,
-    waitBetweenTries: 5000,
+    retryOnFail: false,
     parameters: {
       method: 'POST',
-      url: expr('{{ $json.actor_url }}'),
+      url: expr("{{ $json.actor_url + '?maxTotalChargeUsd=' + $json.max_total_charge_usd }}"),
       authentication: 'genericCredentialType',
       genericAuthType: 'httpHeaderAuth',
       sendBody: true,

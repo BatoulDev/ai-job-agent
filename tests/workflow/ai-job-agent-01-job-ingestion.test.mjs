@@ -319,6 +319,97 @@ test('Apify multi-company branch (Phase 21) is fully isolated — its own seed, 
   assert.match(callApifyBatchEndpoint.parameters.jsonBody, /Split Out Apify Sources/, "Call Apify Batch Endpoint's sourceType expression must resolve its own branch's Split Out node, not the Tier D branch's");
 });
 
+// Phase 2 hardening fix: Call Apify Actor is the shared paid, non-idempotent
+// run-sync-get-dataset-items call for Bayt/GulfTalent/Indeed (all three real,
+// confirmed PAY_PER_EVENT actors). A transport-level retry on this 60s-
+// timeout node could start a second full-price actor run while the first is
+// still executing/billing — the exact same reasoning already correctly
+// applied to Call Data-Slayer Actor below.
+test('Call Apify Actor exists exactly once and never auto-retries (paid, non-idempotent actor call shared by Bayt/GulfTalent/Indeed)', () => {
+  const occurrences = wf.nodes.filter((n) => n.name === 'Call Apify Actor').length;
+  assert.equal(occurrences, 1, 'the actor node must appear exactly once — no duplicate/hidden call path');
+
+  const node = findNode('Call Apify Actor');
+  assert.equal(node.retryOnFail, false, 'a paid, non-idempotent actor call must never auto-retry (AGENTS.md §18)');
+
+  // All four real seeds (Bayt, GulfTalent SA, GulfTalent AE/Dubai, Indeed)
+  // route through this one shared node via the loop's error-output index 1.
+  assert.ok(wf.connections['Loop Apify Sources (Rate Limited)'].main[1].some((c) => c.node === 'Call Apify Actor'), 'Bayt/GulfTalent/Indeed must still route through the same shared actor node');
+
+  // Downstream failure routing remains intact regardless of the retry fix —
+  // onError still reaches an explicit terminal, the branch never silently
+  // disappears.
+  assert.ok(wf.connections['Call Apify Actor'].main[0].some((c) => c.node === 'Aggregate Apify Jobs'), 'success output must still feed Aggregate Apify Jobs');
+  assert.ok(wf.connections['Call Apify Actor'].main[1].some((c) => c.node === 'Build Apify Failure Result'), 'error output must still feed Build Apify Failure Result, never left hanging');
+});
+
+// Phase 2 cost-safety hardening: Bayt/GulfTalent/Indeed are all real,
+// confirmed PAY_PER_EVENT actors (free pricing-metadata GET, re-verified
+// live twice this phase) — same mechanism Call Data-Slayer Actor already
+// uses. Per-item prices below are the real, live-verified values
+// (apify-default-dataset-item), not assumed. Each seed's maxTotalChargeUsd
+// is actor-start (one-time) + max_jobs_per_run * per-item — the actor-start
+// term is not an arbitrary buffer; omitting it would make the cap trigger
+// before a run that returns exactly max_jobs_per_run items finishes.
+const APIFY_ACTOR_START_USD = { bayt: 0.0005, gulftalent: 0.005, indeed: 0.0001 };
+const APIFY_PER_ITEM_USD = { bayt: 0.00099, gulftalent: 0.0007, indeed: 0.0001 };
+
+function getApifySeeds() {
+  const seedsNode = findNode('Apify Multi-Company Source Seeds');
+  const parsed = JSON.parse(seedsNode.parameters.jsonOutput);
+  return parsed.apify_sources;
+}
+
+test('Call Apify Actor derives maxTotalChargeUsd dynamically from each seed, never a hardcoded shared value', () => {
+  const node = findNode('Call Apify Actor');
+  assert.match(node.parameters.url, /\$json\.actor_url/, 'must still build the URL from the seed\'s own actor_url');
+  assert.match(node.parameters.url, /maxTotalChargeUsd=.*\$json\.max_total_charge_usd/, 'maxTotalChargeUsd must be appended dynamically per-seed, mirroring Call Data-Slayer Actor\'s own pattern');
+  // request_body (maxResults/count) must be preserved untouched, separate from the new cap.
+  assert.match(node.parameters.jsonBody, /\$json\.request_body/);
+  assert.equal(node.retryOnFail, false);
+  assert.equal(node.parameters.options.timeout, 60000, 'timeout must be preserved');
+});
+
+for (const [providerType, refreshScope, label] of [
+  ['bayt', null, 'Bayt'],
+  ['gulftalent', 'country:SA', 'GulfTalent SA'],
+  ['gulftalent', 'country:AE:location:Dubai', 'GulfTalent UAE/Dubai'],
+  ['indeed', null, 'Indeed'],
+]) {
+  test(`${label} seed's maxTotalChargeUsd is bounded and derived from its own configured result cap x the verified per-item price`, () => {
+    const seeds = getApifySeeds();
+    const seed = seeds.find((s) => s.provider_type === providerType && s.refresh_scope === refreshScope);
+    assert.ok(seed, `${label} seed must exist`);
+
+    const maxResults = seed.request_body.maxResults ?? seed.request_body.count;
+    assert.ok(typeof maxResults === 'number' && maxResults > 0, `${label}'s own maxResults/count must be a positive number`);
+    assert.equal(seed.max_jobs_per_run, maxResults, `${label}'s max_jobs_per_run must match its own actor-input result cap`);
+
+    const expected = Math.round((APIFY_ACTOR_START_USD[providerType] + maxResults * APIFY_PER_ITEM_USD[providerType]) * 1e6) / 1e6;
+    assert.equal(seed.max_total_charge_usd, expected, `${label}'s maxTotalChargeUsd must equal actor-start + maxResults x per-item price, not an arbitrary value`);
+    assert.ok(seed.max_total_charge_usd > 0 && seed.max_total_charge_usd < 1, `${label}'s cap must be a small, real bounded amount, never unbounded`);
+  });
+}
+
+test('Call Data-Slayer Actor retry safety is unaffected by the Apify actor retry fix (regression against accidental reversion)', () => {
+  const node = findNode('Call Data-Slayer Actor');
+  assert.equal(node.retryOnFail, false);
+});
+
+test('unrelated safe-read/internal-API retry policies are unchanged by the Apify actor retry fix', () => {
+  // Call Apify Batch Endpoint is the safe, idempotent internal API call
+  // (not a paid external side effect) — its retry must remain untouched.
+  const batchEndpoint = findNode('Call Apify Batch Endpoint');
+  assert.equal(batchEndpoint.retryOnFail, true);
+  assert.equal(batchEndpoint.maxTries, 2);
+
+  // Spot-check a handful of other provider-facing/internal nodes elsewhere
+  // in the graph to confirm this was a scoped, single-node fix.
+  assert.equal(findNode('Fetch Source Jobs').retryOnFail, true);
+  assert.equal(findNode('Fetch Multi-Company Feed').retryOnFail, true);
+  assert.equal(findNode('List LinkedIn Enrichment Queue').retryOnFail, true);
+});
+
 test('Lever case routes through Aggregate Lever Jobs before Extract Lever Jobs (Phase 14 fix — Lever\'s bare top-level array response gets auto-split into one item per job by n8n, so the raw array must be re-collected before extraction)', () => {
   const switchConns = wf.connections['Extract Jobs By ATS Type']?.main ?? [];
   assert.ok(switchConns[1]?.some((c) => c.node === 'Aggregate Lever Jobs'), 'the lever case (index 1) must route to Aggregate Lever Jobs, not directly to Extract Lever Jobs');
