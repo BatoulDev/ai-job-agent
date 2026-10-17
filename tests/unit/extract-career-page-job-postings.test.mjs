@@ -105,4 +105,36 @@ describe("extractCareerPageJobPostings", () => {
     assert.deepEqual(extractCareerPageJobPostings(null), []);
     assert.deepEqual(extractCareerPageJobPostings(undefined), []);
   });
+
+  // validThrough: schema.org JobPosting's standard deadline field —
+  // authoritative by the spec itself (the same markup Google for Jobs
+  // consumes), unlike Indeed's unverified `expired` flag. Maps to
+  // jobs.closing_date, which the existing expire_due_jobs() sweep and the
+  // matching-time freshness gate (jobFreshness.ts) already read.
+  test("a full ISO 8601 validThrough persists as closingDate", () => {
+    const jobs = extractCareerPageJobPostings(pageWithJsonLd({ ...singlePosting, validThrough: "2026-12-31T23:59:59Z" }));
+    assert.equal(jobs[0].closingDate, "2026-12-31T23:59:59.000Z");
+  });
+
+  test("a date-only validThrough (YYYY-MM-DD) still persists correctly", () => {
+    const jobs = extractCareerPageJobPostings(pageWithJsonLd({ ...singlePosting, validThrough: "2026-12-31" }));
+    assert.equal(jobs[0].closingDate, "2026-12-31T00:00:00.000Z");
+  });
+
+  test("a malformed validThrough never crashes extraction — closingDate is null, the rest of the posting still extracts", () => {
+    const jobs = extractCareerPageJobPostings(pageWithJsonLd({ ...singlePosting, validThrough: "not-a-real-date" }));
+    assert.equal(jobs.length, 1);
+    assert.equal(jobs[0].closingDate, null);
+    assert.equal(jobs[0].title, "Software Engineer");
+  });
+
+  test("a missing validThrough preserves current behavior (closingDate null, nothing else affected)", () => {
+    const jobs = extractCareerPageJobPostings(pageWithJsonLd(singlePosting));
+    assert.equal(jobs[0].closingDate, null);
+  });
+
+  test("validThrough of a non-string type (e.g. a number) is safely ignored, never coerced", () => {
+    const jobs = extractCareerPageJobPostings(pageWithJsonLd({ ...singlePosting, validThrough: 20261231 }));
+    assert.equal(jobs[0].closingDate, null);
+  });
 });
