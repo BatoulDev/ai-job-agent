@@ -682,6 +682,57 @@ describe("mapBaytJob / mapGulfTalentJob — blackfalcondata Apify actors, live-v
     assert.deepEqual(validateMultiCompanyProviderJob(job, "gulftalent"), { valid: false, reason: "missing_company_name" });
   });
 
+  // 2026-10-22 fix: a real historical dataset item (Michael Page, Saudi
+  // Arabia, dataset PfXFN8QlhTArfYf2H) has a genuine source-stated
+  // validThrough deadline that mapGulfTalentJob previously never read,
+  // leaving closingDate permanently null even when GulfTalent supplies a
+  // real one. Same parseValidThrough convention already proven in
+  // extractCareerPageJobPostings.ts.
+
+  test("mapGulfTalentJob: a valid validThrough with a timezone offset maps to the same instant as closingDate, and unrelated fields stay correct (real historical shape, Michael Page / Saudi Arabia)", () => {
+    const job = mapGulfTalentJob({
+      jobId: "gt-expiry-1",
+      title: "Business Development Manager - EPC",
+      company: "Michael Page",
+      location: "Saudi Arabia",
+      employmentType: "Full Time",
+      description: "d",
+      applyUrl: "https://www.gulftalent.com/saudi-arabia/jobs/business-development-manager-epc-648630",
+      validThrough: "2027-01-18T00:00:00+00:00",
+    });
+    assert.equal(job.closingDate, "2027-01-18T00:00:00.000Z");
+    // Unrelated fields must be unaffected by this fix.
+    assert.equal(job.externalId, "gt-expiry-1");
+    assert.equal(job.companyName, "Michael Page");
+    assert.equal(job.applicationUrl, "https://www.gulftalent.com/saudi-arabia/jobs/business-development-manager-epc-648630");
+    assert.equal(job.employmentType, "full-time");
+  });
+
+  test("mapGulfTalentJob: a valid validThrough already in UTC (Z suffix) maps correctly", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x", validThrough: "2027-01-18T00:00:00Z" });
+    assert.equal(job.closingDate, "2027-01-18T00:00:00.000Z");
+  });
+
+  test("mapGulfTalentJob: validThrough absent maps to null closingDate, never an invented deadline", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x" });
+    assert.equal(job.closingDate, null);
+  });
+
+  test("mapGulfTalentJob: validThrough explicitly null maps to null closingDate", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x", validThrough: null });
+    assert.equal(job.closingDate, null);
+  });
+
+  test("mapGulfTalentJob: validThrough as an empty string maps to null closingDate", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x", validThrough: "" });
+    assert.equal(job.closingDate, null);
+  });
+
+  test("mapGulfTalentJob: a malformed/non-date validThrough maps to null, never a misleading valid deadline", () => {
+    const job = mapGulfTalentJob({ jobId: "x", title: "t", company: "c", description: "d", applyUrl: "https://www.gulftalent.com/x", validThrough: "not-a-real-date" });
+    assert.equal(job.closingDate, null);
+  });
+
   test("mapBaytJob / mapGulfTalentJob: a raw job missing companyName is rejected by the multi-company validator specifically (missing_company_name), not the generic Tier-A rule — proves both adapters flow through the correct validator", () => {
     const baytJob = mapBaytJob({ jobId: "x", title: "t", description: "d", url: "https://www.bayt.com/x" });
     assert.equal(baytJob.companyName, null);
