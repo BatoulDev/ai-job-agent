@@ -1393,7 +1393,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25},\"refresh_scope\":null,\"max_jobs_per_run\":25,\"max_total_charge_usd\":0.02525},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15},\"refresh_scope\":\"country:SA\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15},\"refresh_scope\":\"country:AE:location:Dubai\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15},\"refresh_scope\":null,\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0016}]}",
+        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25},\"refresh_scope\":null,\"max_jobs_per_run\":25,\"max_total_charge_usd\":0.02525},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15},\"refresh_scope\":null,\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0016}]}",
         "options": {}
       },
       "id": "ab329f9e-453f-485b-b8a6-0d187e6d6f4f",
@@ -2840,6 +2840,569 @@
         }
       },
       "notes": "Production daily cadence. TIMEZONE: this node's own parameters have no timezone field — triggerAtHour/triggerAtMinute are interpreted using this WORKFLOW's own Settings → Timezone (falls back to the n8n instance's GENERIC_TIMEZONE, then UTC, if unset). Neither the n8n Workflow SDK nor n8n-mcp's update_workflow exposes a way to set workflow-level settings.timezone — confirmed, same category of manual-only limitation as this workflow's Error Workflow attachment. For 9/0 below to mean real 09:00 Asia/Beirut (with correct automatic DST handling), a human must set this workflow's own Settings → Timezone → Asia/Beirut once in the n8n UI. Until then this resolves to 09:00 UTC, not Beirut time."
+    },
+    {
+      "id": "c0bcdd9f-4b43-4a84-ae1e-f92333b9af5e",
+      "name": "GulfTalent Source Seeds",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        3650
+      ],
+      "notes": "Static seed list, moved out of Apify Multi-Company Source Seeds (see the async/polling note on this branch). actor_url is the bare actor resource (no /run-sync-get-dataset-items suffix) — Start GulfTalent Actor Run below appends /runs itself. Saudi + UAE/Dubai limits (maxResults:15 each) and max_total_charge_usd (0.0155 each, unchanged derivation) are identical to before this fix — this is a reliability fix, not a volume or cost-cap change. refresh_scope stays distinct per entry (country:SA / country:AE:location:Dubai) — the original cross-partition stale-close lesson this field exists for still applies here unchanged.",
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"gulftalent_sources\":[{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15},\"refresh_scope\":\"country:SA\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15},\"refresh_scope\":\"country:AE:location:Dubai\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155}]}",
+        "options": {}
+      }
+    },
+    {
+      "id": "1af6004d-9c13-4e1c-a6ac-3fc164ef10ff",
+      "name": "Split Out GulfTalent Sources",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        896,
+        3650
+      ],
+      "parameters": {
+        "fieldToSplitOut": "gulftalent_sources",
+        "options": {}
+      }
+    },
+    {
+      "id": "baba4e76-38e6-4bbb-aa45-7ed70e54f081",
+      "name": "Loop GulfTalent Sources (Rate Limited)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        3650
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "f7303d6a-bc38-405c-8c1b-a2003a27e040",
+      "name": "Start GulfTalent Actor Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        3650
+      ],
+      "notes": "Async run start (POST .../runs), not run-sync-get-dataset-items — returns immediately with {id, defaultDatasetId, status}, before the actor has necessarily finished. maxTotalChargeUsd is the same real platform-level run-option cap as before (per-seed max_total_charge_usd, unchanged 0.0155) — it bounds this run exactly like every other paid actor call in this workflow, independent of whether the caller waits synchronously or polls asynchronously for the result. Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI — confirmed MCP tool limitation.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": false,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.actor_url + '/runs?maxTotalChargeUsd=' + $json.max_total_charge_usd }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.request_body }}",
+        "options": {
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "id": "8c59bcdb-0a27-4873-b900-28ccb0ef48c4",
+      "name": "Build GulfTalent Start Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        3850
+      ],
+      "notes": "The paid start call itself failed (network/4xx/5xx) — no run was created, nothing to poll, nothing persisted, nothing closed.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3096f14d-c4c6-40a5-933c-5ca8559efac6",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "ed2919f2-46f8-41c9-8d0b-942701dd3e36",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "9a494501-3397-48b9-99e0-25122c8e2b4e",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'gulftalent actor start failed' }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f1102bd4-d18e-4324-8619-d956b8f01a51",
+      "name": "Prepare GulfTalent Poll Attempts",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        3650
+      ],
+      "notes": "Builds a fixed, bounded array of 15 poll-attempt placeholders — Split Out GulfTalent Poll Attempts explodes it into one loop item per attempt, each carrying runId/datasetId forward via 'include other fields'.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f4e78262-4bcc-43e6-8225-d2f2693920be",
+              "name": "runId",
+              "value": "={{ $json.data.id }}",
+              "type": "string"
+            },
+            {
+              "id": "4c0af320-5e9c-48ef-8872-1db20e426e68",
+              "name": "datasetId",
+              "value": "={{ $json.data.defaultDatasetId }}",
+              "type": "string"
+            },
+            {
+              "id": "b7750d8d-b0a1-4d7c-80be-9dfc65d8dfa8",
+              "name": "poll_attempts",
+              "value": "={{ Array.from({ length: 15 }, (_, i) => i) }}",
+              "type": "array"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "7241bfe1-d06d-49b4-a766-47aff25547a8",
+      "name": "Split Out GulfTalent Poll Attempts",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        3650
+      ],
+      "parameters": {
+        "fieldToSplitOut": "poll_attempts",
+        "include": "allOtherFields",
+        "options": {}
+      }
+    },
+    {
+      "id": "139d53e7-020e-4ecf-b579-fbd718597139",
+      "name": "Loop GulfTalent Poll Attempts (Bounded)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2016,
+        3650
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "088c86a2-816c-44d1-9e4a-8346c69ea4d0",
+      "name": "GulfTalent Poll Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        3600
+      ],
+      "notes": "Fixed 10s between polls — a reviewed constant, not derived from Workflow Configuration's generic rateLimitDelaySeconds (that value rate-limits between different SOURCES, a different concern from polling the SAME run's status).",
+      "parameters": {
+        "amount": 10
+      }
+    },
+    {
+      "id": "15d8111b-e05a-40db-91d1-36b446f6d9e6",
+      "name": "Poll GulfTalent Run Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2464,
+        3600
+      ],
+      "notes": "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI, same confirmed MCP tool limitation as every other generic-auth node added this way. Never starts or restarts the actor — read-only run metadata. Free, idempotent status read — safe to retry on transient network blips (unlike the paid start call). A failure here after retries is treated as 'inconclusive this tick', not as actor failure — it continues to the next poll tick via its error path too.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.apify.com/v2/actor-runs/' + $json.runId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "48681f28-2e17-4ee9-831c-0add943f66a6",
+      "name": "Check GulfTalent Run Terminal?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2688,
+        3600
+      ],
+      "notes": "Routes on the run's real status string (confirmed live this phase via free run-metadata reads on two real executions: SUCCEEDED/FAILED were both observed exactly as Apify's own documented terminal values). case 0 = SUCCEEDED -> fetch the dataset. case 1 = a real terminal failure (FAILED/TIMED-OUT/ABORTED) -> record failure, never retried. Fallback (READY/RUNNING/anything else) = still in flight -> loop back for another poll, bounded by the outer attempt count.",
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "SUCCEEDED"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "FAILED"
+                  },
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "TIMED-OUT"
+                  },
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "ABORTED"
+                  }
+                ],
+                "combinator": "or"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "still_running"
+        }
+      }
+    },
+    {
+      "id": "8dc36291-e71d-48f4-93d1-e87e974c4038",
+      "name": "Build GulfTalent Terminal Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2688,
+        3780
+      ],
+      "notes": "A real terminal failure (FAILED/TIMED-OUT/ABORTED) reported by Apify itself — never retried, never treated as evidence existing jobs for this refresh_scope disappeared.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d1043d1-0f83-47b6-a2a4-5485c3dcc81a",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "98831d79-2846-476b-b47e-8803a3365cac",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "bb68963c-45f5-44dd-9cd7-980ee1d55c34",
+              "name": "error",
+              "value": "={{ 'gulftalent actor run ended ' + ($json.data?.status ?? 'unknown') }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4f8f1102-3b12-4d0a-8f73-bc64b1fe7bef",
+      "name": "Build GulfTalent Poll Timeout Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        3850
+      ],
+      "notes": "Fired when 15 poll attempts (150s bound) all passed without a terminal status. References the outer loop's own seed item (Split Out GulfTalent Sources), not whatever shape splitInBatches' done output happens to carry. The run may still complete later on Apify's side — that possibility is exactly why the actor is never restarted here, only the batch endpoint call for this cycle is skipped.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e6a9672-ea5f-4b6b-91c3-b945145e16f4",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "7c0f3c93-431c-4f0f-81c8-aac2a2094d67",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "c3dc00ef-888b-4783-a5b5-582b7644e21c",
+              "name": "error",
+              "value": "gulftalent poll limit exhausted after 15 attempts — run may still be in progress on Apify",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6278f34b-3a22-4728-80ee-2db53d4b9cf4",
+      "name": "Fetch GulfTalent Dataset Items",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2912,
+        3500
+      ],
+      "notes": "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI, same confirmed MCP tool limitation. Free read of already-paid-for data — same dataset the run already billed for, no new cost. Reached only when status === SUCCEEDED.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.apify.com/v2/datasets/' + $json.data.defaultDatasetId + '/items' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "de570331-6263-4e03-ab76-c32784d92469",
+      "name": "Build GulfTalent Dataset Fetch Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        3700
+      ],
+      "notes": "Rare edge case: the actor run itself succeeded, but reading its already-generated dataset failed. No new cost either way — nothing is persisted this cycle, nothing is closed.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f61a439-cd6a-484e-a845-666882661c64",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "c751cdde-fc80-41d4-b0f0-948074d880ec",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "e53d698a-dabc-4622-9a87-eec448ed6eb7",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'gulftalent dataset fetch failed after actor succeeded' }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bafcab77-828f-4e13-9187-1fed2e4cf718",
+      "name": "Aggregate GulfTalent Jobs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3136,
+        3500
+      ],
+      "notes": "Same bare-top-level-array reshape as Aggregate Apify Jobs — run's dataset-items GET returns an array, n8n auto-splits it, this re-aggregates before the batch endpoint call.",
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "options": {}
+      }
+    },
+    {
+      "id": "2e0d27ed-68fb-4a33-80c4-eeb34dcb01f1",
+      "name": "Call GulfTalent Batch Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3360,
+        3500
+      ],
+      "notes": "Same shared run-multi-company-batch endpoint every other multi-company/Apify branch uses — no duplicate persistence model. Credential 'Ingestion Worker Secret' must be bound manually in the n8n UI, same confirmed MCP tool limitation.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  sourceType: $('Split Out GulfTalent Sources').item.json.provider_type,\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Split Out GulfTalent Sources').item.json.max_jobs_per_run,\n  dryRun: $('Workflow Configuration').first().json.dryRun,\n  refreshScope: $('Split Out GulfTalent Sources').item.json.refresh_scope ?? null\n} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "1d4164da-d669-4a2c-ab81-a6f41d88b6f6",
+      "name": "Build GulfTalent Success Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3584,
+        3500
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53fe286b-72e8-40f0-a750-5a62ed2e128f",
+              "name": "provider_type",
+              "value": "={{ $('Split Out GulfTalent Sources').item.json.provider_type }}",
+              "type": "string"
+            },
+            {
+              "id": "de8233d8-6271-4fc9-9962-ad7a1063164f",
+              "name": "succeeded",
+              "value": "={{ $json.outcome === 'succeeded' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "580ffdfe-c947-405f-96b2-bff2f70229a0",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "32ca5f9d-9a12-45c7-8976-98c928122eca",
+      "name": "Build GulfTalent Batch Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3360,
+        3650
+      ],
+      "notes": "The batch persistence call itself failed after a successfully-fetched dataset — distinct from the actor-level failure builders above.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dda9c5ca-4b20-4a1f-b614-3a41f9e27800",
+              "name": "provider_type",
+              "value": "={{ $('Split Out GulfTalent Sources').item.json.provider_type }}",
+              "type": "string"
+            },
+            {
+              "id": "71900450-35eb-4cc0-8aa3-21d1497c2bd6",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "11729bc1-3232-43e6-8c60-6d8c693df56f",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'gulftalent batch endpoint call failed' }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "70c80560-c8d8-4095-9200-b39abfc97c94",
+      "name": "Record GulfTalent Source Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3808,
+        3650
+      ],
+      "notes": "Its own convergence point, deliberately NOT sharing Record Apify Source Result — that node's own outgoing wire already loops back into Loop Apify Sources (Rate Limited), a DIFFERENT loop than GulfTalent's own. A single node can only have one outgoing wire, so GulfTalent needs its own record/delay/loop-back, fully independent from the Bayt/Indeed branch.",
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": []
+        }
+      }
+    },
+    {
+      "id": "afba026d-7dd9-4351-9357-c6333c28191d",
+      "name": "GulfTalent Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4032,
+        3650
+      ],
+      "parameters": {
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
+      }
     }
   ],
   "connections": {
@@ -2869,6 +3432,11 @@
           },
           {
             "node": "List LinkedIn Enrichment Queue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GulfTalent Source Seeds",
             "type": "main",
             "index": 0
           }
@@ -3823,6 +4391,287 @@
         [
           {
             "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GulfTalent Source Seeds": {
+      "main": [
+        [
+          {
+            "node": "Split Out GulfTalent Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out GulfTalent Sources": {
+      "main": [
+        [
+          {
+            "node": "Loop GulfTalent Sources (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop GulfTalent Sources (Rate Limited)": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Start GulfTalent Actor Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start GulfTalent Actor Run": {
+      "main": [
+        [
+          {
+            "node": "Prepare GulfTalent Poll Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Start Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Start Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare GulfTalent Poll Attempts": {
+      "main": [
+        [
+          {
+            "node": "Split Out GulfTalent Poll Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out GulfTalent Poll Attempts": {
+      "main": [
+        [
+          {
+            "node": "Loop GulfTalent Poll Attempts (Bounded)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop GulfTalent Poll Attempts (Bounded)": {
+      "main": [
+        [
+          {
+            "node": "Build GulfTalent Poll Timeout Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GulfTalent Poll Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GulfTalent Poll Delay": {
+      "main": [
+        [
+          {
+            "node": "Poll GulfTalent Run Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll GulfTalent Run Status": {
+      "main": [
+        [
+          {
+            "node": "Check GulfTalent Run Terminal?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop GulfTalent Poll Attempts (Bounded)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GulfTalent Run Terminal?": {
+      "main": [
+        [
+          {
+            "node": "Fetch GulfTalent Dataset Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Terminal Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop GulfTalent Poll Attempts (Bounded)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Terminal Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Poll Timeout Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch GulfTalent Dataset Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate GulfTalent Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Dataset Fetch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Dataset Fetch Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate GulfTalent Jobs": {
+      "main": [
+        [
+          {
+            "node": "Call GulfTalent Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call GulfTalent Batch Endpoint": {
+      "main": [
+        [
+          {
+            "node": "Build GulfTalent Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Batch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Success Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Batch Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record GulfTalent Source Result": {
+      "main": [
+        [
+          {
+            "node": "GulfTalent Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GulfTalent Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Loop GulfTalent Sources (Rate Limited)",
             "type": "main",
             "index": 0
           }

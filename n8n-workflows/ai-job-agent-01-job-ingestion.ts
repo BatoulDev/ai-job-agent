@@ -807,22 +807,6 @@ const apifyMultiCompanySourceSeeds = node({
             max_total_charge_usd: 0.02525,
           },
           {
-            provider_type: 'gulftalent',
-            actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items',
-            request_body: { country: 'SA', maxResults: 15 },
-            refresh_scope: 'country:SA',
-            max_jobs_per_run: 15,
-            max_total_charge_usd: 0.0155,
-          },
-          {
-            provider_type: 'gulftalent',
-            actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items',
-            request_body: { country: 'AE', location: 'Dubai', maxResults: 15 },
-            refresh_scope: 'country:AE:location:Dubai',
-            max_jobs_per_run: 15,
-            max_total_charge_usd: 0.0155,
-          },
-          {
             provider_type: 'indeed',
             actor_url: 'https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items',
             request_body: { country: 'ae', location: 'Dubai', count: 15 },
@@ -875,7 +859,7 @@ const callApifyActor = node({
       "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI — programmatic credential binding for " +
       'generic-auth types on this node is a confirmed n8n MCP tool limitation (reported separately), not a project issue. ' +
       "retryOnFail is deliberately false (Phase 2 hardening fix, same reasoning already applied to Call Data-Slayer " +
-      'Actor above): Bayt/GulfTalent/Indeed are real, confirmed PAY_PER_EVENT actors (live-verified via a free ' +
+      'Actor above): Bayt/Indeed are real, confirmed PAY_PER_EVENT actors (live-verified via a free ' +
       "pricing-metadata GET, same check Data-Slayer's own call uses) — a run-sync-get-dataset-items call is a paid, " +
       "non-idempotent external side effect, so a transport-level retry on this 60s-timeout node could start a second " +
       'full-price actor run while the first is still executing/billing (AGENTS.md §18 — never retry a non-idempotent ' +
@@ -1017,6 +1001,480 @@ const apifyRateLimitDelay = node({
     },
   },
   output: [{ provider_type: 'bayt' }],
+});
+
+// ─────────────────────────────────────────────────────────────────────────
+// GulfTalent — async + bounded polling (reliability fix). Real evidence
+// from two controlled test runs: GulfTalent's run-sync-get-dataset-items
+// call took 32s/85s/112s/125s (3 of 4 real runs exceeded the shared Call
+// Apify Actor node's 60s timeout), discarding already-billed, often
+// already-SUCCEEDED results (~$0.025 wasted real spend across both runs).
+// Bayt/Indeed never showed this problem (both consistently complete in a
+// few seconds), so only GulfTalent is moved to this separate, slower-safe
+// path — Bayt/Indeed's proven-reliable fast sync path above is untouched.
+//
+// Design: start the actor run ASYNCHRONOUSLY (POST .../runs, returns
+// immediately with a run id + dataset id, no waiting) — this is the exact
+// one-and-only paid, non-idempotent action per market per cycle
+// (retryOnFail:false, same discipline as every other paid actor call in
+// this workflow). Then poll the run's status via a FREE, idempotent GET
+// (.../actor-runs/{id}) on a bounded loop: 15 attempts x 10s apart (150s
+// total bound, comfortably above the largest real observed duration,
+// 125s). Only once status is SUCCEEDED do we fetch the dataset items
+// (also a free read of already-paid-for data) and persist. FAILED/
+// TIMED-OUT/ABORTED or poll-exhaustion both record a clean failure and
+// move on — never retried, never treated as evidence that existing
+// GulfTalent jobs for that refresh_scope disappeared (the batch endpoint
+// is simply never called for that partition this run, so nothing closes).
+// ─────────────────────────────────────────────────────────────────────────
+
+const GULFTALENT_POLL_MAX_ATTEMPTS = 15;
+const GULFTALENT_POLL_DELAY_SECONDS = 10;
+
+const gulfTalentSourceSeeds = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'GulfTalent Source Seeds',
+    notes:
+      'Static seed list, moved out of Apify Multi-Company Source Seeds above (see the async/polling note on this ' +
+      "branch). actor_url is the bare actor resource (no /run-sync-get-dataset-items suffix) — Start GulfTalent " +
+      "Actor Run below appends /runs itself. Saudi + UAE/Dubai limits (maxResults:15 each) and " +
+      'max_total_charge_usd (0.0155 each, unchanged derivation: 0.005 actor-start + 15x0.0007/item) are identical ' +
+      'to before this fix — this is a reliability fix, not a volume or cost-cap change. refresh_scope stays ' +
+      'distinct per entry (country:SA / country:AE:location:Dubai) — the original cross-partition stale-close ' +
+      'lesson this field exists for still applies here unchanged.',
+    parameters: {
+      mode: 'raw',
+      jsonOutput: {
+        gulftalent_sources: [
+          {
+            provider_type: 'gulftalent',
+            actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper',
+            request_body: { country: 'SA', maxResults: 15 },
+            refresh_scope: 'country:SA',
+            max_jobs_per_run: 15,
+            max_total_charge_usd: 0.0155,
+          },
+          {
+            provider_type: 'gulftalent',
+            actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper',
+            request_body: { country: 'AE', location: 'Dubai', maxResults: 15 },
+            refresh_scope: 'country:AE:location:Dubai',
+            max_jobs_per_run: 15,
+            max_total_charge_usd: 0.0155,
+          },
+        ],
+      },
+    },
+  },
+  output: [
+    {
+      gulftalent_sources: [
+        { provider_type: 'gulftalent', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper', request_body: { country: 'SA', maxResults: 15 }, refresh_scope: 'country:SA', max_jobs_per_run: 15, max_total_charge_usd: 0.0155 },
+      ],
+    },
+  ],
+});
+
+const splitOutGulfTalentSources = node({
+  type: 'n8n-nodes-base.splitOut',
+  version: 1,
+  config: {
+    name: 'Split Out GulfTalent Sources',
+    parameters: { fieldToSplitOut: 'gulftalent_sources' },
+  },
+  output: [{ provider_type: 'gulftalent', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper', request_body: { country: 'SA', maxResults: 15 }, refresh_scope: 'country:SA', max_jobs_per_run: 15, max_total_charge_usd: 0.0155 }],
+});
+
+const loopGulfTalentSources = splitInBatches({
+  version: 3,
+  config: { name: 'Loop GulfTalent Sources (Rate Limited)', parameters: { batchSize: 1 } },
+  output: [{ provider_type: 'gulftalent', actor_url: 'https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper', request_body: { country: 'SA', maxResults: 15 }, refresh_scope: 'country:SA', max_jobs_per_run: 15, max_total_charge_usd: 0.0155 }],
+});
+
+// The ONE paid, non-idempotent action per market per cycle. Returns
+// immediately (run id + dataset id) — does not wait for the actor to
+// finish, so this node's own timeout only needs to cover Apify accepting
+// the start request, never the actor's real runtime. retryOnFail is
+// deliberately false, same AGENTS.md §18 reasoning as every other paid
+// actor-start node in this workflow — a transport-level retry here could
+// start a second full-price run while the first is already billing.
+// Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI
+// (confirmed MCP tool limitation, same as every other generic-auth node
+// added this way in this workflow).
+const startGulfTalentActorRun = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Start GulfTalent Actor Run',
+    notes:
+      'Async run start (POST .../runs), not run-sync-get-dataset-items — returns immediately with {id, ' +
+      'defaultDatasetId, status}, before the actor has necessarily finished. maxTotalChargeUsd is the same real ' +
+      "platform-level run-option cap as before (per-seed max_total_charge_usd, unchanged 0.0155) — it bounds this " +
+      'run exactly like every other paid actor call in this workflow, independent of whether the caller waits ' +
+      'synchronously or polls asynchronously for the result.',
+    onError: 'continueErrorOutput',
+    retryOnFail: false,
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $json.actor_url + '/runs?maxTotalChargeUsd=' + $json.max_total_charge_usd }}"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ $json.request_body }}'),
+      options: { timeout: 20000 },
+    },
+    credentials: { httpHeaderAuth: newCredential('AI Job Guide - Apify') },
+  },
+  output: [{ id: 'runAbc123', defaultDatasetId: 'datasetAbc123', status: 'READY' }],
+});
+
+const buildGulfTalentStartFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build GulfTalent Start Failure Result',
+    notes: 'The paid start call itself failed (network/4xx/5xx) — no run was created, nothing to poll, nothing persisted, nothing closed.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'provider_type', name: 'provider_type', value: 'gulftalent', type: 'string' },
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'gulftalent actor start failed' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ provider_type: 'gulftalent', succeeded: false, error: 'gulftalent actor start failed' }],
+});
+
+const prepareGulfTalentPollAttempts = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Prepare GulfTalent Poll Attempts',
+    notes: `Builds a fixed, bounded array of ${GULFTALENT_POLL_MAX_ATTEMPTS} poll-attempt placeholders — Split Out GulfTalent Poll Attempts below explodes it into one loop item per attempt, each carrying runId/datasetId forward via 'include other fields'.`,
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'runId', name: 'runId', value: expr('{{ $json.data.id }}'), type: 'string' },
+          { id: 'datasetId', name: 'datasetId', value: expr('{{ $json.data.defaultDatasetId }}'), type: 'string' },
+          { id: 'poll_attempts', name: 'poll_attempts', value: expr(`{{ Array.from({ length: ${GULFTALENT_POLL_MAX_ATTEMPTS} }, (_, i) => i) }}`), type: 'array' },
+        ],
+      },
+    },
+  },
+  output: [{ runId: 'runAbc123', datasetId: 'datasetAbc123', poll_attempts: [0, 1, 2] }],
+});
+
+const splitOutGulfTalentPollAttempts = node({
+  type: 'n8n-nodes-base.splitOut',
+  version: 1,
+  config: {
+    name: 'Split Out GulfTalent Poll Attempts',
+    parameters: { fieldToSplitOut: 'poll_attempts', include: 'allOtherFields' },
+  },
+  output: [{ runId: 'runAbc123', datasetId: 'datasetAbc123', poll_attempts: 0 }],
+});
+
+const loopGulfTalentPoll = splitInBatches({
+  version: 3,
+  config: { name: 'Loop GulfTalent Poll Attempts (Bounded)', parameters: { batchSize: 1 } },
+  output: [{ runId: 'runAbc123', datasetId: 'datasetAbc123', poll_attempts: 0 }],
+});
+
+const gulfTalentPollDelay = node({
+  type: 'n8n-nodes-base.wait',
+  version: 1.1,
+  config: {
+    name: 'GulfTalent Poll Delay',
+    notes: `Fixed ${GULFTALENT_POLL_DELAY_SECONDS}s between polls — a reviewed constant, not derived from Workflow Configuration's generic rateLimitDelaySeconds (that value rate-limits between different SOURCES, a different concern from polling the SAME run's status).`,
+    parameters: { resume: 'timeInterval', amount: GULFTALENT_POLL_DELAY_SECONDS, unit: 'seconds' },
+  },
+  output: [{ runId: 'runAbc123', datasetId: 'datasetAbc123' }],
+});
+
+// Free, idempotent status read — safe to retry on transient network
+// blips (unlike the paid start call above). A failure here after retries
+// is treated as "inconclusive this tick", not as actor failure — it just
+// continues to the next poll tick via its error path too, since the
+// underlying run may well still be fine even if this one status check
+// could not be confirmed.
+const pollGulfTalentRunStatus = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Poll GulfTalent Run Status',
+    notes: "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI, same confirmed MCP tool limitation as every other generic-auth node added this way. Never starts or restarts the actor — read-only run metadata.",
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    parameters: {
+      method: 'GET',
+      url: expr("{{ 'https://api.apify.com/v2/actor-runs/' + $json.runId }}"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      options: { timeout: 15000 },
+    },
+    credentials: { httpHeaderAuth: newCredential('AI Job Guide - Apify') },
+  },
+  output: [{ data: { id: 'runAbc123', status: 'SUCCEEDED', defaultDatasetId: 'datasetAbc123' } }],
+});
+
+// Routes on the run's real status string (confirmed live this phase via
+// free run-metadata reads on two real executions: SUCCEEDED/FAILED were
+// both observed exactly as Apify's own documented terminal values).
+// case 0 = SUCCEEDED → fetch the dataset. case 1 = a real terminal
+// failure (FAILED/TIMED-OUT/ABORTED) → record failure, never retried.
+// Fallback (READY/RUNNING/anything else, and the error-output path from
+// Poll GulfTalent Run Status above) = still in flight or inconclusive →
+// loop back for another poll, bounded by the outer attempt count.
+const checkGulfTalentPollTerminal = switchCase({
+  version: 3.4,
+  config: {
+    name: 'Check GulfTalent Run Terminal?',
+    parameters: {
+      rules: {
+        values: [
+          {
+            outputKey: 'succeeded',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [{ leftValue: expr('{{ $json.data.status }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'SUCCEEDED' }],
+              combinator: 'and',
+            },
+          },
+          {
+            outputKey: 'terminal_failure',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [
+                { leftValue: expr('{{ $json.data.status }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'FAILED' },
+                { leftValue: expr('{{ $json.data.status }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'TIMED-OUT' },
+                { leftValue: expr('{{ $json.data.status }}'), operator: { type: 'string', operation: 'equals' }, rightValue: 'ABORTED' },
+              ],
+              combinator: 'or',
+            },
+          },
+        ],
+      },
+      options: { fallbackOutput: 'extra', renameFallbackOutput: 'still_running' },
+    },
+  },
+  output: [{ data: { id: 'runAbc123', status: 'SUCCEEDED', defaultDatasetId: 'datasetAbc123' } }],
+});
+
+const buildGulfTalentTerminalFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build GulfTalent Terminal Failure Result',
+    notes: 'A real terminal failure (FAILED/TIMED-OUT/ABORTED) reported by Apify itself — never retried, never treated as evidence existing jobs for this refresh_scope disappeared.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'provider_type', name: 'provider_type', value: 'gulftalent', type: 'string' },
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: expr("{{ 'gulftalent actor run ended ' + ($json.data?.status ?? 'unknown') }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ provider_type: 'gulftalent', succeeded: false, error: 'gulftalent actor run ended FAILED' }],
+});
+
+const buildGulfTalentPollTimeoutResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build GulfTalent Poll Timeout Result',
+    notes:
+      `Fired when ${GULFTALENT_POLL_MAX_ATTEMPTS} poll attempts (${GULFTALENT_POLL_MAX_ATTEMPTS * GULFTALENT_POLL_DELAY_SECONDS}s bound) all passed without a terminal status. References the outer loop's own seed item ` +
+      "(Split Out GulfTalent Sources), not whatever shape splitInBatches' done output happens to carry, so this stays correct regardless of that. The run may still complete later on Apify's side — " +
+      'that possibility is exactly why the actor is never restarted here, only the batch endpoint call for this cycle is skipped.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'provider_type', name: 'provider_type', value: 'gulftalent', type: 'string' },
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: `gulftalent poll limit exhausted after ${GULFTALENT_POLL_MAX_ATTEMPTS} attempts — run may still be in progress on Apify`, type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ provider_type: 'gulftalent', succeeded: false, error: 'gulftalent poll limit exhausted after 15 attempts' }],
+});
+
+// Free read of already-paid-for data — same dataset the run already
+// billed for, no new cost. Reached only when status === SUCCEEDED.
+const fetchGulfTalentDatasetItems = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Fetch GulfTalent Dataset Items',
+    notes: "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI, same confirmed MCP tool limitation as every other generic-auth node added this way.",
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    parameters: {
+      method: 'GET',
+      url: expr("{{ 'https://api.apify.com/v2/datasets/' + $json.data.defaultDatasetId + '/items' }}"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      options: { timeout: 30000 },
+    },
+    credentials: { httpHeaderAuth: newCredential('AI Job Guide - Apify') },
+  },
+  output: [{ jobId: 'abc123', title: 'Accountant', company: 'Fixture Co' }],
+});
+
+const buildGulfTalentDatasetFetchFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build GulfTalent Dataset Fetch Failure Result',
+    notes: 'Rare edge case: the actor run itself succeeded, but reading its already-generated dataset failed. No new cost either way — nothing is persisted this cycle, nothing is closed.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'provider_type', name: 'provider_type', value: 'gulftalent', type: 'string' },
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'gulftalent dataset fetch failed after actor succeeded' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ provider_type: 'gulftalent', succeeded: false, error: 'gulftalent dataset fetch failed' }],
+});
+
+const aggregateGulfTalentJobs = node({
+  type: 'n8n-nodes-base.aggregate',
+  version: 1,
+  config: {
+    name: 'Aggregate GulfTalent Jobs',
+    notes: "Same bare-top-level-array reshape as Aggregate Apify Jobs — run's dataset-items GET returns an array, n8n auto-splits it, this re-aggregates before the batch endpoint call.",
+    parameters: { aggregate: 'aggregateAllItemData', destinationFieldName: 'jobs', include: 'allFields' },
+  },
+  output: [{ jobs: [{ jobId: 'abc123', title: 'Accountant', company: 'Fixture Co' }] }],
+});
+
+const callGulfTalentBatchEndpoint = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call GulfTalent Batch Endpoint',
+    notes:
+      'Same shared run-multi-company-batch endpoint every other multi-company/Apify branch uses — no duplicate ' +
+      "persistence model. Credential 'Ingestion Worker Secret' must be bound manually in the n8n UI, same " +
+      'confirmed MCP tool limitation as Call Apify Batch Endpoint above.',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr(
+        '{{ {\n' +
+          "  sourceType: $('Split Out GulfTalent Sources').item.json.provider_type,\n" +
+          '  rawJobs: $json.jobs,\n' +
+          "  maxJobsPerSource: $('Split Out GulfTalent Sources').item.json.max_jobs_per_run,\n" +
+          "  dryRun: $('Workflow Configuration').first().json.dryRun,\n" +
+          "  refreshScope: $('Split Out GulfTalent Sources').item.json.refresh_scope ?? null\n" +
+          '} }}'
+      ),
+      options: { timeout: 30000 },
+    },
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+  },
+  output: [{ outcome: 'succeeded', jobsFetched: 15, jobsValid: 15, jobsRejected: 0, jobsCreated: 15, jobsUpdated: 0, jobsClosed: 0, truncated: false }],
+});
+
+const GULFTALENT_PROVIDER_TYPE_ASSIGNMENT = {
+  id: 'provider_type',
+  name: 'provider_type',
+  value: expr("{{ $('Split Out GulfTalent Sources').item.json.provider_type }}"),
+  type: 'string',
+};
+
+const buildGulfTalentSuccessResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build GulfTalent Success Result',
+    parameters: {
+      mode: 'manual',
+      includeOtherFields: true,
+      assignments: {
+        assignments: [GULFTALENT_PROVIDER_TYPE_ASSIGNMENT, { id: 'succeeded', name: 'succeeded', value: expr("{{ $json.outcome === 'succeeded' }}"), type: 'boolean' }, { id: 'error', name: 'error', value: null, type: 'string' }],
+      },
+    },
+  },
+  output: [{ provider_type: 'gulftalent', outcome: 'succeeded', succeeded: true, error: null }],
+});
+
+const buildGulfTalentBatchFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build GulfTalent Batch Failure Result',
+    notes: 'The batch persistence call itself failed after a successfully-fetched dataset — distinct from the actor-level failure builders above.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          GULFTALENT_PROVIDER_TYPE_ASSIGNMENT,
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'gulftalent batch endpoint call failed' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ provider_type: 'gulftalent', succeeded: false, error: 'gulftalent batch endpoint call failed' }],
+});
+
+const recordGulfTalentSourceResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Record GulfTalent Source Result',
+    notes:
+      "Its own convergence point, deliberately NOT sharing Record Apify Source Result above — that node's own " +
+      "outgoing wire already loops back into Loop Apify Sources (Rate Limited), a DIFFERENT loop than GulfTalent's " +
+      'own. A single node can only have one outgoing wire, so GulfTalent needs its own record/delay/loop-back, ' +
+      'fully independent from the Bayt/Indeed branch, consistent with every other source family in this workflow.',
+    parameters: { mode: 'manual', includeOtherFields: true, assignments: { assignments: [] } },
+  },
+  output: [{ provider_type: 'gulftalent', succeeded: true }],
+});
+
+const gulfTalentRateLimitDelay = node({
+  type: 'n8n-nodes-base.wait',
+  version: 1.1,
+  config: {
+    name: 'GulfTalent Rate Limit Delay',
+    parameters: {
+      resume: 'timeInterval',
+      amount: expr("{{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"),
+      unit: 'seconds',
+    },
+  },
+  output: [{ provider_type: 'gulftalent' }],
 });
 
 // ─────────────────────────────────────────────────────────────────────────
@@ -1950,9 +2408,10 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
   .to(careerPageRateLimitDelay)
   .to(nextBatch(loopCareerPageCandidates))
 
-  // Apify-sourced multi-company feeds (Phase 21): Bayt/GulfTalent/Indeed —
-  // fourth independent branch, static seeds rather than off List Ingestion
-  // Sources (these providers are not dynamically discoverable).
+  // Apify-sourced multi-company feeds (Phase 21): Bayt/Indeed — fourth
+  // independent branch, static seeds rather than off List Ingestion
+  // Sources (these providers are not dynamically discoverable). GulfTalent
+  // moved to its own async/polling branch below (reliability fix).
   .add(workflowConfiguration)
   .to(apifyMultiCompanySourceSeeds)
   .to(splitOutApifySources)
@@ -1966,7 +2425,54 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
   .to(apifyRateLimitDelay)
   .to(nextBatch(loopApifySources))
 
-  // LinkedIn enrichment (data-slayer exact-ID pass) — fifth independent
+  // GulfTalent — fifth independent branch, async + bounded polling
+  // (reliability fix — see the sticky/notes above Loop GulfTalent Sources
+  // for the real evidence this is based on). Fresh off Workflow
+  // Configuration, fully isolated from the Bayt/Indeed branch above —
+  // a GulfTalent failure/timeout here can never affect Bayt/Indeed, and
+  // vice versa.
+  .add(workflowConfiguration)
+  .to(gulfTalentSourceSeeds)
+  .to(splitOutGulfTalentSources)
+  .to(
+    loopGulfTalentSources.onEachBatch(
+      startGulfTalentActorRun.onError(buildGulfTalentStartFailureResult).to(
+        prepareGulfTalentPollAttempts.to(
+          splitOutGulfTalentPollAttempts.to(
+            loopGulfTalentPoll.onEachBatch(
+              gulfTalentPollDelay.to(
+                pollGulfTalentRunStatus.onError(nextBatch(loopGulfTalentPoll)).to(
+                  checkGulfTalentPollTerminal
+                    .onCase(0, fetchGulfTalentDatasetItems.onError(buildGulfTalentDatasetFetchFailureResult).to(aggregateGulfTalentJobs.to(callGulfTalentBatchEndpoint)))
+                    .onCase(1, buildGulfTalentTerminalFailureResult)
+                    .onCase(2, nextBatch(loopGulfTalentPoll))
+                )
+              )
+            )
+          )
+        )
+      )
+    )
+  )
+  .add(loopGulfTalentPoll.onDone(buildGulfTalentPollTimeoutResult))
+  .add(callGulfTalentBatchEndpoint.onError(buildGulfTalentBatchFailureResult))
+  .to(buildGulfTalentSuccessResult)
+  .to(recordGulfTalentSourceResult)
+  .add(buildGulfTalentStartFailureResult)
+  .to(recordGulfTalentSourceResult)
+  .add(buildGulfTalentTerminalFailureResult)
+  .to(recordGulfTalentSourceResult)
+  .add(buildGulfTalentPollTimeoutResult)
+  .to(recordGulfTalentSourceResult)
+  .add(buildGulfTalentDatasetFetchFailureResult)
+  .to(recordGulfTalentSourceResult)
+  .add(buildGulfTalentBatchFailureResult)
+  .to(recordGulfTalentSourceResult)
+  .add(recordGulfTalentSourceResult)
+  .to(gulfTalentRateLimitDelay)
+  .to(nextBatch(loopGulfTalentSources))
+
+  // LinkedIn enrichment (data-slayer exact-ID pass) — sixth independent
   // branch, fresh off Workflow Configuration like the Apify branch above.
   // No loop: List LinkedIn Enrichment Queue already bounds one run to a
   // single <=25-id batch.

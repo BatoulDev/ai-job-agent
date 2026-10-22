@@ -289,8 +289,8 @@ test('the Tier-B loop batches one candidate at a time', () => {
   assertBatchesOneAtATime(findNode('Loop Career Page Candidates (Rate Limited)'));
 });
 
-test('exactly 77 nodes total, matching the live, MCP-synced workflow (76 from the production-readiness audit + 1 new Schedule Trigger for the daily production cadence)', () => {
-  assert.equal(wf.nodes.length, 77);
+test('exactly 98 nodes total (77 prior + 21 new nodes for the GulfTalent async/polling reliability fix)', () => {
+  assert.equal(wf.nodes.length, 98);
 });
 
 test('Apify multi-company branch (Phase 21) is fully isolated — its own seed, split, loop, actor call, aggregate, batch endpoint, success/failure builders, and rate limiter', () => {
@@ -320,21 +320,22 @@ test('Apify multi-company branch (Phase 21) is fully isolated — its own seed, 
 });
 
 // Phase 2 hardening fix: Call Apify Actor is the shared paid, non-idempotent
-// run-sync-get-dataset-items call for Bayt/GulfTalent/Indeed (all three real,
-// confirmed PAY_PER_EVENT actors). A transport-level retry on this 60s-
-// timeout node could start a second full-price actor run while the first is
-// still executing/billing — the exact same reasoning already correctly
-// applied to Call Data-Slayer Actor below.
-test('Call Apify Actor exists exactly once and never auto-retries (paid, non-idempotent actor call shared by Bayt/GulfTalent/Indeed)', () => {
+// run-sync-get-dataset-items call for Bayt/Indeed (both real, confirmed
+// PAY_PER_EVENT actors — GulfTalent moved to its own async/polling branch,
+// see the GulfTalent reliability-fix tests below). A transport-level retry
+// on this 60s-timeout node could start a second full-price actor run while
+// the first is still executing/billing — the exact same reasoning already
+// correctly applied to Call Data-Slayer Actor below.
+test('Call Apify Actor exists exactly once and never auto-retries (paid, non-idempotent actor call shared by Bayt/Indeed)', () => {
   const occurrences = wf.nodes.filter((n) => n.name === 'Call Apify Actor').length;
   assert.equal(occurrences, 1, 'the actor node must appear exactly once — no duplicate/hidden call path');
 
   const node = findNode('Call Apify Actor');
   assert.equal(node.retryOnFail, false, 'a paid, non-idempotent actor call must never auto-retry (AGENTS.md §18)');
 
-  // All four real seeds (Bayt, GulfTalent SA, GulfTalent AE/Dubai, Indeed)
-  // route through this one shared node via the loop's error-output index 1.
-  assert.ok(wf.connections['Loop Apify Sources (Rate Limited)'].main[1].some((c) => c.node === 'Call Apify Actor'), 'Bayt/GulfTalent/Indeed must still route through the same shared actor node');
+  // Both real remaining seeds (Bayt, Indeed) route through this one shared
+  // node via the loop's error-output index 1. GulfTalent no longer does.
+  assert.ok(wf.connections['Loop Apify Sources (Rate Limited)'].main[1].some((c) => c.node === 'Call Apify Actor'), 'Bayt/Indeed must still route through the same shared actor node');
 
   // Downstream failure routing remains intact regardless of the retry fix —
   // onError still reaches an explicit terminal, the branch never silently
@@ -343,21 +344,29 @@ test('Call Apify Actor exists exactly once and never auto-retries (paid, non-ide
   assert.ok(wf.connections['Call Apify Actor'].main[1].some((c) => c.node === 'Build Apify Failure Result'), 'error output must still feed Build Apify Failure Result, never left hanging');
 });
 
-// Phase 2 cost-safety hardening: Bayt/GulfTalent/Indeed are all real,
-// confirmed PAY_PER_EVENT actors (free pricing-metadata GET, re-verified
-// live twice this phase) — same mechanism Call Data-Slayer Actor already
-// uses. Per-item prices below are the real, live-verified values
-// (apify-default-dataset-item), not assumed. Each seed's maxTotalChargeUsd
-// is actor-start (one-time) + max_jobs_per_run * per-item — the actor-start
-// term is not an arbitrary buffer; omitting it would make the cap trigger
-// before a run that returns exactly max_jobs_per_run items finishes.
-const APIFY_ACTOR_START_USD = { bayt: 0.0005, gulftalent: 0.005, indeed: 0.0001 };
-const APIFY_PER_ITEM_USD = { bayt: 0.00099, gulftalent: 0.0007, indeed: 0.0001 };
+// Phase 2 cost-safety hardening: Bayt/Indeed are real, confirmed
+// PAY_PER_EVENT actors (free pricing-metadata GET, re-verified live twice
+// this phase) — same mechanism Call Data-Slayer Actor already uses.
+// GulfTalent's own cost-cap derivation is tested separately below (its own
+// seed list, its own async-start node). Per-item prices below are the
+// real, live-verified values (apify-default-dataset-item), not assumed.
+// Each seed's maxTotalChargeUsd is actor-start (one-time) + max_jobs_per_run
+// * per-item — the actor-start term is not an arbitrary buffer; omitting it
+// would make the cap trigger before a run that returns exactly
+// max_jobs_per_run items finishes.
+const APIFY_ACTOR_START_USD = { bayt: 0.0005, indeed: 0.0001 };
+const APIFY_PER_ITEM_USD = { bayt: 0.00099, indeed: 0.0001 };
 
 function getApifySeeds() {
   const seedsNode = findNode('Apify Multi-Company Source Seeds');
   const parsed = JSON.parse(seedsNode.parameters.jsonOutput);
   return parsed.apify_sources;
+}
+
+function getGulfTalentSeeds() {
+  const seedsNode = findNode('GulfTalent Source Seeds');
+  const parsed = JSON.parse(seedsNode.parameters.jsonOutput);
+  return parsed.gulftalent_sources;
 }
 
 test('Call Apify Actor derives maxTotalChargeUsd dynamically from each seed, never a hardcoded shared value', () => {
@@ -370,10 +379,13 @@ test('Call Apify Actor derives maxTotalChargeUsd dynamically from each seed, nev
   assert.equal(node.parameters.options.timeout, 60000, 'timeout must be preserved');
 });
 
+test('GulfTalent is no longer part of the shared fast-sync Apify seed list (moved to its own async/polling branch)', () => {
+  const seeds = getApifySeeds();
+  assert.ok(!seeds.some((s) => s.provider_type === 'gulftalent'), 'Apify Multi-Company Source Seeds must no longer contain any gulftalent entry');
+});
+
 for (const [providerType, refreshScope, label] of [
   ['bayt', null, 'Bayt'],
-  ['gulftalent', 'country:SA', 'GulfTalent SA'],
-  ['gulftalent', 'country:AE:location:Dubai', 'GulfTalent UAE/Dubai'],
   ['indeed', null, 'Indeed'],
 ]) {
   test(`${label} seed's maxTotalChargeUsd is bounded and derived from its own configured result cap x the verified per-item price`, () => {
@@ -394,6 +406,212 @@ for (const [providerType, refreshScope, label] of [
 test('Call Data-Slayer Actor retry safety is unaffected by the Apify actor retry fix (regression against accidental reversion)', () => {
   const node = findNode('Call Data-Slayer Actor');
   assert.equal(node.retryOnFail, false);
+});
+
+// ── GulfTalent reliability fix: async actor start + bounded polling ────
+// Real evidence from two controlled test runs: GulfTalent's real
+// completion time (32s/85s/112s/125s observed) routinely exceeded the
+// shared Call Apify Actor node's 60s timeout, discarding already-billed,
+// often already-SUCCEEDED results (~$0.025 wasted real spend). Bayt/Indeed
+// never showed this (both consistently complete in seconds) so only
+// GulfTalent moved to this separate branch — Bayt/Indeed's proven fast
+// sync path above is untouched (see the "no longer part of the shared
+// fast-sync Apify seed list" test above).
+
+const GULFTALENT_BRANCH_NODES = [
+  'GulfTalent Source Seeds',
+  'Split Out GulfTalent Sources',
+  'Loop GulfTalent Sources (Rate Limited)',
+  'Start GulfTalent Actor Run',
+  'Build GulfTalent Start Failure Result',
+  'Prepare GulfTalent Poll Attempts',
+  'Split Out GulfTalent Poll Attempts',
+  'Loop GulfTalent Poll Attempts (Bounded)',
+  'GulfTalent Poll Delay',
+  'Poll GulfTalent Run Status',
+  'Check GulfTalent Run Terminal?',
+  'Build GulfTalent Terminal Failure Result',
+  'Build GulfTalent Poll Timeout Result',
+  'Fetch GulfTalent Dataset Items',
+  'Build GulfTalent Dataset Fetch Failure Result',
+  'Aggregate GulfTalent Jobs',
+  'Call GulfTalent Batch Endpoint',
+  'Build GulfTalent Success Result',
+  'Build GulfTalent Batch Failure Result',
+  'Record GulfTalent Source Result',
+  'GulfTalent Rate Limit Delay',
+];
+
+test('GulfTalent async/polling branch is fully isolated — every expected node exists, fresh off Workflow Configuration, independent of the Bayt/Indeed branch', () => {
+  for (const name of GULFTALENT_BRANCH_NODES) findNode(name);
+  const fanOut = wf.connections['Workflow Configuration']?.main?.[0] ?? [];
+  assert.ok(fanOut.some((c) => c.node === 'GulfTalent Source Seeds'), 'GulfTalent branch must start fresh off Workflow Configuration, not depend on the Bayt/Indeed branch');
+});
+
+test('Saudi/UAE limits (maxResults:15) and cost caps (0.0155) are unchanged by this fix — a reliability fix, not a volume or cost-cap change', () => {
+  const seeds = getGulfTalentSeeds();
+  assert.equal(seeds.length, 2, 'exactly two GulfTalent seeds — Saudi and UAE/Dubai');
+  for (const seed of seeds) {
+    assert.equal(seed.request_body.maxResults, 15, 'maxResults must stay 15 — this fix must never increase volume');
+    assert.equal(seed.max_jobs_per_run, 15);
+    assert.equal(seed.max_total_charge_usd, 0.0155, 'cost cap must stay the original, unchanged 0.0155 value');
+  }
+  const scopes = seeds.map((s) => s.refresh_scope);
+  assert.deepEqual(new Set(scopes), new Set(['country:SA', 'country:AE:location:Dubai']), 'Saudi/UAE refresh scopes must stay distinct and unchanged — the cross-partition stale-close fix this field exists for still applies');
+});
+
+test('the paid actor start happens exactly once per market per cycle — one node, retryOnFail:false, never restarted by polling', () => {
+  const occurrences = wf.nodes.filter((n) => n.name === 'Start GulfTalent Actor Run').length;
+  assert.equal(occurrences, 1, 'the paid start node must appear exactly once — no duplicate/hidden call path');
+
+  const node = findNode('Start GulfTalent Actor Run');
+  assert.equal(node.retryOnFail, false, 'a paid, non-idempotent actor start must never auto-retry (AGENTS.md §18)');
+  assert.match(node.parameters.url, /\/runs\?maxTotalChargeUsd=/, 'must use the async run-start endpoint (.../runs), not run-sync-get-dataset-items');
+  assert.match(node.parameters.url, /\$json\.max_total_charge_usd/, 'maxTotalChargeUsd must still be appended dynamically per-seed, unchanged mechanism');
+
+  // The only two nodes that can ever reach "Start GulfTalent Actor Run" are
+  // the outer per-market loop (one start per market) — nothing in the poll
+  // loop may ever point back at it.
+  const reachers = Object.entries(wf.connections)
+    .filter(([, c]) => (c.main ?? []).some((output) => (output ?? []).some((t) => t.node === 'Start GulfTalent Actor Run')))
+    .map(([name]) => name);
+  assert.deepEqual(reachers, ['Loop GulfTalent Sources (Rate Limited)'], 'only the outer per-market loop may ever start the actor — polling must never restart it');
+});
+
+test('polling never starts another paid actor — Poll GulfTalent Run Status is a free, idempotent GET, safe to retry', () => {
+  const node = findNode('Poll GulfTalent Run Status');
+  assert.equal(node.parameters.method, 'GET', 'polling must be a read, never a POST that could start a new run');
+  assert.match(node.parameters.url, /\/actor-runs\//, 'must read run status via the run-metadata endpoint, never .../runs (which would start a new run)');
+  assert.equal(node.retryOnFail, true, 'unlike the paid start, a free read-only status check is safe to retry on transient blips');
+
+  const fetchNode = findNode('Fetch GulfTalent Dataset Items');
+  assert.equal(fetchNode.parameters.method, 'GET');
+  assert.match(fetchNode.parameters.url, /\/datasets\//, 'dataset fetch must read the existing dataset, never start a new run');
+});
+
+test('polling is bounded — a fixed, small number of attempts, with a fixed delay between them', () => {
+  const prepareNode = findNode('Prepare GulfTalent Poll Attempts');
+  const pollAttemptsAssignment = prepareNode.parameters.assignments.assignments.find((a) => a.name === 'poll_attempts');
+  assert.match(pollAttemptsAssignment.value, /Array\.from\(\{\s*length:\s*15\s*\}/, 'must build a fixed-length (15) bounded array of poll attempts, not an open-ended loop');
+
+  const delayNode = findNode('GulfTalent Poll Delay');
+  assert.equal(delayNode.parameters.amount, 10, 'a fixed 10s delay between polls — bounded total wait of 150s, comfortably above the largest real observed GulfTalent duration (125s)');
+
+  const loopNode = findNode('Loop GulfTalent Poll Attempts (Bounded)');
+  assert.equal(loopNode.type, 'n8n-nodes-base.splitInBatches');
+  assert.equal(loopNode.parameters.batchSize ?? 1, 1, 'one poll attempt per batch');
+});
+
+test('Prepare GulfTalent Poll Attempts reads the actor-start response from its real nested shape, not a flat one', () => {
+  const prepareNode = findNode('Prepare GulfTalent Poll Attempts');
+  const runIdAssignment = prepareNode.parameters.assignments.assignments.find((a) => a.name === 'runId');
+  const datasetIdAssignment = prepareNode.parameters.assignments.assignments.find((a) => a.name === 'datasetId');
+
+  // Apify's POST .../runs wraps its payload in a top-level `data` key
+  // (real response: {data: {id, defaultDatasetId, status, ...}}) — a flat
+  // $json.id / $json.defaultDatasetId silently resolves to undefined.
+  // Real incident (2026-10-21 manual test session forensic audit): this
+  // exact flat mapping shipped to the tracked source while the live node
+  // was hand-corrected and never ported back — five real paid Apify runs
+  // ($0.084516 total) happened before this was caught.
+  assert.equal(runIdAssignment.value, '={{ $json.data.id }}', 'runId must read the nested response shape Apify actually returns');
+  assert.equal(datasetIdAssignment.value, '={{ $json.data.defaultDatasetId }}', 'datasetId must read the nested response shape Apify actually returns');
+
+  // Explicitly reject the previously-shipped flat mapping so a future
+  // regression fails loudly here instead of only costing money quietly.
+  assert.notEqual(runIdAssignment.value, '={{ $json.id }}');
+  assert.notEqual(datasetIdAssignment.value, '={{ $json.defaultDatasetId }}');
+
+  // Cross-check against the TypeScript source itself (text-level — this
+  // workflow has no deterministic TS→JSON generator, so nothing else
+  // keeps the two files honest with each other).
+  const tsSource = readFileSync(resolve(ROOT, 'n8n-workflows/ai-job-agent-01-job-ingestion.ts'), 'utf8');
+  const prepareNodeSource = tsSource.slice(
+    tsSource.indexOf('const prepareGulfTalentPollAttempts'),
+    tsSource.indexOf('const splitOutGulfTalentPollAttempts')
+  );
+  assert.match(prepareNodeSource, /expr\('\{\{ \$json\.data\.id \}\}'\)/, 'TypeScript source must agree with the generated JSON on the runId expression');
+  assert.match(prepareNodeSource, /expr\('\{\{ \$json\.data\.defaultDatasetId \}\}'\)/, 'TypeScript source must agree with the generated JSON on the datasetId expression');
+});
+
+test('a successful actor run is eventually fetched exactly once — SUCCEEDED routes to the dataset fetch, never re-polled', () => {
+  const switchNode = findNode('Check GulfTalent Run Terminal?');
+  const rules = switchNode.parameters.rules.values;
+  assert.equal(rules[0].conditions.conditions[0].rightValue, 'SUCCEEDED', 'case 0 must check for the real SUCCEEDED status string');
+
+  assert.ok(wf.connections['Check GulfTalent Run Terminal?']?.main?.[0]?.some((c) => c.node === 'Fetch GulfTalent Dataset Items'), 'the SUCCEEDED case (output 0) must route to the dataset fetch');
+  assert.ok(wf.connections['Fetch GulfTalent Dataset Items']?.main?.[0]?.some((c) => c.node === 'Aggregate GulfTalent Jobs'));
+  assert.ok(wf.connections['Aggregate GulfTalent Jobs']?.main?.[0]?.some((c) => c.node === 'Call GulfTalent Batch Endpoint'));
+
+  const fetchOccurrences = wf.nodes.filter((n) => n.name === 'Fetch GulfTalent Dataset Items').length;
+  assert.equal(fetchOccurrences, 1, 'the dataset fetch node must appear exactly once — reached only via the SUCCEEDED case, never from inside the poll loop directly');
+});
+
+test('a real terminal failure (FAILED/TIMED-OUT/ABORTED) never persists junk and is never retried', () => {
+  const switchNode = findNode('Check GulfTalent Run Terminal?');
+  const rules = switchNode.parameters.rules.values;
+  const terminalValues = rules[1].conditions.conditions.map((c) => c.rightValue);
+  assert.deepEqual(new Set(terminalValues), new Set(['FAILED', 'TIMED-OUT', 'ABORTED']), 'case 1 must cover all three real terminal-failure status strings');
+  assert.equal(rules[1].conditions.combinator, 'or', 'the three terminal statuses must be OR-combined — any one of them is terminal');
+
+  assert.ok(wf.connections['Check GulfTalent Run Terminal?']?.main?.[1]?.some((c) => c.node === 'Build GulfTalent Terminal Failure Result'), 'the terminal-failure case (output 1) must route to its own failure builder, never to the dataset fetch');
+  assert.ok(wf.connections['Build GulfTalent Terminal Failure Result']?.main?.[0]?.some((c) => c.node === 'Record GulfTalent Source Result'), 'terminal failure must converge on Record GulfTalent Source Result and stop there — no batch endpoint call, nothing persisted');
+});
+
+test('poll-limit exhaustion is handled as its own terminal state, never silently dropped and never restarting the actor', () => {
+  assert.ok(wf.connections['Loop GulfTalent Poll Attempts (Bounded)']?.main?.[0]?.some((c) => c.node === 'Build GulfTalent Poll Timeout Result'), "the poll loop's done output (all attempts exhausted without a terminal status) must be wired to its own timeout-result builder");
+  assert.ok(wf.connections['Build GulfTalent Poll Timeout Result']?.main?.[0]?.some((c) => c.node === 'Record GulfTalent Source Result'));
+
+  const reachers = Object.entries(wf.connections)
+    .filter(([, c]) => (c.main ?? []).some((output) => (output ?? []).some((t) => t.node === 'Build GulfTalent Poll Timeout Result')))
+    .map(([name]) => name);
+  assert.deepEqual(reachers, ['Loop GulfTalent Poll Attempts (Bounded)'], 'only poll-exhaustion may reach the timeout-result builder');
+});
+
+test("a failed/timed-out/poll-exhausted GulfTalent refresh never closes that market's existing jobs — the batch endpoint (and its stale-close sweep) is simply never called for that partition this run", () => {
+  // None of the four failure-terminal builders have any path to Call
+  // GulfTalent Batch Endpoint — only a real SUCCEEDED dataset fetch does.
+  const failureBuilders = ['Build GulfTalent Start Failure Result', 'Build GulfTalent Terminal Failure Result', 'Build GulfTalent Poll Timeout Result', 'Build GulfTalent Dataset Fetch Failure Result'];
+  for (const name of failureBuilders) {
+    const reachesBatchEndpoint = (wf.connections[name]?.main ?? []).some((output) => (output ?? []).some((t) => t.node === 'Call GulfTalent Batch Endpoint'));
+    assert.ok(!reachesBatchEndpoint, `${name} must never reach Call GulfTalent Batch Endpoint — a failed refresh is not evidence old jobs disappeared`);
+  }
+  const batchEndpointCallers = Object.entries(wf.connections)
+    .filter(([, c]) => (c.main ?? []).some((output) => (output ?? []).some((t) => t.node === 'Call GulfTalent Batch Endpoint')))
+    .map(([name]) => name);
+  assert.deepEqual(batchEndpointCallers, ['Aggregate GulfTalent Jobs'], 'the batch endpoint (which performs the stale-close sweep server-side) must only ever be reachable after a real successful dataset fetch');
+});
+
+test('GulfTalent Saudi/UAE refresh scopes remain isolated from each other and from every other source partition', () => {
+  const seeds = getGulfTalentSeeds();
+  const scopes = seeds.map((s) => s.refresh_scope);
+  assert.equal(new Set(scopes).size, 2, 'Saudi and UAE must never share a refresh_scope');
+
+  // And distinct from every other Apify-style partition in the workflow.
+  const apifyScopes = getApifySeeds().map((s) => s.refresh_scope).filter(Boolean);
+  for (const scope of scopes) {
+    assert.ok(!apifyScopes.includes(scope), `GulfTalent's refresh_scope "${scope}" must not collide with any Bayt/Indeed partition`);
+  }
+});
+
+test('GulfTalent batch endpoint call resolves its own branch\'s Split Out node, not the Bayt/Indeed branch\'s', () => {
+  const node = findNode('Call GulfTalent Batch Endpoint');
+  assert.match(node.parameters.jsonBody, /Split Out GulfTalent Sources/, "sourceType/maxJobsPerSource/refreshScope must resolve this branch's own split node");
+  assert.ok(!/Split Out Apify Sources/.test(node.parameters.jsonBody), 'must never reference the Bayt/Indeed branch\'s split node');
+  assert.equal(node.retryOnFail, true, 'the batch persistence call itself is a safe, idempotent internal API call — unlike the paid actor start, retry is fine here');
+});
+
+test('GulfTalent converges on its own Record/Rate-Limit-Delay/loop-back, fully independent of the Bayt/Indeed branch\'s own', () => {
+  assert.notEqual(findNode('Record GulfTalent Source Result').id, findNode('Record Apify Source Result').id, 'GulfTalent must not share the Bayt/Indeed branch\'s convergence node — that node already loops back into a different loop');
+  assert.ok(wf.connections['Record GulfTalent Source Result']?.main?.[0]?.some((c) => c.node === 'GulfTalent Rate Limit Delay'));
+  assert.ok(wf.connections['GulfTalent Rate Limit Delay']?.main?.[0]?.some((c) => c.node === 'Loop GulfTalent Sources (Rate Limited)'), 'the delay must loop back into GulfTalent\'s own outer per-market loop, never the Bayt/Indeed one');
+});
+
+test('unrelated sources remain structurally unchanged by the GulfTalent fix', () => {
+  assert.equal(findNode('Call Apify Actor').retryOnFail, false);
+  assert.equal(findNode('Call Data-Slayer Actor').retryOnFail, false);
+  assert.ok(wf.connections['Loop Apify Sources (Rate Limited)'].main[1].some((c) => c.node === 'Call Apify Actor'));
+  assert.ok(wf.connections['Apify Rate Limit Delay'].main[0].some((c) => c.node === 'Loop Apify Sources (Rate Limited)'));
 });
 
 test('unrelated safe-read/internal-API retry policies are unchanged by the Apify actor retry fix', () => {
@@ -545,12 +763,13 @@ test('both the Manual Trigger and the Schedule Trigger converge on the same Work
   assert.ok(wf.connections['Daily 09:00 Beirut Trigger']?.main?.[0]?.some((c) => c.node === 'Workflow Configuration'), 'Schedule Trigger must feed Workflow Configuration');
 });
 
-test('adding the Schedule Trigger did not change Workflow Configuration\'s own downstream fan-out — still exactly the 3 existing branches', () => {
+test('Workflow Configuration fans out to exactly 4 branches (List Ingestion Sources, Apify Multi-Company Source Seeds, List LinkedIn Enrichment Queue, GulfTalent Source Seeds) — the GulfTalent reliability fix added its own branch as a fourth sibling, not a change to any existing branch', () => {
   const fanOut = wf.connections['Workflow Configuration']?.main?.[0] ?? [];
-  assert.equal(fanOut.length, 3, 'Workflow Configuration must still fan out to exactly 3 branches (List Ingestion Sources, Apify Multi-Company Source Seeds, List LinkedIn Enrichment Queue) — adding a second trigger upstream must never add a new downstream branch');
+  assert.equal(fanOut.length, 4, 'exactly 4 parallel branches off Workflow Configuration');
   assert.ok(fanOut.some((c) => c.node === 'List Ingestion Sources'));
   assert.ok(fanOut.some((c) => c.node === 'Apify Multi-Company Source Seeds'));
   assert.ok(fanOut.some((c) => c.node === 'List LinkedIn Enrichment Queue'));
+  assert.ok(fanOut.some((c) => c.node === 'GulfTalent Source Seeds'));
 });
 
 test('workflow-level timezone: if set, must be the real IANA identifier Asia/Beirut (never a fixed UTC offset, so Lebanon\'s DST transitions resolve automatically); if unset, this is the documented, still-pending manual n8n UI step (same confirmed SDK/MCP limitation as Error Workflow attachment — see the trigger node\'s own notes)', () => {
