@@ -289,8 +289,8 @@ test('the Tier-B loop batches one candidate at a time', () => {
   assertBatchesOneAtATime(findNode('Loop Career Page Candidates (Rate Limited)'));
 });
 
-test('exactly 98 nodes total (77 prior + 21 new nodes for the GulfTalent async/polling reliability fix)', () => {
-  assert.equal(wf.nodes.length, 98);
+test('exactly 102 nodes total (98 prior + 4 new nodes for the GulfTalent missing/invalid-ID guard fix)', () => {
+  assert.equal(wf.nodes.length, 102);
 });
 
 test('Apify multi-company branch (Phase 21) is fully isolated — its own seed, split, loop, actor call, aggregate, batch endpoint, success/failure builders, and rate limiter', () => {
@@ -425,6 +425,8 @@ const GULFTALENT_BRANCH_NODES = [
   'Start GulfTalent Actor Run',
   'Build GulfTalent Start Failure Result',
   'Prepare GulfTalent Poll Attempts',
+  'Check GulfTalent Actor Start Run ID Valid?',
+  'Build GulfTalent Invalid Actor Start ID Result',
   'Split Out GulfTalent Poll Attempts',
   'Loop GulfTalent Poll Attempts (Bounded)',
   'GulfTalent Poll Delay',
@@ -432,6 +434,8 @@ const GULFTALENT_BRANCH_NODES = [
   'Check GulfTalent Run Terminal?',
   'Build GulfTalent Terminal Failure Result',
   'Build GulfTalent Poll Timeout Result',
+  'Check GulfTalent Terminal Dataset ID Valid?',
+  'Build GulfTalent Invalid Dataset ID Result',
   'Fetch GulfTalent Dataset Items',
   'Build GulfTalent Dataset Fetch Failure Result',
   'Aggregate GulfTalent Jobs',
@@ -514,8 +518,13 @@ test('Prepare GulfTalent Poll Attempts reads the actor-start response from its r
   // exact flat mapping shipped to the tracked source while the live node
   // was hand-corrected and never ported back — five real paid Apify runs
   // ($0.084516 total) happened before this was caught.
-  assert.equal(runIdAssignment.value, '={{ $json.data.id }}', 'runId must read the nested response shape Apify actually returns');
-  assert.equal(datasetIdAssignment.value, '={{ $json.data.defaultDatasetId }}', 'datasetId must read the nested response shape Apify actually returns');
+  // 2026-10-22 fix: '?.' added so a successful response missing the data
+  // envelope entirely resolves to undefined here rather than throwing an
+  // uncaught expression error (this Set node has no onError wired) — see
+  // Check GulfTalent Actor Start Run ID Valid? for what actually rejects
+  // the resulting invalid runId before it reaches the polling HTTP node.
+  assert.equal(runIdAssignment.value, '={{ $json.data?.id }}', 'runId must read the nested response shape Apify actually returns, defensively');
+  assert.equal(datasetIdAssignment.value, '={{ $json.data?.defaultDatasetId }}', 'datasetId must read the nested response shape Apify actually returns, defensively');
 
   // Explicitly reject the previously-shipped flat mapping so a future
   // regression fails loudly here instead of only costing money quietly.
@@ -530,8 +539,100 @@ test('Prepare GulfTalent Poll Attempts reads the actor-start response from its r
     tsSource.indexOf('const prepareGulfTalentPollAttempts'),
     tsSource.indexOf('const splitOutGulfTalentPollAttempts')
   );
-  assert.match(prepareNodeSource, /expr\('\{\{ \$json\.data\.id \}\}'\)/, 'TypeScript source must agree with the generated JSON on the runId expression');
-  assert.match(prepareNodeSource, /expr\('\{\{ \$json\.data\.defaultDatasetId \}\}'\)/, 'TypeScript source must agree with the generated JSON on the datasetId expression');
+  assert.match(prepareNodeSource, /expr\('\{\{ \$json\.data\?\.id \}\}'\)/, 'TypeScript source must agree with the generated JSON on the runId expression');
+  assert.match(prepareNodeSource, /expr\('\{\{ \$json\.data\?\.defaultDatasetId \}\}'\)/, 'TypeScript source must agree with the generated JSON on the datasetId expression');
+});
+
+// ── Missing/invalid-ID guard (2026-10-22 fix) ───────────────────────────
+// Prepare GulfTalent Poll Attempts' '?.' only prevents a throw while
+// building runId/datasetId — it does not reject them. These two switch
+// nodes are what actually keep an invalid ID from ever reaching a real
+// HTTP node, by routing to the existing Record GulfTalent Source Result
+// failure-recording architecture instead.
+
+// Mirrors (does not execute) the exact ternary condition expression used
+// by Check GulfTalent Actor Start Run ID Valid? — a local JS
+// reproduction for offline testing, never an n8n engine invocation.
+function mirrorActorStartRunIdValid(json) {
+  const runId = json?.runId;
+  return (typeof runId === 'string' && runId.trim().length > 0) ? 'valid' : 'invalid';
+}
+
+// Mirrors (does not execute) the exact ternary condition expression used
+// by Check GulfTalent Terminal Dataset ID Valid?.
+function mirrorTerminalDatasetIdValid(json) {
+  const datasetId = json?.data?.defaultDatasetId;
+  return (typeof datasetId === 'string' && datasetId.trim().length > 0) ? 'valid' : 'invalid';
+}
+
+test('Check GulfTalent Actor Start Run ID Valid? exists, is wired between Prepare GulfTalent Poll Attempts and the poll loop, and its invalid case routes to failure recording without reaching the actor-start node or the batch endpoint', () => {
+  assert.ok(wf.connections['Prepare GulfTalent Poll Attempts']?.main?.[0]?.some((c) => c.node === 'Check GulfTalent Actor Start Run ID Valid?'), 'Prepare GulfTalent Poll Attempts must route through the run-ID guard first');
+  assert.ok(wf.connections['Check GulfTalent Actor Start Run ID Valid?']?.main?.[0]?.some((c) => c.node === 'Split Out GulfTalent Poll Attempts'), 'the valid case must proceed into the poll loop exactly as before');
+  assert.ok(wf.connections['Check GulfTalent Actor Start Run ID Valid?']?.main?.[1]?.some((c) => c.node === 'Build GulfTalent Invalid Actor Start ID Result'), 'the invalid case must route to its own failure builder');
+  assert.ok(wf.connections['Build GulfTalent Invalid Actor Start ID Result']?.main?.[0]?.some((c) => c.node === 'Record GulfTalent Source Result'));
+
+  const reachesBatch = (wf.connections['Build GulfTalent Invalid Actor Start ID Result']?.main ?? []).some((o) => (o ?? []).some((t) => t.node === 'Call GulfTalent Batch Endpoint'));
+  assert.ok(!reachesBatch, 'an invalid run ID must never reach the batch endpoint');
+
+  const reachesActorStart = Object.entries(wf.connections).some(([name, c]) =>
+    name.startsWith('Build GulfTalent Invalid') || name.startsWith('Check GulfTalent')
+      ? (c.main ?? []).some((o) => (o ?? []).some((t) => t.node === 'Start GulfTalent Actor Run'))
+      : false
+  );
+  assert.ok(!reachesActorStart, 'no guard or invalid-ID failure path may ever restart the actor');
+});
+
+test('an invalid actor-start run ID can never reach Poll GulfTalent Run Status — static reachability check', () => {
+  const invalidTargets = (wf.connections['Check GulfTalent Actor Start Run ID Valid?']?.main?.[1] ?? []).map((t) => t.node);
+  assert.deepEqual(invalidTargets, ['Build GulfTalent Invalid Actor Start ID Result']);
+});
+
+for (const [label, json, expected] of [
+  ['valid run ID and dataset ID (historical shape)', { data: { id: 'qxNwKp3b7Zek70sXt', defaultDatasetId: 'PfXFN8QlhTArfYf2H', status: 'READY' }, runId: 'qxNwKp3b7Zek70sXt' }, 'valid'],
+  ['missing data envelope entirely', {}, 'invalid'],
+  ['data: null', { data: null }, 'invalid'],
+  ['missing run ID', { runId: undefined }, 'invalid'],
+  ['empty run ID', { runId: '' }, 'invalid'],
+  ['whitespace-only run ID', { runId: '   ' }, 'invalid'],
+  ['non-string run ID (number)', { runId: 12345 }, 'invalid'],
+  ['non-string run ID (object)', { runId: { id: 'x' } }, 'invalid'],
+  ['run ID with surrounding whitespace is still a usable string', { runId: '  qxNwKp3b7Zek70sXt  ' }, 'valid'],
+]) {
+  test(`Check GulfTalent Actor Start Run ID Valid? predicate (mirrored offline): ${label}`, () => {
+    assert.equal(mirrorActorStartRunIdValid(json), expected);
+  });
+}
+
+test('Check GulfTalent Terminal Dataset ID Valid? exists, is wired between Check GulfTalent Run Terminal? and the dataset fetch, and its invalid case routes to failure recording without reaching the dataset-fetch node or the batch endpoint', () => {
+  assert.ok(wf.connections['Check GulfTalent Run Terminal?']?.main?.[0]?.some((c) => c.node === 'Check GulfTalent Terminal Dataset ID Valid?'), 'the SUCCEEDED case must route through the dataset-ID guard first');
+  assert.ok(wf.connections['Check GulfTalent Terminal Dataset ID Valid?']?.main?.[0]?.some((c) => c.node === 'Fetch GulfTalent Dataset Items'), 'the valid case must proceed to the real dataset fetch exactly as before');
+  assert.ok(wf.connections['Check GulfTalent Terminal Dataset ID Valid?']?.main?.[1]?.some((c) => c.node === 'Build GulfTalent Invalid Dataset ID Result'), 'the invalid case must route to its own failure builder');
+  assert.ok(wf.connections['Build GulfTalent Invalid Dataset ID Result']?.main?.[0]?.some((c) => c.node === 'Record GulfTalent Source Result'));
+
+  const invalidTargets = (wf.connections['Check GulfTalent Terminal Dataset ID Valid?']?.main?.[1] ?? []).map((t) => t.node);
+  assert.deepEqual(invalidTargets, ['Build GulfTalent Invalid Dataset ID Result'], 'an invalid terminal dataset ID must never reach Fetch GulfTalent Dataset Items');
+
+  const reachesBatch = (wf.connections['Build GulfTalent Invalid Dataset ID Result']?.main ?? []).some((o) => (o ?? []).some((t) => t.node === 'Call GulfTalent Batch Endpoint'));
+  assert.ok(!reachesBatch, 'an invalid dataset ID must never reach the batch endpoint');
+});
+
+for (const [label, json, expected] of [
+  ['valid dataset ID (historical shape)', { data: { id: 'qxNwKp3b7Zek70sXt', status: 'SUCCEEDED', defaultDatasetId: 'PfXFN8QlhTArfYf2H' } }, 'valid'],
+  ['missing data envelope entirely', {}, 'invalid'],
+  ['data: null', { data: null }, 'invalid'],
+  ['missing dataset ID', { data: { status: 'SUCCEEDED' } }, 'invalid'],
+  ['empty dataset ID', { data: { status: 'SUCCEEDED', defaultDatasetId: '' } }, 'invalid'],
+  ['non-string dataset ID', { data: { status: 'SUCCEEDED', defaultDatasetId: 42 } }, 'invalid'],
+]) {
+  test(`Check GulfTalent Terminal Dataset ID Valid? predicate (mirrored offline): ${label}`, () => {
+    assert.equal(mirrorTerminalDatasetIdValid(json), expected);
+  });
+}
+
+test('neither new ID guard changed the bounded polling configuration or existing GulfTalent node connectivity', () => {
+  assert.equal(findNode('Prepare GulfTalent Poll Attempts').parameters.assignments.assignments.find((a) => a.name === 'poll_attempts').value, '={{ Array.from({ length: 15 }, (_, i) => i) }}');
+  assert.equal(findNode('GulfTalent Poll Delay').parameters.amount, 10);
+  for (const name of GULFTALENT_BRANCH_NODES) findNode(name);
 });
 
 test('a successful actor run is eventually fetched exactly once — SUCCEEDED routes to the dataset fetch, never re-polled', () => {
@@ -539,7 +640,8 @@ test('a successful actor run is eventually fetched exactly once — SUCCEEDED ro
   const rules = switchNode.parameters.rules.values;
   assert.equal(rules[0].conditions.conditions[0].rightValue, 'SUCCEEDED', 'case 0 must check for the real SUCCEEDED status string');
 
-  assert.ok(wf.connections['Check GulfTalent Run Terminal?']?.main?.[0]?.some((c) => c.node === 'Fetch GulfTalent Dataset Items'), 'the SUCCEEDED case (output 0) must route to the dataset fetch');
+  assert.ok(wf.connections['Check GulfTalent Run Terminal?']?.main?.[0]?.some((c) => c.node === 'Check GulfTalent Terminal Dataset ID Valid?'), 'the SUCCEEDED case (output 0) must route to the dataset-ID guard before the dataset fetch');
+  assert.ok(wf.connections['Check GulfTalent Terminal Dataset ID Valid?']?.main?.[0]?.some((c) => c.node === 'Fetch GulfTalent Dataset Items'), 'the valid case (output 0) of the dataset-ID guard must route to the dataset fetch');
   assert.ok(wf.connections['Fetch GulfTalent Dataset Items']?.main?.[0]?.some((c) => c.node === 'Aggregate GulfTalent Jobs'));
   assert.ok(wf.connections['Aggregate GulfTalent Jobs']?.main?.[0]?.some((c) => c.node === 'Call GulfTalent Batch Endpoint'));
 

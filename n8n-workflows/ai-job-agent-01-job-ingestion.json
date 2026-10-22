@@ -2954,7 +2954,7 @@
         1568,
         3650
       ],
-      "notes": "Builds a fixed, bounded array of 15 poll-attempt placeholders — Split Out GulfTalent Poll Attempts explodes it into one loop item per attempt, each carrying runId/datasetId forward via 'include other fields'.",
+      "notes": "Builds a fixed, bounded array of 15 poll-attempt placeholders — Split Out GulfTalent Poll Attempts explodes it into one loop item per attempt, each carrying runId/datasetId forward via 'include other fields'. Uses '?.' on $json.data — a successful actor-start response missing the data envelope entirely must never throw an uncaught expression error here (this node has no onError wired); Check GulfTalent Actor Start Run ID Valid? is what actually rejects a missing/invalid runId before it can reach the polling HTTP node.",
       "parameters": {
         "mode": "manual",
         "assignments": {
@@ -2962,13 +2962,13 @@
             {
               "id": "f4e78262-4bcc-43e6-8225-d2f2693920be",
               "name": "runId",
-              "value": "={{ $json.data.id }}",
+              "value": "={{ $json.data?.id }}",
               "type": "string"
             },
             {
               "id": "4c0af320-5e9c-48ef-8872-1db20e426e68",
               "name": "datasetId",
-              "value": "={{ $json.data.defaultDatasetId }}",
+              "value": "={{ $json.data?.defaultDatasetId }}",
               "type": "string"
             },
             {
@@ -2976,6 +2976,84 @@
               "name": "poll_attempts",
               "value": "={{ Array.from({ length: 15 }, (_, i) => i) }}",
               "type": "array"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "13d5f708-83d3-48dc-b1b9-07a20c49eff8",
+      "name": "Check GulfTalent Actor Start Run ID Valid?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        3850
+      ],
+      "notes": "Only runId is checked here — datasetId from this same actor-start response is never actually read by Fetch GulfTalent Dataset Items (that node reads the TERMINAL poll response's own data.defaultDatasetId instead, checked separately by Check GulfTalent Terminal Dataset ID Valid?), so validating it here would guard a field nothing consumes. Rejects a missing/null actor-start data envelope and a missing, empty, or non-string runId before the real polling HTTP call.",
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ (typeof $json.runId === 'string' && $json.runId.trim().length > 0) ? 'valid' : 'invalid' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "valid"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "invalid"
+        }
+      }
+    },
+    {
+      "id": "7c416ced-bcbf-4ac8-91ae-9ad8cd6f079a",
+      "name": "Build GulfTalent Invalid Actor Start ID Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        4000
+      ],
+      "notes": "The actor-start HTTP call itself succeeded, but its response lacked a usable run ID (missing data envelope, or missing/empty/non-string data.id) — nothing to poll, nothing persisted, nothing closed. Never retried, never reaches the batch endpoint, and never restarts the actor.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e4b8934-04b2-43e1-993b-feaaf331c4c8",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "f46a427f-9731-44ea-8926-261a960dc451",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "d65a1a8b-f01c-4911-914d-650ffc81cb7c",
+              "name": "error",
+              "value": "gulftalent actor-start response missing a valid run ID",
+              "type": "string"
             }
           ]
         }
@@ -3192,6 +3270,84 @@
               "id": "c3dc00ef-888b-4783-a5b5-582b7644e21c",
               "name": "error",
               "value": "gulftalent poll limit exhausted after 15 attempts — run may still be in progress on Apify",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a15da3cc-5f81-454a-ac35-cb0abb159656",
+      "name": "Check GulfTalent Terminal Dataset ID Valid?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        3300
+      ],
+      "notes": "Reached only from the SUCCEEDED case of Check GulfTalent Run Terminal? — still defensively re-checks data.defaultDatasetId rather than assuming a SUCCEEDED status guarantees a usable dataset ID. Deliberately re-checks THIS terminal response's own data.defaultDatasetId, not the actor-start response's (unused) datasetId field.",
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ (typeof $json.data?.defaultDatasetId === 'string' && $json.data.defaultDatasetId.trim().length > 0) ? 'valid' : 'invalid' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "valid"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "invalid"
+        }
+      }
+    },
+    {
+      "id": "d453f914-16c2-4c19-856e-81d1710456d0",
+      "name": "Build GulfTalent Invalid Dataset ID Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        3150
+      ],
+      "notes": "The actor run itself reported SUCCEEDED, but its terminal response lacked a usable dataset ID — nothing is fetched, nothing persisted, nothing closed. Never retried, never reaches the batch endpoint, and never restarts the actor.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9eb6cc1c-0f7e-4cb0-917c-4b544256352e",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "dbdf8684-b5e3-4384-86cb-1b61d9969017",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "3afdf99a-a531-450f-8697-5068e65a0a8f",
+              "name": "error",
+              "value": "gulftalent terminal response missing a valid dataset ID",
               "type": "string"
             }
           ]
@@ -4464,7 +4620,36 @@
       "main": [
         [
           {
+            "node": "Check GulfTalent Actor Start Run ID Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GulfTalent Actor Start Run ID Valid?": {
+      "main": [
+        [
+          {
             "node": "Split Out GulfTalent Poll Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Invalid Actor Start ID Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Invalid Actor Start ID Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
             "type": "main",
             "index": 0
           }
@@ -4533,7 +4718,7 @@
       "main": [
         [
           {
-            "node": "Fetch GulfTalent Dataset Items",
+            "node": "Check GulfTalent Terminal Dataset ID Valid?",
             "type": "main",
             "index": 0
           }
@@ -4548,6 +4733,35 @@
         [
           {
             "node": "Loop GulfTalent Poll Attempts (Bounded)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GulfTalent Terminal Dataset ID Valid?": {
+      "main": [
+        [
+          {
+            "node": "Fetch GulfTalent Dataset Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Invalid Dataset ID Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Invalid Dataset ID Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
             "type": "main",
             "index": 0
           }

@@ -1157,19 +1157,81 @@ const prepareGulfTalentPollAttempts = node({
   version: 3.4,
   config: {
     name: 'Prepare GulfTalent Poll Attempts',
-    notes: `Builds a fixed, bounded array of ${GULFTALENT_POLL_MAX_ATTEMPTS} poll-attempt placeholders — Split Out GulfTalent Poll Attempts below explodes it into one loop item per attempt, each carrying runId/datasetId forward via 'include other fields'.`,
+    notes:
+      `Builds a fixed, bounded array of ${GULFTALENT_POLL_MAX_ATTEMPTS} poll-attempt placeholders — Split Out GulfTalent Poll Attempts below explodes it into one loop item per attempt, each carrying runId/datasetId forward via 'include other fields'. ` +
+      "Uses '?.' on $json.data — a successful actor-start response missing the data envelope entirely must never throw an uncaught expression error here (this node has no onError wired); " +
+      'Check GulfTalent Actor Start Run ID Valid? below is what actually rejects a missing/invalid runId before it can reach the paid-adjacent polling HTTP node.',
     parameters: {
       mode: 'manual',
       assignments: {
         assignments: [
-          { id: 'runId', name: 'runId', value: expr('{{ $json.data.id }}'), type: 'string' },
-          { id: 'datasetId', name: 'datasetId', value: expr('{{ $json.data.defaultDatasetId }}'), type: 'string' },
+          { id: 'runId', name: 'runId', value: expr('{{ $json.data?.id }}'), type: 'string' },
+          { id: 'datasetId', name: 'datasetId', value: expr('{{ $json.data?.defaultDatasetId }}'), type: 'string' },
           { id: 'poll_attempts', name: 'poll_attempts', value: expr(`{{ Array.from({ length: ${GULFTALENT_POLL_MAX_ATTEMPTS} }, (_, i) => i) }}`), type: 'array' },
         ],
       },
     },
   },
   output: [{ runId: 'runAbc123', datasetId: 'datasetAbc123', poll_attempts: [0, 1, 2] }],
+});
+
+// Rejects a missing/null actor-start data envelope and a missing, empty,
+// or non-string runId BEFORE the free-but-real polling HTTP call —
+// Poll GulfTalent Run Status's URL is built from exactly this field
+// ('https://api.apify.com/v2/actor-runs/' + $json.runId), so an invalid
+// runId here would otherwise silently become a wrong-but-valid URL
+// (.../actor-runs/undefined) instead of a clean, actionable rejection.
+// Reuses the same string-equals + fallbackOutput pattern already proven
+// by Check GulfTalent Run Terminal? below — no new condition syntax.
+const checkGulfTalentActorStartRunIdValid = switchCase({
+  version: 3.4,
+  config: {
+    name: 'Check GulfTalent Actor Start Run ID Valid?',
+    notes:
+      'Only runId is checked here — datasetId from this same actor-start response is never actually read by Fetch GulfTalent Dataset Items (that node reads the TERMINAL poll response\'s own data.defaultDatasetId instead, checked separately by Check GulfTalent Terminal Dataset ID Valid? below), so validating it here would guard a field nothing consumes.',
+    parameters: {
+      rules: {
+        values: [
+          {
+            outputKey: 'valid',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [
+                {
+                  leftValue: expr("{{ (typeof $json.runId === 'string' && $json.runId.trim().length > 0) ? 'valid' : 'invalid' }}"),
+                  operator: { type: 'string', operation: 'equals' },
+                  rightValue: 'valid',
+                },
+              ],
+              combinator: 'and',
+            },
+          },
+        ],
+      },
+      options: { fallbackOutput: 'extra', renameFallbackOutput: 'invalid' },
+    },
+  },
+  output: [{ runId: 'runAbc123', datasetId: 'datasetAbc123', poll_attempts: [0, 1, 2] }],
+});
+
+const buildGulfTalentInvalidActorStartIdResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build GulfTalent Invalid Actor Start ID Result',
+    notes: 'The actor-start HTTP call itself succeeded, but its response lacked a usable run ID (missing data envelope, or missing/empty/non-string data.id) — nothing to poll, nothing persisted, nothing closed. Never retried, never reaches the batch endpoint, and never restarts the actor.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'provider_type', name: 'provider_type', value: 'gulftalent', type: 'string' },
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: 'gulftalent actor-start response missing a valid run ID', type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ provider_type: 'gulftalent', succeeded: false, error: 'gulftalent actor-start response missing a valid run ID' }],
 });
 
 const splitOutGulfTalentPollAttempts = node({
@@ -1311,6 +1373,64 @@ const buildGulfTalentPollTimeoutResult = node({
     },
   },
   output: [{ provider_type: 'gulftalent', succeeded: false, error: 'gulftalent poll limit exhausted after 15 attempts' }],
+});
+
+// Rejects a missing, empty, or non-string dataset ID from the TERMINAL
+// (SUCCEEDED) poll response BEFORE the free-but-real dataset-fetch HTTP
+// call — Fetch GulfTalent Dataset Items's URL is built from exactly this
+// field. Deliberately re-checks data.defaultDatasetId from THIS response,
+// not the actor-start response's own (unused) datasetId field — see
+// Check GulfTalent Actor Start Run ID Valid?'s own note on why those two
+// are not assumed identical. Uses '?.' for the same missing-data-envelope
+// safety as Build GulfTalent Terminal Failure Result above.
+const checkGulfTalentTerminalDatasetIdValid = switchCase({
+  version: 3.4,
+  config: {
+    name: 'Check GulfTalent Terminal Dataset ID Valid?',
+    notes: 'Reached only from the SUCCEEDED case of Check GulfTalent Run Terminal? above — still defensively re-checks data.defaultDatasetId rather than assuming a SUCCEEDED status guarantees a usable dataset ID.',
+    parameters: {
+      rules: {
+        values: [
+          {
+            outputKey: 'valid',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [
+                {
+                  leftValue: expr("{{ (typeof $json.data?.defaultDatasetId === 'string' && $json.data.defaultDatasetId.trim().length > 0) ? 'valid' : 'invalid' }}"),
+                  operator: { type: 'string', operation: 'equals' },
+                  rightValue: 'valid',
+                },
+              ],
+              combinator: 'and',
+            },
+          },
+        ],
+      },
+      options: { fallbackOutput: 'extra', renameFallbackOutput: 'invalid' },
+    },
+  },
+  output: [{ data: { id: 'runAbc123', status: 'SUCCEEDED', defaultDatasetId: 'datasetAbc123' } }],
+});
+
+const buildGulfTalentInvalidDatasetIdResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build GulfTalent Invalid Dataset ID Result',
+    notes: 'The actor run itself reported SUCCEEDED, but its terminal response lacked a usable dataset ID — nothing is fetched, nothing persisted, nothing closed. Never retried, never reaches the batch endpoint, and never restarts the actor.',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          { id: 'provider_type', name: 'provider_type', value: 'gulftalent', type: 'string' },
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: 'gulftalent terminal response missing a valid dataset ID', type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ provider_type: 'gulftalent', succeeded: false, error: 'gulftalent terminal response missing a valid dataset ID' }],
 });
 
 // Free read of already-paid-for data — same dataset the run already
@@ -2438,18 +2558,28 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
     loopGulfTalentSources.onEachBatch(
       startGulfTalentActorRun.onError(buildGulfTalentStartFailureResult).to(
         prepareGulfTalentPollAttempts.to(
-          splitOutGulfTalentPollAttempts.to(
-            loopGulfTalentPoll.onEachBatch(
-              gulfTalentPollDelay.to(
-                pollGulfTalentRunStatus.onError(nextBatch(loopGulfTalentPoll)).to(
-                  checkGulfTalentPollTerminal
-                    .onCase(0, fetchGulfTalentDatasetItems.onError(buildGulfTalentDatasetFetchFailureResult).to(aggregateGulfTalentJobs.to(callGulfTalentBatchEndpoint)))
-                    .onCase(1, buildGulfTalentTerminalFailureResult)
-                    .onCase(2, nextBatch(loopGulfTalentPoll))
+          checkGulfTalentActorStartRunIdValid
+            .onCase(
+              0,
+              splitOutGulfTalentPollAttempts.to(
+                loopGulfTalentPoll.onEachBatch(
+                  gulfTalentPollDelay.to(
+                    pollGulfTalentRunStatus.onError(nextBatch(loopGulfTalentPoll)).to(
+                      checkGulfTalentPollTerminal
+                        .onCase(
+                          0,
+                          checkGulfTalentTerminalDatasetIdValid
+                            .onCase(0, fetchGulfTalentDatasetItems.onError(buildGulfTalentDatasetFetchFailureResult).to(aggregateGulfTalentJobs.to(callGulfTalentBatchEndpoint)))
+                            .onCase(1, buildGulfTalentInvalidDatasetIdResult)
+                        )
+                        .onCase(1, buildGulfTalentTerminalFailureResult)
+                        .onCase(2, nextBatch(loopGulfTalentPoll))
+                    )
+                  )
                 )
               )
             )
-          )
+            .onCase(1, buildGulfTalentInvalidActorStartIdResult)
         )
       )
     )
@@ -2460,7 +2590,11 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
   .to(recordGulfTalentSourceResult)
   .add(buildGulfTalentStartFailureResult)
   .to(recordGulfTalentSourceResult)
+  .add(buildGulfTalentInvalidActorStartIdResult)
+  .to(recordGulfTalentSourceResult)
   .add(buildGulfTalentTerminalFailureResult)
+  .to(recordGulfTalentSourceResult)
+  .add(buildGulfTalentInvalidDatasetIdResult)
   .to(recordGulfTalentSourceResult)
   .add(buildGulfTalentPollTimeoutResult)
   .to(recordGulfTalentSourceResult)
