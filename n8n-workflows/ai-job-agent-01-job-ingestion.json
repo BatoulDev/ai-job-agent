@@ -3044,6 +3044,272 @@
       "notes": "Production daily cadence. TIMEZONE: this node's own parameters have no timezone field — triggerAtHour/triggerAtMinute are interpreted using this WORKFLOW's own Settings → Timezone (falls back to the n8n instance's GENERIC_TIMEZONE, then UTC, if unset). Neither the n8n Workflow SDK nor n8n-mcp's update_workflow exposes a way to set workflow-level settings.timezone — confirmed, same category of manual-only limitation as this workflow's Error Workflow attachment. For 9/0 below to mean real 09:00 Asia/Beirut (with correct automatic DST handling), a human must set this workflow's own Settings → Timezone → Asia/Beirut once in the n8n UI. Until then this resolves to 09:00 UTC, not Beirut time."
     },
     {
+      "id": "ec299575-59d3-4260-853e-408ba05943f7",
+      "name": "List LinkedIn Discovery Seeds",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        3400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/list-linkedin-discovery-seeds",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "notes": "Credential 'Ingestion Worker Secret' must be bound manually in the n8n UI — confirmed MCP tool limitation. Returns the static, bounded per-market seed list when providerConfig.ts's linkedin.enabled is true, or an empty seeds array otherwise — same structurally-inert-while-disabled posture as List LinkedIn Enrichment Queue.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "e52c3afa-fd78-4ea9-8693-453f10ed73a7",
+      "name": "Log List Discovery Seeds Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        3560
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'list-linkedin-discovery-seeds call failed' }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "notes": "Terminal failure for this branch this run — nothing to loop over if seed listing itself failed. Never blocks the rest of ingestion (its own independent branch)."
+    },
+    {
+      "id": "5d10decb-8334-4f5d-bac9-a426bfe961a8",
+      "name": "Split Out LinkedIn Discovery Seeds",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        672,
+        3400
+      ],
+      "parameters": {
+        "fieldToSplitOut": "seeds"
+      }
+    },
+    {
+      "id": "67894e83-82fd-40bd-bb59-24012143cc3e",
+      "name": "Loop LinkedIn Discovery Seeds (Rate Limited)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        896,
+        3400
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "2a11d047-8010-471f-9a19-dc46c6595893",
+      "name": "Call Bebity Actor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        3320
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.actorUrl + '?maxTotalChargeUsd=' + $json.maxTotalChargeUsd }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.requestBody }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "notes": "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI — confirmed MCP tool limitation. retryOnFail deliberately false — Bebity is a real confirmed PAY_PER_EVENT actor; a run-sync-get-dataset-items call is paid and non-idempotent. No title/keyword/category field is ever sent — broad discovery across every profession.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": false
+    },
+    {
+      "id": "d6a52ae5-0373-44f8-959e-c1fc1f754822",
+      "name": "Aggregate Bebity Jobs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        3320
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "include": "allFields"
+      },
+      "notes": "Bebity's run-sync-get-dataset-items returns a bare top-level array — n8n auto-splits it into one item per job, so this re-aggregates back into one {jobs:[...]} item before the batch endpoint call."
+    },
+    {
+      "id": "345b993b-b819-4c91-8082-dd80cc137a1a",
+      "name": "Call LinkedIn Discovery Batch Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1568,
+        3320
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { sourceType: 'linkedin', rawJobs: $json.jobs, maxJobsPerSource: $('Split Out LinkedIn Discovery Seeds').item.json.maxJobsPerRun, dryRun: $('Workflow Configuration').first().json.dryRun, refreshScope: $('Split Out LinkedIn Discovery Seeds').item.json.refreshScope } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "notes": "Credential 'Ingestion Worker Secret' must be bound manually in the n8n UI — confirmed MCP tool limitation. Reuses the SAME shared run-multi-company-batch endpoint the Tier D and Apify branches use — linkedin is already in MULTI_COMPANY_SOURCE_TYPES' allowlist. The endpoint re-checks providerConfig.ts's linkedin.enabled live before writing anything.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "d7efb1db-48bb-4ba3-9eef-b71a51d051b6",
+      "name": "Build LinkedIn Discovery Success Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        3320
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "market",
+              "name": "market",
+              "value": "={{ $('Split Out LinkedIn Discovery Seeds').item.json.market }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": "={{ $json.outcome === 'succeeded' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1561d16d-50f4-42fa-b99c-493c9d3039e4",
+      "name": "Build LinkedIn Discovery Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        3460
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "market",
+              "name": "market",
+              "value": "={{ $('Split Out LinkedIn Discovery Seeds').item.json.market }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'bebity actor or batch call failed' }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "277b9f9d-cd06-475b-b0d4-9d1cf056bb81",
+      "name": "Record LinkedIn Discovery Source Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        3400
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": []
+        }
+      },
+      "notes": "Convergence point for this loop, same purpose as Record Apify Source Result above."
+    },
+    {
+      "id": "e7c56f45-c5b9-4306-a475-ed1aff5705e9",
+      "name": "LinkedIn Discovery Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        3400
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}",
+        "unit": "seconds"
+      },
+      "webhookId": "831c3d81-f29a-437a-9e56-a2ef5390e396"
+    },
+    {
+      "id": "04861bc7-f1e1-461d-8fbf-7b06e966927e",
+      "name": "Sticky Note LinkedIn Discovery",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        3250
+      ],
+      "parameters": {
+        "content": "### LinkedIn/Bebity discovery (market expansion)\nBroad discovery across every profession — no title/keyword/category field exists in Bebity's own real confirmed input. Five market seeds (Lebanon/Saudi/UAE/Qatar/Kuwait), each its own refresh_scope. Only Lebanon has ever been real-tested with Bebity; the other four are structurally complete but UNVALIDATED and need their own small bounded real pilot before providerConfig.ts's linkedin.enabled is ever considered. Reuses run-multi-company-batch — no duplicate persistence model. Structurally inert while disabled at two independent layers.",
+        "height": 260,
+        "width": 380,
+        "color": 9
+      }
+    },
+    {
       "id": "c0bcdd9f-4b43-4a84-ae1e-f92333b9af5e",
       "name": "GulfTalent Source Seeds",
       "type": "n8n-nodes-base.set",
@@ -3858,6 +4124,11 @@
           },
           {
             "node": "List LinkedIn Enrichment Queue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "List LinkedIn Discovery Seeds",
             "type": "main",
             "index": 0
           },
@@ -4799,6 +5070,138 @@
         [
           {
             "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List LinkedIn Discovery Seeds": {
+      "main": [
+        [
+          {
+            "node": "Split Out LinkedIn Discovery Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log List Discovery Seeds Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out LinkedIn Discovery Seeds": {
+      "main": [
+        [
+          {
+            "node": "Loop LinkedIn Discovery Seeds (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop LinkedIn Discovery Seeds (Rate Limited)": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Call Bebity Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Bebity Actor": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Bebity Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build LinkedIn Discovery Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Bebity Jobs": {
+      "main": [
+        [
+          {
+            "node": "Call LinkedIn Discovery Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call LinkedIn Discovery Batch Endpoint": {
+      "main": [
+        [
+          {
+            "node": "Build LinkedIn Discovery Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build LinkedIn Discovery Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LinkedIn Discovery Success Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Discovery Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LinkedIn Discovery Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Discovery Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record LinkedIn Discovery Source Result": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Discovery Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Discovery Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Loop LinkedIn Discovery Seeds (Rate Limited)",
             "type": "main",
             "index": 0
           }

@@ -1022,12 +1022,13 @@ test('every LinkedIn branch terminal path converges on Record LinkedIn Enrichmen
   }
 });
 
-test('the LinkedIn branch has no loop/rate-limit-delay node — one run is already one bounded <=25-id batch, by design', () => {
-  assert.ok(!wf.nodes.some((n) => n.name === 'LinkedIn Rate Limit Delay'), 'no rate-limit loop should exist for this branch');
-  const splitBatchesNearLinkedIn = wf.nodes.filter(
-    (n) => n.type === 'n8n-nodes-base.splitInBatches' && n.name.toLowerCase().includes('linkedin')
+test('the LinkedIn ENRICHMENT branch (data-slayer, exact-ID) has no loop/rate-limit-delay node of its own — one run is already one bounded <=25-id batch, by design. The market-expansion phase added a loop for the separate DISCOVERY branch (Bebity, per-market seeds) — that is a different node, scoped out below.', () => {
+  assert.ok(!wf.nodes.some((n) => n.name === 'LinkedIn Rate Limit Delay'), 'no rate-limit loop should exist for the enrichment branch specifically');
+  const enrichmentLoopNodeNames = ['Loop LinkedIn Enrichment Queue', 'Loop LinkedIn Enrichment', 'LinkedIn Enrichment Loop'];
+  const splitBatchesNearLinkedInEnrichment = wf.nodes.filter(
+    (n) => n.type === 'n8n-nodes-base.splitInBatches' && enrichmentLoopNodeNames.includes(n.name)
   );
-  assert.equal(splitBatchesNearLinkedIn.length, 0, 'List LinkedIn Enrichment Queue already bounds one run to one batch — no fan-out loop is needed or present');
+  assert.equal(splitBatchesNearLinkedInEnrichment.length, 0, 'List LinkedIn Enrichment Queue already bounds one run to one batch — no fan-out loop is needed or present for enrichment');
 });
 
 // ── Daily production Schedule Trigger ──────────────────────────────────
@@ -1058,13 +1059,14 @@ test('both the Manual Trigger and the Schedule Trigger converge on the same Work
   assert.ok(wf.connections['Daily 09:00 Beirut Trigger']?.main?.[0]?.some((c) => c.node === 'Workflow Configuration'), 'Schedule Trigger must feed Workflow Configuration');
 });
 
-test('Workflow Configuration fans out to exactly 4 branches (List Ingestion Sources, Apify Multi-Company Source Seeds, List LinkedIn Enrichment Queue, GulfTalent Source Seeds) — the GulfTalent reliability fix added its own branch as a fourth sibling, not a change to any existing branch', () => {
+test('Workflow Configuration fans out to exactly 5 branches (List Ingestion Sources, Apify Multi-Company Source Seeds, List LinkedIn Enrichment Queue, List LinkedIn Discovery Seeds, GulfTalent Source Seeds) — the GulfTalent reliability fix added its own branch as a fifth sibling, not a change to any existing branch', () => {
   const fanOut = wf.connections['Workflow Configuration']?.main?.[0] ?? [];
-  assert.equal(fanOut.length, 4, 'exactly 4 parallel branches off Workflow Configuration');
+  assert.equal(fanOut.length, 5, 'exactly 5 parallel branches off Workflow Configuration');
   assert.ok(fanOut.some((c) => c.node === 'List Ingestion Sources'));
   assert.ok(fanOut.some((c) => c.node === 'Apify Multi-Company Source Seeds'));
   assert.ok(fanOut.some((c) => c.node === 'List LinkedIn Enrichment Queue'));
   assert.ok(fanOut.some((c) => c.node === 'GulfTalent Source Seeds'));
+  assert.ok(fanOut.some((c) => c.node === 'List LinkedIn Discovery Seeds'));
 });
 
 test('workflow-level timezone: if set, must be the real IANA identifier Asia/Beirut (never a fixed UTC offset, so Lebanon\'s DST transitions resolve automatically); if unset, this is the documented, still-pending manual n8n UI step (same confirmed SDK/MCP limitation as Error Workflow attachment — see the trigger node\'s own notes)', () => {
@@ -1075,4 +1077,106 @@ test('workflow-level timezone: if set, must be the real IANA identifier Asia/Bei
 
 test('the workflow remains inactive after adding the production schedule — going live is still a separate, explicit decision', () => {
   assert.equal(wf.active, false);
+});
+
+// ── LinkedIn/Bebity discovery (market expansion) ───────────────────────
+// Added alongside the five-market Bebity seed list (linkedinDiscoverySeeds.ts)
+// — this is DISCOVERY, structurally and architecturally separate from the
+// LinkedIn enrichment branch above (data-slayer, exact-ID only). Reuses
+// run-multi-company-batch, same as the Apify multi-company branch, so no
+// duplicate persistence model exists for this provider.
+
+test('LinkedIn discovery branch is fully isolated — its own seed listing, split, rate-limited loop, actor call, aggregate, batch endpoint, success/failure builders, and rate limiter', () => {
+  for (const name of [
+    'List LinkedIn Discovery Seeds',
+    'Log List Discovery Seeds Failure',
+    'Split Out LinkedIn Discovery Seeds',
+    'Loop LinkedIn Discovery Seeds (Rate Limited)',
+    'Call Bebity Actor',
+    'Aggregate Bebity Jobs',
+    'Call LinkedIn Discovery Batch Endpoint',
+    'Build LinkedIn Discovery Success Result',
+    'Build LinkedIn Discovery Failure Result',
+    'Record LinkedIn Discovery Source Result',
+    'LinkedIn Discovery Rate Limit Delay',
+  ]) {
+    findNode(name);
+  }
+});
+
+test('List LinkedIn Discovery Seeds has Bearer auth, bounded retry, and both outputs wired (success to the split, error to its own log node) — never a hanging failure', () => {
+  const node = findNode('List LinkedIn Discovery Seeds');
+  assert.equal(node.parameters.method, 'POST');
+  assert.match(node.parameters.url, /\/api\/internal\/ingestion\/list-linkedin-discovery-seeds$/);
+  assert.equal(node.parameters.authentication, 'genericCredentialType');
+  assert.equal(node.parameters.genericAuthType, 'httpBearerAuth');
+  assert.equal(node.retryOnFail, true);
+  assert.equal(node.onError, 'continueErrorOutput');
+  assert.ok(wf.connections['List LinkedIn Discovery Seeds']?.main?.[0]?.some((c) => c.node === 'Split Out LinkedIn Discovery Seeds'), 'success output must feed the split node');
+  assert.ok(wf.connections['List LinkedIn Discovery Seeds']?.main?.[1]?.some((c) => c.node === 'Log List Discovery Seeds Failure'), 'error output must be wired, never left hanging');
+});
+
+test('the discovery branch starts fresh off Workflow Configuration — a failure here cannot block Tier A/D/B, Apify, or LinkedIn enrichment', () => {
+  const fanOut = wf.connections['Workflow Configuration']?.main?.[0] ?? [];
+  assert.ok(fanOut.some((c) => c.node === 'List LinkedIn Discovery Seeds'), 'discovery branch must start fresh off Workflow Configuration, not depend on any other branch');
+});
+
+test('the discovery loop batches one market seed at a time, and the loop (index 1) feeds Call Bebity Actor', () => {
+  assertBatchesOneAtATime(findNode('Loop LinkedIn Discovery Seeds (Rate Limited)'));
+  assert.ok(wf.connections['Loop LinkedIn Discovery Seeds (Rate Limited)']?.main?.[1]?.some((c) => c.node === 'Call Bebity Actor'), 'the loop branch (index 1) must feed Call Bebity Actor');
+});
+
+test('Call Bebity Actor is a real PAY_PER_EVENT, non-idempotent actor call and must never auto-retry; sends no title/keyword field (broad discovery, per product rule)', () => {
+  const occurrences = wf.nodes.filter((n) => n.name === 'Call Bebity Actor').length;
+  assert.equal(occurrences, 1, 'the actor node must appear exactly once — no duplicate/hidden call path');
+
+  const node = findNode('Call Bebity Actor');
+  assert.equal(node.retryOnFail, false, 'a paid, non-idempotent actor call must never auto-retry (AGENTS.md §18/§35)');
+  assert.equal(node.parameters.authentication, 'genericCredentialType');
+  assert.equal(node.parameters.genericAuthType, 'httpHeaderAuth');
+  assert.match(node.parameters.url, /maxTotalChargeUsd=/, 'the real financial backstop must be the platform-level maxTotalChargeUsd query param, never actor-input maxItems alone');
+  assert.match(node.parameters.jsonBody, /\$json\.requestBody/, 'must forward each seed\'s own requestBody untouched');
+  assert.ok(!/title|keyword|category/i.test(node.parameters.jsonBody), 'must never send a title/keyword/category filter — broad discovery across every profession, per product rule');
+
+  assert.ok(wf.connections['Call Bebity Actor']?.main?.[0]?.some((c) => c.node === 'Aggregate Bebity Jobs'), 'success output must feed Aggregate Bebity Jobs');
+  assert.ok(wf.connections['Call Bebity Actor']?.main?.[1]?.some((c) => c.node === 'Build LinkedIn Discovery Failure Result'), 'error output must be wired, never left hanging');
+});
+
+test('Bebity\'s bare top-level array is re-aggregated into {jobs:[...]} before the batch endpoint call, mirroring Aggregate Apify Jobs\' own pattern', () => {
+  const node = findNode('Aggregate Bebity Jobs');
+  assert.equal(node.type, 'n8n-nodes-base.aggregate');
+  assert.equal(node.parameters.aggregate, 'aggregateAllItemData');
+  assert.equal(node.parameters.destinationFieldName, 'jobs');
+  assert.ok(wf.connections['Aggregate Bebity Jobs']?.main?.[0]?.some((c) => c.node === 'Call LinkedIn Discovery Batch Endpoint'));
+});
+
+test('Call LinkedIn Discovery Batch Endpoint reuses the shared run-multi-company-batch route with sourceType linkedin and its own seed\'s refreshScope, never a hardcoded/shared scope', () => {
+  const node = findNode('Call LinkedIn Discovery Batch Endpoint');
+  assert.equal(node.parameters.method, 'POST');
+  assert.match(node.parameters.url, /\/api\/internal\/ingestion\/run-multi-company-batch$/, 'must reuse the SAME shared endpoint as the Apify and Tier D branches — no duplicate persistence model');
+  assert.equal(node.parameters.authentication, 'genericCredentialType');
+  assert.equal(node.parameters.genericAuthType, 'httpBearerAuth');
+  assert.equal(node.retryOnFail, true);
+  assert.equal(node.onError, 'continueErrorOutput');
+  assert.match(node.parameters.jsonBody, /sourceType:\s*'linkedin'/);
+  assert.match(node.parameters.jsonBody, /refreshScope:/, 'must forward the seed\'s own per-market refresh_scope, never a shared/hardcoded one');
+  assert.match(node.parameters.jsonBody, /Split Out LinkedIn Discovery Seeds/, 'the refreshScope/maxJobsPerSource expression must resolve its own branch\'s split node, not the Apify or Tier D branch\'s');
+
+  assert.ok(wf.connections['Call LinkedIn Discovery Batch Endpoint']?.main?.[0]?.some((c) => c.node === 'Build LinkedIn Discovery Success Result'));
+  assert.ok(wf.connections['Call LinkedIn Discovery Batch Endpoint']?.main?.[1]?.some((c) => c.node === 'Build LinkedIn Discovery Failure Result'), 'error output must be wired, never left hanging');
+});
+
+test('both discovery result paths converge on Record LinkedIn Discovery Source Result, which rate-limits before looping back to the next market seed', () => {
+  for (const name of ['Build LinkedIn Discovery Success Result', 'Build LinkedIn Discovery Failure Result']) {
+    assert.ok(wf.connections[name]?.main?.[0]?.some((c) => c.node === 'Record LinkedIn Discovery Source Result'), `${name} must feed Record LinkedIn Discovery Source Result`);
+  }
+  assert.ok(wf.connections['Record LinkedIn Discovery Source Result']?.main?.[0]?.some((c) => c.node === 'LinkedIn Discovery Rate Limit Delay'));
+  assert.ok(wf.connections['LinkedIn Discovery Rate Limit Delay']?.main?.[0]?.some((c) => c.node === 'Loop LinkedIn Discovery Seeds (Rate Limited)'), 'the delay must loop back into the batching node');
+});
+
+test('the discovery branch is architecturally separate from LinkedIn enrichment — distinct node sets, distinct actors (Bebity vs data-slayer), only the shared run-multi-company-batch persistence endpoint in common', () => {
+  assert.notEqual(findNode('Call Bebity Actor').id, findNode('Call Data-Slayer Actor').id, 'sanity: these must remain two different actor nodes');
+  const enrichmentNodes = new Set(['List LinkedIn Enrichment Queue', 'Check Eligible Jobs Exist', 'Fetch Data-Slayer Pricing Metadata', 'Check Data-Slayer Price', 'Call Data-Slayer Actor', 'Aggregate Data-Slayer Dataset', 'Call LinkedIn Enrichment Batch Endpoint']);
+  const discoveryNodes = new Set(['List LinkedIn Discovery Seeds', 'Split Out LinkedIn Discovery Seeds', 'Loop LinkedIn Discovery Seeds (Rate Limited)', 'Call Bebity Actor', 'Aggregate Bebity Jobs', 'Call LinkedIn Discovery Batch Endpoint']);
+  for (const n of discoveryNodes) assert.ok(!enrichmentNodes.has(n), `${n} must not overlap with the enrichment branch's node set`);
 });

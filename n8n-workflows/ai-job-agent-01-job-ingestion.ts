@@ -2314,12 +2314,294 @@ const apifyMultiCompanyNote = sticky(
 );
 
 // ─────────────────────────────────────────────────────────────────────────
-// LinkedIn enrichment (data-slayer exact-ID pass). Fifth independent
+// LinkedIn/Bebity DISCOVERY (market expansion). Seventh independent branch,
+// same "fresh off Workflow Configuration" pattern as the Apify branch
+// above. Separate and independent from the LinkedIn ENRICHMENT branch
+// below — Bebity discovers new LinkedIn jobs here; Data-Slayer enrichment
+// only ever acts on LinkedIn jobs already persisted (by this branch or
+// otherwise), never discovers anything itself (confirmed by Data-Slayer's
+// own real input schema: job_ids_or_urls + include_hiring_team only).
+// See src/lib/ingestion/linkedinDiscoverySeeds.ts for the real, bounded
+// per-market seed list (Lebanon/Saudi/UAE/Qatar/Kuwait — rows:10 each,
+// uniformly conservative since only Lebanon has ever been real-tested
+// with Bebity) and its own cost derivation.
+//
+// Structurally inert while providerConfig.ts's linkedin.enabled stays
+// false, at TWO independent layers: (1) List LinkedIn Discovery Seeds
+// returns an empty seeds array in that state, so this loop has nothing to
+// iterate and the paid Bebity actor call never fires; (2) even if it did,
+// Call LinkedIn Discovery Batch Endpoint's own route re-checks
+// isProviderEnabled("linkedin") live before writing anything. Neither
+// layer trusts the other — same discipline already used for the
+// enrichment branch's own list/apply endpoints.
+// ─────────────────────────────────────────────────────────────────────────
+
+const listLinkedInDiscoverySeeds = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'List LinkedIn Discovery Seeds',
+    notes:
+      "Returns the static, bounded per-market seed list (rows/locations/maxTotalChargeUsd) when providerConfig.ts's " +
+      'linkedin.enabled is true, or an empty seeds array otherwise — same structurally-inert-while-disabled posture ' +
+      'as List LinkedIn Enrichment Queue.',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/list-linkedin-discovery-seeds"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ {} }}'),
+      options: { timeout: 30000 },
+    },
+  },
+  output: [
+    {
+      seeds: [
+        {
+          market: 'lebanon',
+          actorUrl: 'https://api.apify.com/v2/acts/bebity~linkedin-jobs-scraper/run-sync-get-dataset-items',
+          requestBody: { rows: 10, locations: ['Lebanon'], companyProfile: false, enrichCompany: false },
+          refreshScope: 'linkedin:lebanon',
+          maxJobsPerRun: 10,
+          maxTotalChargeUsd: 0.01505,
+        },
+      ],
+    },
+  ],
+});
+
+const logListDiscoverySeedsFailure = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Log List Discovery Seeds Failure',
+    notes: 'Terminal failure for this branch this run — nothing to loop over if seed listing itself failed. Never blocks the rest of ingestion (its own independent branch).',
+    parameters: {
+      mode: 'manual',
+      assignments: { assignments: [{ id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'list-linkedin-discovery-seeds call failed' }}"), type: 'string' }] },
+    },
+  },
+  output: [{ error: 'list-linkedin-discovery-seeds call failed' }],
+});
+
+const splitOutLinkedInDiscoverySeeds = node({
+  type: 'n8n-nodes-base.splitOut',
+  version: 1,
+  config: {
+    name: 'Split Out LinkedIn Discovery Seeds',
+    parameters: { fieldToSplitOut: 'seeds' },
+  },
+  output: [
+    {
+      market: 'lebanon',
+      actorUrl: 'https://api.apify.com/v2/acts/bebity~linkedin-jobs-scraper/run-sync-get-dataset-items',
+      requestBody: { rows: 10, locations: ['Lebanon'], companyProfile: false, enrichCompany: false },
+      refreshScope: 'linkedin:lebanon',
+      maxJobsPerRun: 10,
+      maxTotalChargeUsd: 0.01505,
+    },
+  ],
+});
+
+const loopLinkedInDiscoverySeeds = splitInBatches({
+  version: 3,
+  config: { name: 'Loop LinkedIn Discovery Seeds (Rate Limited)', parameters: { batchSize: 1 } },
+  output: [
+    {
+      market: 'lebanon',
+      actorUrl: 'https://api.apify.com/v2/acts/bebity~linkedin-jobs-scraper/run-sync-get-dataset-items',
+      requestBody: { rows: 10, locations: ['Lebanon'], companyProfile: false, enrichCompany: false },
+      refreshScope: 'linkedin:lebanon',
+      maxJobsPerRun: 10,
+      maxTotalChargeUsd: 0.01505,
+    },
+  ],
+});
+
+const callBebityActor = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call Bebity Actor',
+    notes:
+      "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI, same confirmed MCP tool limitation " +
+      'noted on Call Apify Actor/Call Data-Slayer Actor. retryOnFail is deliberately false — Bebity is a real, ' +
+      'confirmed PAY_PER_EVENT actor (free pricing-metadata GET, this phase); a run-sync-get-dataset-items call is ' +
+      'a paid, non-idempotent external side effect, so a transport-level retry could start a second full-price ' +
+      'actor run while the first is still executing/billing (AGENTS.md §18). maxTotalChargeUsd is appended ' +
+      "dynamically per-seed, same pattern as Call Apify Actor's own cost-safety fix. No title/keyword/category " +
+      "field is ever sent — broad discovery across every profession, per product rule; Bebity's own real confirmed " +
+      'input has no such field anyway (rows/locations/companyProfile/enrichCompany only).',
+    onError: 'continueErrorOutput',
+    retryOnFail: false,
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $json.actorUrl + '?maxTotalChargeUsd=' + $json.maxTotalChargeUsd }}"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpHeaderAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr('{{ $json.requestBody }}'),
+      options: { timeout: 60000 },
+    },
+    credentials: { httpHeaderAuth: newCredential('AI Job Guide - Apify') },
+  },
+  output: [{ id: '4477362945', title: 'Accountant', companyName: 'Fixture Co', location: 'Lebanon' }],
+});
+
+const aggregateBebityJobs = node({
+  type: 'n8n-nodes-base.aggregate',
+  version: 1,
+  config: {
+    name: 'Aggregate Bebity Jobs',
+    notes:
+      "Bebity's run-sync-get-dataset-items returns a bare top-level array, same as every other Apify actor in this " +
+      'workflow — n8n auto-splits it into one item per job, so this re-aggregates back into one {jobs:[...]} item ' +
+      'before the batch endpoint call.',
+    parameters: { aggregate: 'aggregateAllItemData', destinationFieldName: 'jobs', include: 'allFields' },
+  },
+  output: [{ jobs: [{ id: '4477362945', title: 'Accountant', companyName: 'Fixture Co', location: 'Lebanon' }] }],
+});
+
+const callLinkedInDiscoveryBatchEndpoint = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Call LinkedIn Discovery Batch Endpoint',
+    notes:
+      'Reuses the SAME shared run-multi-company-batch endpoint the Tier D and Apify branches use — linkedin is ' +
+      "already in MULTI_COMPANY_SOURCE_TYPES' allowlist (parseMultiCompanyIngestionBatchRequest.ts). The endpoint " +
+      "itself re-checks providerConfig.ts's linkedin.enabled live before writing anything (never trusts this " +
+      "branch's own already-gated seed list), so this stays structurally inert end-to-end while disabled, not just " +
+      "at the seed-listing step. Credential 'Ingestion Worker Secret' must be bound manually in the n8n UI, same " +
+      'confirmed MCP tool limitation noted elsewhere.',
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 2,
+    waitBetweenTries: 3000,
+    parameters: {
+      method: 'POST',
+      url: expr("{{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch"),
+      authentication: 'genericCredentialType',
+      genericAuthType: 'httpBearerAuth',
+      sendBody: true,
+      contentType: 'json',
+      specifyBody: 'json',
+      jsonBody: expr(
+        '{{ {\n' +
+          "  sourceType: 'linkedin',\n" +
+          '  rawJobs: $json.jobs,\n' +
+          "  maxJobsPerSource: $('Split Out LinkedIn Discovery Seeds').item.json.maxJobsPerRun,\n" +
+          "  dryRun: $('Workflow Configuration').first().json.dryRun,\n" +
+          "  refreshScope: $('Split Out LinkedIn Discovery Seeds').item.json.refreshScope\n" +
+          '} }}'
+      ),
+      options: { timeout: 30000 },
+    },
+    credentials: { httpBearerAuth: newCredential('Ingestion Worker Secret') },
+  },
+  output: [{ outcome: 'succeeded', jobsFetched: 10, jobsValid: 10, jobsRejected: 0, jobsCreated: 10, jobsUpdated: 0, jobsClosed: 0, truncated: false }],
+});
+
+const LINKEDIN_DISCOVERY_MARKET_ASSIGNMENT = {
+  id: 'market',
+  name: 'market',
+  value: expr("{{ $('Split Out LinkedIn Discovery Seeds').item.json.market }}"),
+  type: 'string',
+};
+
+const buildLinkedInDiscoverySuccessResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build LinkedIn Discovery Success Result',
+    parameters: {
+      mode: 'manual',
+      includeOtherFields: true,
+      assignments: {
+        assignments: [LINKEDIN_DISCOVERY_MARKET_ASSIGNMENT, { id: 'succeeded', name: 'succeeded', value: expr("{{ $json.outcome === 'succeeded' }}"), type: 'boolean' }, { id: 'error', name: 'error', value: null, type: 'string' }],
+      },
+    },
+  },
+  output: [{ market: 'lebanon', outcome: 'succeeded', succeeded: true, error: null }],
+});
+
+const buildLinkedInDiscoveryFailureResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build LinkedIn Discovery Failure Result',
+    parameters: {
+      mode: 'manual',
+      assignments: {
+        assignments: [
+          LINKEDIN_DISCOVERY_MARKET_ASSIGNMENT,
+          { id: 'succeeded', name: 'succeeded', value: false, type: 'boolean' },
+          { id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'bebity actor or batch call failed' }}"), type: 'string' },
+        ],
+      },
+    },
+  },
+  output: [{ market: 'lebanon', succeeded: false, error: 'bebity actor or batch call failed' }],
+});
+
+const recordLinkedInDiscoverySourceResult = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Record LinkedIn Discovery Source Result',
+    notes: 'Convergence point for this loop, same purpose as Record Apify Source Result above — one execution-history entry per market per run.',
+    parameters: { mode: 'manual', includeOtherFields: true, assignments: { assignments: [] } },
+  },
+  output: [{ market: 'lebanon', succeeded: true }],
+});
+
+const linkedInDiscoveryRateLimitDelay = node({
+  type: 'n8n-nodes-base.wait',
+  version: 1.1,
+  config: {
+    name: 'LinkedIn Discovery Rate Limit Delay',
+    parameters: {
+      resume: 'timeInterval',
+      amount: expr("{{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"),
+      unit: 'seconds',
+    },
+  },
+  output: [{ market: 'lebanon' }],
+});
+
+const linkedInDiscoveryNote = sticky(
+  '### LinkedIn/Bebity discovery (market expansion)\n' +
+    'Broad discovery across every profession — no title/keyword/category field exists in Bebity\'s own real confirmed ' +
+    'input (rows/locations/companyProfile/enrichCompany only), and none is ever sent here, per product rule ' +
+    '(ingestion stays role-agnostic; relevance belongs in CV/preferences/matching, never here). Five market seeds ' +
+    '(Lebanon/Saudi/UAE/Qatar/Kuwait), each its own refresh_scope so stale-close never crosses market boundaries — ' +
+    'only Lebanon has ever been real-tested with Bebity (two live pilots); the other four are structurally complete ' +
+    'but UNVALIDATED and need their own small bounded real pilot before providerConfig.ts\'s linkedin.enabled is ' +
+    'ever considered (AGENTS.md §35 rule 6/10). Reuses run-multi-company-batch (already allowlists linkedin) — no ' +
+    'duplicate persistence model. Structurally inert while disabled, at two independent layers: the seed-listing ' +
+    'endpoint returns empty, and the batch endpoint re-checks enabled live either way. Call Bebity Actor needs ' +
+    "'AI Job Guide - Apify' bound manually in the n8n UI; Call LinkedIn Discovery Batch Endpoint needs 'Ingestion " +
+    "Worker Secret' — same confirmed MCP tool limitation noted on every other HTTP node's credential in this workflow.",
+  [listLinkedInDiscoverySeeds],
+  { color: 9 }
+);
+
+// ─────────────────────────────────────────────────────────────────────────
+// LinkedIn enrichment (data-slayer exact-ID pass). Seventh independent
 // branch, same "fresh off Workflow Configuration" pattern as the Apify
-// multi-company branch above. NOT a discovery branch — Bebity itself has
-// no branch in this workflow yet (LinkedIn discovery remains
-// providerConfig.ts enabled:false, pending its own separate, explicitly-
-// approved integration). This branch only ever acts on LinkedIn jobs
+// multi-company branch above. NOT a discovery branch — Bebity discovery
+// lives in the separate branch directly above this one. This branch only
+// ever acts on LinkedIn jobs
 // however they already exist in the jobs table (source_type='linkedin',
 // dedup_scope='type:linkedin') with work_arrangement still null and
 // linkedin_enrichment_attempts under the cap — see
@@ -2889,9 +3171,9 @@ const recordLinkedInEnrichmentResult = node({
 const linkedInEnrichmentNote = sticky(
   '### LinkedIn enrichment — data-slayer exact-ID pass\n' +
     'EXACT_ID_ENRICHMENT_ONLY, never a discovery source (its real input schema is only job_ids_or_urls + ' +
-    'include_hiring_team — confirmed live, no keyword/location field exists). Bebity itself has no branch in this ' +
-    'workflow yet, so this branch acts purely on whatever LinkedIn jobs already exist in the jobs table — a ' +
-    'future, separately-approved Bebity discovery branch and this one are independent. Work-arrangement value ' +
+    'include_hiring_team — confirmed live, no keyword/location field exists). Bebity discovery now has its own ' +
+    'separate branch (LinkedIn/Bebity discovery sticky note above) — the two remain fully independent; this ' +
+    'branch acts purely on whatever LinkedIn jobs already exist in the jobs table, from any source. Work-arrangement value ' +
     'priority is QUALITY-FIRST and deliberately NOT classifier-gated for cost (a dated product decision — see ' +
     'docs/LEBANON_LIVE_SOURCE_EXPANSION.md): every eligible job (work_arrangement null, attempts < 2) is sent to ' +
     'data-slayer; structured workplace_types wins when present, classifyWorkArrangementFromText.ts is the fallback, ' +
@@ -3106,7 +3388,24 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
   .to(gulfTalentRateLimitDelay)
   .to(nextBatch(loopGulfTalentSources))
 
-  // LinkedIn enrichment (data-slayer exact-ID pass) — sixth independent
+  // LinkedIn/Bebity discovery (market expansion) — seventh independent
+  // branch, fresh off Workflow Configuration like the Apify branch above.
+  // Structurally inert while providerConfig.ts's linkedin.enabled stays
+  // false — see linkedInDiscoveryNote for the full reasoning.
+  .add(workflowConfiguration)
+  .to(listLinkedInDiscoverySeeds.onError(logListDiscoverySeedsFailure))
+  .to(splitOutLinkedInDiscoverySeeds)
+  .to(loopLinkedInDiscoverySeeds.onEachBatch(callBebityActor.onError(buildLinkedInDiscoveryFailureResult).to(aggregateBebityJobs.to(callLinkedInDiscoveryBatchEndpoint))))
+  .add(callLinkedInDiscoveryBatchEndpoint.onError(buildLinkedInDiscoveryFailureResult))
+  .to(buildLinkedInDiscoverySuccessResult)
+  .to(recordLinkedInDiscoverySourceResult)
+  .add(buildLinkedInDiscoveryFailureResult)
+  .to(recordLinkedInDiscoverySourceResult)
+  .add(recordLinkedInDiscoverySourceResult)
+  .to(linkedInDiscoveryRateLimitDelay)
+  .to(nextBatch(loopLinkedInDiscoverySeeds))
+
+  // LinkedIn enrichment (data-slayer exact-ID pass) — eighth independent
   // branch, fresh off Workflow Configuration like the Apify branch above.
   // No loop: List LinkedIn Enrichment Queue already bounds one run to a
   // single <=25-id batch.
@@ -3150,4 +3449,5 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
   .add(multiCompanyNote)
   .add(careerPageNote)
   .add(apifyMultiCompanyNote)
+  .add(linkedInDiscoveryNote)
   .add(linkedInEnrichmentNote);

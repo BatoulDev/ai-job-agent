@@ -313,12 +313,16 @@ const TIER_C_PROVIDERS: readonly ProviderConfig[] = [
     tier: "C",
     kind: "multi_company_feed",
     enabled: false,
-    // Lebanon only, per AGENTS.md §35 rule 6/10 — Gulf/international
-    // markets are a future, separately-validated config change, not a
-    // default outcome of this pilot's implementation. Whether this
-    // actor's `locations` field even resolves Gulf markets correctly has
-    // never been tested.
-    markets: ["lebanon"],
+    // Discovery branch (linkedinDiscoverySeeds.ts) now has seeds for all
+    // five markets, but Gulf/international expansion remains
+    // UNVALIDATED — only Lebanon has ever been real-tested with Bebity
+    // (two live pilots, docs/LEBANON_LIVE_SOURCE_EXPANSION.md §11-12).
+    // Whether this actor's `locations` field actually resolves Saudi/
+    // UAE/Qatar/Kuwait correctly has never been confirmed live — each
+    // new market needs its own small bounded real pilot before
+    // providerConfig.ts's enabled:true (AGENTS.md §35 rule 6/10) is ever
+    // considered, exactly the same discipline already applied to Lebanon.
+    markets: ["lebanon", "saudi-arabia", "uae", "qatar", "kuwait"],
     priority: 40,
     scheduleHint: "daily",
     freshnessCutoffDays: 7,
