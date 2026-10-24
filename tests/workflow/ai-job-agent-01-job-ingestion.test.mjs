@@ -580,6 +580,22 @@ for (const [providerType, refreshScope, label] of [
   });
 }
 
+// Market-expansion phase: Qatar/Kuwait seeds were added for Indeed using
+// real zero-cost evidence (providers/indeed.ts's own confirmed Gulf-capable
+// country enum from a historical 400-rejection probe), not a new paid call.
+// Adding them without also fixing the pre-existing UAE seed's refresh_scope
+// (previously null) would have made all three Indeed partitions share one
+// stale-close scope — the exact cross-partition bug already seen once with
+// GulfTalent SA/AE. This test guards against that regression.
+test('Indeed UAE/Qatar/Kuwait each have their own distinct, non-null refresh_scope (stale-close partition isolation)', () => {
+  const seeds = getApifySeeds().filter((s) => s.provider_type === 'indeed');
+  assert.equal(seeds.length, 3, 'exactly three Indeed seeds — UAE, Qatar, Kuwait');
+  const scopes = seeds.map((s) => s.refresh_scope);
+  assert.ok(scopes.every((s) => typeof s === 'string' && s.length > 0), 'no Indeed seed may have a null/empty refresh_scope now that three partitions share one source_type');
+  assert.equal(new Set(scopes).size, 3, 'every Indeed refresh_scope must be unique — a shared scope would let one country\'s run close another country\'s jobs');
+  assert.deepEqual(new Set(scopes), new Set(['country:ae', 'country:qa', 'country:kw']));
+});
+
 test('Call Data-Slayer Actor retry safety is unaffected by the Apify actor retry fix (regression against accidental reversion)', () => {
   const node = findNode('Call Data-Slayer Actor');
   assert.equal(node.retryOnFail, false);
