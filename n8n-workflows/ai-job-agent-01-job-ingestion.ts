@@ -1205,26 +1205,25 @@ const apifyMultiCompanySourceSeeds = node({
   config: {
     name: 'Apify Multi-Company Source Seeds',
     notes:
-      'Static seed list — bounded to the real markets live-benchmarked this phase (Bayt: Lebanon; GulfTalent: Saudi ' +
-      'Arabia + UAE/Dubai; Indeed: UAE/Dubai only — Indeed and GulfTalent both real-confirmed to have no Lebanon ' +
-      "country option). Qatar/Kuwait not yet included — add once benchmarked. refresh_scope (Phase 22 fix): a real " +
-      'paid-pilot run proved these two GulfTalent entries share one source_type but are independently-complete ' +
-      "query partitions — without a distinct refresh_scope per entry, the AE/Dubai call's stale-close sweep wrongly " +
-      "closed the SA call's jobs as 'not seen'. Bayt/Indeed keep refresh_scope: null (one undivided partition each " +
-      'today, unchanged behavior) — only add a value here if a second independent query is ever added for them. ' +
-      "max_jobs_per_run (2026-10-02 fix): each seed's own requested ingestion cap, read by Call Apify Batch " +
-      'Endpoint instead of the global Workflow Configuration.maxJobsPerSource — the global 5 was far below every ' +
-      'real paid batch size (25/15/15/15) and falsely truncated all four. Still clamped server-side against ' +
-      "providerConfig.ts's maxJobsPerRun (40 for all three) — this value can only ever be lowered by the server, " +
-      'never raised. ' +
-      'max_total_charge_usd (Phase 2 cost-safety fix): the real platform-level run-option cap for Call Apify ' +
-      'Actor below, same mechanism already used for Call Data-Slayer Actor. All three actors are real, confirmed ' +
-      "PAY_PER_EVENT (free pricing-metadata GET, re-verified live) — each value here is the exact real cost of a " +
-      'fully-successful run at this seed\'s own max_jobs_per_run: the one-time apify-actor-start charge plus ' +
-      "max_jobs_per_run x the per-dataset-item charge (Bayt 0.0005 + 25x0.00099 = 0.02525; GulfTalent " +
-      '0.005 + 15x0.0007 = 0.0155 for each of its two seeds; Indeed 0.0001 + 15x0.0001 = 0.0016). The actor-start ' +
-      'component is not an arbitrary buffer — omitting it would make the cap trigger before a run that returns ' +
-      'exactly max_jobs_per_run items and behaves entirely within its configured bounds.',
+      'Static seed list — bounded to the real markets live-benchmarked this phase (Bayt: Lebanon; Indeed: UAE/Dubai, ' +
+      'Qatar, Kuwait). GulfTalent (Saudi + UAE/Dubai) moved OUT of this shared fast-sync seed list and loop — see ' +
+      "GulfTalent Source Seeds below — because real evidence (two controlled test runs) proved this actor's real " +
+      "completion time (32-125s observed) routinely exceeds Call Apify Actor's 60s HTTP timeout, discarding " +
+      'successful, already-billed results. Bayt/Indeed stay on this fast synchronous path unchanged — their own ' +
+      'real completion times have never exceeded a few seconds. refresh_scope: Bayt/Indeed keep their own ' +
+      'independently-reviewed values (see each entry) — the GulfTalent cross-partition stale-close lesson that ' +
+      'originally justified this field still applies to GulfTalent in its own new seed list below. ' +
+      "max_jobs_per_run: each seed's own requested ingestion cap, read by Call Apify Batch Endpoint instead of the " +
+      'global Workflow Configuration.maxJobsPerSource. Still clamped server-side against providerConfig.ts\'s ' +
+      "maxJobsPerRun (40 for both) — this value can only ever be lowered by the server, never raised. " +
+      'max_total_charge_usd: the real platform-level run-option cap for Call Apify Actor below, same mechanism ' +
+      'already used for Call Data-Slayer Actor. Both remaining actors are real, confirmed PAY_PER_EVENT (free ' +
+      'pricing-metadata GET, re-verified live) — each value here is the exact real cost of a fully-successful run ' +
+      "at this seed's own max_jobs_per_run: the one-time apify-actor-start charge plus max_jobs_per_run x the " +
+      'per-dataset-item charge (Bayt 0.0005 + 25x0.00099 = 0.02525; Indeed 0.0001 + 15x0.0001 = 0.0016 for each of ' +
+      'its three seeds). The actor-start component is not an arbitrary buffer — omitting it would make the cap ' +
+      'trigger before a run that returns exactly max_jobs_per_run items and behaves entirely within its configured ' +
+      'bounds.',
     parameters: {
       mode: 'raw',
       jsonOutput: {
@@ -1241,7 +1240,42 @@ const apifyMultiCompanySourceSeeds = node({
             provider_type: 'indeed',
             actor_url: 'https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items',
             request_body: { country: 'ae', location: 'Dubai', count: 15 },
-            refresh_scope: null,
+            // Phase (market expansion) fix: was refresh_scope: null when
+            // this was Indeed's only partition. Now that Qatar/Kuwait
+            // seeds exist below sharing this same actor, null would make
+            // all three share ONE stale-close partition — exactly the
+            // cross-partition bug already found and fixed for GulfTalent's
+            // two seeds (Phase 22). Given a real, stable, distinct value
+            // instead, same pattern as GulfTalent.
+            refresh_scope: 'country:ae',
+            max_jobs_per_run: 15,
+            max_total_charge_usd: 0.0016,
+          },
+          {
+            // Qatar/Kuwait added per the market-expansion audit: Indeed's
+            // own real, confirmed country enum (Phase 21 live benchmark,
+            // the same zero-cost 400-rejection that proved Lebanon is NOT
+            // supported) already includes both qa and kw — see
+            // providers/indeed.ts's own header comment ("Gulf-capable
+            // (bh, kw, om, qa, sa, ae)"). No new paid call was needed to
+            // confirm this; it was already real evidence in this
+            // codebase. Bayt/GulfTalent were NOT extended to Qatar/Kuwait
+            // in this same pass: neither actor exposes a free, checkable
+            // country enum, and neither has ever been real-tested beyond
+            // the markets already live (Bayt: Lebanon; GulfTalent: SA/AE)
+            // — adding them here would be guessing, not evidence.
+            provider_type: 'indeed',
+            actor_url: 'https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items',
+            request_body: { country: 'qa', count: 15 },
+            refresh_scope: 'country:qa',
+            max_jobs_per_run: 15,
+            max_total_charge_usd: 0.0016,
+          },
+          {
+            provider_type: 'indeed',
+            actor_url: 'https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items',
+            request_body: { country: 'kw', count: 15 },
+            refresh_scope: 'country:kw',
             max_jobs_per_run: 15,
             max_total_charge_usd: 0.0016,
           },

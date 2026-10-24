@@ -561,7 +561,9 @@ test('GulfTalent is no longer part of the shared fast-sync Apify seed list (move
 
 for (const [providerType, refreshScope, label] of [
   ['bayt', null, 'Bayt'],
-  ['indeed', null, 'Indeed'],
+  ['indeed', 'country:ae', 'Indeed UAE'],
+  ['indeed', 'country:qa', 'Indeed Qatar'],
+  ['indeed', 'country:kw', 'Indeed Kuwait'],
 ]) {
   test(`${label} seed's maxTotalChargeUsd is bounded and derived from its own configured result cap x the verified per-item price`, () => {
     const seeds = getApifySeeds();
