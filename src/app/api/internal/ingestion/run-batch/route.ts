@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { parseIngestionBatchRequestBody } from "./parseIngestionBatchRequest";
+import { mapRawJobsWithAdapter } from "@/lib/ingestion/mapRawJobsWithAdapter";
 import { getProviderAdapter } from "@/lib/ingestion/providers";
 import { runIngestionBatch } from "@/lib/ingestion/ingestSourceBatch";
 import { createAdminClient } from "@/lib/supabase/admin";
@@ -40,7 +41,17 @@ export async function POST(request: Request) {
   }
 
   try {
-    const mappedJobs = rawJobs.map((raw) => adapter(raw));
+    // 2026-10-23 audit fix (same defect, same fix as run-multi-company-batch/route.ts):
+    // a single malformed raw item used to throw inside the adapter and kill
+    // the whole .map(), discarding every otherwise-valid job in the batch.
+    // mapRawJobsWithAdapter isolates that one record instead — it is
+    // rejected by the real required-field validator below (never smuggled
+    // into success), while the rest of the batch persists normally.
+    const { mapped: mappedJobs } = mapRawJobsWithAdapter(rawJobs, adapter, sourceType, (index, type, errorKind) => {
+      console.error(
+        `Ingestion: adapter threw (${errorKind}) for ${type} item ${index} — rejecting that record, continuing the batch.`
+      );
+    });
     const supabase = createAdminClient();
     const result = await runIngestionBatch(supabase, sourceId, sourceType, mappedJobs, { maxJobsPerSource, dryRun, paginationIncomplete });
     return NextResponse.json(result);
