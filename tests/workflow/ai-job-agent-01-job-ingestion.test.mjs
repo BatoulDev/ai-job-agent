@@ -776,6 +776,10 @@ test('Check GulfTalent Actor Start Run ID Valid? exists, is wired between Prepar
 });
 
 test('an invalid actor-start run ID can never reach Poll GulfTalent Run Status — static reachability check', () => {
+  // Poll GulfTalent Run Status is reachable only through the loop that
+  // Check GulfTalent Actor Start Run ID Valid?'s VALID case feeds — its
+  // invalid case is wired exclusively to the failure builder, never to
+  // Split Out GulfTalent Poll Attempts or anything upstream of the poll node.
   const invalidTargets = (wf.connections['Check GulfTalent Actor Start Run ID Valid?']?.main?.[1] ?? []).map((t) => t.node);
   assert.deepEqual(invalidTargets, ['Build GulfTalent Invalid Actor Start ID Result']);
 });
@@ -905,6 +909,7 @@ test('GulfTalent converges on its own Record/Rate-Limit-Delay/loop-back, fully i
 test('unrelated sources remain structurally unchanged by the GulfTalent fix', () => {
   assert.equal(findNode('Call Apify Actor').retryOnFail, false);
   assert.equal(findNode('Call Data-Slayer Actor').retryOnFail, false);
+  assert.equal(findNode('Call Bebity Actor').retryOnFail, false);
   assert.ok(wf.connections['Loop Apify Sources (Rate Limited)'].main[1].some((c) => c.node === 'Call Apify Actor'));
   assert.ok(wf.connections['Apify Rate Limit Delay'].main[0].some((c) => c.node === 'Loop Apify Sources (Rate Limited)'));
 });
