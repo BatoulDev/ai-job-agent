@@ -1,4 +1,4 @@
-import { workflow, node, trigger, sticky, splitInBatches, nextBatch, switchCase, newCredential, expr } from '@n8n/workflow-sdk';
+import { workflow, node, trigger, sticky, splitInBatches, nextBatch, switchCase, merge, newCredential, expr } from '@n8n/workflow-sdk';
 
 const startTrigger = trigger({
   type: 'n8n-nodes-base.manualTrigger',
@@ -297,49 +297,475 @@ const extractAshbyJobs = node({
   output: [{ rawJobs: [] }],
 });
 
-// Phase 16. Oracle's recruitingCEJobRequisitions response nests the real job
-// list at items[0].requisitionList and carries no candidate-facing URL of
-// its own (only internal hcmRestApi self-links) — the real, public apply
-// URL lives at a sibling path, {host}/hcmUI/CandidateExperience/en/sites/
-// {site}/job/{id}, confirmed live this phase (docs/LEBANON_GULF_SOURCE_RESEARCH.md
-// §3). This expression derives that host+site from the same feed_url
-// Fetch Source Jobs already used, and stamps it onto every raw job so
-// providers/oracle-hcm.ts (a plain (raw) => RawProviderJob function, no
-// per-batch context parameter) can build a real applicationUrl without
-// inventing one.
-const extractOracleHcmJobs = node({
+// 2026-10-23 pagination-safety phase. Oracle's recruitingCEJobRequisitions
+// response nests the real job list at items[0].requisitionList and carries
+// no candidate-facing URL of its own (only internal hcmRestApi self-links)
+// — the real, public apply URL lives at a sibling path, {host}/hcmUI/
+// CandidateExperience/en/sites/{site}/job/{id}, confirmed live Phase 16
+// (docs/LEBANON_GULF_SOURCE_RESEARCH.md §3).
+//
+// Also confirmed THIS phase (a real, bounded, live-approved test against
+// AUBMC — see docs/LEBANON_LIVE_SOURCE_EXPANSION.md's own pagination
+// section): the request's own `&limit=50` query parameter does NOT govern
+// the real job-results page size — only the response's own
+// items[0].Offset/items[0].Limit/items[0].TotalJobsCount can be trusted,
+// and `finder=findReqs;siteNumber=X,offset=N` is the real, accepted,
+// honored syntax for requesting a later page (the echoed-back Offset
+// changed exactly as requested, and the result emptied out exactly as
+// predicted once past the real total). A genuine second page of DISTINCT
+// job content was never observed live (the one real tenant tested has
+// fewer jobs than one page) — every multi-page safeguard below therefore
+// fails CLOSED (keeps whatever was already safely accumulated, marks
+// `paginationIncomplete`, stops asking for more) rather than assuming
+// pagination "must be working" once more than one page is actually needed.
+//
+// This exact bounded-pagination algorithm is also implemented, independently
+// testable, and unit-tested in src/lib/ingestion/oracleHcmPagination.ts —
+// n8n expressions cannot import a project module at runtime, so the logic
+// is deliberately duplicated here, the same pattern this workflow already
+// uses for deriveAtsFeedUrl.ts's own candidateSiteUrl regex.
+const ORACLE_HCM_MAX_PAGES = 10;
+
+// 2026-10-24 corrective fix: moved from a Set-node inline expression into a
+// Code node after an isolated n8n diagnostic (executions 300293/300549/
+// 300782) proved Array.from(map.values()) AND the [...map.values()] spread
+// form both silently return an empty array inside the Set-node inline-
+// expression evaluator — even though the Map itself reports the correct
+// size and every other field computed in the same scope is correct. The
+// Code node's real JS sandbox does not share that defect. Mirrors
+// classifyOracleHcmFirstPage in src/lib/ingestion/oracleHcmPagination.ts
+// exactly, including that module's own 2026-10-24 fix: missing/invalid Ids
+// are never collapsed into each other under a shared empty key, and an
+// explicit integrity check fails closed if a merge step ever loses a valid
+// Id (or returns empty despite non-empty inputs) instead of silently
+// reporting success with fewer jobs than were actually seen.
+const prepareOracleHcmPageState = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'Prepare Oracle HCM Page State',
+    notes:
+      'Classifies the FIRST page (already fetched by the shared Fetch Source Jobs node above) using only the ' +
+      "response's own items[0].{Offset,Limit,TotalJobsCount,requisitionList} — never the requested limit=50. A " +
+      'malformed/unparseable response, or a merge that fails its own integrity check, fails closed ' +
+      '(paginationIncomplete:true, zero jobs accumulated) rather than half-trusting it. See providers/oracle-hcm.ts, ' +
+      "deriveAtsFeedUrl.ts, and src/lib/ingestion/oracleHcmPagination.ts's classifyOracleHcmFirstPage, which this " +
+      'Code node mirrors exactly. Also throws (routed to its own error output, never silently) if it ever receives ' +
+      'more than 1 input item — runOnceForAllItems + $input.first() would otherwise silently discard the rest; the ' +
+      'current graph never sends it more than 1 (Loop Sources batchSize=1, no HTTP pagination on Fetch Source ' +
+      'Jobs), but this guard makes that invariant fail loud instead of fail silent if it is ever broken.',
+    onError: 'continueErrorOutput',
+    parameters: {
+      mode: 'runOnceForAllItems',
+      language: 'javaScript',
+      jsCode:
+        'function hasValidRequisitionId(job) {\n' +
+        '  var id = job ? job.Id : undefined;\n' +
+        "  return id !== undefined && id !== null && String(id).trim() !== '';\n" +
+        '}\n' +
+        'function dedupeById(jobs) {\n' +
+        '  var map = new Map();\n' +
+        '  var missingIdCounter = 0;\n' +
+        '  for (var i = 0; i < jobs.length; i++) {\n' +
+        '    var job = jobs[i];\n' +
+        "    var key = hasValidRequisitionId(job) ? ('id:' + String(job.Id)) : ('missing:' + (missingIdCounter++));\n" +
+        '    map.set(key, job);\n' +
+        '  }\n' +
+        '  return Array.from(map.values());\n' +
+        '}\n' +
+        'function validRequisitionIds(jobs) {\n' +
+        '  var ids = new Set();\n' +
+        '  for (var i = 0; i < jobs.length; i++) {\n' +
+        '    if (hasValidRequisitionId(jobs[i])) ids.add(String(jobs[i].Id));\n' +
+        '  }\n' +
+        '  return ids;\n' +
+        '}\n' +
+        'function mergeIncludesEveryValidId(priorJobs, newJobs, merged) {\n' +
+        '  var expected = validRequisitionIds(priorJobs);\n' +
+        '  validRequisitionIds(newJobs).forEach(function (id) { expected.add(id); });\n' +
+        '  var actual = validRequisitionIds(merged);\n' +
+        '  var ok = true;\n' +
+        '  expected.forEach(function (id) { if (!actual.has(id)) ok = false; });\n' +
+        '  if (!ok) return false;\n' +
+        '  return !(merged.length === 0 && (priorJobs.length > 0 || newJobs.length > 0));\n' +
+        '}\n' +
+        '\n' +
+        'const allInputItems = $input.all();\n' +
+        'if (allInputItems.length !== 1) {\n' +
+        "  throw new Error('Prepare Oracle HCM Page State expected exactly 1 input item but received ' + allInputItems.length + ' — refusing to process via $input.first() only, which would silently discard the rest.');\n" +
+        '}\n' +
+        'const input = allInputItems[0].json;\n' +
+        "const feedUrl = $('Split Out Sources').item.json.feed_url;\n" +
+        "const siteMatch = typeof feedUrl === 'string' ? feedUrl.match(/^https:\\/\\/([^/]+)\\/hcmRestApi.*siteNumber=([A-Za-z0-9_]+)/) : null;\n" +
+        "const candidateSiteUrl = siteMatch ? ('https://' + siteMatch[1] + '/hcmUI/CandidateExperience/en/sites/' + siteMatch[2]) : null;\n" +
+        '\n' +
+        'const items = input.items;\n' +
+        'const first = (Array.isArray(items) && items.length > 0) ? items[0] : null;\n' +
+        'const offset = first ? first.Offset : undefined;\n' +
+        'const limit = first ? first.Limit : undefined;\n' +
+        'const totalJobsCount = first ? first.TotalJobsCount : undefined;\n' +
+        'const requisitionList = first ? first.requisitionList : undefined;\n' +
+        "const metaOk = typeof offset === 'number' && Number.isFinite(offset)\n" +
+        "  && typeof limit === 'number' && Number.isFinite(limit)\n" +
+        "  && typeof totalJobsCount === 'number' && Number.isFinite(totalJobsCount)\n" +
+        '  && Array.isArray(requisitionList);\n' +
+        '\n' +
+        'if (!metaOk) {\n' +
+        '  return [{ json: { pageState: { rawJobs: [], pageOffset: 0, pageLimit: 0, totalJobsCount: 0, pagesFetched: 1, paginationIncomplete: true, isComplete: false, candidateSiteUrl: candidateSiteUrl, feedUrl: feedUrl } } }];\n' +
+        '}\n' +
+        '\n' +
+        'const stamped = requisitionList.map(function (job) { return Object.assign({}, job, { candidateSiteUrl: candidateSiteUrl }); });\n' +
+        'const deduped = dedupeById(stamped);\n' +
+        'if (!mergeIncludesEveryValidId([], stamped, deduped)) {\n' +
+        '  return [{ json: { pageState: { rawJobs: [], pageOffset: 0, pageLimit: 0, totalJobsCount: 0, pagesFetched: 1, paginationIncomplete: true, isComplete: false, candidateSiteUrl: candidateSiteUrl, feedUrl: feedUrl } } }];\n' +
+        '}\n' +
+        '\n' +
+        'const isComplete = (offset + requisitionList.length) >= totalJobsCount;\n' +
+        'return [{ json: { pageState: { rawJobs: deduped, pageOffset: offset, pageLimit: limit, totalJobsCount: totalJobsCount, pagesFetched: 1, paginationIncomplete: false, isComplete: isComplete, candidateSiteUrl: candidateSiteUrl, feedUrl: feedUrl } } }];',
+    },
+  },
+  output: [{ pageState: { rawJobs: [], pageOffset: 0, pageLimit: 25, totalJobsCount: 8, pagesFetched: 1, paginationIncomplete: false, isComplete: true } }],
+});
+
+// case 0 = already complete (or already known malformed) from page 1 alone
+// — the real, live-tested AUBMC case (8 jobs, one page). Fallback = genuinely
+// needs more pages, enters the bounded loop below.
+const checkOracleHcmPage1Complete = switchCase({
+  version: 3.4,
+  config: {
+    name: 'Check Oracle HCM Page 1 Complete?',
+    parameters: {
+      rules: {
+        values: [
+          {
+            outputKey: 'done',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [
+                { leftValue: expr('{{ $json.pageState.isComplete }}'), operator: { type: 'boolean', operation: 'equals' }, rightValue: true },
+                { leftValue: expr('{{ $json.pageState.paginationIncomplete }}'), operator: { type: 'boolean', operation: 'equals' }, rightValue: true },
+              ],
+              combinator: 'or',
+            },
+          },
+        ],
+      },
+      options: { fallbackOutput: 'extra', renameFallbackOutput: 'needs_more_pages' },
+    },
+  },
+  output: [{ pageState: { isComplete: true, paginationIncomplete: false } }],
+});
+
+// 2026-10-23 CORRECTIVE fix, replacing this phase's own first pagination
+// attempt. An isolated, authorized n8n test (workflow 9UJQcvhgDQKWj8Ry,
+// execution 299820) proved the original splitInBatches-based design was
+// broken: `nextBatch()` does NOT carry mutated item state forward — the
+// loop re-emits its own originally pre-built queued items every iteration
+// (confirmed directly: three distinctly-seeded synthetic items came back
+// with their ORIGINAL seed and an unmutated counter each time, never the
+// previous iteration's incremented value). A fixed-attempts-array +
+// splitInBatches loop is right for GulfTalent's poll loop (which never
+// needs to mutate anything across attempts) but wrong here, where
+// pageOffset/rawJobs genuinely must accumulate across iterations.
+//
+// Fix: a direct, self-referencing cycle (no splitInBatches at all) —
+// Prepare Oracle HCM Next Page Request -> Fetch Oracle HCM Next Page ->
+// Carry Forward Oracle HCM Page State (Merge, combineByPosition) -> Merge
+// & Classify Oracle HCM Page -> Route Oracle HCM Page Outcome -> back to
+// Prepare Oracle HCM Next Page Request. The Merge node is the SDK's own
+// documented, proven mechanism for "a node's output replaces my data, but
+// I need the pre-call data back afterward" (see get_sdk_reference's
+// `independent_sources`/parallel-branches-plus-Merge pattern) — a
+// pre-fetch Set node feeds Merge's input 0 UNCHANGED (never touched by the
+// HTTP call), while Fetch Oracle HCM Next Page's success AND error outputs
+// both feed Merge's input 1, so pageState is reliably present on every
+// path reaching Merge & Classify regardless of what the HTTP node does to
+// $json — no assumption about HTTP Request's replace-vs-preserve behavior
+// is required at all. The page-count bound, previously provided for free
+// by the fixed attempts array's own exhaustion, is now an explicit check
+// inside Route Oracle HCM Page Outcome's own condition.
+const prepareOracleHcmNextPageRequest = node({
   type: 'n8n-nodes-base.set',
   version: 3.4,
   config: {
-    name: 'Extract Oracle HCM Jobs',
+    name: 'Prepare Oracle HCM Next Page Request',
     notes:
-      'Phase 16. Confirmed live against a real registry tenant (AUBMC, Lebanon) — a direct unauthenticated GET to ' +
-      'recruitingCEJobRequisitions returned real job data, and the derived candidate-facing URL returned a real 200 job page. ' +
-      'See providers/oracle-hcm.ts and deriveAtsFeedUrl.ts.',
+      'Builds the next-page URL from the CURRENT pageState (always reliable here — this node runs BEFORE any HTTP ' +
+      'call touches $json), adding offset=N as a finder variable, the same comma-separated placement as the existing ' +
+      'siteNumber variable — the one live-confirmed syntax this phase\'s bounded test verified is accepted and ' +
+      'honored. This exact item (pageState + nextPageUrl, untouched) also feeds Carry Forward Oracle HCM Page ' +
+      "State's first input directly — see that node's own notes for why.",
     onError: 'continueErrorOutput',
     parameters: {
       mode: 'manual',
+      includeOtherFields: true,
       assignments: {
         assignments: [
           {
-            id: 'rawJobs',
-            name: 'rawJobs',
+            id: 'nextPageUrl',
+            name: 'nextPageUrl',
             value: expr(
               '={{ (() => {\n' +
-                "  const feedUrl = $('Split Out Sources').item.json.feed_url;\n" +
-                '  const m = feedUrl.match(/^https:\\/\\/([^/]+)\\/hcmRestApi.*siteNumber=([A-Za-z0-9_]+)/);\n' +
-                '  const candidateSiteUrl = m ? `https://${m[1]}/hcmUI/CandidateExperience/en/sites/${m[2]}` : null;\n' +
-                '  const list = $json.items?.[0]?.requisitionList ?? [];\n' +
-                '  return list.map((job) => ({ ...job, candidateSiteUrl }));\n' +
+                '  const feedUrl = $json.pageState.feedUrl;\n' +
+                '  const nextOffset = $json.pageState.pageOffset + $json.pageState.pageLimit;\n' +
+                '  const m = feedUrl.match(/(finder=findReqs;siteNumber=[A-Za-z0-9_]+)/);\n' +
+                "  return m ? feedUrl.replace(m[1], m[1] + ',offset=' + nextOffset) : null;\n" +
                 '})() }}'
             ),
-            type: 'array',
+            type: 'string',
           },
         ],
       },
     },
   },
-  output: [{ rawJobs: [] }],
+  output: [{ pageState: {}, nextPageUrl: 'https://x/hcmRestApi/resources/latest/recruitingCEJobRequisitions?finder=findReqs;siteNumber=CX_1,offset=25&expand=requisitionList&limit=50' }],
+});
+
+const fetchOracleHcmNextPage = node({
+  type: 'n8n-nodes-base.httpRequest',
+  version: 4.4,
+  config: {
+    name: 'Fetch Oracle HCM Next Page',
+    notes:
+      'Free, idempotent read — safe to retry. A null nextPageUrl (feed_url shape unrecognized — defensive, never ' +
+      "observed live) simply fails this request, which routes through the same error path as any other failure. " +
+      "Both this node's success AND error outputs feed Carry Forward Oracle HCM Page State's second input — pageState " +
+      "itself is recovered from that Merge node's OTHER (untouched) input regardless of which output fires here.",
+    onError: 'continueErrorOutput',
+    retryOnFail: true,
+    maxTries: 4,
+    waitBetweenTries: 5000,
+    parameters: {
+      method: 'GET',
+      url: expr('{{ $json.nextPageUrl }}'),
+      authentication: 'none',
+      options: { timeout: 15000 },
+    },
+  },
+  output: [{ items: [{ Offset: 25, Limit: 25, TotalJobsCount: 60, requisitionList: [] }] }],
+});
+
+// The SDK reference's own documented fix for "a node's output replaces my
+// data, but a later node needs the pre-call data back" — see this file's
+// header comment above. input(0) = the untouched pre-fetch item (pageState
+// + nextPageUrl, never touched by the HTTP call). input(1) = whatever
+// Fetch Oracle HCM Next Page produced, success OR error — Merge waits for
+// both, so pageState is always present on the combined item reaching
+// Merge & Classify below, with no assumption required about whether the
+// HTTP node's own output preserves or replaces input fields.
+const carryForwardOracleHcmPageState = merge({
+  version: 3.2,
+  config: {
+    name: 'Carry Forward Oracle HCM Page State',
+    parameters: { mode: 'combine', combineBy: 'combineByPosition', numberInputs: 2 },
+  },
+  output: [{ pageState: {}, nextPageUrl: 'https://x', items: [{ Offset: 25, Limit: 25, TotalJobsCount: 60, requisitionList: [] }] }],
+});
+
+// Shared, defensive last-resort fallback — reached only if Prepare Oracle
+// HCM Next Page Request or Merge & Classify Oracle HCM Page itself throws
+// unexpectedly (both already have their own defensive checks for every
+// anticipated bad-input case; this is the explicit error-output handler
+// requirement 5 of this phase's corrective fix calls for, not left
+// silently dropped). Uses optional chaining throughout since, in this rare
+// double-fault case, pageState's own shape is exactly what's in doubt.
+const buildOracleHcmSafetyFallbackState = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Oracle HCM Safety Fallback State',
+    notes: 'Never discards jobs it can still see — only loses already-accumulated jobs in the rare case pageState itself was unreadable, which is strictly safer than guessing.',
+    parameters: {
+      mode: 'manual',
+      includeOtherFields: true,
+      assignments: {
+        assignments: [
+          {
+            id: 'pageState',
+            name: 'pageState',
+            value: expr('{{ { ...($json.pageState ?? {}), rawJobs: ($json.pageState?.rawJobs ?? []), paginationIncomplete: true, isComplete: false } }}'),
+            type: 'object',
+          },
+        ],
+      },
+    },
+  },
+  output: [{ pageState: { paginationIncomplete: true, isComplete: false } }],
+});
+
+// 2026-10-24 corrective fix: moved from a Set-node inline expression into a
+// Code node for the same reason as Prepare Oracle HCM Page State above (see
+// that node's own comment) — the exact node most at risk, since THIS is the
+// step that actually merges two pages' worth of jobs together.
+const mergeClassifyOracleHcmPage = node({
+  type: 'n8n-nodes-base.code',
+  version: 2,
+  config: {
+    name: 'Merge & Classify Oracle HCM Page',
+    notes:
+      "Mirrors classifyOracleHcmNextPage in src/lib/ingestion/oracleHcmPagination.ts (including that module's own " +
+      '2026-10-24 fix: missing/invalid Ids are never collapsed into each other, and an explicit integrity check ' +
+      'fails closed if a merge ever loses a valid Id or returns empty despite non-empty inputs), plus one ' +
+      "n8n-specific check the pure module doesn't need (its caller already separates success/failure): " +
+      "input.error, set by Carry Forward Oracle HCM Page State whenever Fetch Oracle HCM Next Page's error output " +
+      'fired. Fails closed (keeps the prior accumulated rawJobs, forces paginationIncomplete, never merges the new ' +
+      'page) on: a fetch failure; malformed metadata; a non-advancing/repeated offset (the API ignored our ' +
+      'request); a premature empty page (0 items before the real reported total is reached); or the merge step ' +
+      "itself failing its own integrity check. A genuinely-advancing page's items are de-duplicated by Oracle's " +
+      'own raw Id against everything already accumulated. Its own error output is explicitly wired (see the ' +
+      '2026-10-23 pre-import audit finding this corrective fix resolves) — never silently dropped. Also throws ' +
+      '(routed to its own error output, never silently) if it ever receives more than 1 input item — ' +
+      'runOnceForAllItems + $input.first() would otherwise silently discard the rest; the current graph never ' +
+      'sends it more than 1 (single-item cycle, Merge combineByPosition pairs exactly 1:1), but this guard makes ' +
+      'that invariant fail loud instead of fail silent if it is ever broken.',
+    onError: 'continueErrorOutput',
+    parameters: {
+      mode: 'runOnceForAllItems',
+      language: 'javaScript',
+      jsCode:
+        'function hasValidRequisitionId(job) {\n' +
+        '  var id = job ? job.Id : undefined;\n' +
+        "  return id !== undefined && id !== null && String(id).trim() !== '';\n" +
+        '}\n' +
+        'function dedupeById(jobs) {\n' +
+        '  var map = new Map();\n' +
+        '  var missingIdCounter = 0;\n' +
+        '  for (var i = 0; i < jobs.length; i++) {\n' +
+        '    var job = jobs[i];\n' +
+        "    var key = hasValidRequisitionId(job) ? ('id:' + String(job.Id)) : ('missing:' + (missingIdCounter++));\n" +
+        '    map.set(key, job);\n' +
+        '  }\n' +
+        '  return Array.from(map.values());\n' +
+        '}\n' +
+        'function validRequisitionIds(jobs) {\n' +
+        '  var ids = new Set();\n' +
+        '  for (var i = 0; i < jobs.length; i++) {\n' +
+        '    if (hasValidRequisitionId(jobs[i])) ids.add(String(jobs[i].Id));\n' +
+        '  }\n' +
+        '  return ids;\n' +
+        '}\n' +
+        'function mergeIncludesEveryValidId(priorJobs, newJobs, merged) {\n' +
+        '  var expected = validRequisitionIds(priorJobs);\n' +
+        '  validRequisitionIds(newJobs).forEach(function (id) { expected.add(id); });\n' +
+        '  var actual = validRequisitionIds(merged);\n' +
+        '  var ok = true;\n' +
+        '  expected.forEach(function (id) { if (!actual.has(id)) ok = false; });\n' +
+        '  if (!ok) return false;\n' +
+        '  return !(merged.length === 0 && (priorJobs.length > 0 || newJobs.length > 0));\n' +
+        '}\n' +
+        '\n' +
+        'const allInputItems = $input.all();\n' +
+        'if (allInputItems.length !== 1) {\n' +
+        "  throw new Error('Merge & Classify Oracle HCM Page expected exactly 1 input item but received ' + allInputItems.length + ' — refusing to process via $input.first() only, which would silently discard the rest.');\n" +
+        '}\n' +
+        'const input = allInputItems[0].json;\n' +
+        'const prior = input.pageState;\n' +
+        '\n' +
+        'if (input.error) {\n' +
+        '  return [{ json: Object.assign({}, input, { pageState: Object.assign({}, prior, { paginationIncomplete: true, isComplete: false }) }) }];\n' +
+        '}\n' +
+        '\n' +
+        'const items = input.items;\n' +
+        'const first = (Array.isArray(items) && items.length > 0) ? items[0] : null;\n' +
+        'const offset = first ? first.Offset : undefined;\n' +
+        'const limit = first ? first.Limit : undefined;\n' +
+        'const totalJobsCount = first ? first.TotalJobsCount : undefined;\n' +
+        'const requisitionList = first ? first.requisitionList : undefined;\n' +
+        "const metaOk = typeof offset === 'number' && Number.isFinite(offset)\n" +
+        "  && typeof limit === 'number' && Number.isFinite(limit)\n" +
+        "  && typeof totalJobsCount === 'number' && Number.isFinite(totalJobsCount)\n" +
+        '  && Array.isArray(requisitionList);\n' +
+        '\n' +
+        'if (!metaOk) {\n' +
+        '  return [{ json: Object.assign({}, input, { pageState: Object.assign({}, prior, { paginationIncomplete: true, isComplete: false }) }) }];\n' +
+        '}\n' +
+        '\n' +
+        'const isNonAdvancingOffset = offset <= prior.pageOffset;\n' +
+        'const isPrematureEmptyPage = requisitionList.length === 0 && offset < totalJobsCount;\n' +
+        'if (isNonAdvancingOffset || isPrematureEmptyPage) {\n' +
+        '  return [{ json: Object.assign({}, input, { pageState: Object.assign({}, prior, { paginationIncomplete: true, isComplete: false }) }) }];\n' +
+        '}\n' +
+        '\n' +
+        'const stamped = requisitionList.map(function (job) { return Object.assign({}, job, { candidateSiteUrl: prior.candidateSiteUrl }); });\n' +
+        'const merged = dedupeById(prior.rawJobs.concat(stamped));\n' +
+        'if (!mergeIncludesEveryValidId(prior.rawJobs, stamped, merged)) {\n' +
+        '  return [{ json: Object.assign({}, input, { pageState: Object.assign({}, prior, { paginationIncomplete: true, isComplete: false }) }) }];\n' +
+        '}\n' +
+        '\n' +
+        'const isComplete = (offset + requisitionList.length) >= totalJobsCount;\n' +
+        'return [{ json: Object.assign({}, input, { pageState: { rawJobs: merged, pageOffset: offset, pageLimit: limit, totalJobsCount: totalJobsCount, pagesFetched: prior.pagesFetched + 1, paginationIncomplete: false, isComplete: isComplete, candidateSiteUrl: prior.candidateSiteUrl, feedUrl: prior.feedUrl } }) }];',
+    },
+  },
+  output: [{ pageState: { rawJobs: [], pageOffset: 25, pageLimit: 25, totalJobsCount: 60, pagesFetched: 2, paginationIncomplete: false, isComplete: false } }],
+});
+
+// case 0 = genuinely needs another page AND still under the bound (loop
+// back, directly to Prepare Oracle HCM Next Page Request — no
+// splitInBatches involved). case 1 = not complete, not failed, but the
+// bound is exhausted (a real, explicit page-count check now that nothing
+// else enforces one). Fallback = done — either isComplete (real success)
+// or paginationIncomplete (a safeguard fired) — both exit with pageState
+// already correct; the shared Call Ingestion Batch Endpoint reads it
+// either way.
+const routeOracleHcmPageOutcome = switchCase({
+  version: 3.4,
+  config: {
+    name: 'Route Oracle HCM Page Outcome',
+    parameters: {
+      rules: {
+        values: [
+          {
+            outputKey: 'continue',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [
+                { leftValue: expr('{{ $json.pageState.paginationIncomplete }}'), operator: { type: 'boolean', operation: 'equals' }, rightValue: false },
+                { leftValue: expr('{{ $json.pageState.isComplete }}'), operator: { type: 'boolean', operation: 'equals' }, rightValue: false },
+                { leftValue: expr(`{{ $json.pageState.pagesFetched < ${ORACLE_HCM_MAX_PAGES} }}`), operator: { type: 'boolean', operation: 'equals' }, rightValue: true },
+              ],
+              combinator: 'and',
+            },
+          },
+          {
+            outputKey: 'bound_exhausted',
+            conditions: {
+              options: { caseSensitive: true, leftValue: '', typeValidation: 'strict' },
+              conditions: [
+                { leftValue: expr('{{ $json.pageState.paginationIncomplete }}'), operator: { type: 'boolean', operation: 'equals' }, rightValue: false },
+                { leftValue: expr('{{ $json.pageState.isComplete }}'), operator: { type: 'boolean', operation: 'equals' }, rightValue: false },
+                { leftValue: expr(`{{ $json.pageState.pagesFetched >= ${ORACLE_HCM_MAX_PAGES} }}`), operator: { type: 'boolean', operation: 'equals' }, rightValue: true },
+              ],
+              combinator: 'and',
+            },
+          },
+        ],
+      },
+      options: { fallbackOutput: 'extra', renameFallbackOutput: 'exit' },
+    },
+  },
+  output: [{ pageState: { isComplete: false, paginationIncomplete: false, pagesFetched: 2 } }],
+});
+
+// Reached only when ORACLE_HCM_MAX_PAGES was exhausted without ever seeing
+// isComplete — by definition an incomplete retrieval, regardless of
+// whatever pageState.paginationIncomplete already said.
+const buildOracleHcmPaginationBoundExhausted = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Build Oracle HCM Pagination Bound Exhausted',
+    notes: `Fired when ${ORACLE_HCM_MAX_PAGES} pages all passed without a completion signal. Whatever was accumulated within the bound is preserved — only paginationIncomplete is forced.`,
+    parameters: {
+      mode: 'manual',
+      includeOtherFields: true,
+      assignments: {
+        assignments: [
+          { id: 'pageState', name: 'pageState', value: expr('{{ { ...$json.pageState, paginationIncomplete: true, isComplete: false } }}'), type: 'object' },
+        ],
+      },
+    },
+  },
+  output: [{ pageState: { paginationIncomplete: true, isComplete: false } }],
 });
 
 const SOURCE_ID_ASSIGNMENT = { id: 'source_id', name: 'source_id', value: expr("{{ $('Split Out Sources').item.json.source_id }}"), type: 'string' };
@@ -416,7 +842,12 @@ const callIngestionBatchEndpoint = node({
         '{{ {\n' +
           "  sourceId: $('Split Out Sources').item.json.source_id,\n" +
           "  sourceType: $('Split Out Sources').item.json.ats_type,\n" +
-          '  rawJobs: $json.rawJobs,\n' +
+          // 2026-10-23 pagination-safety phase: Oracle HCM's branch carries its
+          // rawJobs/incompleteness signal nested under pageState (see
+          // Prepare Oracle HCM Page State above); every other ATS type still
+          // sets a flat rawJobs field exactly as before — unaffected.
+          '  rawJobs: $json.pageState ? $json.pageState.rawJobs : $json.rawJobs,\n' +
+          '  paginationIncomplete: $json.pageState ? ($json.pageState.paginationIncomplete === true) : false,\n' +
           "  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n" +
           "  dryRun: $('Workflow Configuration').first().json.dryRun\n" +
           '} }}'
@@ -2468,7 +2899,19 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
             .onCase(1, aggregateLeverJobs.to(extractLeverJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint)))
             .onCase(2, extractWorkableJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
             .onCase(3, extractAshbyJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
-            .onCase(4, extractOracleHcmJobs.onError(buildFetchFailureResult).to(callIngestionBatchEndpoint))
+            .onCase(
+              4,
+              prepareOracleHcmPageState.onError(buildFetchFailureResult).to(
+                checkOracleHcmPage1Complete
+                  .onCase(0, callIngestionBatchEndpoint)
+                  .onCase(
+                    1,
+                    prepareOracleHcmNextPageRequest
+                      .onError(buildOracleHcmSafetyFallbackState.to(callIngestionBatchEndpoint))
+                      .to(carryForwardOracleHcmPageState.input(0))
+                  )
+              )
+            )
             .onCase(5, buildUnsupportedSourceResult.to(recordSourceResult))
         )
     )
@@ -2483,6 +2926,29 @@ export default workflow('ai-job-agent-01-job-ingestion', 'AI Job Guide / 01 Job 
   .add(recordSourceResult)
   .to(rateLimitDelay)
   .to(nextBatch(loopSources))
+
+  // Oracle HCM bounded pagination — the direct, self-referencing cycle
+  // (2026-10-23 corrective fix, see Prepare Oracle HCM Next Page Request's
+  // own header comment above for why). Wired as separate .add() statements
+  // reusing the same node instances already entered via Extract Jobs By
+  // ATS Type's oracle_hcm case above — the same convention this workflow
+  // already uses for every other multi-entry-point node (e.g.
+  // recordSourceResult, callIngestionBatchEndpoint themselves).
+  .add(
+    prepareOracleHcmNextPageRequest.to(
+      fetchOracleHcmNextPage.onError(carryForwardOracleHcmPageState.input(1)).to(carryForwardOracleHcmPageState.input(1))
+    )
+  )
+  .add(
+    carryForwardOracleHcmPageState.to(
+      mergeClassifyOracleHcmPage.onError(buildOracleHcmSafetyFallbackState).to(
+        routeOracleHcmPageOutcome
+          .onCase(0, prepareOracleHcmNextPageRequest)
+          .onCase(1, buildOracleHcmPaginationBoundExhausted.to(callIngestionBatchEndpoint))
+          .onCase(2, callIngestionBatchEndpoint)
+      )
+    )
+  )
 
   // Tier D: multi-company feeds — second independent branch off List Ingestion Sources' success output.
   .add(listIngestionSources)

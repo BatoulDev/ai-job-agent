@@ -123,14 +123,14 @@ test('Call Ingestion Batch Endpoint posts to the internal route with Bearer auth
 });
 
 test('every extraction node degrades gracefully instead of halting the whole run on a malformed response', () => {
-  for (const name of ['Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs', 'Extract Oracle HCM Jobs']) {
+  for (const name of ['Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs', 'Prepare Oracle HCM Page State']) {
     const node = findNode(name);
     assert.equal(node.onError, 'continueErrorOutput', `${name} must continue to its error output, not stop the workflow`);
   }
 });
 
 test('every fallible node error output is wired to a Build *Result node, never left hanging', () => {
-  const fallible = ['Fetch Source Jobs', 'Call Ingestion Batch Endpoint', 'Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs', 'Extract Oracle HCM Jobs'];
+  const fallible = ['Fetch Source Jobs', 'Call Ingestion Batch Endpoint', 'Extract Greenhouse Jobs', 'Extract Lever Jobs', 'Extract Workable Jobs', 'Extract Ashby Jobs', 'Prepare Oracle HCM Page State'];
   for (const name of fallible) {
     const conns = wf.connections[name]?.main ?? [];
     const errorOutput = conns[1] ?? [];
@@ -144,19 +144,170 @@ test('Extract Jobs By ATS Type has ashby and oracle_hcm cases (Phase 13/16) rout
   const conns = wf.connections['Extract Jobs By ATS Type']?.main ?? [];
   assert.equal(conns.length, 6, 'five defined cases plus one fallback output');
   assert.ok(conns[3]?.some((c) => c.node === 'Extract Ashby Jobs'), 'the ashby case (index 3) must route to Extract Ashby Jobs');
-  assert.ok(conns[4]?.some((c) => c.node === 'Extract Oracle HCM Jobs'), 'the oracle_hcm case (index 4) must route to Extract Oracle HCM Jobs');
+  assert.ok(conns[4]?.some((c) => c.node === 'Prepare Oracle HCM Page State'), 'the oracle_hcm case (index 4) must route into the bounded pagination branch (2026-10-23 pagination-safety phase)');
   assert.ok(conns[5]?.some((c) => c.node === 'Build Unsupported Source Result'), 'the fallback (index 5) must still route to Build Unsupported Source Result');
 });
 
-test('Extract Oracle HCM Jobs derives a real candidate-facing apply URL from feed_url and stamps it onto every raw job, then feeds the shared Call Ingestion Batch Endpoint (Phase 16)', () => {
-  const node = findNode('Extract Oracle HCM Jobs');
-  assert.equal(node.type, 'n8n-nodes-base.set');
+// ── Oracle HCM bounded pagination (2026-10-23 pagination-safety phase) ──
+// The core page-classification algorithm itself is independently unit-tested
+// in tests/unit/oracle-hcm-pagination.test.mjs (src/lib/ingestion/oracleHcmPagination.ts)
+// — this file only checks that the n8n graph wires that same algorithm
+// (deliberately duplicated inline, since n8n expressions cannot import a
+// project module) into the real workflow correctly.
+
+test('Prepare Oracle HCM Page State derives candidateSiteUrl and classifies the first page using only items[0].{Offset,Limit,TotalJobsCount,requisitionList} — never the requested limit=50', () => {
+  const node = findNode('Prepare Oracle HCM Page State');
+  // 2026-10-24 corrective fix: moved from a Set-node inline expression to a
+  // Code node after an isolated n8n diagnostic (executions 300293/300549/
+  // 300782) proved the Set-node inline-expression evaluator silently drops
+  // Map-iterator results that a Code node's real JS sandbox handles
+  // correctly. See tests/workflow/oracle-hcm-code-node-behavior.test.mjs
+  // for the behavioral (not just structural) coverage of this node's logic.
+  assert.equal(node.type, 'n8n-nodes-base.code');
+  assert.equal(node.parameters.mode, 'runOnceForAllItems');
+  const value = node.parameters.jsCode;
+  assert.match(value, /candidateSiteUrl/, "must derive and stamp candidateSiteUrl onto each raw job — Oracle's REST response carries no candidate-facing URL of its own");
+  assert.match(value, /requisitionList/);
+  assert.match(value, /TotalJobsCount/);
+  assert.match(value, /paginationIncomplete:\s*true/, 'a malformed first page must fail closed');
+  assert.match(value, /mergeIncludesEveryValidId/, '2026-10-24 fix: the accumulation-integrity guard must be wired in, not just the dedup step');
+  assert.match(value, /missing:/, '2026-10-24 fix: missing/invalid Ids must get a unique synthetic key, never a shared empty-string key');
+  assert.match(value, /\$input\.all\(\)/, '2026-10-24 defensive guard: must inspect all input items, not just $input.first()');
+  assert.match(value, /allInputItems\.length !== 1/, '2026-10-24 defensive guard: must refuse to silently process via $input.first() when more than 1 item arrives');
+  assert.ok(wf.connections['Prepare Oracle HCM Page State']?.main?.[1]?.some((c) => c.node === 'Build Fetch Failure Result'), 'error output must be wired, never left hanging');
+});
+
+test('Check Oracle HCM Page 1 Complete? skips straight to the batch endpoint when page 1 alone is already complete or already malformed — the real, live-tested AUBMC case', () => {
+  const switchNode = findNode('Check Oracle HCM Page 1 Complete?');
+  const rule = switchNode.parameters.rules.values[0];
+  assert.equal(rule.conditions.combinator, 'or');
+  const leftValues = rule.conditions.conditions.map((c) => c.leftValue);
+  assert.ok(leftValues.some((v) => v.includes('isComplete')));
+  assert.ok(leftValues.some((v) => v.includes('paginationIncomplete')));
+  const conns = wf.connections['Check Oracle HCM Page 1 Complete?']?.main ?? [];
+  assert.ok(conns[0]?.some((c) => c.node === 'Call Ingestion Batch Endpoint'), 'case 0 (done) must skip the cycle entirely');
+  assert.ok(conns[1]?.some((c) => c.node === 'Prepare Oracle HCM Next Page Request'), 'fallback (needs more pages) must enter the direct-cycle pagination branch (2026-10-23 corrective fix)');
+});
+
+// ── 2026-10-23 CORRECTIVE FIX ──────────────────────────────────────────
+// Replaces the splitInBatches-based loop (removed) after an isolated,
+// authorized n8n test (workflow 9UJQcvhgDQKWj8Ry, execution 299820)
+// proved nextBatch() does not carry mutated item state forward — it
+// re-emits the loop's own originally pre-built queued items every
+// iteration. The fix is a direct, self-referencing cycle with a Merge
+// node recovering pre-HTTP-call state, so this file's static structural
+// checks below exist specifically to prove: (1) the state-carrying path
+// (Merge's two inputs) is wired correctly — this is the "HTTP state
+// preservation" proof; (2) the cycle terminates — either via a real
+// completion signal or the explicit bound check, never unbounded; (3)
+// every node's error output is explicitly wired, including the specific
+// gap the pre-import audit found (Merge & Classify's missing error wire).
+// "Three-page retrieval" and "state progression" behavior for the
+// classification algorithm ITSELF is proven by real execution in
+// tests/unit/oracle-hcm-pagination.test.mjs (classifyOracleHcmFirstPage /
+// classifyOracleHcmNextPage) — this file only proves the n8n graph wires
+// that same (deliberately duplicated) logic together correctly, per this
+// file's own header comment.
+
+test('Prepare Oracle HCM Next Page Request builds the next-page URL from the CURRENT pageState (always reliable pre-fetch) using the real reported Offset+Limit, never the requested one, and fans out to both the Merge node and the actual fetch', () => {
+  const node = findNode('Prepare Oracle HCM Next Page Request');
   assert.equal(node.onError, 'continueErrorOutput');
-  const value = node.parameters.assignments.assignments[0].value;
-  assert.match(value, /candidateSiteUrl/, 'must derive and stamp candidateSiteUrl onto each raw job — Oracle\'s REST response carries no candidate-facing URL of its own');
-  assert.match(value, /requisitionList/, 'must read the real nested job list shape (items[0].requisitionList), not assume a flat array');
-  assert.ok(wf.connections['Extract Oracle HCM Jobs']?.main?.[0]?.some((c) => c.node === 'Call Ingestion Batch Endpoint'), 'success output must feed the shared Tier-A endpoint');
-  assert.ok(wf.connections['Extract Oracle HCM Jobs']?.main?.[1]?.some((c) => c.node === 'Build Fetch Failure Result'), 'error output must be wired, never left hanging');
+  const field = node.parameters.assignments.assignments.find((a) => a.name === 'nextPageUrl');
+  assert.match(field.value, /pageState\.feedUrl/);
+  assert.match(field.value, /pageState\.pageOffset \+ \$json\.pageState\.pageLimit/, 'next offset must come from the real reported page size, not the requested limit=50');
+  assert.match(field.value, /finder=findReqs;siteNumber=/, 'must target the same finder variable Oracle actually honors, confirmed live this phase');
+  assert.match(field.value, /',offset=' \+ nextOffset/, 'offset must be inserted as a finder variable, the live-confirmed syntax');
+  const conns = wf.connections['Prepare Oracle HCM Next Page Request']?.main ?? [];
+  assert.ok(conns[0]?.some((c) => c.node === 'Carry Forward Oracle HCM Page State' && c.index === 0), 'the untouched pre-fetch item must feed the Merge node\'s first input directly — this is the state-preservation mechanism, not an assumption about the HTTP node');
+  assert.ok(conns[0]?.some((c) => c.node === 'Fetch Oracle HCM Next Page'), 'the same item must also drive the actual fetch');
+  assert.ok(conns[1]?.some((c) => c.node === 'Build Oracle HCM Safety Fallback State'), 'error output must be wired, never left hanging');
+});
+
+test('Fetch Oracle HCM Next Page reads the pre-built URL and sends both its success AND error outputs into Carry Forward Oracle HCM Page State\'s second input — never left hanging either way', () => {
+  const node = findNode('Fetch Oracle HCM Next Page');
+  assert.equal(node.parameters.method, 'GET');
+  assert.equal(node.parameters.url, '={{ $json.nextPageUrl }}');
+  assert.equal(node.retryOnFail, true);
+  assert.equal(node.onError, 'continueErrorOutput');
+  const conns = wf.connections['Fetch Oracle HCM Next Page']?.main ?? [];
+  assert.ok(conns[0]?.some((c) => c.node === 'Carry Forward Oracle HCM Page State' && c.index === 1), 'success output must feed the Merge node\'s second input');
+  assert.ok(conns[1]?.some((c) => c.node === 'Carry Forward Oracle HCM Page State' && c.index === 1), 'error output must ALSO feed the same Merge input — Merge & Classify checks $json.error to tell the two apart, so pageState recovery never depends on which one fired');
+});
+
+test('Carry Forward Oracle HCM Page State (Merge, combineByPosition) is the state-preservation mechanism — the proven SDK pattern for "a node replaces my data, I need the pre-call data back", not an assumption about HTTP Request behavior', () => {
+  const node = findNode('Carry Forward Oracle HCM Page State');
+  assert.equal(node.type, 'n8n-nodes-base.merge');
+  assert.equal(node.parameters.mode, 'combine');
+  assert.equal(node.parameters.combineBy, 'combineByPosition');
+  assert.equal(node.parameters.numberInputs, 2);
+  assert.ok(wf.connections['Carry Forward Oracle HCM Page State']?.main?.[0]?.some((c) => c.node === 'Merge & Classify Oracle HCM Page'));
+});
+
+test('Build Oracle HCM Safety Fallback State is explicitly wired for both Prepare Oracle HCM Next Page Request\'s and Merge & Classify\'s error outputs — no silently dropped error, the exact gap the pre-import audit found', () => {
+  const node = findNode('Build Oracle HCM Safety Fallback State');
+  const field = node.parameters.assignments.assignments.find((a) => a.name === 'pageState');
+  assert.match(field.value, /paginationIncomplete:\s*true/);
+  assert.match(field.value, /\$json\.pageState\?\./, 'uses optional chaining — this is the one path where pageState\'s own shape is genuinely in doubt');
+  assert.ok(wf.connections['Build Oracle HCM Safety Fallback State']?.main?.[0]?.some((c) => c.node === 'Call Ingestion Batch Endpoint'));
+  assert.ok(wf.connections['Merge & Classify Oracle HCM Page']?.main?.[1]?.some((c) => c.node === 'Build Oracle HCM Safety Fallback State'), 'Merge & Classify\'s error output must be wired — CONFIRMED BUG from the pre-import audit, fixed by this corrective pass');
+});
+
+test('Merge & Classify Oracle HCM Page checks for a fetch failure first, then fails closed on malformed metadata, a non-advancing/repeated offset, and a premature empty page — never discarding prior accumulated jobs', () => {
+  const node = findNode('Merge & Classify Oracle HCM Page');
+  // 2026-10-24 corrective fix: moved from a Set-node inline expression
+  // (includeOtherFields:true) to a Code node — see Prepare Oracle HCM Page
+  // State's own test above for why, and
+  // tests/workflow/oracle-hcm-code-node-behavior.test.mjs for behavioral
+  // coverage. The old Set-node includeOtherFields:true is now done
+  // explicitly via Object.assign({}, input, {...}) in jsCode.
+  assert.equal(node.type, 'n8n-nodes-base.code');
+  assert.equal(node.parameters.mode, 'runOnceForAllItems');
+  assert.equal('includeOtherFields' in (node.parameters ?? {}), false, 'not a Set-node parameter — the equivalent passthrough is explicit in jsCode now');
+  const value = node.parameters.jsCode;
+  assert.match(value, /if \(input\.error\)/, 'must check the Merge-combined error signal before attempting to parse items');
+  assert.match(value, /metaOk/);
+  assert.match(value, /isNonAdvancingOffset/);
+  assert.match(value, /isPrematureEmptyPage/);
+  assert.match(value, /Object\.assign\(\{\}, prior/, 'every failure branch spreads the prior accumulated state forward');
+  assert.match(value, /new Map/, 'de-duplicates accumulated jobs by Oracle\'s own raw Id');
+  assert.match(value, /mergeIncludesEveryValidId/, '2026-10-24 fix: the accumulation-integrity guard must be wired in, not just the dedup step');
+  assert.match(value, /missing:/, '2026-10-24 fix: missing/invalid Ids must get a unique synthetic key, never a shared empty-string key');
+  assert.match(value, /\$input\.all\(\)/, '2026-10-24 defensive guard: must inspect all input items, not just $input.first()');
+  assert.match(value, /allInputItems\.length !== 1/, '2026-10-24 defensive guard: must refuse to silently process via $input.first() when more than 1 item arrives');
+});
+
+test('Route Oracle HCM Page Outcome loops back DIRECTLY to Prepare Oracle HCM Next Page Request (no splitInBatches) only when genuinely incomplete, not failed, AND still under the explicit page-count bound; separately routes bound-exhaustion vs. real completion/failure', () => {
+  const switchNode = findNode('Route Oracle HCM Page Outcome');
+  assert.equal(switchNode.parameters.rules.values.length, 2, 'two real rules (continue, bound_exhausted) plus one fallback — three outputs total');
+  const continueRule = switchNode.parameters.rules.values[0];
+  assert.equal(continueRule.conditions.combinator, 'and');
+  assert.ok(continueRule.conditions.conditions.some((c) => c.leftValue.includes('pagesFetched < 10')), 'the page-count bound is now an explicit condition — nothing else enforces one without splitInBatches');
+  const boundRule = switchNode.parameters.rules.values[1];
+  assert.ok(boundRule.conditions.conditions.some((c) => c.leftValue.includes('pagesFetched >= 10')));
+  const conns = wf.connections['Route Oracle HCM Page Outcome']?.main ?? [];
+  assert.ok(conns[0]?.some((c) => c.node === 'Prepare Oracle HCM Next Page Request'), 'case 0 (continue) loops back directly to the cycle entry point, carrying the real merged pageState — not through a batching node that would reset it');
+  assert.ok(conns[1]?.some((c) => c.node === 'Build Oracle HCM Pagination Bound Exhausted'), 'case 1 (bound_exhausted) must force incompleteness explicitly');
+  assert.ok(conns[2]?.some((c) => c.node === 'Call Ingestion Batch Endpoint'), 'fallback (exit) reaches the batch endpoint, whether complete or failed');
+});
+
+test('Build Oracle HCM Pagination Bound Exhausted is reached only from Route Oracle HCM Page Outcome\'s explicit bound_exhausted case, and forces paginationIncomplete', () => {
+  const node = findNode('Build Oracle HCM Pagination Bound Exhausted');
+  const field = node.parameters.assignments.assignments.find((a) => a.name === 'pageState');
+  assert.match(field.value, /paginationIncomplete:\s*true/);
+  assert.ok(wf.connections['Build Oracle HCM Pagination Bound Exhausted']?.main?.[0]?.some((c) => c.node === 'Call Ingestion Batch Endpoint'));
+});
+
+test('no node in the Oracle HCM pagination branch still references the removed splitInBatches-based design', () => {
+  for (const removedName of ['Prepare Oracle HCM Page Attempts', 'Split Out Oracle HCM Page Attempts', 'Loop Oracle HCM Pages (Bounded)', 'Build Oracle HCM Fetch Failure State']) {
+    assert.equal(wf.nodes.some((n) => n.name === removedName), false, `${removedName} must no longer exist — replaced by the 2026-10-23 corrective fix`);
+    assert.equal(removedName in wf.connections, false);
+  }
+});
+
+test('Call Ingestion Batch Endpoint reads Oracle HCM\'s nested pageState when present, and propagates paginationIncomplete to run-batch — every other ATS type (flat rawJobs, no pageState) is unaffected', () => {
+  const node = findNode('Call Ingestion Batch Endpoint');
+  assert.match(node.parameters.jsonBody, /rawJobs:\s*\$json\.pageState\s*\?\s*\$json\.pageState\.rawJobs\s*:\s*\$json\.rawJobs/);
+  assert.match(node.parameters.jsonBody, /paginationIncomplete:\s*\$json\.pageState\s*\?\s*\(\$json\.pageState\.paginationIncomplete === true\)\s*:\s*false/);
 });
 
 test('all four per-source result paths converge on Record Source Result', () => {
@@ -289,8 +440,32 @@ test('the Tier-B loop batches one candidate at a time', () => {
   assertBatchesOneAtATime(findNode('Loop Career Page Candidates (Rate Limited)'));
 });
 
-test('exactly 102 nodes total (98 prior + 4 new nodes for the GulfTalent missing/invalid-ID guard fix)', () => {
-  assert.equal(wf.nodes.length, 102);
+// 2026-10-25: replaced a brittle total-node-count assertion (which coupled
+// this test to every other unrelated feature touching this workflow file,
+// e.g. LinkedIn discovery, GulfTalent, Apify seeds) with explicit structural
+// checks scoped to exactly what the Oracle HCM pagination-safety phase
+// actually changed — passes identically whether or not unrelated branches
+// are present.
+test('the Oracle HCM pagination branch node set is complete, and the old single-node Extract Oracle HCM Jobs no longer exists', () => {
+  const ORACLE_HCM_NODES = [
+    'Prepare Oracle HCM Page State',
+    'Check Oracle HCM Page 1 Complete?',
+    'Prepare Oracle HCM Next Page Request',
+    'Fetch Oracle HCM Next Page',
+    'Carry Forward Oracle HCM Page State',
+    'Build Oracle HCM Safety Fallback State',
+    'Merge & Classify Oracle HCM Page',
+    'Route Oracle HCM Page Outcome',
+    'Build Oracle HCM Pagination Bound Exhausted',
+  ];
+  for (const name of ORACLE_HCM_NODES) {
+    assert.ok(wf.nodes.some((n) => n.name === name), `${name} must exist (2026-10-23 pagination-safety phase)`);
+  }
+  assert.equal(
+    wf.nodes.some((n) => n.name === 'Extract Oracle HCM Jobs'),
+    false,
+    'the old single-node pre-pagination implementation must no longer exist, replaced by the bounded pagination branch'
+  );
 });
 
 test('Apify multi-company branch (Phase 21) is fully isolated — its own seed, split, loop, actor call, aggregate, batch endpoint, success/failure builders, and rate limiter', () => {
