@@ -26,7 +26,12 @@ describe("providerConfig", () => {
     assert.ok(config, "linkedin must have a providerConfig entry for the pilot build");
     assert.equal(config.enabled, false);
     assert.equal(config.requiresCredentialEnvVar, "APIFY_API_TOKEN");
-    assert.deepEqual(config.markets, ["lebanon"]);
+    // Market-expansion phase: the discovery branch now has seeds for all
+    // five markets (linkedinDiscoverySeeds.ts), but Gulf/international
+    // remain UNVALIDATED — only Lebanon has ever been real-tested with
+    // Bebity. enabled stays false for all of them until each market's own
+    // bounded real pilot is reviewed (AGENTS.md §35 rule 6/10).
+    assert.deepEqual(config.markets, ["lebanon", "saudi-arabia", "uae", "qatar", "kuwait"]);
   });
 
   test("getEnabledProviders / getProvidersForMarket never include linkedin while it is disabled", () => {

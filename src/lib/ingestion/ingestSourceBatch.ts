@@ -78,6 +78,18 @@ export interface IngestionBatchOptions {
   maxJobsPerSource: number;
   /** When true, validates and reports but never writes to the database. */
   dryRun: boolean;
+  /**
+   * 2026-10-23 pagination-safety fix: set by a caller whose own fetch loop
+   * (e.g. a multi-page Oracle HCM or GulfTalent retrieval) did not reach a
+   * confirmed-complete page before this call — a page-fetch failure or a
+   * bounded page-count exhaustion, not an ordinary single-page run. Forces
+   * `truncated` to true in persistValidatedJobs below REGARDLESS of how the
+   * fetched item count compares to maxJobsPerSource, because a count that
+   * happens to be under the cap is not evidence the retrieval actually saw
+   * every page — see that function's own truncated computation. Optional
+   * and false-by-default so every existing single-page caller is unchanged.
+   */
+  paginationIncomplete?: boolean;
 }
 
 /**
@@ -101,7 +113,20 @@ export type IngestionBatchOutcome =
   | "source_not_found"
   | "source_not_approved"
   | "no_valid_jobs"
-  | "provider_not_enabled";
+  | "provider_not_enabled"
+  /**
+   * 2026-10-23 audit fix: the upsert already committed — jobsCreated/
+   * jobsUpdated below are real, already-written counts, never zeroed out —
+   * but the stale-close read or update that normally follows it failed
+   * before completing. jobsClosed is always 0 here, meaning "stale-close
+   * did not run to completion", never "verified nothing was stale". A
+   * caller must treat this the same as a failure for retry/alerting
+   * purposes (never as "succeeded"), while still trusting jobsCreated/
+   * jobsUpdated. Retrying the same call is safe: the upsert step is
+   * idempotent, so a retry only re-confirms the same rows and attempts
+   * stale-close again — it can never create a duplicate.
+   */
+  | "partial_stale_close_failed";
 
 export interface IngestionBatchResult {
   outcome: IngestionBatchOutcome;
@@ -242,7 +267,11 @@ export async function persistValidatedJobs(
   // otherwise-valid batch.
   const deduped = Array.from(new Map(validated.map((row) => [row.external_id, row])).values());
 
-  const truncated = deduped.length > options.maxJobsPerSource;
+  // A count under the cap is not proof every page was fetched — an
+  // incomplete multi-page retrieval (page-fetch failure, bounded page-count
+  // exhaustion) must force the same truncated-batch safety (no stale-close,
+  // see below) even when deduped.length happens to be <= maxJobsPerSource.
+  const truncated = deduped.length > options.maxJobsPerSource || options.paginationIncomplete === true;
   const bounded = truncated ? deduped.slice(0, options.maxJobsPerSource) : deduped;
 
   if (options.dryRun) {
@@ -305,11 +334,24 @@ export async function persistValidatedJobs(
 
   let jobsClosed = 0;
   if (!truncated) {
+    // 2026-10-23 audit fix: the upsert above already committed — jobsCreated/
+    // jobsUpdated are real. Previously, a failure in either step below threw
+    // and propagated all the way to the HTTP caller as an opaque 500, losing
+    // those already-true counts and reporting what looked like a total
+    // failure despite real rows having been written. Returning a dedicated
+    // partial outcome here (never "succeeded") makes that distinction
+    // observable to the caller without an atomic cross-statement transaction
+    // — true atomicity would need a DB-side RPC/migration, out of scope for
+    // this fix; see the audit's Phase 2 report for that proposal.
     const seenExternalIds = new Set(bounded.map((row) => row.external_id));
     const activeQuery = supabase.from("jobs").select("id, external_id").eq("status", "active");
     const { data: activeRows, error: activeError } = await refreshScopeQuery(activeQuery, scope);
     if (activeError) {
-      throw new Error(`ingestion: failed to read active jobs for stale-close: ${activeError.message}`);
+      console.error(
+        `ingestion: stale-close read failed after a successful upsert (${jobsCreated} created, ${jobsUpdated} updated) — reporting partial_stale_close_failed, not succeeded:`,
+        activeError.message
+      );
+      return { outcome: "partial_stale_close_failed", jobsFetched: rawJobsCount, jobsValid: validated.length, jobsRejected, jobsCreated, jobsUpdated, jobsClosed: 0, truncated };
     }
     const staleIds = (activeRows ?? [])
       .filter((row) => row.external_id && !seenExternalIds.has(row.external_id))
@@ -321,7 +363,11 @@ export async function persistValidatedJobs(
         .update({ status: "unavailable", status_reason: "not_found_in_latest_ingestion_run" })
         .in("id", staleIds);
       if (closeError) {
-        throw new Error(`ingestion: failed to close stale jobs: ${closeError.message}`);
+        console.error(
+          `ingestion: stale-close update failed after a successful upsert (${jobsCreated} created, ${jobsUpdated} updated) — reporting partial_stale_close_failed, not succeeded:`,
+          closeError.message
+        );
+        return { outcome: "partial_stale_close_failed", jobsFetched: rawJobsCount, jobsValid: validated.length, jobsRejected, jobsCreated, jobsUpdated, jobsClosed: 0, truncated };
       }
       jobsClosed = staleIds.length;
     }

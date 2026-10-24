@@ -41,6 +41,25 @@ export interface GulfTalentRawJob {
   // number means, exactly what AGENTS.md §30 prohibits. Captured for
   // inspection if GulfTalent ever documents the code meanings.
   seniorityId?: number;
+  // Real, confirmed-present field (2026-10-22 forensic re-audit, a real
+  // Saudi Arabia dataset item) — the source-stated application deadline.
+  // Same schema.org JobPosting.validThrough concept
+  // extractCareerPageJobPostings.ts already maps to RawProviderJob's own
+  // closingDate; GulfTalent's own value had never been read.
+  validThrough?: string;
+}
+
+/**
+ * Parses GulfTalent's validThrough into an ISO 8601 string, or null for
+ * anything not a genuine date (missing, null, empty, malformed) — never
+ * throws, never invents a deadline. Same convention as
+ * extractCareerPageJobPostings.ts's own parseValidThrough (schema.org
+ * JobPosting.validThrough is the same underlying concept there).
+ */
+function parseValidThrough(value: unknown): string | null {
+  if (typeof value !== "string" || !value.trim()) return null;
+  const parsed = new Date(value.trim());
+  return Number.isNaN(parsed.getTime()) ? null : parsed.toISOString();
 }
 
 const EMPLOYMENT_TYPE_MAP: Record<string, string> = {
@@ -71,5 +90,6 @@ export function mapGulfTalentJob(raw: GulfTalentRawJob): RawProviderJob {
     publishedAt: raw.postedAt ?? null,
     sourceLastModifiedAt: null,
     sourceListingUrl: typeof raw.applyUrl === "string" ? raw.applyUrl : null,
+    closingDate: parseValidThrough(raw.validThrough),
   };
 }

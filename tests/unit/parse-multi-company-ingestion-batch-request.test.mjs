@@ -124,3 +124,26 @@ describe("parseMultiCompanyIngestionBatchRequestBody — refreshScope (Phase 22 
     assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ refreshScope: "   " })).ok, false);
   });
 });
+
+// 2026-10-23 pagination-safety fix: lets a caller whose own fetch loop did
+// not reach a confirmed-complete page (e.g. a future paginated GulfTalent
+// retrieval) force truncated-batch stale-close safety downstream. Optional
+// and false by default so every existing single-page caller
+// (RemoteOK/Jobicy/Arbeitnow/Bayt/Indeed) is unaffected.
+describe("parseMultiCompanyIngestionBatchRequestBody — paginationIncomplete (2026-10-23 pagination-safety fix)", () => {
+  test("defaults to false when omitted", () => {
+    const result = parseMultiCompanyIngestionBatchRequestBody(validBody());
+    assert.equal(result.ok, true);
+    assert.equal(result.value.paginationIncomplete, false);
+  });
+
+  test("accepts an explicit true", () => {
+    const result = parseMultiCompanyIngestionBatchRequestBody(validBody({ paginationIncomplete: true }));
+    assert.equal(result.ok, true);
+    assert.equal(result.value.paginationIncomplete, true);
+  });
+
+  test("rejects a non-boolean paginationIncomplete", () => {
+    assert.equal(parseMultiCompanyIngestionBatchRequestBody(validBody({ paginationIncomplete: "true" })).ok, false);
+  });
+});

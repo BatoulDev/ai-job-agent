@@ -40,6 +40,15 @@ export interface IngestionBatchRequestBody {
   rawJobs: unknown[];
   maxJobsPerSource: number;
   dryRun: boolean;
+  /**
+   * 2026-10-23 pagination-safety fix: true when the caller's own fetch loop
+   * did not reach a confirmed-complete page (a page-fetch failure, or
+   * bounded page-count exhaustion) before this call — see
+   * IngestionBatchOptions's own comment in ingestSourceBatch.ts. Optional
+   * and false by default so every existing single-page caller is
+   * unaffected.
+   */
+  paginationIncomplete: boolean;
 }
 
 export type ParseIngestionBatchRequestResult =
@@ -87,6 +96,10 @@ export function parseIngestionBatchRequestBody(body: unknown): ParseIngestionBat
     return { ok: false, error: "dryRun must be a boolean" };
   }
 
+  if (record.paginationIncomplete !== undefined && typeof record.paginationIncomplete !== "boolean") {
+    return { ok: false, error: "paginationIncomplete must be a boolean" };
+  }
+
   return {
     ok: true,
     value: {
@@ -95,6 +108,7 @@ export function parseIngestionBatchRequestBody(body: unknown): ParseIngestionBat
       rawJobs: record.rawJobs,
       maxJobsPerSource: record.maxJobsPerSource,
       dryRun: record.dryRun,
+      paginationIncomplete: record.paginationIncomplete === true,
     },
   };
 }

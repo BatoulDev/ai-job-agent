@@ -367,29 +367,231 @@
       "notes": "Phase 13. Ashby posting-api returns {jobs:[...], apiVersion} — confirmed live against a real registry board (sr-qa-the-utopia-studio)."
     },
     {
-      "parameters": {
-        "assignments": {
-          "assignments": [
-            {
-              "id": "rawJobs",
-              "name": "rawJobs",
-              "type": "array",
-              "value": "={{ (() => {\n  const feedUrl = $('Split Out Sources').item.json.feed_url;\n  const m = feedUrl.match(/^https:\\/\\/([^/]+)\\/hcmRestApi.*siteNumber=([A-Za-z0-9_]+)/);\n  const candidateSiteUrl = m ? `https://${m[1]}/hcmUI/CandidateExperience/en/sites/${m[2]}` : null;\n  const list = $json.items?.[0]?.requisitionList ?? [];\n  return list.map((job) => ({ ...job, candidateSiteUrl }));\n})() }}"
-            }
-          ]
-        },
-        "options": {}
-      },
-      "id": "ac4ae318-c432-457d-87b7-38334e71634f",
-      "name": "Extract Oracle HCM Jobs",
-      "type": "n8n-nodes-base.set",
-      "typeVersion": 3.4,
+      "id": "6cb59ce5-bd50-44aa-8571-72c3923aafb8",
+      "name": "Prepare Oracle HCM Page State",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
       "position": [
         1568,
         848
       ],
       "onError": "continueErrorOutput",
-      "notes": "Phase 16. Confirmed live against a real registry tenant (AUBMC, Lebanon) — a direct unauthenticated GET to recruitingCEJobRequisitions returned real job data, and the derived candidate-facing URL returned a real 200 job page. See providers/oracle-hcm.ts and deriveAtsFeedUrl.ts."
+      "notes": "2026-10-23 pagination-safety phase. Classifies the FIRST page (already fetched by the shared Fetch Source Jobs node) using only the response's own items[0].{Offset,Limit,TotalJobsCount,requisitionList} — never the requested limit=50. A malformed/unparseable response, or a merge that fails its own integrity check, fails closed (paginationIncomplete:true, zero jobs accumulated). Mirrors classifyOracleHcmFirstPage in src/lib/ingestion/oracleHcmPagination.ts exactly. 2026-10-24: moved from a Set-node inline expression into a Code node — an isolated n8n diagnostic (executions 300293/300549/300782) proved Array.from(map.values()) and the [...map.values()] spread form both silently return an empty array inside the Set-node inline-expression evaluator despite the Map itself reporting the correct size; the Code node's real JS sandbox does not share that defect. Also throws (routed to its own error output, never silently) if it ever receives more than 1 input item — runOnceForAllItems + $input.first() would otherwise silently discard the rest; the current graph never sends it more than 1 (Loop Sources batchSize=1, no HTTP pagination on Fetch Source Jobs), but this guard makes that invariant fail loud instead of fail silent if it is ever broken.",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "function hasValidRequisitionId(job) {\n  var id = job ? job.Id : undefined;\n  return id !== undefined && id !== null && String(id).trim() !== '';\n}\nfunction dedupeById(jobs) {\n  var map = new Map();\n  var missingIdCounter = 0;\n  for (var i = 0; i < jobs.length; i++) {\n    var job = jobs[i];\n    var key = hasValidRequisitionId(job) ? ('id:' + String(job.Id)) : ('missing:' + (missingIdCounter++));\n    map.set(key, job);\n  }\n  return Array.from(map.values());\n}\nfunction validRequisitionIds(jobs) {\n  var ids = new Set();\n  for (var i = 0; i < jobs.length; i++) {\n    if (hasValidRequisitionId(jobs[i])) ids.add(String(jobs[i].Id));\n  }\n  return ids;\n}\nfunction mergeIncludesEveryValidId(priorJobs, newJobs, merged) {\n  var expected = validRequisitionIds(priorJobs);\n  validRequisitionIds(newJobs).forEach(function (id) { expected.add(id); });\n  var actual = validRequisitionIds(merged);\n  var ok = true;\n  expected.forEach(function (id) { if (!actual.has(id)) ok = false; });\n  if (!ok) return false;\n  return !(merged.length === 0 && (priorJobs.length > 0 || newJobs.length > 0));\n}\n\nconst allInputItems = $input.all();\nif (allInputItems.length !== 1) {\n  throw new Error('Prepare Oracle HCM Page State expected exactly 1 input item but received ' + allInputItems.length + ' — refusing to process via $input.first() only, which would silently discard the rest.');\n}\nconst input = allInputItems[0].json;\nconst feedUrl = $('Split Out Sources').item.json.feed_url;\nconst siteMatch = typeof feedUrl === 'string' ? feedUrl.match(/^https:\\/\\/([^/]+)\\/hcmRestApi.*siteNumber=([A-Za-z0-9_]+)/) : null;\nconst candidateSiteUrl = siteMatch ? ('https://' + siteMatch[1] + '/hcmUI/CandidateExperience/en/sites/' + siteMatch[2]) : null;\n\nconst items = input.items;\nconst first = (Array.isArray(items) && items.length > 0) ? items[0] : null;\nconst offset = first ? first.Offset : undefined;\nconst limit = first ? first.Limit : undefined;\nconst totalJobsCount = first ? first.TotalJobsCount : undefined;\nconst requisitionList = first ? first.requisitionList : undefined;\nconst metaOk = typeof offset === 'number' && Number.isFinite(offset)\n  && typeof limit === 'number' && Number.isFinite(limit)\n  && typeof totalJobsCount === 'number' && Number.isFinite(totalJobsCount)\n  && Array.isArray(requisitionList);\n\nif (!metaOk) {\n  return [{ json: { pageState: { rawJobs: [], pageOffset: 0, pageLimit: 0, totalJobsCount: 0, pagesFetched: 1, paginationIncomplete: true, isComplete: false, candidateSiteUrl: candidateSiteUrl, feedUrl: feedUrl } } }];\n}\n\nconst stamped = requisitionList.map(function (job) { return Object.assign({}, job, { candidateSiteUrl: candidateSiteUrl }); });\nconst deduped = dedupeById(stamped);\nif (!mergeIncludesEveryValidId([], stamped, deduped)) {\n  return [{ json: { pageState: { rawJobs: [], pageOffset: 0, pageLimit: 0, totalJobsCount: 0, pagesFetched: 1, paginationIncomplete: true, isComplete: false, candidateSiteUrl: candidateSiteUrl, feedUrl: feedUrl } } }];\n}\n\nconst isComplete = (offset + requisitionList.length) >= totalJobsCount;\nreturn [{ json: { pageState: { rawJobs: deduped, pageOffset: offset, pageLimit: limit, totalJobsCount: totalJobsCount, pagesFetched: 1, paginationIncomplete: false, isComplete: isComplete, candidateSiteUrl: candidateSiteUrl, feedUrl: feedUrl } } }];"
+      }
+    },
+    {
+      "id": "5536e77c-ca8a-47c8-b872-828a7beb6543",
+      "name": "Check Oracle HCM Page 1 Complete?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        848
+      ],
+      "notes": "case 0 = already complete (or already known malformed) from page 1 alone — the real, live-tested AUBMC case (8 jobs, one page). Fallback = genuinely needs more pages, enters the bounded loop below.",
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.pageState.isComplete }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "rightValue": true
+                  },
+                  {
+                    "leftValue": "={{ $json.pageState.paginationIncomplete }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "rightValue": true
+                  }
+                ],
+                "combinator": "or"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "needs_more_pages"
+        }
+      }
+    },
+    {
+      "id": "31758256-b3e0-4438-a1a2-2bb3d773efd7",
+      "name": "Fetch Oracle HCM Next Page",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2688,
+        1028
+      ],
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 4,
+      "waitBetweenTries": 5000,
+      "notes": "Free, idempotent read — safe to retry. A null nextPageUrl (feed_url shape unrecognized — defensive, never observed live) simply fails this request, which routes through the same error path as any other failure. Both this node's success AND error outputs feed Carry Forward Oracle HCM Page State's second input — pageState itself is recovered from that Merge node's OTHER (untouched) input regardless of which output fires here.",
+      "parameters": {
+        "method": "GET",
+        "url": "={{ $json.nextPageUrl }}",
+        "authentication": "none",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "c0bfcefa-1a2a-4bf5-acbb-112c921f9e8b",
+      "name": "Merge & Classify Oracle HCM Page",
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        2912,
+        1028
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "Mirrors classifyOracleHcmNextPage in src/lib/ingestion/oracleHcmPagination.ts (including that module's own 2026-10-24 fix: missing/invalid Ids are never collapsed into each other, and an explicit integrity check fails closed if a merge ever loses a valid Id or returns empty despite non-empty inputs), plus one n8n-specific check the pure module doesn't need (its caller already separates success/failure): input.error, set by Carry Forward Oracle HCM Page State whenever Fetch Oracle HCM Next Page's error output fired. Fails closed on: a fetch failure; malformed metadata; a non-advancing/repeated offset; a premature empty page; or the merge step itself failing its own integrity check. Its own error output is explicitly wired. 2026-10-24: moved from a Set-node inline expression into a Code node for the same reason as Prepare Oracle HCM Page State above — the exact node most at risk, since THIS is the step that actually merges two pages' worth of jobs together. Also throws (routed to its own error output, never silently) if it ever receives more than 1 input item — runOnceForAllItems + $input.first() would otherwise silently discard the rest; the current graph never sends it more than 1 (single-item cycle, Merge combineByPosition pairs exactly 1:1), but this guard makes that invariant fail loud instead of fail silent if it is ever broken.",
+      "parameters": {
+        "mode": "runOnceForAllItems",
+        "language": "javaScript",
+        "jsCode": "function hasValidRequisitionId(job) {\n  var id = job ? job.Id : undefined;\n  return id !== undefined && id !== null && String(id).trim() !== '';\n}\nfunction dedupeById(jobs) {\n  var map = new Map();\n  var missingIdCounter = 0;\n  for (var i = 0; i < jobs.length; i++) {\n    var job = jobs[i];\n    var key = hasValidRequisitionId(job) ? ('id:' + String(job.Id)) : ('missing:' + (missingIdCounter++));\n    map.set(key, job);\n  }\n  return Array.from(map.values());\n}\nfunction validRequisitionIds(jobs) {\n  var ids = new Set();\n  for (var i = 0; i < jobs.length; i++) {\n    if (hasValidRequisitionId(jobs[i])) ids.add(String(jobs[i].Id));\n  }\n  return ids;\n}\nfunction mergeIncludesEveryValidId(priorJobs, newJobs, merged) {\n  var expected = validRequisitionIds(priorJobs);\n  validRequisitionIds(newJobs).forEach(function (id) { expected.add(id); });\n  var actual = validRequisitionIds(merged);\n  var ok = true;\n  expected.forEach(function (id) { if (!actual.has(id)) ok = false; });\n  if (!ok) return false;\n  return !(merged.length === 0 && (priorJobs.length > 0 || newJobs.length > 0));\n}\n\nconst allInputItems = $input.all();\nif (allInputItems.length !== 1) {\n  throw new Error('Merge & Classify Oracle HCM Page expected exactly 1 input item but received ' + allInputItems.length + ' — refusing to process via $input.first() only, which would silently discard the rest.');\n}\nconst input = allInputItems[0].json;\nconst prior = input.pageState;\n\nif (input.error) {\n  return [{ json: Object.assign({}, input, { pageState: Object.assign({}, prior, { paginationIncomplete: true, isComplete: false }) }) }];\n}\n\nconst items = input.items;\nconst first = (Array.isArray(items) && items.length > 0) ? items[0] : null;\nconst offset = first ? first.Offset : undefined;\nconst limit = first ? first.Limit : undefined;\nconst totalJobsCount = first ? first.TotalJobsCount : undefined;\nconst requisitionList = first ? first.requisitionList : undefined;\nconst metaOk = typeof offset === 'number' && Number.isFinite(offset)\n  && typeof limit === 'number' && Number.isFinite(limit)\n  && typeof totalJobsCount === 'number' && Number.isFinite(totalJobsCount)\n  && Array.isArray(requisitionList);\n\nif (!metaOk) {\n  return [{ json: Object.assign({}, input, { pageState: Object.assign({}, prior, { paginationIncomplete: true, isComplete: false }) }) }];\n}\n\nconst isNonAdvancingOffset = offset <= prior.pageOffset;\nconst isPrematureEmptyPage = requisitionList.length === 0 && offset < totalJobsCount;\nif (isNonAdvancingOffset || isPrematureEmptyPage) {\n  return [{ json: Object.assign({}, input, { pageState: Object.assign({}, prior, { paginationIncomplete: true, isComplete: false }) }) }];\n}\n\nconst stamped = requisitionList.map(function (job) { return Object.assign({}, job, { candidateSiteUrl: prior.candidateSiteUrl }); });\nconst merged = dedupeById(prior.rawJobs.concat(stamped));\nif (!mergeIncludesEveryValidId(prior.rawJobs, stamped, merged)) {\n  return [{ json: Object.assign({}, input, { pageState: Object.assign({}, prior, { paginationIncomplete: true, isComplete: false }) }) }];\n}\n\nconst isComplete = (offset + requisitionList.length) >= totalJobsCount;\nreturn [{ json: Object.assign({}, input, { pageState: { rawJobs: merged, pageOffset: offset, pageLimit: limit, totalJobsCount: totalJobsCount, pagesFetched: prior.pagesFetched + 1, paginationIncomplete: false, isComplete: isComplete, candidateSiteUrl: prior.candidateSiteUrl, feedUrl: prior.feedUrl } }) }];"
+      }
+    },
+    {
+      "id": "ca4fb2eb-a28b-47d2-bf9c-d51065907a0d",
+      "name": "Route Oracle HCM Page Outcome",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        3136,
+        1028
+      ],
+      "notes": "case 0 = genuinely needs another page AND still under the bound (loop back, directly to Prepare Oracle HCM Next Page Request — no splitInBatches involved). case 1 = not complete, not failed, but the bound is exhausted (a real, explicit page-count check now that nothing else enforces one). Fallback = done — either isComplete (real success) or paginationIncomplete (a safeguard fired).",
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.pageState.paginationIncomplete }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "rightValue": false
+                  },
+                  {
+                    "leftValue": "={{ $json.pageState.isComplete }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "rightValue": false
+                  },
+                  {
+                    "leftValue": "={{ $json.pageState.pagesFetched < 10 }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "rightValue": true
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.pageState.paginationIncomplete }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "rightValue": false
+                  },
+                  {
+                    "leftValue": "={{ $json.pageState.isComplete }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "rightValue": false
+                  },
+                  {
+                    "leftValue": "={{ $json.pageState.pagesFetched >= 10 }}",
+                    "operator": {
+                      "type": "boolean",
+                      "operation": "equals"
+                    },
+                    "rightValue": true
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "exit"
+        }
+      }
+    },
+    {
+      "id": "5f040ee4-cbbf-474b-9f10-a02f1e5f402b",
+      "name": "Build Oracle HCM Pagination Bound Exhausted",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        1328
+      ],
+      "notes": "Fired when 10 pages all passed without a completion signal. Whatever was accumulated within the bound is preserved — only paginationIncomplete is forced.",
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pageState",
+              "name": "pageState",
+              "type": "object",
+              "value": "={{ { ...$json.pageState, paginationIncomplete: true, isComplete: false } }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
     },
     {
       "parameters": {
@@ -399,7 +601,7 @@
         "genericAuthType": "httpBearerAuth",
         "sendBody": true,
         "specifyBody": "json",
-        "jsonBody": "={{ {\n  sourceId: $('Split Out Sources').item.json.source_id,\n  sourceType: $('Split Out Sources').item.json.ats_type,\n  rawJobs: $json.rawJobs,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
+        "jsonBody": "={{ {\n  sourceId: $('Split Out Sources').item.json.source_id,\n  sourceType: $('Split Out Sources').item.json.ats_type,\n  rawJobs: $json.pageState ? $json.pageState.rawJobs : $json.rawJobs,\n  paginationIncomplete: $json.pageState ? ($json.pageState.paginationIncomplete === true) : false,\n  maxJobsPerSource: $('Workflow Configuration').first().json.maxJobsPerSource,\n  dryRun: $('Workflow Configuration').first().json.dryRun\n} }}",
         "options": {
           "timeout": 30000
         }
@@ -1393,7 +1595,7 @@
     {
       "parameters": {
         "mode": "raw",
-        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25},\"refresh_scope\":null,\"max_jobs_per_run\":25,\"max_total_charge_usd\":0.02525},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15},\"refresh_scope\":\"country:SA\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15},\"refresh_scope\":\"country:AE:location:Dubai\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15},\"refresh_scope\":null,\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0016}]}",
+        "jsonOutput": "{\"apify_sources\":[{\"provider_type\":\"bayt\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~bayt-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"LB\",\"maxResults\":25},\"refresh_scope\":null,\"max_jobs_per_run\":25,\"max_total_charge_usd\":0.02525},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"ae\",\"location\":\"Dubai\",\"count\":15},\"refresh_scope\":\"country:ae\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0016},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"qa\",\"count\":15},\"refresh_scope\":\"country:qa\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0016},{\"provider_type\":\"indeed\",\"actor_url\":\"https://api.apify.com/v2/acts/curious_coder~indeed-scraper/run-sync-get-dataset-items\",\"request_body\":{\"country\":\"kw\",\"count\":15},\"refresh_scope\":\"country:kw\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0016}]}",
         "options": {}
       },
       "id": "ab329f9e-453f-485b-b8a6-0d187e6d6f4f",
@@ -2840,6 +3042,1059 @@
         }
       },
       "notes": "Production daily cadence. TIMEZONE: this node's own parameters have no timezone field — triggerAtHour/triggerAtMinute are interpreted using this WORKFLOW's own Settings → Timezone (falls back to the n8n instance's GENERIC_TIMEZONE, then UTC, if unset). Neither the n8n Workflow SDK nor n8n-mcp's update_workflow exposes a way to set workflow-level settings.timezone — confirmed, same category of manual-only limitation as this workflow's Error Workflow attachment. For 9/0 below to mean real 09:00 Asia/Beirut (with correct automatic DST handling), a human must set this workflow's own Settings → Timezone → Asia/Beirut once in the n8n UI. Until then this resolves to 09:00 UTC, not Beirut time."
+    },
+    {
+      "id": "ec299575-59d3-4260-853e-408ba05943f7",
+      "name": "List LinkedIn Discovery Seeds",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        448,
+        3400
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/list-linkedin-discovery-seeds",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {} }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "notes": "Credential 'Ingestion Worker Secret' must be bound manually in the n8n UI — confirmed MCP tool limitation. Returns the static, bounded per-market seed list when providerConfig.ts's linkedin.enabled is true, or an empty seeds array otherwise — same structurally-inert-while-disabled posture as List LinkedIn Enrichment Queue.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "e52c3afa-fd78-4ea9-8693-453f10ed73a7",
+      "name": "Log List Discovery Seeds Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        448,
+        3560
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'list-linkedin-discovery-seeds call failed' }}",
+              "type": "string"
+            }
+          ]
+        }
+      },
+      "notes": "Terminal failure for this branch this run — nothing to loop over if seed listing itself failed. Never blocks the rest of ingestion (its own independent branch)."
+    },
+    {
+      "id": "5d10decb-8334-4f5d-bac9-a426bfe961a8",
+      "name": "Split Out LinkedIn Discovery Seeds",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        672,
+        3400
+      ],
+      "parameters": {
+        "fieldToSplitOut": "seeds"
+      }
+    },
+    {
+      "id": "67894e83-82fd-40bd-bb59-24012143cc3e",
+      "name": "Loop LinkedIn Discovery Seeds (Rate Limited)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        896,
+        3400
+      ],
+      "parameters": {
+        "batchSize": 1
+      }
+    },
+    {
+      "id": "2a11d047-8010-471f-9a19-dc46c6595893",
+      "name": "Call Bebity Actor",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1120,
+        3320
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.actorUrl + '?maxTotalChargeUsd=' + $json.maxTotalChargeUsd }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.requestBody }}",
+        "options": {
+          "timeout": 60000
+        }
+      },
+      "notes": "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI — confirmed MCP tool limitation. retryOnFail deliberately false — Bebity is a real confirmed PAY_PER_EVENT actor; a run-sync-get-dataset-items call is paid and non-idempotent. No title/keyword/category field is ever sent — broad discovery across every profession.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": false
+    },
+    {
+      "id": "d6a52ae5-0373-44f8-959e-c1fc1f754822",
+      "name": "Aggregate Bebity Jobs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        1344,
+        3320
+      ],
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "include": "allFields"
+      },
+      "notes": "Bebity's run-sync-get-dataset-items returns a bare top-level array — n8n auto-splits it into one item per job, so this re-aggregates back into one {jobs:[...]} item before the batch endpoint call."
+    },
+    {
+      "id": "345b993b-b819-4c91-8082-dd80cc137a1a",
+      "name": "Call LinkedIn Discovery Batch Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1568,
+        3320
+      ],
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ { sourceType: 'linkedin', rawJobs: $json.jobs, maxJobsPerSource: $('Split Out LinkedIn Discovery Seeds').item.json.maxJobsPerRun, dryRun: $('Workflow Configuration').first().json.dryRun, refreshScope: $('Split Out LinkedIn Discovery Seeds').item.json.refreshScope } }}",
+        "options": {
+          "timeout": 30000
+        }
+      },
+      "notes": "Credential 'Ingestion Worker Secret' must be bound manually in the n8n UI — confirmed MCP tool limitation. Reuses the SAME shared run-multi-company-batch endpoint the Tier D and Apify branches use — linkedin is already in MULTI_COMPANY_SOURCE_TYPES' allowlist. The endpoint re-checks providerConfig.ts's linkedin.enabled live before writing anything.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000
+    },
+    {
+      "id": "d7efb1db-48bb-4ba3-9eef-b71a51d051b6",
+      "name": "Build LinkedIn Discovery Success Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1792,
+        3320
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "market",
+              "name": "market",
+              "value": "={{ $('Split Out LinkedIn Discovery Seeds').item.json.market }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": "={{ $json.outcome === 'succeeded' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "1561d16d-50f4-42fa-b99c-493c9d3039e4",
+      "name": "Build LinkedIn Discovery Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        3460
+      ],
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "market",
+              "name": "market",
+              "value": "={{ $('Split Out LinkedIn Discovery Seeds').item.json.market }}",
+              "type": "string"
+            },
+            {
+              "id": "succeeded",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "error",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'bebity actor or batch call failed' }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "277b9f9d-cd06-475b-b0d4-9d1cf056bb81",
+      "name": "Record LinkedIn Discovery Source Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        3400
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": []
+        }
+      },
+      "notes": "Convergence point for this loop, same purpose as Record Apify Source Result above."
+    },
+    {
+      "id": "e7c56f45-c5b9-4306-a475-ed1aff5705e9",
+      "name": "LinkedIn Discovery Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        3400
+      ],
+      "parameters": {
+        "resume": "timeInterval",
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}",
+        "unit": "seconds"
+      },
+      "webhookId": "831c3d81-f29a-437a-9e56-a2ef5390e396"
+    },
+    {
+      "id": "04861bc7-f1e1-461d-8fbf-7b06e966927e",
+      "name": "Sticky Note LinkedIn Discovery",
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        400,
+        3250
+      ],
+      "parameters": {
+        "content": "### LinkedIn/Bebity discovery (market expansion)\nBroad discovery across every profession — no title/keyword/category field exists in Bebity's own real confirmed input. Five market seeds (Lebanon/Saudi/UAE/Qatar/Kuwait), each its own refresh_scope. Only Lebanon has ever been real-tested with Bebity; the other four are structurally complete but UNVALIDATED and need their own small bounded real pilot before providerConfig.ts's linkedin.enabled is ever considered. Reuses run-multi-company-batch — no duplicate persistence model. Structurally inert while disabled at two independent layers.",
+        "height": 260,
+        "width": 380,
+        "color": 9
+      }
+    },
+    {
+      "id": "c0bcdd9f-4b43-4a84-ae1e-f92333b9af5e",
+      "name": "GulfTalent Source Seeds",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        672,
+        3650
+      ],
+      "notes": "Static seed list, moved out of Apify Multi-Company Source Seeds (see the async/polling note on this branch). actor_url is the bare actor resource (no /run-sync-get-dataset-items suffix) — Start GulfTalent Actor Run below appends /runs itself. Saudi + UAE/Dubai limits (maxResults:15 each) and max_total_charge_usd (0.0155 each, unchanged derivation) are identical to before this fix — this is a reliability fix, not a volume or cost-cap change. refresh_scope stays distinct per entry (country:SA / country:AE:location:Dubai) — the original cross-partition stale-close lesson this field exists for still applies here unchanged.",
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "{\"gulftalent_sources\":[{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper\",\"request_body\":{\"country\":\"SA\",\"maxResults\":15},\"refresh_scope\":\"country:SA\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155},{\"provider_type\":\"gulftalent\",\"actor_url\":\"https://api.apify.com/v2/acts/blackfalcondata~gulftalent-scraper\",\"request_body\":{\"country\":\"AE\",\"location\":\"Dubai\",\"maxResults\":15},\"refresh_scope\":\"country:AE:location:Dubai\",\"max_jobs_per_run\":15,\"max_total_charge_usd\":0.0155}]}",
+        "options": {}
+      }
+    },
+    {
+      "id": "1af6004d-9c13-4e1c-a6ac-3fc164ef10ff",
+      "name": "Split Out GulfTalent Sources",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        896,
+        3650
+      ],
+      "parameters": {
+        "fieldToSplitOut": "gulftalent_sources",
+        "options": {}
+      }
+    },
+    {
+      "id": "baba4e76-38e6-4bbb-aa45-7ed70e54f081",
+      "name": "Loop GulfTalent Sources (Rate Limited)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        1120,
+        3650
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "f7303d6a-bc38-405c-8c1b-a2003a27e040",
+      "name": "Start GulfTalent Actor Run",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        1344,
+        3650
+      ],
+      "notes": "Async run start (POST .../runs), not run-sync-get-dataset-items — returns immediately with {id, defaultDatasetId, status}, before the actor has necessarily finished. maxTotalChargeUsd is the same real platform-level run-option cap as before (per-seed max_total_charge_usd, unchanged 0.0155) — it bounds this run exactly like every other paid actor call in this workflow, independent of whether the caller waits synchronously or polls asynchronously for the result. Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI — confirmed MCP tool limitation.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": false,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $json.actor_url + '/runs?maxTotalChargeUsd=' + $json.max_total_charge_usd }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.request_body }}",
+        "options": {
+          "timeout": 20000
+        }
+      }
+    },
+    {
+      "id": "8c59bcdb-0a27-4873-b900-28ccb0ef48c4",
+      "name": "Build GulfTalent Start Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1344,
+        3850
+      ],
+      "notes": "The paid start call itself failed (network/4xx/5xx) — no run was created, nothing to poll, nothing persisted, nothing closed.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3096f14d-c4c6-40a5-933c-5ca8559efac6",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "ed2919f2-46f8-41c9-8d0b-942701dd3e36",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "9a494501-3397-48b9-99e0-25122c8e2b4e",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'gulftalent actor start failed' }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "f1102bd4-d18e-4324-8619-d956b8f01a51",
+      "name": "Prepare GulfTalent Poll Attempts",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        3650
+      ],
+      "notes": "Builds a fixed, bounded array of 15 poll-attempt placeholders — Split Out GulfTalent Poll Attempts explodes it into one loop item per attempt, each carrying runId/datasetId forward via 'include other fields'. Uses '?.' on $json.data — a successful actor-start response missing the data envelope entirely must never throw an uncaught expression error here (this node has no onError wired); Check GulfTalent Actor Start Run ID Valid? is what actually rejects a missing/invalid runId before it can reach the polling HTTP node.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f4e78262-4bcc-43e6-8225-d2f2693920be",
+              "name": "runId",
+              "value": "={{ $json.data?.id }}",
+              "type": "string"
+            },
+            {
+              "id": "4c0af320-5e9c-48ef-8872-1db20e426e68",
+              "name": "datasetId",
+              "value": "={{ $json.data?.defaultDatasetId }}",
+              "type": "string"
+            },
+            {
+              "id": "b7750d8d-b0a1-4d7c-80be-9dfc65d8dfa8",
+              "name": "poll_attempts",
+              "value": "={{ Array.from({ length: 15 }, (_, i) => i) }}",
+              "type": "array"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "13d5f708-83d3-48dc-b1b9-07a20c49eff8",
+      "name": "Check GulfTalent Actor Start Run ID Valid?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        3850
+      ],
+      "notes": "Only runId is checked here — datasetId from this same actor-start response is never actually read by Fetch GulfTalent Dataset Items (that node reads the TERMINAL poll response's own data.defaultDatasetId instead, checked separately by Check GulfTalent Terminal Dataset ID Valid?), so validating it here would guard a field nothing consumes. Rejects a missing/null actor-start data envelope and a missing, empty, or non-string runId before the real polling HTTP call.",
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ (typeof $json.runId === 'string' && $json.runId.trim().length > 0) ? 'valid' : 'invalid' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "valid"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "invalid"
+        }
+      }
+    },
+    {
+      "id": "7c416ced-bcbf-4ac8-91ae-9ad8cd6f079a",
+      "name": "Build GulfTalent Invalid Actor Start ID Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1568,
+        4000
+      ],
+      "notes": "The actor-start HTTP call itself succeeded, but its response lacked a usable run ID (missing data envelope, or missing/empty/non-string data.id) — nothing to poll, nothing persisted, nothing closed. Never retried, never reaches the batch endpoint, and never restarts the actor.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "4e4b8934-04b2-43e1-993b-feaaf331c4c8",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "f46a427f-9731-44ea-8926-261a960dc451",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "d65a1a8b-f01c-4911-914d-650ffc81cb7c",
+              "name": "error",
+              "value": "gulftalent actor-start response missing a valid run ID",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "7241bfe1-d06d-49b4-a766-47aff25547a8",
+      "name": "Split Out GulfTalent Poll Attempts",
+      "type": "n8n-nodes-base.splitOut",
+      "typeVersion": 1,
+      "position": [
+        1792,
+        3650
+      ],
+      "parameters": {
+        "fieldToSplitOut": "poll_attempts",
+        "include": "allOtherFields",
+        "options": {}
+      }
+    },
+    {
+      "id": "139d53e7-020e-4ecf-b579-fbd718597139",
+      "name": "Loop GulfTalent Poll Attempts (Bounded)",
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [
+        2016,
+        3650
+      ],
+      "parameters": {
+        "options": {}
+      }
+    },
+    {
+      "id": "088c86a2-816c-44d1-9e4a-8346c69ea4d0",
+      "name": "GulfTalent Poll Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        2240,
+        3600
+      ],
+      "notes": "Fixed 10s between polls — a reviewed constant, not derived from Workflow Configuration's generic rateLimitDelaySeconds (that value rate-limits between different SOURCES, a different concern from polling the SAME run's status).",
+      "parameters": {
+        "amount": 10
+      }
+    },
+    {
+      "id": "15d8111b-e05a-40db-91d1-36b446f6d9e6",
+      "name": "Poll GulfTalent Run Status",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2464,
+        3600
+      ],
+      "notes": "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI, same confirmed MCP tool limitation as every other generic-auth node added this way. Never starts or restarts the actor — read-only run metadata. Free, idempotent status read — safe to retry on transient network blips (unlike the paid start call). A failure here after retries is treated as 'inconclusive this tick', not as actor failure — it continues to the next poll tick via its error path too.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.apify.com/v2/actor-runs/' + $json.runId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 15000
+        }
+      }
+    },
+    {
+      "id": "48681f28-2e17-4ee9-831c-0add943f66a6",
+      "name": "Check GulfTalent Run Terminal?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2688,
+        3600
+      ],
+      "notes": "Routes on the run's real status string (confirmed live this phase via free run-metadata reads on two real executions: SUCCEEDED/FAILED were both observed exactly as Apify's own documented terminal values). case 0 = SUCCEEDED -> fetch the dataset. case 1 = a real terminal failure (FAILED/TIMED-OUT/ABORTED) -> record failure, never retried. Fallback (READY/RUNNING/anything else) = still in flight -> loop back for another poll, bounded by the outer attempt count.",
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "SUCCEEDED"
+                  }
+                ],
+                "combinator": "and"
+              }
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "FAILED"
+                  },
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "TIMED-OUT"
+                  },
+                  {
+                    "leftValue": "={{ $json.data.status }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "ABORTED"
+                  }
+                ],
+                "combinator": "or"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "still_running"
+        }
+      }
+    },
+    {
+      "id": "8dc36291-e71d-48f4-93d1-e87e974c4038",
+      "name": "Build GulfTalent Terminal Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2688,
+        3780
+      ],
+      "notes": "A real terminal failure (FAILED/TIMED-OUT/ABORTED) reported by Apify itself — never retried, never treated as evidence existing jobs for this refresh_scope disappeared.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "2d1043d1-0f83-47b6-a2a4-5485c3dcc81a",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "98831d79-2846-476b-b47e-8803a3365cac",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "bb68963c-45f5-44dd-9cd7-980ee1d55c34",
+              "name": "error",
+              "value": "={{ 'gulftalent actor run ended ' + ($json.data?.status ?? 'unknown') }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "4f8f1102-3b12-4d0a-8f73-bc64b1fe7bef",
+      "name": "Build GulfTalent Poll Timeout Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2016,
+        3850
+      ],
+      "notes": "Fired when 15 poll attempts (150s bound) all passed without a terminal status. References the outer loop's own seed item (Split Out GulfTalent Sources), not whatever shape splitInBatches' done output happens to carry. The run may still complete later on Apify's side — that possibility is exactly why the actor is never restarted here, only the batch endpoint call for this cycle is skipped.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "0e6a9672-ea5f-4b6b-91c3-b945145e16f4",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "7c0f3c93-431c-4f0f-81c8-aac2a2094d67",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "c3dc00ef-888b-4783-a5b5-582b7644e21c",
+              "name": "error",
+              "value": "gulftalent poll limit exhausted after 15 attempts — run may still be in progress on Apify",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "a15da3cc-5f81-454a-ac35-cb0abb159656",
+      "name": "Check GulfTalent Terminal Dataset ID Valid?",
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        3300
+      ],
+      "notes": "Reached only from the SUCCEEDED case of Check GulfTalent Run Terminal? — still defensively re-checks data.defaultDatasetId rather than assuming a SUCCEEDED status guarantees a usable dataset ID. Deliberately re-checks THIS terminal response's own data.defaultDatasetId, not the actor-start response's (unused) datasetId field.",
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "strict",
+                  "version": 3
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ (typeof $json.data?.defaultDatasetId === 'string' && $json.data.defaultDatasetId.trim().length > 0) ? 'valid' : 'invalid' }}",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "rightValue": "valid"
+                  }
+                ],
+                "combinator": "and"
+              }
+            }
+          ]
+        },
+        "options": {
+          "fallbackOutput": "extra",
+          "renameFallbackOutput": "invalid"
+        }
+      }
+    },
+    {
+      "id": "d453f914-16c2-4c19-856e-81d1710456d0",
+      "name": "Build GulfTalent Invalid Dataset ID Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        3150
+      ],
+      "notes": "The actor run itself reported SUCCEEDED, but its terminal response lacked a usable dataset ID — nothing is fetched, nothing persisted, nothing closed. Never retried, never reaches the batch endpoint, and never restarts the actor.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9eb6cc1c-0f7e-4cb0-917c-4b544256352e",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "dbdf8684-b5e3-4384-86cb-1b61d9969017",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "3afdf99a-a531-450f-8697-5068e65a0a8f",
+              "name": "error",
+              "value": "gulftalent terminal response missing a valid dataset ID",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "6278f34b-3a22-4728-80ee-2db53d4b9cf4",
+      "name": "Fetch GulfTalent Dataset Items",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        2912,
+        3500
+      ],
+      "notes": "Credential 'AI Job Guide - Apify' must be bound manually in the n8n UI, same confirmed MCP tool limitation. Free read of already-paid-for data — same dataset the run already billed for, no new cost. Reached only when status === SUCCEEDED.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "GET",
+        "url": "={{ 'https://api.apify.com/v2/datasets/' + $json.data.defaultDatasetId + '/items' }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "de570331-6263-4e03-ab76-c32784d92469",
+      "name": "Build GulfTalent Dataset Fetch Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2912,
+        3700
+      ],
+      "notes": "Rare edge case: the actor run itself succeeded, but reading its already-generated dataset failed. No new cost either way — nothing is persisted this cycle, nothing is closed.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "9f61a439-cd6a-484e-a845-666882661c64",
+              "name": "provider_type",
+              "value": "gulftalent",
+              "type": "string"
+            },
+            {
+              "id": "c751cdde-fc80-41d4-b0f0-948074d880ec",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "e53d698a-dabc-4622-9a87-eec448ed6eb7",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'gulftalent dataset fetch failed after actor succeeded' }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "bafcab77-828f-4e13-9187-1fed2e4cf718",
+      "name": "Aggregate GulfTalent Jobs",
+      "type": "n8n-nodes-base.aggregate",
+      "typeVersion": 1,
+      "position": [
+        3136,
+        3500
+      ],
+      "notes": "Same bare-top-level-array reshape as Aggregate Apify Jobs — run's dataset-items GET returns an array, n8n auto-splits it, this re-aggregates before the batch endpoint call.",
+      "parameters": {
+        "aggregate": "aggregateAllItemData",
+        "destinationFieldName": "jobs",
+        "options": {}
+      }
+    },
+    {
+      "id": "2e0d27ed-68fb-4a33-80c4-eeb34dcb01f1",
+      "name": "Call GulfTalent Batch Endpoint",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        3360,
+        3500
+      ],
+      "notes": "Same shared run-multi-company-batch endpoint every other multi-company/Apify branch uses — no duplicate persistence model. Credential 'Ingestion Worker Secret' must be bound manually in the n8n UI, same confirmed MCP tool limitation.",
+      "onError": "continueErrorOutput",
+      "retryOnFail": true,
+      "maxTries": 2,
+      "waitBetweenTries": 3000,
+      "parameters": {
+        "method": "POST",
+        "url": "={{ $('Workflow Configuration').first().json.appBaseUrl }}/api/internal/ingestion/run-multi-company-batch",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ {\n  sourceType: $('Split Out GulfTalent Sources').item.json.provider_type,\n  rawJobs: $json.jobs,\n  maxJobsPerSource: $('Split Out GulfTalent Sources').item.json.max_jobs_per_run,\n  dryRun: $('Workflow Configuration').first().json.dryRun,\n  refreshScope: $('Split Out GulfTalent Sources').item.json.refresh_scope ?? null\n} }}",
+        "options": {
+          "timeout": 30000
+        }
+      }
+    },
+    {
+      "id": "1d4164da-d669-4a2c-ab81-a6f41d88b6f6",
+      "name": "Build GulfTalent Success Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3584,
+        3500
+      ],
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": [
+            {
+              "id": "53fe286b-72e8-40f0-a750-5a62ed2e128f",
+              "name": "provider_type",
+              "value": "={{ $('Split Out GulfTalent Sources').item.json.provider_type }}",
+              "type": "string"
+            },
+            {
+              "id": "de8233d8-6271-4fc9-9962-ad7a1063164f",
+              "name": "succeeded",
+              "value": "={{ $json.outcome === 'succeeded' }}",
+              "type": "boolean"
+            },
+            {
+              "id": "580ffdfe-c947-405f-96b2-bff2f70229a0",
+              "name": "error",
+              "value": null,
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "32ca5f9d-9a12-45c7-8976-98c928122eca",
+      "name": "Build GulfTalent Batch Failure Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3360,
+        3650
+      ],
+      "notes": "The batch persistence call itself failed after a successfully-fetched dataset — distinct from the actor-level failure builders above.",
+      "parameters": {
+        "mode": "manual",
+        "assignments": {
+          "assignments": [
+            {
+              "id": "dda9c5ca-4b20-4a1f-b614-3a41f9e27800",
+              "name": "provider_type",
+              "value": "={{ $('Split Out GulfTalent Sources').item.json.provider_type }}",
+              "type": "string"
+            },
+            {
+              "id": "71900450-35eb-4cc0-8aa3-21d1497c2bd6",
+              "name": "succeeded",
+              "value": false,
+              "type": "boolean"
+            },
+            {
+              "id": "11729bc1-3232-43e6-8c60-6d8c693df56f",
+              "name": "error",
+              "value": "={{ $json.error?.message ?? 'gulftalent batch endpoint call failed' }}",
+              "type": "string"
+            }
+          ]
+        }
+      }
+    },
+    {
+      "id": "70c80560-c8d8-4095-9200-b39abfc97c94",
+      "name": "Record GulfTalent Source Result",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3808,
+        3650
+      ],
+      "notes": "Its own convergence point, deliberately NOT sharing Record Apify Source Result — that node's own outgoing wire already loops back into Loop Apify Sources (Rate Limited), a DIFFERENT loop than GulfTalent's own. A single node can only have one outgoing wire, so GulfTalent needs its own record/delay/loop-back, fully independent from the Bayt/Indeed branch.",
+      "parameters": {
+        "mode": "manual",
+        "includeOtherFields": true,
+        "assignments": {
+          "assignments": []
+        }
+      }
+    },
+    {
+      "id": "afba026d-7dd9-4351-9357-c6333c28191d",
+      "name": "GulfTalent Rate Limit Delay",
+      "type": "n8n-nodes-base.wait",
+      "typeVersion": 1.1,
+      "position": [
+        4032,
+        3650
+      ],
+      "parameters": {
+        "amount": "={{ $('Workflow Configuration').first().json.rateLimitDelaySeconds }}"
+      }
+    },
+    {
+      "id": "d30844f2-ae31-4973-831a-698bbb83730f",
+      "name": "Prepare Oracle HCM Next Page Request",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2464,
+        1028
+      ],
+      "onError": "continueErrorOutput",
+      "notes": "Builds the next-page URL from the CURRENT pageState (always reliable here — this node runs BEFORE any HTTP call touches $json), adding offset=N as a finder variable, the same comma-separated placement as the existing siteNumber variable — the one live-confirmed syntax this phase's bounded test verified is accepted and honored. This exact item (pageState + nextPageUrl, untouched) also feeds Carry Forward Oracle HCM Page State's first input directly — see that node's own notes for why.",
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "nextPageUrl",
+              "name": "nextPageUrl",
+              "type": "string",
+              "value": "={{ (() => {\n  const feedUrl = $json.pageState.feedUrl;\n  const nextOffset = $json.pageState.pageOffset + $json.pageState.pageLimit;\n  const m = feedUrl.match(/(finder=findReqs;siteNumber=[A-Za-z0-9_]+)/);\n  return m ? feedUrl.replace(m[1], m[1] + ',offset=' + nextOffset) : null;\n})() }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
+    },
+    {
+      "id": "a736ed5c-0e2b-4a28-9eee-81bb5cf9d0bc",
+      "name": "Carry Forward Oracle HCM Page State",
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        3136,
+        1128
+      ],
+      "notes": "The SDK reference's own documented fix for \"a node's output replaces my data, but a later node needs the pre-call data back\". input(0) = the untouched pre-fetch item (pageState + nextPageUrl, never touched by the HTTP call). input(1) = whatever Fetch Oracle HCM Next Page produced, success OR error — Merge waits for both, so pageState is always present on the combined item reaching Merge & Classify, with no assumption required about whether the HTTP node's own output preserves or replaces input fields.",
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 2,
+        "options": {}
+      }
+    },
+    {
+      "id": "67239459-e3bc-49f4-a279-c6bf36de856a",
+      "name": "Build Oracle HCM Safety Fallback State",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        3584,
+        1328
+      ],
+      "notes": "Never discards jobs it can still see — only loses already-accumulated jobs in the rare case pageState itself was unreadable, which is strictly safer than guessing.",
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "pageState",
+              "name": "pageState",
+              "type": "object",
+              "value": "={{ { ...($json.pageState ?? {}), rawJobs: ($json.pageState?.rawJobs ?? []), paginationIncomplete: true, isComplete: false } }}"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      }
     }
   ],
   "connections": {
@@ -2869,6 +4124,16 @@
           },
           {
             "node": "List LinkedIn Enrichment Queue",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "List LinkedIn Discovery Seeds",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "GulfTalent Source Seeds",
             "type": "main",
             "index": 0
           }
@@ -2976,7 +4241,7 @@
         ],
         [
           {
-            "node": "Extract Oracle HCM Jobs",
+            "node": "Prepare Oracle HCM Page State",
             "type": "main",
             "index": 0
           }
@@ -2984,24 +4249,6 @@
         [
           {
             "node": "Build Unsupported Source Result",
-            "type": "main",
-            "index": 0
-          }
-        ]
-      ]
-    },
-    "Extract Oracle HCM Jobs": {
-      "main": [
-        [
-          {
-            "node": "Call Ingestion Batch Endpoint",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "Build Fetch Failure Result",
             "type": "main",
             "index": 0
           }
@@ -3823,6 +5070,630 @@
         [
           {
             "node": "Workflow Configuration",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "List LinkedIn Discovery Seeds": {
+      "main": [
+        [
+          {
+            "node": "Split Out LinkedIn Discovery Seeds",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Log List Discovery Seeds Failure",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out LinkedIn Discovery Seeds": {
+      "main": [
+        [
+          {
+            "node": "Loop LinkedIn Discovery Seeds (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop LinkedIn Discovery Seeds (Rate Limited)": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Call Bebity Actor",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call Bebity Actor": {
+      "main": [
+        [
+          {
+            "node": "Aggregate Bebity Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build LinkedIn Discovery Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate Bebity Jobs": {
+      "main": [
+        [
+          {
+            "node": "Call LinkedIn Discovery Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call LinkedIn Discovery Batch Endpoint": {
+      "main": [
+        [
+          {
+            "node": "Build LinkedIn Discovery Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build LinkedIn Discovery Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LinkedIn Discovery Success Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Discovery Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build LinkedIn Discovery Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record LinkedIn Discovery Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record LinkedIn Discovery Source Result": {
+      "main": [
+        [
+          {
+            "node": "LinkedIn Discovery Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LinkedIn Discovery Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Loop LinkedIn Discovery Seeds (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GulfTalent Source Seeds": {
+      "main": [
+        [
+          {
+            "node": "Split Out GulfTalent Sources",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out GulfTalent Sources": {
+      "main": [
+        [
+          {
+            "node": "Loop GulfTalent Sources (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop GulfTalent Sources (Rate Limited)": {
+      "main": [
+        null,
+        [
+          {
+            "node": "Start GulfTalent Actor Run",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Start GulfTalent Actor Run": {
+      "main": [
+        [
+          {
+            "node": "Prepare GulfTalent Poll Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Start Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Start Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare GulfTalent Poll Attempts": {
+      "main": [
+        [
+          {
+            "node": "Check GulfTalent Actor Start Run ID Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GulfTalent Actor Start Run ID Valid?": {
+      "main": [
+        [
+          {
+            "node": "Split Out GulfTalent Poll Attempts",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Invalid Actor Start ID Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Invalid Actor Start ID Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Split Out GulfTalent Poll Attempts": {
+      "main": [
+        [
+          {
+            "node": "Loop GulfTalent Poll Attempts (Bounded)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Loop GulfTalent Poll Attempts (Bounded)": {
+      "main": [
+        [
+          {
+            "node": "Build GulfTalent Poll Timeout Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "GulfTalent Poll Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GulfTalent Poll Delay": {
+      "main": [
+        [
+          {
+            "node": "Poll GulfTalent Run Status",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Poll GulfTalent Run Status": {
+      "main": [
+        [
+          {
+            "node": "Check GulfTalent Run Terminal?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop GulfTalent Poll Attempts (Bounded)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GulfTalent Run Terminal?": {
+      "main": [
+        [
+          {
+            "node": "Check GulfTalent Terminal Dataset ID Valid?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Terminal Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Loop GulfTalent Poll Attempts (Bounded)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check GulfTalent Terminal Dataset ID Valid?": {
+      "main": [
+        [
+          {
+            "node": "Fetch GulfTalent Dataset Items",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Invalid Dataset ID Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Invalid Dataset ID Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Terminal Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Poll Timeout Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch GulfTalent Dataset Items": {
+      "main": [
+        [
+          {
+            "node": "Aggregate GulfTalent Jobs",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Dataset Fetch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Dataset Fetch Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Aggregate GulfTalent Jobs": {
+      "main": [
+        [
+          {
+            "node": "Call GulfTalent Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Call GulfTalent Batch Endpoint": {
+      "main": [
+        [
+          {
+            "node": "Build GulfTalent Success Result",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build GulfTalent Batch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Success Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build GulfTalent Batch Failure Result": {
+      "main": [
+        [
+          {
+            "node": "Record GulfTalent Source Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Record GulfTalent Source Result": {
+      "main": [
+        [
+          {
+            "node": "GulfTalent Rate Limit Delay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "GulfTalent Rate Limit Delay": {
+      "main": [
+        [
+          {
+            "node": "Loop GulfTalent Sources (Rate Limited)",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Oracle HCM Page State": {
+      "main": [
+        [
+          {
+            "node": "Check Oracle HCM Page 1 Complete?",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Fetch Failure Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Fetch Oracle HCM Next Page": {
+      "main": [
+        [
+          {
+            "node": "Carry Forward Oracle HCM Page State",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Carry Forward Oracle HCM Page State",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Merge & Classify Oracle HCM Page": {
+      "main": [
+        [
+          {
+            "node": "Route Oracle HCM Page Outcome",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Oracle HCM Safety Fallback State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Route Oracle HCM Page Outcome": {
+      "main": [
+        [
+          {
+            "node": "Prepare Oracle HCM Next Page Request",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Oracle HCM Pagination Bound Exhausted",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Call Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Oracle HCM Pagination Bound Exhausted": {
+      "main": [
+        [
+          {
+            "node": "Call Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Check Oracle HCM Page 1 Complete?": {
+      "main": [
+        [
+          {
+            "node": "Call Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Prepare Oracle HCM Next Page Request",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Oracle HCM Next Page Request": {
+      "main": [
+        [
+          {
+            "node": "Carry Forward Oracle HCM Page State",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Fetch Oracle HCM Next Page",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Build Oracle HCM Safety Fallback State",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Build Oracle HCM Safety Fallback State": {
+      "main": [
+        [
+          {
+            "node": "Call Ingestion Batch Endpoint",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Carry Forward Oracle HCM Page State": {
+      "main": [
+        [
+          {
+            "node": "Merge & Classify Oracle HCM Page",
             "type": "main",
             "index": 0
           }
