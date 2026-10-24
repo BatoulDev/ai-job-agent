@@ -78,6 +78,18 @@ export interface IngestionBatchOptions {
   maxJobsPerSource: number;
   /** When true, validates and reports but never writes to the database. */
   dryRun: boolean;
+  /**
+   * 2026-10-23 pagination-safety fix: set by a caller whose own fetch loop
+   * (e.g. a multi-page Oracle HCM or GulfTalent retrieval) did not reach a
+   * confirmed-complete page before this call — a page-fetch failure or a
+   * bounded page-count exhaustion, not an ordinary single-page run. Forces
+   * `truncated` to true in persistValidatedJobs below REGARDLESS of how the
+   * fetched item count compares to maxJobsPerSource, because a count that
+   * happens to be under the cap is not evidence the retrieval actually saw
+   * every page — see that function's own truncated computation. Optional
+   * and false-by-default so every existing single-page caller is unchanged.
+   */
+  paginationIncomplete?: boolean;
 }
 
 /**
@@ -242,7 +254,11 @@ export async function persistValidatedJobs(
   // otherwise-valid batch.
   const deduped = Array.from(new Map(validated.map((row) => [row.external_id, row])).values());
 
-  const truncated = deduped.length > options.maxJobsPerSource;
+  // A count under the cap is not proof every page was fetched — an
+  // incomplete multi-page retrieval (page-fetch failure, bounded page-count
+  // exhaustion) must force the same truncated-batch safety (no stale-close,
+  // see below) even when deduped.length happens to be <= maxJobsPerSource.
+  const truncated = deduped.length > options.maxJobsPerSource || options.paginationIncomplete === true;
   const bounded = truncated ? deduped.slice(0, options.maxJobsPerSource) : deduped;
 
   if (options.dryRun) {

@@ -30,7 +30,7 @@ export async function POST(request: Request) {
   if (!parsed.ok) {
     return NextResponse.json({ error: parsed.error }, { status: 400 });
   }
-  const { sourceId, sourceType, rawJobs, maxJobsPerSource, dryRun } = parsed.value;
+  const { sourceId, sourceType, rawJobs, maxJobsPerSource, dryRun, paginationIncomplete } = parsed.value;
 
   const adapter = getProviderAdapter(sourceType);
   if (!adapter) {
@@ -42,7 +42,7 @@ export async function POST(request: Request) {
   try {
     const mappedJobs = rawJobs.map((raw) => adapter(raw));
     const supabase = createAdminClient();
-    const result = await runIngestionBatch(supabase, sourceId, sourceType, mappedJobs, { maxJobsPerSource, dryRun });
+    const result = await runIngestionBatch(supabase, sourceId, sourceType, mappedJobs, { maxJobsPerSource, dryRun, paginationIncomplete });
     return NextResponse.json(result);
   } catch (error) {
     // Never mark an ingestion run successful when its DB write result is

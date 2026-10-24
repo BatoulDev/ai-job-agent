@@ -39,6 +39,15 @@ export interface MultiCompanyIngestionBatchRequestBody {
    * Arbeitnow, Bayt, Indeed) is completely unaffected.
    */
   refreshScope: string | null;
+  /**
+   * 2026-10-23 pagination-safety fix: true when the caller's own fetch loop
+   * did not reach a confirmed-complete page (a page-fetch failure, or
+   * bounded page-count exhaustion) before this call — see
+   * IngestionBatchOptions's own comment in ingestSourceBatch.ts. Optional
+   * and false by default so every existing single-page caller
+   * (RemoteOK/Jobicy/Arbeitnow/Bayt/Indeed) is unaffected.
+   */
+  paginationIncomplete: boolean;
 }
 
 export type ParseMultiCompanyIngestionBatchRequestResult =
@@ -97,6 +106,10 @@ export function parseMultiCompanyIngestionBatchRequestBody(body: unknown): Parse
     return { ok: false, error: "refreshScope must not be empty when provided" };
   }
 
+  if (record.paginationIncomplete !== undefined && typeof record.paginationIncomplete !== "boolean") {
+    return { ok: false, error: "paginationIncomplete must be a boolean" };
+  }
+
   return {
     ok: true,
     value: {
@@ -105,6 +118,7 @@ export function parseMultiCompanyIngestionBatchRequestBody(body: unknown): Parse
       maxJobsPerSource: record.maxJobsPerSource,
       dryRun: record.dryRun,
       refreshScope: typeof record.refreshScope === "string" ? record.refreshScope : null,
+      paginationIncomplete: record.paginationIncomplete === true,
     },
   };
 }
