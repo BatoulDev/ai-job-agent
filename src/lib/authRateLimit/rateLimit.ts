@@ -6,7 +6,8 @@ export type AuthRateLimitAction =
   | "forgot_password"
   | "oauth_init"
   | "oauth_callback"
-  | "password_update";
+  | "password_update"
+  | "account_reauth";
 export type AuthRateLimitIdentifierKind = "email" | "session" | "user";
 
 export interface AuthRateLimitPolicy {
@@ -38,6 +39,15 @@ export const AUTH_RATE_LIMIT_POLICIES = {
   // enough that a page refresh (which never calls this on its own) can
   // never lock a legitimate user out of setting their password.
   password_update_user: { limit: 8, windowMinutes: 15 },
+  // User-keyed, same reasoning as password_update_user: the password
+  // re-entry gate in front of account deletion (POST
+  // /api/account/reauthenticate) only ever runs against an already-
+  // authenticated caller's own id. Tighter than password_update (8/15min)
+  // since this guards a real password-guessing surface rather than a
+  // post-recovery one-time set; still generous enough that a user who
+  // mistypes their password a few times while confirming deletion is never
+  // locked out.
+  account_reauth_user: { limit: 6, windowMinutes: 15 },
 } as const satisfies Record<string, AuthRateLimitPolicy>;
 
 export interface RateLimitReservation {
