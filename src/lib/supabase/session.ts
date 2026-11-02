@@ -3,6 +3,21 @@ import { NextResponse, type NextRequest } from "next/server";
 import { supabasePublishableKey, supabaseUrl } from "./env";
 import { isSafeRedirectPath } from "@/lib/safeRedirect";
 import { onboardingStepToPath } from "@/lib/entitlements/onboardingStep";
+import { buildSecurityHeaders } from "@/lib/security/securityHeaders";
+
+const supabaseOrigin = new URL(supabaseUrl).origin;
+
+// Applied to every response this function returns (redirect or continue) —
+// one place, so no route can accidentally ship without these headers.
+function withSecurityHeaders(response: NextResponse, request: NextRequest): NextResponse {
+  const isDev = process.env.NODE_ENV !== "production";
+  const isHttps =
+    request.headers.get("x-forwarded-proto") === "https" || request.nextUrl.protocol === "https:";
+  for (const { key, value } of buildSecurityHeaders({ isDev, isHttps, supabaseOrigin })) {
+    response.headers.set(key, value);
+  }
+  return response;
+}
 
 // Route groups gated by src/proxy.ts. Prefix match: "/onboarding" also
 // covers "/onboarding/preferences" and "/onboarding/upload-cv".
@@ -59,13 +74,13 @@ export async function updateSession(request: NextRequest) {
   if (!user && isProtected) {
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("next", `${pathname}${request.nextUrl.search}`);
-    return withCookiesFrom(response, NextResponse.redirect(redirectUrl));
+    return withSecurityHeaders(withCookiesFrom(response, NextResponse.redirect(redirectUrl)), request);
   }
 
   if (user && isAuthOnly) {
     const next = request.nextUrl.searchParams.get("next");
     if (isSafeRedirectPath(next)) {
-      return withCookiesFrom(response, NextResponse.redirect(new URL(next, request.url)));
+      return withSecurityHeaders(withCookiesFrom(response, NextResponse.redirect(new URL(next, request.url))), request);
     }
     // Same authoritative resolver every other post-auth entry point uses
     // (src/lib/entitlements/postAuthDestination.ts, shared with
@@ -85,8 +100,8 @@ export async function updateSession(request: NextRequest) {
         ? (readiness as { next_step: string }).next_step
         : "dashboard";
     const redirectUrl = new URL(onboardingStepToPath(nextStep), request.url);
-    return withCookiesFrom(response, NextResponse.redirect(redirectUrl));
+    return withSecurityHeaders(withCookiesFrom(response, NextResponse.redirect(redirectUrl)), request);
   }
 
-  return response;
+  return withSecurityHeaders(response, request);
 }
