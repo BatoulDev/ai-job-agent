@@ -143,11 +143,47 @@ test('every rerank network-calling node has native retry configured', () => {
   }
 });
 
-test('every fallible rerank node error output is wired to Log Rerank Failure', () => {
-  for (const name of ['Prepare Rerank', 'Call OpenAI Chat', 'Save Rerank Result']) {
+test('every per-candidate fallible rerank node error output is wired to Log Rerank Failure', () => {
+  // Prepare Rerank is deliberately NOT in this list — see the next test.
+  // It is the whole-batch call that runs BEFORE Split Out Candidates ever
+  // primes Loop Candidates (Rate Limited) with real items, so it cannot
+  // safely share this per-candidate retry chain (see the next test's
+  // comment for the real defect this distinction fixes).
+  for (const name of ['Call OpenAI Chat', 'Save Rerank Result']) {
     const errorOutput = wf.connections[name]?.main?.[1] ?? [];
     assert.ok(errorOutput.some((c) => c.node === 'Log Rerank Failure'), `${name}'s error output must be wired to Log Rerank Failure`);
   }
+});
+
+test('Prepare Rerank\'s own failure is wired to its own dedicated terminal node, never into the per-candidate retry loop', () => {
+  // Fix (2026-11-02, reproduced live as n8n execution 349135): Prepare
+  // Rerank previously shared Log Rerank Failure's chain into
+  // nextBatch(Loop Candidates (Rate Limited)) — fine for a per-candidate
+  // retry (the loop is already primed with real items by then), but when
+  // Prepare Rerank itself fails, Split Out Candidates never ran, so the
+  // loop was never primed. Feeding the bogus failure payload into
+  // nextBatch() on that unprimed loop made n8n treat it as a brand-new
+  // one-item batch, which flowed through Build Chat Request (no real
+  // `.prompt` field) straight into a real, malformed Call OpenAI Chat
+  // request. Log Prepare Rerank Failure is a dedicated dead end instead —
+  // same proven pattern as ai-job-agent-03-cover-letter-generation.ts's
+  // own "Log Prepare Failure".
+  const errorOutput = wf.connections['Prepare Rerank']?.main?.[1] ?? [];
+  assert.ok(
+    errorOutput.some((c) => c.node === 'Log Prepare Rerank Failure'),
+    'Prepare Rerank\'s error output must be wired to Log Prepare Rerank Failure, not the shared per-candidate Log Rerank Failure chain'
+  );
+  assert.ok(
+    !errorOutput.some((c) => c.node === 'Log Rerank Failure'),
+    'Prepare Rerank must NOT route into the per-candidate retry chain — it can feed a bogus item into an unprimed Loop Candidates (Rate Limited)'
+  );
+
+  const logPrepareRerankFailure = findNode('Log Prepare Rerank Failure');
+  assert.equal(logPrepareRerankFailure.type, 'n8n-nodes-base.set');
+  assert.ok(
+    !wf.connections['Log Prepare Rerank Failure'],
+    'Log Prepare Rerank Failure must be a true dead end — it must never feed back into Rerank Rate Limit Delay/Loop Candidates, since there are no real candidates to retry when Prepare Rerank itself failed'
+  );
 });
 
 test('a failed candidate still reaches the rate-limit delay and loops to the next one, instead of stalling the run', () => {

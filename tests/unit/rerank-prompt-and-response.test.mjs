@@ -20,6 +20,11 @@ describe("buildRerankPrompt", () => {
     targetRoles: [],
     preferredLocations: [],
     experienceLevel: null,
+    // Work Authorization Phase 1: "not stated" defaults — every Free/
+    // Student user, structurally, plus any Pro user who never opted in.
+    willingToRelocate: null,
+    workAuthorizationStatus: null,
+    relocationMarketCountryCodes: [],
   };
   const job = {
     title: "Backend Engineer",
@@ -129,6 +134,79 @@ describe("buildRerankPrompt", () => {
     assert.doesNotMatch(prompt, /Target roles:/);
     assert.doesNotMatch(prompt, /Preferred locations:/);
     assert.doesNotMatch(prompt, /Experience level:/);
+  });
+});
+
+// Work Authorization Phase 1 (docs/PRODUCT_MATCHING_RULES.md "Work
+// authorization") — advisory-only context, never a hard filter.
+describe("buildRerankPrompt — work authorization (advisory only)", () => {
+  const profile = {
+    professionalSummary: "Five years of backend experience.",
+    skills: ["TypeScript", "PostgreSQL"],
+    recommendedRoles: ["Backend Engineer"],
+    strongestAreas: ["API design"],
+    profileLevel: "mid-level",
+    preferredWorkArrangement: null,
+    preferredJobType: null,
+    targetRoles: [],
+    preferredLocations: [],
+    experienceLevel: null,
+    willingToRelocate: null,
+    workAuthorizationStatus: null,
+    relocationMarketCountryCodes: [],
+  };
+  const job = {
+    title: "Backend Engineer",
+    description: "Build APIs.",
+    companyName: "Acme",
+    location: "Beirut, Lebanon",
+    workArrangement: "onsite",
+    seniority: "mid-level",
+    employmentType: "full-time",
+  };
+
+  test("FREE/STUDENT UNCHANGED: with no work-authorization fields set (every Free/Student user, structurally), the WORK AUTHORIZATION section is entirely omitted", () => {
+    const prompt = buildRerankPrompt(profile, job);
+    assert.doesNotMatch(prompt, /WORK AUTHORIZATION/);
+  });
+
+  test("ADVISORY ACCURACY: a stated work_authorization_status and relocation markets are rendered accurately, verbatim", () => {
+    const prompt = buildRerankPrompt(
+      { ...profile, workAuthorizationStatus: "needs_employer_support", relocationMarketCountryCodes: ["SA", "AE"], willingToRelocate: true },
+      job
+    );
+    assert.match(prompt, /=== WORK AUTHORIZATION \(user-reported, advisory only — not verified\) ===/);
+    assert.match(prompt, /User-reported work authorization status: needs_employer_support/);
+    assert.match(prompt, /User-selected relocation markets: SA, AE/);
+    assert.match(prompt, /User-reported willingness to relocate: yes/);
+  });
+
+  test("UNKNOWN NEVER PRESENTED AS VERIFIED: unset fields render as 'not stated', never a guessed or confirmed value", () => {
+    const prompt = buildRerankPrompt({ ...profile, willingToRelocate: true }, job);
+    assert.match(prompt, /User-reported work authorization status: not stated/);
+    assert.match(prompt, /User-selected relocation markets: not stated/);
+  });
+
+  test("EMPLOYER SPONSORSHIP NEVER CLAIMED VERIFIED: the section always states sponsorship is unverified unless separately evidenced in the job listing", () => {
+    const prompt = buildRerankPrompt({ ...profile, workAuthorizationStatus: "already_authorized" }, job);
+    assert.match(prompt, /Employer sponsorship: unverified unless separately evidenced in the JOB LISTING text itself/);
+  });
+
+  test("NEVER A HARD FILTER: the model is explicitly instructed that this section cannot change the eligibility decision, which is already final", () => {
+    const prompt = buildRerankPrompt({ ...profile, workAuthorizationStatus: "already_authorized" }, job);
+    assert.match(prompt, /can NEVER change whether this job is a match/);
+    assert.match(prompt, /eligibility for this job has already been decided before this prompt was written/);
+  });
+
+  test("NEVER CLAIM VERIFIED AUTHORIZATION: the model is explicitly instructed never to claim the user is legally authorized based only on preference", () => {
+    const prompt = buildRerankPrompt({ ...profile, workAuthorizationStatus: "already_authorized" }, job);
+    assert.match(prompt, /[Nn]ever claim or imply the user is legally authorized to work in the job's country based only on their stated preference/);
+  });
+
+  test("the section renders when ONLY willingToRelocate is set (the other two still null) — any one of the three fields is enough to trigger it", () => {
+    const prompt = buildRerankPrompt({ ...profile, willingToRelocate: false }, job);
+    assert.match(prompt, /WORK AUTHORIZATION/);
+    assert.match(prompt, /User-reported willingness to relocate: no/);
   });
 });
 

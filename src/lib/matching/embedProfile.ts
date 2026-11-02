@@ -4,6 +4,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildProfileEmbeddingText, hashEmbeddingText, type ProfileEmbeddingInput } from "./embeddingText.ts";
 import type { EmbeddingGenerator } from "./embedJob.ts";
+import { parseIdAllowlist } from "./aiTestIsolation.ts";
 
 export type EmbedProfileResult =
   | { updated: true; reason: "embedded" }
@@ -146,14 +147,20 @@ export interface PendingProfileEmbedding {
  * source of truth for "is this actually eligible."
  */
 export async function findProfilesNeedingEmbedding(supabase: SupabaseClient, limit: number): Promise<PendingProfileEmbedding[]> {
-  const { data: candidates, error } = await supabase
+  let query = supabase
     .from("cv_analyses")
     .select("id, user_id, professional_summary, skills, recommended_roles, strongest_areas, profile_level")
     .eq("review_status", "approved")
     .eq("is_current", true)
     .eq("recommendations_state", "current")
-    .is("profile_embedding", null)
-    .limit(limit);
+    .is("profile_embedding", null);
+
+  // See embedJob.ts's identical pattern / aiTestIsolation.ts's header: a
+  // no-op unless this exact env var is explicitly set.
+  const allowlist = parseIdAllowlist(process.env.MATCHING_EMBEDDING_TEST_CV_ANALYSIS_IDS, "MATCHING_EMBEDDING_TEST_CV_ANALYSIS_IDS");
+  if (allowlist) query = query.in("id", allowlist);
+
+  const { data: candidates, error } = await query.limit(limit);
   if (error) throw new Error(`findProfilesNeedingEmbedding: query failed: ${error.message}`);
   if (!candidates || candidates.length === 0) return [];
 

@@ -860,6 +860,51 @@ export type Database = {
           },
         ]
       }
+      job_locations: {
+        Row: {
+          city: string | null
+          country_code: string
+          created_at: string
+          id: string
+          is_primary: boolean
+          job_id: string
+          location_confidence: string
+        }
+        Insert: {
+          city?: string | null
+          country_code: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          job_id: string
+          location_confidence: string
+        }
+        Update: {
+          city?: string | null
+          country_code?: string
+          created_at?: string
+          id?: string
+          is_primary?: boolean
+          job_id?: string
+          location_confidence?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "job_locations_country_code_fkey"
+            columns: ["country_code"]
+            isOneToOne: false
+            referencedRelation: "countries"
+            referencedColumns: ["code"]
+          },
+          {
+            foreignKeyName: "job_locations_job_id_fkey"
+            columns: ["job_id"]
+            isOneToOne: false
+            referencedRelation: "jobs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       job_preference_authorized_countries: {
         Row: {
           country_code: string
@@ -2950,6 +2995,14 @@ export type Database = {
       update_profile_name_and_retry_analysis: {
         Args: { p_full_name: string }
         Returns: Json
+      }
+      upsert_job_with_locations: {
+        Args: { p_job: Json; p_locations: Json; p_replace_locations: boolean }
+        Returns: {
+          out_created: boolean
+          out_job_id: string
+          out_status: string
+        }[]
       }
     }
     Enums: {

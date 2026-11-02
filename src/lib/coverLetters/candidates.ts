@@ -34,6 +34,7 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildCoverLetterPrompt, type CoverLetterJobInput, type CoverLetterMatchInput, type CoverLetterProfileInput } from "./prompt.ts";
 import type { PlanCode } from "@/lib/plans/types";
+import { parseIdAllowlist } from "../matching/aiTestIsolation.ts";
 
 export interface CoverLetterCandidate {
   matchId: string;
@@ -41,12 +42,17 @@ export interface CoverLetterCandidate {
 }
 
 export async function findCoverLetterCandidates(supabase: SupabaseClient, limit: number): Promise<CoverLetterCandidate[]> {
-  const { data: matches, error: matchesError } = await supabase
+  let matchesQuery = supabase
     .from("matches")
     .select("id, user_id, job_id, cv_analysis_id, explanation, score_breakdown")
-    .eq("status", "user_approved")
-    .order("score", { ascending: false })
-    .limit(limit);
+    .eq("status", "user_approved");
+
+  // See src/lib/matching/aiTestIsolation.ts's header — a no-op unless this
+  // exact env var is explicitly set for a local real-AI validation run.
+  const allowlist = parseIdAllowlist(process.env.COVER_LETTER_TEST_MATCH_IDS, "COVER_LETTER_TEST_MATCH_IDS");
+  if (allowlist) matchesQuery = matchesQuery.in("id", allowlist);
+
+  const { data: matches, error: matchesError } = await matchesQuery.order("score", { ascending: false }).limit(limit);
   if (matchesError) throw new Error(`findCoverLetterCandidates: matches query failed: ${matchesError.message}`);
   if (!matches || matches.length === 0) return [];
 
