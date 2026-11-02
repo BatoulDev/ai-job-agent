@@ -4,7 +4,12 @@
 // already-tested checkJobEligibility(), reused rather than re-derived
 // (AGENTS.md §16 — one gate, not two that can drift).
 import type { SupabaseClient } from "@supabase/supabase-js";
-import { deriveEligibilityLocation, type JobLocationColumns } from "../ingestion/jobEligibilityLocation.ts";
+import {
+  deriveEligibilityLocation,
+  deriveEligibilityLocationForVerifiedRow,
+  type JobLocationColumns,
+  type VerifiedLocationRow,
+} from "../ingestion/jobEligibilityLocation.ts";
 import { checkJobEligibility, type JobEligibilityInput } from "../ingestion/checkJobEligibility.ts";
 import { checkJobFreshness } from "./jobFreshness.ts";
 import { cosineSimilarity } from "./cosineSimilarity.ts";
@@ -31,6 +36,99 @@ interface CandidateJobRow extends JobLocationColumns {
   expires_at: string | null;
   closing_date: string | null;
   created_at: string;
+}
+
+/**
+ * Checkpoint 2D: one batched fetch of every verified job_locations row for
+ * the whole candidate pool (never one query per job — AGENTS.md §26/§31,
+ * "avoid N+1"). Grouped by job_id; a job with no rows here simply has no
+ * entry in the returned Map — the caller's own fallback to the scalar
+ * jobs.country_code/city path (deriveEligibilityLocation) covers that,
+ * unchanged from before this checkpoint.
+ *
+ * Supabase/PostgREST silently truncates a `select` to the project's
+ * configured max_rows (locally 1000, supabase/config.toml) rather than
+ * erroring — a candidate pool large enough, with enough locations per job,
+ * could in principle exceed that. Requesting an exact count alongside the
+ * data and comparing it to the returned row count is what actually proves
+ * the fetch wasn't truncated; never assumed from the request succeeding
+ * without an error. Throws (never silently proceeds with a partial set) if
+ * truncation is detected — evaluating eligibility against a job's known-
+ * incomplete location set could wrongly reject a job whose only qualifying
+ * location happened to fall outside the truncated page, which is worse
+ * than failing the whole batch loudly.
+ *
+ * FIX (Checkpoint 2D safety review): `count` itself is also untrusted — an
+ * absent/null count (the `Content-Range` header missing or stripped by an
+ * intermediate proxy, a future client library change) must fail closed,
+ * not be read as "nothing to validate." The original version only checked
+ * `count !== null && rows.length !== count`, which silently skipped the
+ * whole completeness check whenever `count` came back null — exactly the
+ * "apparently complete but partial" case this function exists to catch.
+ * `{ count: "exact" }` was explicitly requested; a response without one is
+ * itself an anomaly, never a quiet pass-through.
+ *
+ * Exported (Checkpoint 2E) so save-time revalidation (revalidateJobEligibility.ts)
+ * re-fetches a single job's CURRENT verified locations through this exact
+ * same fail-closed function — never a second, looser read path.
+ */
+export async function fetchVerifiedLocationsByJobId(
+  supabase: SupabaseClient,
+  jobIds: readonly string[]
+): Promise<Map<string, VerifiedLocationRow[]>> {
+  const locationsByJobId = new Map<string, VerifiedLocationRow[]>();
+  if (jobIds.length === 0) return locationsByJobId;
+
+  const { data, error, count } = await supabase
+    .from("job_locations")
+    .select("job_id, country_code, location_confidence", { count: "exact" })
+    .in("job_id", jobIds);
+  if (error) throw new Error(`shortlistJobsForUser: failed to fetch job_locations: ${error.message}`);
+
+  const rows = data ?? [];
+  if (count === null) {
+    throw new Error(
+      `shortlistJobsForUser: job_locations fetch returned no exact count — refusing to evaluate eligibility against a location set of unverifiable completeness.`
+    );
+  }
+  if (rows.length !== count) {
+    throw new Error(
+      `shortlistJobsForUser: job_locations fetch returned ${rows.length} of ${count} rows — refusing to evaluate eligibility against a partially loaded location set.`
+    );
+  }
+
+  for (const row of rows as { job_id: string; country_code: string; location_confidence: string }[]) {
+    const list = locationsByJobId.get(row.job_id) ?? [];
+    list.push({ countryCode: row.country_code, locationConfidence: row.location_confidence as VerifiedLocationRow["locationConfidence"] });
+    locationsByJobId.set(row.job_id, list);
+  }
+  return locationsByJobId;
+}
+
+/**
+ * Checkpoint 2D's per-job eligibility decision, extracted (Checkpoint 2E)
+ * so discovery (shortlistJobsForUser, below) and save-time revalidation
+ * (revalidateJobEligibility.ts) share the exact same function rather than
+ * two copies of the same "try every verified location, any pass wins"
+ * logic that could drift apart. A job with verified job_locations rows is
+ * eligible once ANY one of them independently passes every existing hard-
+ * eligibility rule — never by combining favorable attributes across
+ * locations (job_locations carries no work_arrangement/remote_scope of
+ * its own; every call below pairs one location's country with the SAME
+ * job-level fields, see deriveEligibilityLocationForVerifiedRow).
+ * `.some()` short-circuits on the first pass. A job with zero verified
+ * locations (legacy jobs, and country-less Remote jobs by design —
+ * Checkpoint 2C) falls back to the original scalar jobs.country_code/city
+ * path, byte-for-byte unchanged.
+ */
+export function isJobEligibleGivenLocations(
+  job: JobLocationColumns,
+  verifiedLocations: VerifiedLocationRow[] | undefined,
+  userContext: ShortlistUserContext
+): boolean {
+  return verifiedLocations && verifiedLocations.length > 0
+    ? verifiedLocations.some((row) => checkJobEligibility({ job: deriveEligibilityLocationForVerifiedRow(job, row), ...userContext }).eligible)
+    : checkJobEligibility({ job: deriveEligibilityLocation(job), ...userContext }).eligible;
 }
 
 /**
@@ -66,8 +164,11 @@ export async function shortlistJobsForUser(
     .limit(options.candidatePoolSize);
   if (error) throw new Error(`shortlistJobsForUser: failed to fetch candidate jobs: ${error.message}`);
 
+  const candidateJobs = (data ?? []) as CandidateJobRow[];
+  const locationsByJobId = await fetchVerifiedLocationsByJobId(supabase, candidateJobs.map((job) => job.id));
+
   const scored: ShortlistedJob[] = [];
-  for (const job of (data ?? []) as CandidateJobRow[]) {
+  for (const job of candidateJobs) {
     if (!job.embedding) continue;
 
     const freshness = checkJobFreshness({
@@ -79,16 +180,11 @@ export async function shortlistJobsForUser(
     });
     if (!freshness.fresh) continue;
 
-    const location = deriveEligibilityLocation({
-      location: job.location,
-      country_code: job.country_code,
-      city: job.city,
-      work_arrangement: job.work_arrangement,
-      remote_scope: job.remote_scope,
-      employment_type: job.employment_type,
-    });
-    const eligibility = checkJobEligibility({ job: location, ...userContext });
-    if (!eligibility.eligible) continue;
+    // The surrounding loop pushes at most one `scored` entry per job id
+    // regardless of how many verified locations qualify — never one entry
+    // per qualifying location.
+    const verifiedLocations = locationsByJobId.get(job.id);
+    if (!isJobEligibleGivenLocations(job, verifiedLocations, userContext)) continue;
 
     scored.push({ jobId: job.id, similarity: cosineSimilarity(profileEmbedding, job.embedding) });
   }

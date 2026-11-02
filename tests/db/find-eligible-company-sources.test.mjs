@@ -54,7 +54,7 @@ after(async () => {
   }
 });
 
-test("findEligibleCompanySources: returns only verified, suitable_public_ats, URL-derivable rows for the five supported ATS adapters", async () => {
+test("findEligibleCompanySources: returns only verified, suitable_public_ats, URL-derivable rows for the six supported ATS adapters (Workday added this phase)", async () => {
   // Dedicated, self-contained Oracle HCM fixture — see header comment.
   const suffix = randomUUID().slice(0, 8);
   fixtureCompanyId = `cc-oraclehcm-fixture-${suffix}`;
@@ -79,7 +79,7 @@ test("findEligibleCompanySources: returns only verified, suitable_public_ats, UR
   assert.ok(sources.length >= 10, `expected at least 10 real derivable sources in the registry, got ${sources.length}`);
 
   for (const source of sources) {
-    assert.ok(["greenhouse", "lever", "workable", "ashby", "oracle_hcm"].includes(source.sourceType), `unexpected sourceType: ${source.sourceType}`);
+    assert.ok(["greenhouse", "lever", "workable", "ashby", "oracle_hcm", "workday"].includes(source.sourceType), `unexpected sourceType: ${source.sourceType}`);
     assert.match(source.feedUrl, /^https:\/\//);
     assert.ok(source.sourceId, "every source must have a sourceId");
   }
@@ -119,4 +119,31 @@ test("findEligibleCompanySources: returns only verified, suitable_public_ats, UR
   const oracleResult = sources.find((s) => s.sourceId === fixtureSourceId);
   assert.equal(oracleResult.sourceType, "oracle_hcm");
   assert.match(oracleResult.feedUrl, /hcmRestApi\/resources\/latest\/recruitingCEJobRequisitions/);
+
+  // Workday integration Phase 1 (2026-10-25): 4 real registry rows have a
+  // genuine myworkdayjobs.com tenant URL and must now be included; 2 rows
+  // labeled ats_provider "Workday" whose careers_url does NOT match that
+  // shape (a stale/incorrect registry label) must still be safely excluded
+  // — same "never guess" discipline as every other branch in
+  // deriveAtsFeedUrl.ts, proven here against the real registry, not just
+  // the offline unit tests in derive-ats-feed-url.test.mjs.
+  const murex = sources.find((s) => s.sourceId === "sr-lb-murex");
+  assert.ok(murex, "expected Murex (a real, live-researched Lebanon Workday tenant) to be included");
+  assert.equal(murex.sourceType, "workday");
+  assert.equal(murex.feedUrl, "https://murex.wd3.myworkdayjobs.com/wday/cxs/murex/MurexCareerPage1/jobs");
+
+  for (const id of ["sr-sa-datarobot", "sr-sa-ncr-atleos", "sr-qa-kbr"]) {
+    const row = sources.find((s) => s.sourceId === id);
+    assert.ok(row, `expected ${id} (a real genuine Workday tenant) to be included`);
+    assert.equal(row.sourceType, "workday");
+  }
+
+  assert.ok(
+    !sourceIds.includes("sr-qa-tivoli"),
+    "Tivoli Hotels is labeled ats_provider Workday but its careers_url is not a myworkdayjobs.com tenant — must be safely excluded, never guessed"
+  );
+  assert.ok(
+    !sourceIds.includes("sr-kw-pwc"),
+    "PwC Kuwait is labeled ats_provider Workday but its careers_url is not a myworkdayjobs.com tenant — must be safely excluded, never guessed"
+  );
 });

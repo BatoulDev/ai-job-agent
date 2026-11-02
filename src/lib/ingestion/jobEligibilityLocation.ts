@@ -49,6 +49,50 @@ function asEmploymentType(value: string | null): EmploymentType | null {
   return null;
 }
 
+/**
+ * One already-verified public.job_locations row (Phase 2 multi-location
+ * support, 20261026090000) — country_code/location_confidence are never
+ * re-derived here, only trusted as-is (that table's own CHECK constraint
+ * already guarantees location_confidence is 'high'|'medium', never 'low').
+ * city is intentionally omitted — EligibilityLocation/checkJobEligibility
+ * never read it.
+ */
+export interface VerifiedLocationRow {
+  countryCode: string;
+  locationConfidence: LocationConfidence;
+}
+
+/**
+ * Checkpoint 2D (multi-location matching): same bridge as
+ * deriveEligibilityLocation below, but for ONE verified job_locations row
+ * instead of the job's own scalar country_code/city. work_arrangement/
+ * remote_scope/employment_type stay job-level — job_locations has no such
+ * columns, so there is no way for this function to mix one location's
+ * country with another location's work arrangement; every call here uses
+ * exactly one row's country_code paired with the SAME job-level fields.
+ * Never a second derivation path: workArrangement/employmentType reuse the
+ * identical asWorkArrangement/asEmploymentType helpers deriveEligibilityLocation
+ * itself uses.
+ */
+export function deriveEligibilityLocationForVerifiedRow(
+  job: Pick<JobLocationColumns, "work_arrangement" | "remote_scope" | "employment_type">,
+  row: VerifiedLocationRow
+): EligibilityLocation {
+  const workArrangement = asWorkArrangement(job.work_arrangement);
+  return {
+    countryCode: row.countryCode,
+    workArrangement,
+    // FIX (Checkpoint 2D safety requirement 5): remote_scope is never
+    // inferred from the location row — it is the job's own stated scope,
+    // identical for every location this job has. A verified additional
+    // location can never manufacture remote eligibility a job's own
+    // remote_scope doesn't actually state.
+    remoteScope: workArrangement === "remote" ? job.remote_scope : null,
+    locationConfidence: row.locationConfidence,
+    employmentType: asEmploymentType(job.employment_type),
+  };
+}
+
 export function deriveEligibilityLocation(job: JobLocationColumns): EligibilityLocation {
   const workArrangement = asWorkArrangement(job.work_arrangement);
   const employmentType = asEmploymentType(job.employment_type);
