@@ -67,6 +67,71 @@ describe("deriveAtsFeedUrl", () => {
     assert.equal(result, null);
   });
 
+  // Workday integration Phase 1 (2026-10-25). Real tenant URLs below are the
+  // actual official_careers_url values stored in the local company_sources
+  // registry (confirmed via a read-only DB query, not invented) for the 6
+  // rows labeled ats_provider "Workday" — 4 genuine Workday tenants, 2
+  // mislabeled (careers_url points elsewhere entirely).
+  test("derives a Workday feed URL (real registry row: Murex, Lebanon)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://murex.wd3.myworkdayjobs.com/MurexCareerPage1");
+    assert.deepEqual(result, { sourceType: "workday", feedUrl: "https://murex.wd3.myworkdayjobs.com/wday/cxs/murex/MurexCareerPage1/jobs" });
+  });
+
+  test("derives a Workday feed URL with an underscored site slug (real registry row: DataRobot, Saudi Arabia)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://datarobot.wd1.myworkdayjobs.com/DataRobot_External_Careers");
+    assert.deepEqual(result, { sourceType: "workday", feedUrl: "https://datarobot.wd1.myworkdayjobs.com/wday/cxs/datarobot/DataRobot_External_Careers/jobs" });
+  });
+
+  test("derives a Workday feed URL with a lowercase underscored site slug (real registry row: NCR Atleos, Saudi Arabia)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://ncratleos.wd1.myworkdayjobs.com/ext_non_usalteos");
+    assert.deepEqual(result, { sourceType: "workday", feedUrl: "https://ncratleos.wd1.myworkdayjobs.com/wday/cxs/ncratleos/ext_non_usalteos/jobs" });
+  });
+
+  test("derives a Workday feed URL for a different wd-shard number (real registry row: KBR, Qatar)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://kbr.wd5.myworkdayjobs.com/KBR_Careers");
+    assert.deepEqual(result, { sourceType: "workday", feedUrl: "https://kbr.wd5.myworkdayjobs.com/wday/cxs/kbr/KBR_Careers/jobs" });
+  });
+
+  test("returns null for a Workday-labeled row whose careers_url is not a myworkdayjobs.com tenant at all — safely rejected, not guessed (real registry row: Tivoli Hotels, mislabeled ats_provider)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://www.tivolihotels.com/en/qatar");
+    assert.equal(result, null);
+  });
+
+  test("returns null for a Workday-labeled row pointing at an unrelated corporate domain — safely rejected, not guessed (real registry row: PwC Kuwait, mislabeled ats_provider)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://www.pwc.com/m1/en/careers.html");
+    assert.equal(result, null);
+  });
+
+  test("returns null for a non-https Workday-shaped URL (malformed: wrong scheme)", () => {
+    const result = deriveAtsFeedUrl("Workday", "http://murex.wd3.myworkdayjobs.com/MurexCareerPage1");
+    assert.equal(result, null);
+  });
+
+  test("returns null when the wd-shard segment is missing entirely (malformed: not a real Workday tenant host)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://murex.myworkdayjobs.com/MurexCareerPage1");
+    assert.equal(result, null);
+  });
+
+  test("returns null when the site slug is missing entirely (malformed: no path segment after the tenant host)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://murex.wd3.myworkdayjobs.com/");
+    assert.equal(result, null);
+  });
+
+  test("returns null when the site slug is missing entirely, no trailing slash either (malformed: bare host)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://murex.wd3.myworkdayjobs.com");
+    assert.equal(result, null);
+  });
+
+  test("derives a Workday feed URL even with trailing query params or a path suffix, same tolerant-prefix-match convention as the Workable branch above (tenant/site edge case)", () => {
+    const result = deriveAtsFeedUrl("Workday", "https://murex.wd3.myworkdayjobs.com/MurexCareerPage1?lang=en");
+    assert.deepEqual(result, { sourceType: "workday", feedUrl: "https://murex.wd3.myworkdayjobs.com/wday/cxs/murex/MurexCareerPage1/jobs" });
+  });
+
+  test("Workday ats_provider matching is case-insensitive", () => {
+    const result = deriveAtsFeedUrl("WORKDAY", "https://murex.wd3.myworkdayjobs.com/MurexCareerPage1");
+    assert.notEqual(result, null);
+  });
+
   test("returns null when official_careers_url is missing entirely", () => {
     assert.equal(deriveAtsFeedUrl("Greenhouse", null), null);
   });

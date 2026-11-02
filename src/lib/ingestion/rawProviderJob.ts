@@ -11,7 +11,8 @@
 // limitation: country_code/city/remote_scope are now populated via Phase
 // 01's normalizeLocation() instead of being hardcoded null.
 
-import { normalizeLocation, type WorkArrangement } from "./normalizeLocation.ts";
+import { normalizeLocation, type WorkArrangement, type LocationConfidence } from "./normalizeLocation.ts";
+import { deriveJobLocationRows, type JobLocationRow } from "./jobLocations.ts";
 
 export type JobSourceType =
   | "admin_manual"
@@ -88,6 +89,30 @@ export interface RawProviderJob {
    * Most adapters have no such signal and leave this null/undefined.
    */
   closingDate?: string | null;
+  /**
+   * Provider-supplied list of locations this job is ALSO eligible at,
+   * beyond its primary `rawLocation` (Workday's real `additionalLocations`
+   * detail-response field is the first case of this — see providers/
+   * workday.ts). Four-way contract, deliberately never collapsed:
+   *   - undefined: this adapter never supplies the field at all, or this
+   *     run's response simply omitted the key — NOT a confirmed signal.
+   *   - null: the provider's response stated the value is explicitly
+   *     unknown/unavailable — ALSO not confirmed. Must never be treated
+   *     the same as `[]`.
+   *   - []: explicitly confirmed — this job currently has zero
+   *     additional locations.
+   *   - non-empty array: explicitly confirmed — these are the job's
+   *     current additional locations.
+   * Only the two array cases represent a confirmed current state a
+   * future caller may use to safely REPLACE previously-stored additional
+   * locations; `undefined` and `null` must both be treated as "not
+   * confirmed this run". Never implement the replace-decision as
+   * `additionalLocations !== undefined` — that incorrectly treats `null`
+   * as confirmed. See jobLocations.ts's deriveJobLocationRows() for the
+   * pure, offline function that consumes this field; the replace-decision
+   * itself belongs to the ingestion call site (not yet implemented).
+   */
+  additionalLocations?: readonly string[] | null;
 }
 
 export type RawProviderJobRejectReason =
@@ -180,6 +205,40 @@ export interface JobUpsertRow {
    * pending_review rather than shown as a normal active listing.
    */
   status: "active" | "pending_review";
+  /**
+   * Phase 2 multi-location support (Checkpoint 2C) — derived from the same
+   * `raw` this row came from, via deriveJobLocationRows(). Never a second
+   * source of truth: the primary member here always mirrors `location`/
+   * `country_code`/`city` above exactly, since both are computed from the
+   * identical normalizeLocation() call on the identical rawLocation input.
+   * Consumed only by persistValidatedJobs()'s RPC write path — never sent
+   * to the `jobs` table directly (there is no such column).
+   */
+  locationRows: JobLocationRow[];
+  /**
+   * The primary candidate's own normalizeLocation().locationConfidence —
+   * NOT re-derived, the exact same value already computed below for
+   * `location`. Phase 2 corrective fix (20261027090000): deriveJobLocationRows
+   * drops any candidate without a resolved country (job_locations.country_code
+   * is NOT NULL/FK — there is nowhere to store "remote, no country"), so a
+   * valid country-less Remote job (explicit scope = high, or ambiguous
+   * no-scope = medium) would otherwise send an empty locationRows with no
+   * way for upsert_job_with_locations to tell that apart from a genuinely
+   * unresolved location. Passed through so the RPC's status computation
+   * can fall back to it — gated there to work_arrangement='remote' only,
+   * never a geographic-eligibility signal (remote_scope stays the sole
+   * eligibility path).
+   */
+  primaryLocationConfidence: LocationConfidence;
+  /**
+   * True only when raw.additionalLocations is a confirmed array ([] or
+   * populated) this run — false for both `undefined` (field never
+   * supplied) and `null` (explicitly unknown/unavailable). Deliberately
+   * NOT `raw.additionalLocations !== undefined` alone, which would
+   * incorrectly treat `null` as confirmed. See RawProviderJob.
+   * additionalLocations's own doc comment for the full four-way contract.
+   */
+  replaceLocations: boolean;
 }
 
 /**
@@ -225,5 +284,11 @@ export function mapRawProviderJobToJobRow(raw: RawProviderJob, context: JobSourc
     source_last_modified_at: raw.sourceLastModifiedAt ?? null,
     closing_date: raw.closingDate ?? null,
     status: location.locationConfidence === "low" ? "pending_review" : "active",
+    locationRows: deriveJobLocationRows(raw.rawLocation, raw.additionalLocations),
+    primaryLocationConfidence: location.locationConfidence,
+    // Tri-state contract: only an explicit array (confirmed empty or
+    // confirmed populated) counts as confirmed — undefined and null both
+    // mean "not confirmed this run", never collapsed into each other.
+    replaceLocations: raw.additionalLocations !== undefined && raw.additionalLocations !== null,
   };
 }

@@ -126,7 +126,25 @@ export type IngestionBatchOutcome =
    * idempotent, so a retry only re-confirms the same rows and attempts
    * stale-close again — it can never create a duplicate.
    */
-  | "partial_stale_close_failed";
+  | "partial_stale_close_failed"
+  /**
+   * Phase 2 multi-location persistence (Checkpoint 2C,
+   * 20261026090000_add_job_locations_multi_location_support.sql's
+   * upsert_job_with_locations RPC): at least one job's per-job RPC call
+   * failed this run. jobsCreated/jobsUpdated below count ONLY the rows
+   * that actually committed — a row whose RPC call errored is never
+   * counted as created or updated, even though it was attempted.
+   * truncated is always forced true alongside this outcome (see
+   * persistValidatedJobs below), so stale-close never runs on a batch
+   * where a write genuinely failed — a job that WAS fetched but failed
+   * to PERSIST is a different failure mode than a page-fetch failure,
+   * but equally disqualifying for a trustworthy "we saw the complete
+   * universe this run" claim. A retry is safe: each RPC call is
+   * independently idempotent (ON CONFLICT upsert + scoped location
+   * replace), so re-running only re-confirms already-committed rows and
+   * retries the ones that failed — it can never create a duplicate.
+   */
+  | "partial_upsert_failed";
 
 export interface IngestionBatchResult {
   outcome: IngestionBatchOutcome;
@@ -324,13 +342,90 @@ export async function persistValidatedJobs(
     ...(scope.sourceId === null ? { refresh_scope: scope.refreshScope } : {}),
   }));
 
-  const { error: upsertError } = await supabase.from("jobs").upsert(stamped, { onConflict: "dedup_scope,external_id" });
-  if (upsertError) {
-    throw new Error(`ingestion: upsert failed: ${upsertError.message}`);
+  // Phase 2 (Checkpoint 2C): one upsert_job_with_locations() RPC call per
+  // row, replacing the single multi-row .upsert() this used to be — the
+  // jobs row and its job_locations rows now commit together, atomically,
+  // per job (see that RPC's own header comment for why). This is a real,
+  // named behavior change from before: today's single multi-row upsert
+  // was atomic for the WHOLE batch (one bad row failed everything); a
+  // per-job RPC loop makes the write step best-effort ACROSS jobs (one
+  // job failing never rolls back a sibling already committed this run).
+  // jobsCreated/jobsUpdated below count only rows that actually
+  // committed — never a row whose RPC call errored, even though it was
+  // attempted (AGENTS.md §18/§30: never report a failed write as a
+  // successful creation or update).
+  let jobsCreated = 0;
+  let jobsUpdated = 0;
+  let anyWriteFailed = false;
+
+  for (const row of stamped) {
+    const { error: rpcError } = await supabase.rpc("upsert_job_with_locations", {
+      // Explicit allowlist, matching upsert_job_with_locations's own
+      // v_allowed_job_keys exactly (20261026090000_add_job_locations_multi_location_support.sql)
+      // — status/status_reason/id/created_at/updated_at/dedup_scope are
+      // deliberately never sent: status is computed inside the RPC from
+      // locationRows, never trusted from the caller, and the rest are
+      // database/trigger-managed.
+      p_job: {
+        title: row.title,
+        company_name: row.company_name,
+        description: row.description,
+        location: row.location,
+        work_arrangement: row.work_arrangement,
+        employment_type: row.employment_type,
+        seniority: row.seniority,
+        application_method: row.application_method,
+        application_url: row.application_url,
+        application_email: row.application_email,
+        source_type: row.source_type,
+        external_id: row.external_id,
+        source_url: row.source_url,
+        source_id: row.source_id,
+        country_code: row.country_code,
+        city: row.city,
+        remote_scope: row.remote_scope,
+        published_at: row.published_at,
+        source_last_modified_at: row.source_last_modified_at,
+        closing_date: row.closing_date,
+        refresh_scope: "refresh_scope" in row ? row.refresh_scope : null,
+        first_seen_at: row.first_seen_at,
+        last_seen_at: row.last_seen_at,
+        last_checked_at: row.last_checked_at,
+        last_successful_check_at: row.last_successful_check_at,
+        // Checkpoint 2C corrective fix (20261027090000) — never persisted
+        // by the RPC, consulted only as a status fallback gated to
+        // work_arrangement='remote' with no qualifying p_locations row.
+        primary_location_confidence: row.primaryLocationConfidence,
+      },
+      p_locations: row.locationRows.map((loc) => ({
+        country_code: loc.countryCode,
+        city: loc.city,
+        is_primary: loc.isPrimary,
+        location_confidence: loc.locationConfidence,
+      })),
+      p_replace_locations: row.replaceLocations,
+    });
+
+    if (rpcError) {
+      anyWriteFailed = true;
+      // Real Postgres/PostgREST error text only — never a secret, same
+      // convention as every other console.error in this function.
+      console.error(`ingestion: upsert_job_with_locations failed for external_id "${row.external_id}" — not counted as created or updated this run:`, rpcError.message);
+      continue;
+    }
+    if (existingExternalIds.has(row.external_id)) {
+      jobsUpdated += 1;
+    } else {
+      jobsCreated += 1;
+    }
   }
 
-  const jobsCreated = bounded.filter((row) => !existingExternalIds.has(row.external_id)).length;
-  const jobsUpdated = bounded.length - jobsCreated;
+  if (anyWriteFailed) {
+    console.error(
+      `ingestion: partial_upsert_failed — ${jobsCreated} created, ${jobsUpdated} updated from real, committed writes; truncated forced true so stale-close does not run this batch.`
+    );
+    return { outcome: "partial_upsert_failed", jobsFetched: rawJobsCount, jobsValid: validated.length, jobsRejected, jobsCreated, jobsUpdated, jobsClosed: 0, truncated: true };
+  }
 
   let jobsClosed = 0;
   if (!truncated) {

@@ -496,6 +496,28 @@ describe("mapWorkdayJob — mapping logic only, NOT wired into the ingestion wor
     const job = mapWorkdayJob({ ...raw, tenantSiteBaseUrl: undefined });
     assert.equal(job.applicationUrl, null);
   });
+
+  describe("additionalLocations — four-way contract, never collapsed (Phase 2 multi-location, real field confirmed live against Murex job JR103091)", () => {
+    test("absent (undefined) stays undefined — never defaulted to [] — the exact shortcut that would break the unconfirmed-vs-confirmed-empty distinction", () => {
+      const job = mapWorkdayJob({ ...raw, additionalLocations: undefined });
+      assert.strictEqual(job.additionalLocations, undefined);
+    });
+
+    test("explicitly null stays null — never collapsed into [] or undefined, since null and [] mean different things to a future caller", () => {
+      const job = mapWorkdayJob({ ...raw, additionalLocations: null });
+      assert.strictEqual(job.additionalLocations, null);
+    });
+
+    test("explicitly confirmed empty ([]) stays [] — distinct from both undefined and null", () => {
+      const job = mapWorkdayJob({ ...raw, additionalLocations: [] });
+      assert.deepEqual(job.additionalLocations, []);
+    });
+
+    test("a populated array passes through completely unchanged", () => {
+      const job = mapWorkdayJob({ ...raw, additionalLocations: ["Beirut"] });
+      assert.deepEqual(job.additionalLocations, ["Beirut"]);
+    });
+  });
 });
 
 describe("mapBaytJob / mapGulfTalentJob — blackfalcondata Apify actors, live-verified (Phase 21, docs/LEBANON_LIVE_SOURCE_EXPANSION.md) — fixtures here mirror the real observed schema, not invented data", () => {

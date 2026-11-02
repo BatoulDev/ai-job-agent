@@ -40,6 +40,17 @@ export interface WorkdayRawJob {
   // (`https://{tenant}.wd{N}.myworkdayjobs.com/{site}`) is not itself part
   // of any single job record.
   tenantSiteBaseUrl?: string;
+  // Real field name confirmed live against Murex's detail response
+  // (job JR103091, Phase 2 multi-location investigation): an array of
+  // location strings this job is ALSO eligible at, beyond locationsText.
+  // Not present on every real job observed (most carry no such field at
+  // all) — mapWorkdayJob() below passes this through UNCHANGED
+  // (undefined stays undefined, null stays null, [] stays [], a
+  // populated array stays as-is). Never defaulted with `?? []` here or
+  // anywhere downstream — see RawProviderJob.additionalLocations's own
+  // doc comment for why that single shortcut would break the whole
+  // confirmed-vs-unconfirmed contract this field exists to carry.
+  additionalLocations?: string[] | null;
 }
 
 function extractRequisitionId(raw: WorkdayRawJob): string {
@@ -60,6 +71,12 @@ export function mapWorkdayJob(raw: WorkdayRawJob): RawProviderJob {
     title: typeof raw.title === "string" ? raw.title : null,
     description: stripHtml(raw.description),
     rawLocation: typeof raw.locationsText === "string" && raw.locationsText.trim() ? raw.locationsText.trim() : null,
+    // Direct passthrough, deliberately not `raw.additionalLocations ?? []`
+    // or any other normalization — see this field's own doc comment on
+    // RawProviderJob for why undefined/null/[]/populated must each
+    // survive unchanged to the caller that decides whether to replace
+    // previously-stored additional locations.
+    additionalLocations: raw.additionalLocations,
     providerWorkArrangement: null,
     applicationUrl: applyUrl,
     applicationEmail: null,
