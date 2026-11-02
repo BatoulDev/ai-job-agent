@@ -83,13 +83,19 @@ function ExistingApplication({
         <p className="mt-2 text-sm text-muted">You marked this as applied. Track what happens next from the Sent tab.</p>
       )}
       {application.applicationMethod === "email" && application.status === "sent" && (
-        <p className="mt-2 text-sm text-muted">Sent to {match.job.applicationEmail}.</p>
+        // Honest about what actually happened: no real email provider is
+        // connected yet (src/lib/applications/emailTransport.ts — the only
+        // EmailTransport implementation anywhere in this codebase is a
+        // mock that never makes a network call). Never claim a real send.
+        <p className="mt-2 text-sm text-muted">
+          Recorded as ready to send to {match.job.applicationEmail}. Real email delivery isn&apos;t connected yet, so no message actually left our system — approving this only logs your application internally.
+        </p>
       )}
       {application.applicationMethod === "email" && application.status === "pending_send" && (
-        <p className="mt-2 text-sm text-muted">Waiting to be sent to {match.job.applicationEmail}.</p>
+        <p className="mt-2 text-sm text-muted">Waiting to be recorded for {match.job.applicationEmail}.</p>
       )}
       {application.applicationMethod === "email" && application.status === "sending" && (
-        <p className="mt-2 text-sm text-muted">Sending to {match.job.applicationEmail} now...</p>
+        <p className="mt-2 text-sm text-muted">Recording this application for {match.job.applicationEmail} now...</p>
       )}
       {application.status === "failed" && (
         <p className="mt-2 text-xs text-red-700">{application.lastError ?? "The send attempt failed."}</p>

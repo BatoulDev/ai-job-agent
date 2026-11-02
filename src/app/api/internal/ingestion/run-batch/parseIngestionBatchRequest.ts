@@ -18,6 +18,16 @@ import type { JobSourceType } from "../../../../../lib/ingestion/rawProviderJob.
 // oracle_hcm (Phase 16) is company-specific, same shape as
 // greenhouse/lever/workable/ashby — see deriveAtsFeedUrl.ts and
 // providers/oracle-hcm.ts.
+// workday is company-specific, same shape as the above — see
+// deriveAtsFeedUrl.ts's WORKDAY_PATTERN branch and providers/workday.ts.
+// Listed here (Workday integration Phase 1) alongside the mapping adapter
+// (already registered in providers/index.ts) and the URL-derivation branch
+// so the request-validation layer stops 400-rejecting a real sourceType
+// the rest of the pipeline already understands. Still not reachable end to
+// end this phase: no n8n node fetches a Workday feed yet, and
+// providerConfig.ts keeps workday.enabled:false until a live pilot proves
+// the still-missing per-job detail-fetch step (providers/workday.ts's own
+// header comment) — this allowlist entry alone cannot cause a live call.
 // career_page IS accepted: it is company-specific (one company_sources row
 // per candidate, same as Tier A), its raw jobs just arrive pre-extracted
 // from POST /extract-career-page-jobs rather than a vendor ATS API — see
@@ -26,7 +36,7 @@ import type { JobSourceType } from "../../../../../lib/ingestion/rawProviderJob.
 // (remoteok/jobicy/arbeitnow/jsearch/adzuna/bayt/gulftalent) are never
 // accepted here — they have no company_sources row to key a sourceId off;
 // see run-multi-company-batch/route.ts (Phase 13).
-const AUTOMATABLE_SOURCE_TYPES: readonly JobSourceType[] = ["greenhouse", "lever", "workable", "ashby", "oracle_hcm", "career_page"];
+const AUTOMATABLE_SOURCE_TYPES: readonly JobSourceType[] = ["greenhouse", "lever", "workable", "ashby", "oracle_hcm", "workday", "career_page"];
 
 // Defense in depth against a misconfigured or compromised caller sending an
 // unbounded payload (AGENTS.md §27) — well above any real ATS board size

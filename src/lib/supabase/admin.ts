@@ -1,5 +1,11 @@
 import { createClient as createSupabaseClient } from "@supabase/supabase-js";
-import { supabaseUrl } from "./env";
+// Checkpoint 2E audit-remediation: explicit ".ts" extension (same reason
+// as the other relative-import fixes in this checkpoint) — this module is
+// now a transitive dependency of a guarded local DB test invoking the
+// real matching route handlers directly under plain `node --test`, which
+// needs the extension even though the bundler-resolved build does not.
+// No behavior change.
+import { supabaseUrl } from "./env.ts";
 
 function requireServerEnv(name: string, value: string | undefined): string {
   if (!value) {

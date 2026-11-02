@@ -496,3 +496,45 @@ incomplete onboarding.
   granted wider access than they opted into.
 - Gulf relocation markets (onsite/hybrid): SA, QA, KW, AE — see
   `job_preference_relocation_locations` and the "Relocation" bullet above.
+
+---
+
+## Work authorization (Phase 0/1, read-only architecture review + advisory-only implementation, 2026-10-27)
+
+**Current policy, stated plainly so it is never mistaken for enforced:**
+
+- `job_preferences.work_authorization_status` (`needs_employer_support` |
+  `already_authorized` | `unsure`) and `job_preference_authorized_countries`
+  are **user-reported and informational/advisory only**. They are not a
+  matching gate.
+- Employer visa sponsorship and legal work eligibility are **not currently
+  verified** by this product. No job-side field reliably states whether a
+  specific employer sponsors visas for a specific country —
+  `jobs.relocation_required` exists in the schema but is unpopulated by
+  every ingestion adapter today (confirmed: 0 of 852 real jobs have it
+  set), and `normalizeLocation()`'s keyword-based `relocationSignal` is
+  computed during ingestion but never persisted or read anywhere. Neither
+  is a basis for a hard eligibility decision.
+- **No new hard eligibility gate is authorized by this decision.**
+  `checkJobEligibility()` and `revalidateJobEligibilityForSave()` remain
+  the sole deterministic eligibility rules, unchanged — see "Market
+  coverage vs. work arrangement vs. relocation" above and
+  `src/lib/ingestion/checkJobEligibility.ts`'s own header comment. Existing
+  Lebanon-local, verified-international-remote, Pro relocation
+  (SA/QA/KW/AE only), and multi-location (`isJobEligibleGivenLocations` —
+  any one verified `job_locations` row passing is sufficient) rules are
+  all preserved exactly as they were before this decision.
+- What this decision *does* authorize: surfacing the user's own
+  self-reported `willing_to_relocate` / `work_authorization_status` /
+  selected relocation-market country codes into the LLM rerank prompt
+  (`buildRerankPrompt`, Phase 06) as **advisory context only** — so the
+  LLM's free-text explanation can mention it, never so it can decide
+  eligibility. The prompt explicitly instructs the model never to claim
+  verified employer sponsorship, never to claim the user is legally
+  authorized for a job based only on preferences, never to treat unknown
+  employer authorization as confirmed, and never to let any of this
+  override the eligibility decision already made before the prompt runs.
+- Any future hard-gate change (treating `relocation_required`/
+  `relocationSignal` as enforceable, or requiring authorized-country
+  matching) requires a separate, explicit product decision and real
+  ingestion evidence first — not a natural extension of this one.

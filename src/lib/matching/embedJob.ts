@@ -7,6 +7,7 @@
 // implementation passed in by the caller.
 import type { SupabaseClient } from "@supabase/supabase-js";
 import { buildJobEmbeddingText, hashEmbeddingText, type JobEmbeddingInput } from "./embeddingText.ts";
+import { parseIdAllowlist } from "./aiTestIsolation.ts";
 
 /** Given the exact text to embed, returns its vector. Implemented by whichever provider is eventually wired up. */
 export type EmbeddingGenerator = (text: string) => Promise<number[]>;
@@ -83,13 +84,20 @@ export interface PendingJobEmbedding {
  * embedJobIfChanged() directly instead.
  */
 export async function findJobsNeedingEmbedding(supabase: SupabaseClient, limit: number): Promise<PendingJobEmbedding[]> {
-  const { data, error } = await supabase
+  let query = supabase
     .from("jobs")
     .select("id, title, description, company_name, location, work_arrangement, seniority, employment_type")
     .eq("status", "active")
-    .is("embedding", null)
-    .order("last_seen_at", { ascending: false })
-    .limit(limit);
+    .is("embedding", null);
+
+  // See aiTestIsolation.ts's own header: unset in every environment except
+  // an explicitly-configured local real-AI validation run — when unset,
+  // this is a no-op and the query below is unchanged from before this line
+  // existed.
+  const allowlist = parseIdAllowlist(process.env.MATCHING_EMBEDDING_TEST_JOB_IDS, "MATCHING_EMBEDDING_TEST_JOB_IDS");
+  if (allowlist) query = query.in("id", allowlist);
+
+  const { data, error } = await query.order("last_seen_at", { ascending: false }).limit(limit);
   if (error) throw new Error(`findJobsNeedingEmbedding: query failed: ${error.message}`);
 
   return (data ?? []).map((job) => {

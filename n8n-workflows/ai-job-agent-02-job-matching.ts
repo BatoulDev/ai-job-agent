@@ -203,6 +203,42 @@ const nothingToEmbed = node({
 // removed "Build Execution Summary" node hit is avoided entirely by never
 // attempting it here.
 
+// Dedicated terminal failure node for Prepare Rerank's OWN failure — never
+// shared with logRerankFailure (the PER-CANDIDATE retry failure handler
+// below). Found 2026-11-02 (real-AI-evidence session): Prepare Rerank's
+// error previously routed into the same logRerankFailure -> rerankRateLimitDelay
+// -> nextBatch(loopCandidates) chain used for an individual candidate's
+// Call OpenAI Chat/Save Rerank Result failure. That chain assumes
+// loopCandidates has ALREADY been primed with a real batch by
+// Split Out Candidates — true for a per-candidate retry, never true when
+// Prepare Rerank itself fails (its failure happens strictly before Split
+// Out Candidates ever runs). Feeding that one bogus failure payload into
+// nextBatch() on an unprimed SplitInBatches node made n8n treat it as a
+// brand-new one-item batch: it flowed through Build Chat Request (producing
+// a message with no `content`, since the payload has no `.prompt` field)
+// straight to a REAL Call OpenAI Chat request — reproduced live this
+// session (execution 349135: a real `NodeApiError` 400 from
+// api.openai.com, "'messages' must contain the word 'json'..."). Same
+// pattern already handled correctly for the whole-batch failure case one
+// workflow over (ai-job-agent-03-cover-letter-generation.ts's
+// "Log Prepare Failure" is a true dead end, never feeding its own loop) —
+// this fix brings Prepare Rerank in line with that proven pattern instead
+// of inventing a new one.
+const logPrepareRerankFailure = node({
+  type: 'n8n-nodes-base.set',
+  version: 3.4,
+  config: {
+    name: 'Log Prepare Rerank Failure',
+    notes:
+      'Terminal failure node for the whole-batch Prepare Rerank call — a human reviews the n8n execution log directly. Deliberately NOT connected to rerankRateLimitDelay/loopCandidates: there are no real candidates to retry when this step itself failed before Split Out Candidates ever ran.',
+    parameters: {
+      mode: 'manual',
+      assignments: { assignments: [{ id: 'error', name: 'error', value: expr("{{ $json.error?.message ?? 'prepare-rerank step failed' }}"), type: 'string' }] },
+    },
+  },
+  output: [{ error: 'request failed' }],
+});
+
 const prepareRerank = node({
   type: 'n8n-nodes-base.httpRequest',
   version: 4.4,
@@ -384,7 +420,7 @@ export default workflow('ai-job-agent-02-job-matching', 'AI Job Guide / 02 Job M
   .add(logEmbeddingsFailure.to(prepareRerank))
   .add(
     prepareRerank
-      .onError(logRerankFailure)
+      .onError(logPrepareRerankFailure)
       .to(
         splitOutCandidates.to(
           loopCandidates.onEachBatch(

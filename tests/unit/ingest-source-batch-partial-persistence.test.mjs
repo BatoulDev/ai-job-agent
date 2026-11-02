@@ -32,10 +32,20 @@ function makeJobRow(externalId) {
     source_last_modified_at: null,
     closing_date: null,
     status: "active",
+    // Phase 2 (Checkpoint 2C): GulfTalent never supplies additionalLocations
+    // — a plain single-location job, same as every other pre-Phase-2
+    // provider.
+    locationRows: [],
+    replaceLocations: false,
   };
 }
 
-/** responses are consumed in call order: [existingQuery, upsert, activeQuery, closeUpdate?] */
+/**
+ * responses are consumed in call order: [existingQuery, rpc×N (one
+ * upsert_job_with_locations call per row, Phase 2 Checkpoint 2C —
+ * replaces the single whole-batch .upsert() this used to be), activeQuery,
+ * closeUpdate?].
+ */
 function makeMockSupabase(responses) {
   let callIndex = 0;
   const calls = [];
@@ -51,10 +61,14 @@ function makeMockSupabase(responses) {
         is(...args) { record.ops.push(["is", args]); return builder; },
         in(...args) { record.ops.push(["in", args]); return builder; },
         update(...args) { record.ops.push(["update", args]); return builder; },
-        upsert(...args) { record.ops.push(["upsert", args]); return Promise.resolve(result); },
         then(resolve, reject) { return Promise.resolve(result).then(resolve, reject); },
       };
       return builder;
+    },
+    rpc(fnName, params) {
+      const result = responses[callIndex++];
+      calls.push({ table: fnName, ops: [["rpc", params]] });
+      return Promise.resolve(result);
     },
   };
 }
@@ -64,7 +78,8 @@ const GULFTALENT_SA_SCOPE = { sourceId: null, sourceType: "gulftalent", refreshS
 test("BEFORE-fix reproduction (documented): a stale-close read failure used to throw and lose the already-committed upsert counts — now returns partial_stale_close_failed instead", async () => {
   const supabase = makeMockSupabase([
     { data: [], error: null }, // existingQuery: no pre-existing rows
-    { error: null }, // upsert: succeeds
+    { error: null }, // rpc: gt-sa-1 succeeds
+    { error: null }, // rpc: gt-sa-2 succeeds
     { data: null, error: { message: "simulated stale-close read failure" } }, // activeQuery: fails
   ]);
   const rows = [makeJobRow("gt-sa-1"), makeJobRow("gt-sa-2")];
@@ -80,7 +95,8 @@ test("BEFORE-fix reproduction (documented): a stale-close read failure used to t
 test("stale-close UPDATE failure (read succeeded, the close write itself failed) is also reported as partial, with real upsert counts intact", async () => {
   const supabase = makeMockSupabase([
     { data: [{ external_id: "gt-sa-1", first_seen_at: "2026-01-01T00:00:00.000Z" }], error: null }, // existingQuery: gt-sa-1 already existed
-    { error: null }, // upsert succeeds
+    { error: null }, // rpc: gt-sa-1 succeeds (update)
+    { error: null }, // rpc: gt-sa-2 succeeds (create)
     { data: [{ id: "row-stale", external_id: "gt-sa-old" }], error: null }, // activeQuery: one stale candidate found
     { error: { message: "simulated stale-close update failure" } }, // close update fails
   ]);
@@ -110,18 +126,42 @@ test("full success path is unaffected by this fix: upsert and stale-close both s
   assert.equal(result.jobsClosed, 1, "the genuinely stale row is closed exactly as before this fix");
 });
 
-test("upsert failure itself is unchanged: still throws immediately, since nothing was committed at all", async () => {
+// Phase 2 (Checkpoint 2C) intentional behavior change, documented here
+// rather than silently re-asserted: a single multi-row .upsert() either
+// committed everything or threw for the whole batch. Each row's own
+// upsert_job_with_locations() RPC call is now independently caught — a
+// failure is never thrown, always reported via the dedicated
+// partial_upsert_failed outcome, with truncated forced true so
+// stale-close never runs on a batch where a write genuinely failed.
+test("a per-job RPC failure is caught, never thrown — reported as partial_upsert_failed with the failed row excluded from the counts, and truncated forced true", async () => {
   const supabase = makeMockSupabase([
     { data: [], error: null },
-    { error: { message: "simulated upsert failure" } },
+    { error: { message: "simulated upsert_job_with_locations failure" } },
   ]);
   const rows = [makeJobRow("gt-sa-1")];
 
-  await assert.rejects(
-    () => persistValidatedJobs(supabase, 1, rows, 0, { maxJobsPerSource: 10, dryRun: false }, GULFTALENT_SA_SCOPE),
-    /ingestion: upsert failed/,
-    "an upsert failure means zero rows were written — throwing (unchanged behavior) is still correct here"
-  );
+  const result = await persistValidatedJobs(supabase, 1, rows, 0, { maxJobsPerSource: 10, dryRun: false }, GULFTALENT_SA_SCOPE);
+
+  assert.equal(result.outcome, "partial_upsert_failed");
+  assert.equal(result.jobsCreated, 0, "the failed row is never counted as created");
+  assert.equal(result.jobsUpdated, 0);
+  assert.equal(result.jobsClosed, 0, "stale-close must never run after any write failure");
+  assert.equal(result.truncated, true, "forced true so a future run cannot treat 'failed to write' the same as 'confirmed gone' for stale-close purposes");
+});
+
+test("a mixed batch (one row fails, one succeeds) counts only the real success, never the failed row, and still reports partial_upsert_failed", async () => {
+  const supabase = makeMockSupabase([
+    { data: [], error: null }, // existingQuery: neither row pre-exists
+    { error: null }, // rpc: gt-sa-1 succeeds
+    { error: { message: "simulated upsert_job_with_locations failure" } }, // rpc: gt-sa-2 fails
+  ]);
+  const rows = [makeJobRow("gt-sa-1"), makeJobRow("gt-sa-2")];
+
+  const result = await persistValidatedJobs(supabase, 2, rows, 0, { maxJobsPerSource: 10, dryRun: false }, GULFTALENT_SA_SCOPE);
+
+  assert.equal(result.outcome, "partial_upsert_failed");
+  assert.equal(result.jobsCreated, 1, "only the row whose RPC call actually succeeded is counted — the failed sibling is excluded, never fabricated as a success");
+  assert.equal(result.truncated, true);
 });
 
 test("refresh_scope isolation is preserved: the stale-close read is still filtered to this exact refresh_scope, never the whole gulftalent source_type", async () => {

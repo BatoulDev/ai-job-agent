@@ -4,6 +4,7 @@
 // only builds prompts (never calls an LLM itself).
 import { test, before, after } from "node:test";
 import assert from "node:assert/strict";
+import { randomUUID } from "node:crypto";
 import { adminClient, assertExpectedLocalProject, createTestUser, deleteTestUsers, uploadFakeCv, insertFakeAnalysis, deleteFakeJobs } from "./helpers.mjs";
 import { findRerankCandidates, encodeCandidateId, decodeCandidateId } from "../../src/lib/matching/rerankCandidates.ts";
 import { saveMatchResult } from "../../src/lib/matching/saveMatch.ts";
@@ -96,14 +97,38 @@ async function approveAnalysisWithEmbedding(cvSuffix, embedding = [1, 0, 0, 0]) 
   return approved;
 }
 
+// Checkpoint 2E: candidateId is now a versioned, HMAC-signed token
+// (candidateToken.ts), not a plain "analysisId:jobId" string — round-trip
+// is proven by decoding, not by comparing the raw encoded string (which
+// also embeds a timestamp and is never meant to be stable/predictable).
 test("encodeCandidateId/decodeCandidateId round-trip exactly", () => {
-  const id = encodeCandidateId("analysis-1", "job-1");
-  assert.equal(id, "analysis-1:job-1");
-  assert.deepEqual(decodeCandidateId(id), { cvAnalysisId: "analysis-1", jobId: "job-1" });
+  // Checkpoint 2E audit fix: candidateToken.ts now strictly validates that
+  // the analysis/job/run identifiers are real UUIDs, matching
+  // cv_analyses.id/jobs.id's actual uuid-typed columns — plain placeholder
+  // strings are no longer accepted even for a round-trip test.
+  const analysisId = randomUUID();
+  const jobId = randomUUID();
+  const runId = randomUUID();
+  const id = encodeCandidateId(analysisId, jobId, runId);
+  const decoded = decodeCandidateId(id);
+  assert.equal(decoded.ok, true);
+  assert.equal(decoded.value.cvAnalysisId, analysisId);
+  assert.equal(decoded.value.jobId, jobId);
+  assert.equal(decoded.value.runId, runId);
 });
 
-test("decodeCandidateId returns null for a malformed id", () => {
-  assert.equal(decodeCandidateId("no-separator-here"), null);
+test("decodeCandidateId rejects a malformed id", () => {
+  const decoded = decodeCandidateId("no-separator-here");
+  assert.equal(decoded.ok, false);
+  assert.equal(decoded.reason, "invalid_format");
+});
+
+// Requirement: legacy unsigned ids (the pre-Checkpoint-2E "analysisId:jobId"
+// format) must never be accepted as a compatibility fallback.
+test("decodeCandidateId rejects a legacy unsigned candidateId", () => {
+  const decoded = decodeCandidateId(`${randomUUID()}:${randomUUID()}`);
+  assert.equal(decoded.ok, false);
+  assert.equal(decoded.reason, "invalid_format");
 });
 
 test("saveMatchResult: inserts a new match, then upserts on re-score without duplicating the row", async () => {
@@ -175,7 +200,14 @@ test("findRerankCandidates: returns a grounded prompt for an eligible, shortlist
   assert.ok(match, "an eligible, embedded, shortlisted job with no existing match must appear as a rerank candidate");
   assert.match(match.prompt, /Find Candidates Job/);
   assert.match(match.prompt, /TypeScript/);
-  assert.equal(match.candidateId, encodeCandidateId(analysis.id, job.id));
+  // Checkpoint 2E: candidateId is a signed token embedding a timestamp and
+  // a per-call runId, so comparing the raw string against a fresh
+  // encodeCandidateId() call would never match — decode it instead and
+  // assert the real fields it carries.
+  const decodedCandidateId = decodeCandidateId(match.candidateId);
+  assert.equal(decodedCandidateId.ok, true);
+  assert.equal(decodedCandidateId.value.cvAnalysisId, analysis.id);
+  assert.equal(decodedCandidateId.value.jobId, job.id);
 });
 
 test("findRerankCandidates: a stale, long-unconfirmed job is never built into a rerank prompt — the freshness gate runs upstream, inside shortlistJobsForUser, before any candidate reaches this step", async () => {

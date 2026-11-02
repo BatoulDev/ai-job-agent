@@ -277,6 +277,18 @@
       "parameters": { "resume": "timeInterval", "amount": 1, "unit": "seconds" }
     },
     {
+      "id": "711b077b-0bec-4738-aab7-fd87dfbe326d",
+      "name": "Log Prepare Rerank Failure",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [672, 620],
+      "notes": "Terminal failure node for the whole-batch Prepare Rerank call — a human reviews the n8n execution log directly. Deliberately NOT connected to Rerank Rate Limit Delay/Loop Candidates: there are no real candidates to retry when this step itself failed before Split Out Candidates ever ran. Added 2026-11-02 to fix a real defect: Prepare Rerank's failure previously shared Log Rerank Failure's chain into the per-candidate retry loop, which fed a bogus, prompt-less payload into Call OpenAI Chat as if it were a real candidate (reproduced live, execution 349135 — a real OpenAI 400).",
+      "parameters": {
+        "mode": "manual",
+        "assignments": { "assignments": [{ "id": "error", "name": "error", "value": "={{ $json.error?.message ?? 'prepare-rerank step failed' }}", "type": "string" }] }
+      }
+    },
+    {
       "id": "90372200-28ab-4c1b-8238-b8f84fa52185",
       "name": "Sticky Note 8d72aba5",
       "type": "n8n-nodes-base.stickyNote",
@@ -324,7 +336,7 @@
     "Prepare Rerank": {
       "main": [
         [{ "node": "Split Out Candidates", "type": "main", "index": 0 }],
-        [{ "node": "Log Rerank Failure", "type": "main", "index": 0 }]
+        [{ "node": "Log Prepare Rerank Failure", "type": "main", "index": 0 }]
       ]
     },
     "Split Out Candidates": { "main": [[{ "node": "Loop Candidates (Rate Limited)", "type": "main", "index": 0 }]] },

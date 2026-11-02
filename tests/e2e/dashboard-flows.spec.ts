@@ -16,6 +16,7 @@ interface Fixture {
   matchReadyForEmailAppId: string;
   matchForMarkSentId: string;
   applicationForMarkSentId: string;
+  matchForSentEmailId: string;
 }
 
 const fixture: Fixture = JSON.parse(readFileSync(resolve(__dirname, ".fixture.json"), "utf8"));
@@ -97,6 +98,14 @@ test("edit and approve a cover-letter draft from the Approved tab", async ({ pag
   await card.getByRole("button", { name: "Approve Cover Letter" }).click();
   await expect(card.getByText("Approved", { exact: true })).toBeVisible();
   await expect(card.getByText("This is my own edited version")).toBeVisible();
+
+  // Phase C (MVP readiness): an approved cover letter must be downloadable,
+  // not just readable on-screen. Plain text is the only format this
+  // content is ever stored in, so that's the only format claimed here.
+  const downloadButton = card.getByRole("button", { name: "Download (.txt)" });
+  await expect(downloadButton).toBeVisible();
+  const [download] = await Promise.all([page.waitForEvent("download"), downloadButton.click()]);
+  expect(download.suggestedFilename()).toMatch(/^cover-letter-.*\.txt$/);
 });
 
 test("preview and approve & send an email application from the Approved tab", async ({ page }) => {
@@ -116,7 +125,22 @@ test("preview and approve & send an email application from the Approved tab", as
   // The explicit approval gate created the application — status is Pending
   // (nothing auto-sends it; that's the internal worker's separate job).
   await expect(card.getByText("Pending", { exact: true })).toBeVisible();
-  await expect(card.getByText("Waiting to be sent to jobs@e2e-fixture.test.")).toBeVisible();
+  await expect(card.getByText("Waiting to be recorded for jobs@e2e-fixture.test.")).toBeVisible();
+});
+
+test("an already-sent email application never claims a real email was actually delivered", async ({ page }) => {
+  await login(page);
+  await goToTab(page, "approved");
+
+  // Phase D (MVP readiness): MockEmailTransport never makes a real network
+  // call (src/lib/applications/emailTransport.ts) — the UI must say so
+  // honestly for an application already in 'sent' status, not claim a real
+  // delivery happened.
+  const card = page.getByTestId(`approved-match-${fixture.matchForSentEmailId}`);
+  await expect(card).toBeVisible();
+  await expect(card.getByText("Sent", { exact: true })).toBeVisible();
+  await expect(card.getByText(/Real email delivery isn.t connected yet/)).toBeVisible();
+  await expect(card.getByText(/^Sent to /)).toHaveCount(0);
 });
 
 test("mark an external-link application as sent, then report an outcome on the Sent tab", async ({ page }) => {

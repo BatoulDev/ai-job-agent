@@ -3,6 +3,12 @@
 // validate the *shape* of each result's LLM response — that is
 // parseRerankResponse()'s job (src/lib/matching/rerankResponse.ts), run once
 // per item by the route itself; this module only validates the envelope.
+//
+// A relative import (not "@/"), matching rerankCandidates.ts's own fix —
+// MAX_CANDIDATE_TOKEN_LENGTH is a real runtime value, and this file is
+// imported directly by a route-handler test under plain `node --test`,
+// which cannot resolve the bundler-only alias.
+import { MAX_CANDIDATE_TOKEN_LENGTH } from "../../../../../lib/matching/candidateToken.ts";
 
 const MAX_ITEMS = 200;
 const MAX_MODEL_NAME_LENGTH = 200;
@@ -44,6 +50,9 @@ export function parseSaveRerankResultsRequestBody(body: unknown): ParseSaveReran
     if (typeof item !== "object" || item === null) return { ok: false, error: `results[${index}] must be an object` };
     const row = item as Record<string, unknown>;
     if (!isNonEmptyString(row.candidateId)) return { ok: false, error: `results[${index}].candidateId is required` };
+    if (row.candidateId.length > MAX_CANDIDATE_TOKEN_LENGTH) {
+      return { ok: false, error: `results[${index}].candidateId must be at most ${MAX_CANDIDATE_TOKEN_LENGTH} characters` };
+    }
     if (!("response" in row)) return { ok: false, error: `results[${index}].response is required` };
     results.push({ candidateId: row.candidateId, response: row.response });
   }

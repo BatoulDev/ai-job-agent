@@ -40,6 +40,21 @@ export default function Footer() {
                 ))}
               </ul>
             </div>
+            <div>
+              <p className="text-xs font-semibold uppercase tracking-wide text-muted">
+                Legal
+              </p>
+              <ul className="mt-3 space-y-2">
+                <li>
+                  <Link
+                    href="/privacy"
+                    className="text-sm text-muted transition-colors hover:text-text"
+                  >
+                    Privacy Policy
+                  </Link>
+                </li>
+              </ul>
+            </div>
           </div>
         </div>
 

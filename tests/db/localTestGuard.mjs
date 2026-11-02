@@ -49,6 +49,42 @@ export function loadEnvLocal() {
 const fileEnv = loadEnvLocal();
 export const getEnv = (name) => process.env[name] ?? fileEnv[name];
 
+// Checkpoint 2E: src/lib/matching/candidateToken.ts reads
+// MATCHING_CANDIDATE_TOKEN_SECRET directly from process.env — matching
+// how it behaves under a real Next.js server process, where .env.local
+// is already loaded into process.env automatically. Plain `node --test`
+// has no such auto-loading; getEnv()'s fileEnv fallback above is private
+// to this module's own three Supabase vars, so anything else reading
+// process.env directly (as production code correctly does, rather than
+// depending on a test-only helper) would otherwise see nothing. Copied
+// through explicitly, once, here — every tests/db/*.test.mjs file already
+// imports this module (directly or via helpers.mjs) before touching any
+// matching-pipeline code.
+if (!process.env.MATCHING_CANDIDATE_TOKEN_SECRET && fileEnv.MATCHING_CANDIDATE_TOKEN_SECRET) {
+  process.env.MATCHING_CANDIDATE_TOKEN_SECRET = fileEnv.MATCHING_CANDIDATE_TOKEN_SECRET;
+}
+// Same reasoning, for src/lib/internalAuth.ts's bearer-secret check —
+// needed now that a Checkpoint 2E audit-remediation test calls the real
+// prepare-rerank/save-rerank-results POST handlers directly.
+if (!process.env.MATCHING_WORKER_SECRET && fileEnv.MATCHING_WORKER_SECRET) {
+  process.env.MATCHING_WORKER_SECRET = fileEnv.MATCHING_WORKER_SECRET;
+}
+// Same reasoning again — both route handlers call createAdminClient()
+// (src/lib/supabase/admin.ts), which reads NEXT_PUBLIC_SUPABASE_URL and
+// SUPABASE_SECRET_KEY directly from process.env (via src/lib/supabase/env.ts
+// and its own read respectively), not through this file's getEnv().
+// NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY is included too: env.ts computes
+// BOTH of its exports (supabaseUrl, supabasePublishableKey) at module-
+// evaluation time via a throwing requireEnv() — merely importing admin.ts
+// (for supabaseUrl alone) evaluates that whole module, so the publishable
+// key must also be present or the import itself throws before admin.ts's
+// own code ever runs.
+for (const name of ["NEXT_PUBLIC_SUPABASE_URL", "NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY", "SUPABASE_SECRET_KEY"]) {
+  if (!process.env[name] && fileEnv[name]) {
+    process.env[name] = fileEnv[name];
+  }
+}
+
 export function fail(message) {
   throw new Error(`[db-test-guard] ${message}`);
 }

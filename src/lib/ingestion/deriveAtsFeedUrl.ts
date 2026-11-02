@@ -23,7 +23,7 @@
 import type { JobSourceType } from "./rawProviderJob.ts";
 
 export interface DerivedAtsFeedUrl {
-  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable" | "ashby" | "oracle_hcm">;
+  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable" | "ashby" | "oracle_hcm" | "workday">;
   feedUrl: string;
 }
 
@@ -50,6 +50,23 @@ const ASHBY_PATTERN = /jobs\.ashbyhq\.com\/([a-z0-9-]+)/i;
 // from this same feed URL (see oracle-hcm.ts's own header comment) since
 // Oracle's REST response carries no candidate-facing URL of its own.
 const ORACLE_PATTERN = /https:\/\/([a-z0-9.-]+)\/hcmUI\/CandidateExperience\/[a-z]{2}\/sites\/([A-Za-z0-9_]+)/i;
+// Workday integration Phase 1 (2026-10-25): confirmed real tenant URL shape
+// from company_sources' own researcher-recorded official_careers_url values
+// — https://{tenant}.wd{N}.myworkdayjobs.com/{site} (e.g. Murex's real
+// https://murex.wd3.myworkdayjobs.com/MurexCareerPage1) — cross-checked
+// against the documented Workday CXS API shape in
+// docs/LEBANON_GULF_SOURCE_RESEARCH.md §3. `site` legitimately mixes case
+// in real tenants (MurexCareerPage1, DataRobot_External_Careers), unlike
+// every other pattern below, so it is intentionally not lowercased or
+// restricted to lowercase-only like GREENHOUSE_PATTERN/LEVER_PATTERN are.
+// Two of the six real company_sources rows labeled ats_provider "Workday"
+// (Tivoli Hotels, PwC Kuwait) have a careers URL that does NOT match this
+// host shape at all — this pattern correctly returns null for those two
+// (see deriveAtsFeedUrl's own doc comment: "returns null whenever the URL
+// doesn't match a recognized pattern, rather than guessing"), flagging a
+// stale/incorrect ats_provider label for manual re-research rather than
+// silently fabricating a feed URL that could never work.
+const WORKDAY_PATTERN = /^https:\/\/([a-z0-9-]+)\.wd(\d+)\.myworkdayjobs\.com\/([A-Za-z0-9_-]+)/i;
 
 /** ats_provider is researcher-entered free text (e.g. "Greenhouse", "Workable", "Oracle Cloud HCM") — normalize before matching. */
 function normalizeAtsProviderLabel(atsProvider: string | null): string {
@@ -111,6 +128,27 @@ export function deriveAtsFeedUrl(atsProvider: string | null, officialCareersUrl:
         sourceType: "oracle_hcm",
         feedUrl: `https://${host}/hcmRestApi/resources/latest/recruitingCEJobRequisitions?finder=findReqs;siteNumber=${siteNumber}&expand=requisitionList&limit=50`,
       };
+    }
+    return null;
+  }
+
+  if (label.includes("workday")) {
+    const match = officialCareersUrl.match(WORKDAY_PATTERN);
+    if (match) {
+      const [, tenant, wdNumber, site] = match;
+      // The real confirmed list endpoint (docs/LEBANON_GULF_SOURCE_RESEARCH.md
+      // §3): POST https://{tenant}.wd{N}.myworkdayjobs.com/wday/cxs/{tenant}/
+      // {site}/jobs, body {"appliedFacets":{},"limit":N,"offset":0,
+      // "searchText":""} — unlike every other branch above, this is a POST
+      // with a JSON body, not a plain GET; the n8n fetch node wiring this up
+      // (not yet built — Workday integration Phase 2) must account for that
+      // difference. tenantSiteBaseUrl (providers/workday.ts's own stamped
+      // field, needed to build each job's real apply URL) is recoverable
+      // from this same feedUrl by stripping the trailing
+      // "/wday/cxs/{tenant}/{site}/jobs" suffix, the same "reconstruct from
+      // the one derived URL" pattern ORACLE_PATTERN's host/siteNumber
+      // already uses.
+      return { sourceType: "workday", feedUrl: `https://${tenant}.wd${wdNumber}.myworkdayjobs.com/wday/cxs/${tenant}/${site}/jobs` };
     }
     return null;
   }

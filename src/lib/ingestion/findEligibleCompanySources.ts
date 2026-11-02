@@ -20,7 +20,7 @@ import type { JobSourceType } from "./rawProviderJob.ts";
 
 export interface EligibleIngestionSource {
   sourceId: string;
-  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable" | "ashby" | "oracle_hcm">;
+  sourceType: Extract<JobSourceType, "greenhouse" | "lever" | "workable" | "ashby" | "oracle_hcm" | "workday">;
   feedUrl: string;
 }
 

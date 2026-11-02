@@ -185,6 +185,41 @@ export default async function globalSetup() {
   const { data: applicationForMarkSent, error: appError } = await userClient.rpc("create_application", { p_match_id: matchForMarkSent.id });
   if (appError) throw new Error(`create_application for mark-sent fixture: ${appError.message}`);
 
+  // 6. Approved email-method match with an application already in 'sent'
+  // status — bypasses the real worker (src/lib/applications/sendApplication.ts)
+  // entirely, same spirit as fixture #5's pre-seeded pending_send: this
+  // exists purely to drive the UI's rendering of the post-send state, not
+  // to re-prove the worker itself. Confirms the "sent" copy is honest about
+  // MockEmailTransport never making a real network call (Phase D finding).
+  const jobForSentEmail = await fixtureJob("E2E Data Engineer (Sent Email App)", {
+    application_method: "email",
+    application_email: "jobs-sent@e2e-fixture.test",
+  });
+  const matchForSentEmail = await fixtureMatch(jobForSentEmail, {
+    status: "user_approved",
+    surfaced_at: new Date().toISOString(),
+    decided_at: new Date().toISOString(),
+  });
+  const { error: sentEmailLetterError } = await admin.from("cover_letters").insert({
+    user_id: userId,
+    match_id: matchForSentEmail.id,
+    generated_content: "Dear Hiring Team,\n\nApproved cover letter body for the data role.\n\nSincerely,",
+    generation_status: "completed",
+    approval_status: "user_approved",
+    approved_content: "Dear Hiring Team,\n\nApproved cover letter body for the data role.\n\nSincerely,",
+    approved_at: new Date().toISOString(),
+  });
+  if (sentEmailLetterError) throw new Error(`sent-email fixture cover letter: ${sentEmailLetterError.message}`);
+  const { data: applicationForSentEmail, error: sentAppError } = await userClient.rpc("create_application", {
+    p_match_id: matchForSentEmail.id,
+  });
+  if (sentAppError) throw new Error(`create_application for sent-email fixture: ${sentAppError.message}`);
+  const { error: markSentError } = await admin
+    .from("applications")
+    .update({ status: "sent", last_attempt_at: new Date().toISOString() })
+    .eq("id", applicationForSentEmail.id);
+  if (markSentError) throw new Error(`mark sent-email fixture as sent: ${markSentError.message}`);
+
   const fixture = {
     email: EMAIL,
     password: PASSWORD,
@@ -197,6 +232,8 @@ export default async function globalSetup() {
     matchForMarkSentId: matchForMarkSent.id,
     applicationForMarkSentId: applicationForMarkSent.id,
     jobReadyForEmailAppTitle: jobReadyForEmailApp.title,
+    matchForSentEmailId: matchForSentEmail.id,
+    applicationForSentEmailId: applicationForSentEmail.id,
   };
   writeFileSync(FIXTURE_PATH, JSON.stringify(fixture, null, 2));
 

@@ -29,6 +29,19 @@ export default function CoverLetterCard({
   }
 
   if (coverLetter.approvalStatus === "user_approved") {
+    const handleDownload = () => {
+      // Plain-text export: the only format this content is ever stored in
+      // (public.cover_letters.approved_content, text column) — never claim
+      // a PDF/Word export the system doesn't actually produce.
+      const blob = new Blob([coverLetter.approvedContent ?? ""], { type: "text/plain;charset=utf-8" });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement("a");
+      link.href = url;
+      link.download = `cover-letter-${matchId}.txt`;
+      link.click();
+      URL.revokeObjectURL(url);
+    };
+
     return (
       <div className="mt-4 rounded-2xl border border-slate-200 bg-bg p-4">
         <div className="flex items-center justify-between gap-2">
@@ -36,6 +49,13 @@ export default function CoverLetterCard({
           <span className="inline-flex items-center rounded-full bg-success/10 px-2.5 py-0.5 text-xs font-semibold text-success">Approved</span>
         </div>
         <p className="mt-2 whitespace-pre-wrap text-sm leading-relaxed text-text">{coverLetter.approvedContent}</p>
+        <button
+          type="button"
+          onClick={handleDownload}
+          className="mt-3 rounded-full border border-slate-200 px-4 py-2 text-sm font-semibold text-text transition-colors hover:border-slate-300"
+        >
+          Download (.txt)
+        </button>
       </div>
     );
   }

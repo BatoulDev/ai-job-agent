@@ -33,10 +33,24 @@ function makeJobRow(externalId) {
     source_last_modified_at: null,
     closing_date: null,
     status: "active",
+    // Phase 2 (Checkpoint 2C): GulfTalent never supplies additionalLocations
+    // — a plain single-location job, same as every other pre-Phase-2
+    // provider. locationRows:[] means the per-row RPC call writes no
+    // job_locations rows at all; replaceLocations:false is the correct
+    // "unconfirmed" default for a provider with no concept of this field.
+    locationRows: [],
+    replaceLocations: false,
   };
 }
 
-/** responses are consumed in call order: [existingQuery, upsert, activeQuery, closeUpdate?] */
+/**
+ * responses are consumed in call order: [existingQuery, rpc×N (one
+ * upsert_job_with_locations call per row, Phase 2 Checkpoint 2C —
+ * replaces the single whole-batch .upsert() this used to be), activeQuery,
+ * closeUpdate?]. Every test file in this suite still uses exactly one row
+ * per batch, so this remains a 1:1 slot swap from the old single-upsert
+ * response.
+ */
 function makeMockSupabase(responses) {
   let callIndex = 0;
   const calls = [];
@@ -52,10 +66,14 @@ function makeMockSupabase(responses) {
         is(...args) { record.ops.push(["is", args]); return builder; },
         in(...args) { record.ops.push(["in", args]); return builder; },
         update(...args) { record.ops.push(["update", args]); return builder; },
-        upsert(...args) { record.ops.push(["upsert", args]); return Promise.resolve(result); },
         then(resolve, reject) { return Promise.resolve(result).then(resolve, reject); },
       };
       return builder;
+    },
+    rpc(fnName, params) {
+      const result = responses[callIndex++];
+      calls.push({ table: fnName, ops: [["rpc", params]] });
+      return Promise.resolve(result);
     },
   };
 }
