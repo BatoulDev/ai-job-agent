@@ -53,3 +53,17 @@ next-env.d.ts
 /playwright-report/
 /blob-report/
 tests/e2e/.fixture.json
+
+# e2e evidence screenshots/JSON written by tests/e2e/*-evidence.spec.ts and
+# tests/e2e/dashboard-screenshots.spec.ts — regenerate locally on demand,
+# never meant to be committed.
+/test-fixtures/e2e-evidence-output/
+
+# Claude Code project config — local settings, runtime locks, and the
+# locally-installed graphify skill are machine-specific, not project source.
+/.claude/
+
+# graphify's generated knowledge-graph output (cache, HTML/Obsidian
+# exports, cost reports) — regenerate with `graphify update .`, never
+# meant to be committed.
+/graphify-out/
